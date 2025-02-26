@@ -1,37 +1,95 @@
 
 import React from 'react';
+import { useInfiniteQuery } from '@tanstack/react-query';
+import { getTelegramMessages } from '../services/api';
 import DealCard from './DealCard';
 import { Button } from '@/components/ui/button';
-
-const SAMPLE_DEALS = [
-  {
-    title: "boAt Aavante Bar 3200D Pro Soundbar",
-    offerPrice: "₹4,950",
-    regularPrice: "₹12,999",
-    description: "Apply ₹2000 coupon • 3549 Off With ICICI CC",
-    link: "https://amzn.to/4h1HHEZ",
-  },
-  // Add more sample deals here
-];
+import { Loader2 } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
 
 const DealGrid = () => {
+  const { toast } = useToast();
+
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    isError,
+  } = useInfiniteQuery({
+    queryKey: ['telegram-messages'],
+    queryFn: ({ pageParam }) => getTelegramMessages(pageParam),
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to load deals. Please try again later.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-apple-gray" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="text-center py-16">
+        <p className="text-apple-gray">Failed to load deals. Please try again later.</p>
+      </div>
+    );
+  }
+
+  const allMessages = data?.pages.flatMap((page) => page.data) ?? [];
+
   return (
     <section className="py-16 bg-gradient-to-b from-apple-lightGray to-white">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between mb-8">
-          <h2 className="text-2xl font-semibold text-apple-darkGray">Latest Deals</h2>
+          <h2 className="text-2xl font-semibold text-gradient">Latest Deals</h2>
           <Button variant="ghost" className="text-apple-darkGray hover:text-black" asChild>
             <a href="/deals">View All</a>
           </Button>
         </div>
+        
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {SAMPLE_DEALS.map((deal, index) => (
+          {allMessages.map((message) => (
             <DealCard
-              key={index}
-              {...deal}
+              key={message.id}
+              title={message.text.split('\n')[0] || 'New Deal'} // First line as title
+              description={message.text}
+              offerPrice="Check Price"
+              regularPrice="Limited Time"
+              link={message.link || '#'}
             />
           ))}
         </div>
+
+        {hasNextPage && (
+          <div className="mt-8 text-center">
+            <Button
+              onClick={() => fetchNextPage()}
+              disabled={isFetchingNextPage}
+              variant="outline"
+              className="rounded-full"
+            >
+              {isFetchingNextPage ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Loading...
+                </>
+              ) : (
+                'Load More Deals'
+              )}
+            </Button>
+          </div>
+        )}
       </div>
     </section>
   );
