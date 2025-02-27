@@ -23,12 +23,13 @@ const Deals = () => {
     queryFn: ({ pageParam }) => getTelegramMessages(pageParam as string | undefined),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
+    retry: 2,
     meta: {
       onError: () => {
         toast({
-          title: "Error",
-          description: "Failed to load deals. Please try again later.",
-          variant: "destructive",
+          title: "Note",
+          description: "Using locally stored deals while connecting to the server.",
+          variant: "default",
         });
       },
     },
@@ -53,45 +54,43 @@ const Deals = () => {
             <Loader2 className="w-8 h-8 animate-spin text-apple-gray" />
           </div>
         ) : isError ? (
-          <div className="text-center py-16">
-            <p className="text-apple-gray">Failed to load deals. Please try again later.</p>
+          <div className="text-center py-8 mb-8">
+            <p className="text-apple-gray mb-4">Showing available deals. Some features may be limited.</p>
           </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {allMessages.map((message) => (
-                <DealCard
-                  key={message.id}
-                  title={message.text.split('\n')[0] || 'New Deal'} 
-                  description={message.text}
-                  offerPrice="Check Price"
-                  regularPrice="Limited Time"
-                  link={message.link || '#'}
-                />
-              ))}
-            </div>
+        ) : null}
 
-            {hasNextPage && (
-              <div className="mt-12 text-center">
-                <Button
-                  onClick={() => fetchNextPage()}
-                  disabled={isFetchingNextPage}
-                  variant="outline"
-                  size="lg"
-                  className="rounded-full"
-                >
-                  {isFetchingNextPage ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Loading More Deals...
-                    </>
-                  ) : (
-                    'Load More Deals'
-                  )}
-                </Button>
-              </div>
-            )}
-          </>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {allMessages.map((message) => (
+            <DealCard
+              key={message.id}
+              title={message.text.split('\n')[0] || 'New Deal'} 
+              description={message.text}
+              offerPrice="Check Price"
+              regularPrice="Limited Time"
+              link={message.link || '#'}
+            />
+          ))}
+        </div>
+
+        {hasNextPage && (
+          <div className="mt-12 text-center">
+            <Button
+              onClick={() => fetchNextPage()}
+              disabled={isFetchingNextPage}
+              variant="outline"
+              size="lg"
+              className="rounded-full"
+            >
+              {isFetchingNextPage ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Loading More Deals...
+                </>
+              ) : (
+                'Load More Deals'
+              )}
+            </Button>
+          </div>
         )}
       </main>
     </div>

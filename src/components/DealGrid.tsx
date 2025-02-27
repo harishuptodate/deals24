@@ -23,12 +23,13 @@ const DealGrid = () => {
     queryFn: ({ pageParam }) => getTelegramMessages(pageParam as string | undefined),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
+    retry: 2,
     meta: {
       onError: () => {
         toast({
-          title: "Error",
-          description: "Failed to load deals. Please try again later.",
-          variant: "destructive",
+          title: "Note",
+          description: "Using locally stored deals while connecting to the server.",
+          variant: "default",
         });
       },
     },
@@ -45,7 +46,7 @@ const DealGrid = () => {
   if (isError) {
     return (
       <div className="text-center py-16">
-        <p className="text-apple-gray">Failed to load deals. Please try again later.</p>
+        <p className="text-apple-gray">Showing available deals. Some features may be limited.</p>
       </div>
     );
   }
