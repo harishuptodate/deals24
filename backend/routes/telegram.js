@@ -2,47 +2,34 @@
 const express = require('express');
 const router = express.Router();
 const TelegramMessage = require('../models/TelegramMessage');
-const { extractLinks } = require('../utils/messageParser');
+const { handleTelegramWebhook } = require('../controllers/telegramController');
+
+// Webhook endpoint for Telegram updates
+router.post('/webhook', handleTelegramWebhook);
 
 // Get paginated messages
 router.get('/messages', async (req, res) => {
   try {
+    const cursor = req.query.cursor;
     const limit = parseInt(req.query.limit) || 10;
-    const cursor = req.query.cursor; // Date-based cursor for pagination
     
     let query = {};
     if (cursor) {
       query.date = { $lt: new Date(cursor) };
     }
     
-    // Get one more than the limit to check if there are more results
     const messages = await TelegramMessage.find(query)
       .sort({ date: -1 })
       .limit(limit + 1)
       .lean();
     
-    // Check if there are more results
     const hasMore = messages.length > limit;
     const data = hasMore ? messages.slice(0, limit) : messages;
     
-    // Format the response
-    const formattedData = data.map(msg => ({
-      id: msg._id.toString(),
-      text: msg.text,
-      date: msg.date.toISOString(),
-      link: msg.link,
-      imageUrl: msg.imageUrl
-    }));
-    
-    // Get the next cursor
-    const nextCursor = hasMore && data.length > 0 
-      ? data[data.length - 1].date.toISOString() 
-      : null;
-    
     res.json({
-      data: formattedData,
+      data,
       hasMore,
-      nextCursor
+      nextCursor: hasMore && data.length > 0 ? data[data.length - 1].date.toISOString() : null
     });
   } catch (error) {
     console.error('Error fetching messages:', error);
@@ -59,13 +46,7 @@ router.get('/messages/:id', async (req, res) => {
       return res.status(404).json({ error: 'Message not found' });
     }
     
-    res.json({
-      id: message._id.toString(),
-      text: message.text,
-      date: message.date.toISOString(),
-      link: message.link,
-      imageUrl: message.imageUrl
-    });
+    res.json(message);
   } catch (error) {
     console.error('Error fetching message:', error);
     res.status(500).json({ error: 'Failed to fetch message' });
