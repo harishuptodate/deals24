@@ -9,26 +9,51 @@ import Deals from "./pages/Deals";
 import Categories from "./pages/Categories";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
+import { useEffect } from "react";
 
-const queryClient = new QueryClient();
+// Create a client with production-appropriate settings
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      gcTime: 1000 * 60 * 10, // 10 minutes
+      retry: 3,
+      refetchOnWindowFocus: import.meta.env.PROD, // Only refetch on window focus in production
+    },
+  },
+});
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/deals" element={<Deals />} />
-          <Route path="/categories" element={<Categories />} />
-          <Route path="/admin" element={<Admin />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+// Verify environment variables are loaded
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+console.log("API Base URL configured:", apiBaseUrl || "Not set");
+
+const App = () => {
+  useEffect(() => {
+    // Log environment information on startup (only in development)
+    if (import.meta.env.DEV) {
+      console.log("Running in development mode");
+      console.log("API Base URL:", import.meta.env.VITE_API_BASE_URL);
+    }
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/deals" element={<Deals />} />
+            <Route path="/categories" element={<Categories />} />
+            <Route path="/admin" element={<Admin />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;

@@ -14,6 +14,9 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        inter: ["Inter", "system-ui", "sans-serif"],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -76,6 +79,9 @@ export default {
       },
       backdropBlur: {
         xs: "2px",
+      },
+      boxShadow: {
+        'subtle': '0 2px 10px rgba(0, 0, 0, 0.05)',
       },
     },
   },

@@ -1,4 +1,6 @@
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -28,8 +30,13 @@
   }
 
   body {
-    @apply antialiased text-apple-darkGray;
+    @apply antialiased text-apple-darkGray font-inter;
     font-feature-settings: "ss01", "ss02", "cv01", "cv02", "cv03", "cv04";
+    letter-spacing: -0.01em;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-inter font-bold tracking-tight;
   }
 
   /* Custom scroll bar */
@@ -53,7 +60,7 @@
 
 @layer components {
   .glass-effect {
-    @apply backdrop-blur-md bg-white/80 border border-white/20;
+    @apply backdrop-blur-md bg-white/90 border border-white/20;
   }
 
   .hover-scale {
@@ -62,5 +69,9 @@
 
   .text-gradient {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-apple-darkGray to-apple-gray;
+  }
+
+  .btn-gradient {
+    @apply bg-gradient-to-r from-apple-darkGray to-black text-white hover:shadow-md transition-all;
   }
 }
