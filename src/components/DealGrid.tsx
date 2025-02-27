@@ -19,14 +19,16 @@ const DealGrid = () => {
     isError,
   } = useInfiniteQuery({
     queryKey: ['telegram-messages'],
-    queryFn: ({ pageParam }) => getTelegramMessages(pageParam),
+    queryFn: ({ pageParam }) => getTelegramMessages(pageParam as string | undefined),
     getNextPageParam: (lastPage) => lastPage.nextCursor,
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to load deals. Please try again later.",
-        variant: "destructive",
-      });
+    meta: {
+      onError: () => {
+        toast({
+          title: "Error",
+          description: "Failed to load deals. Please try again later.",
+          variant: "destructive",
+        });
+      },
     },
   });
 

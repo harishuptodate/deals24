@@ -1,69 +1,103 @@
-# Welcome to your Lovable project
 
-## Project info
+# Deals24 - Telegram Deals Aggregator
 
-**URL**: https://lovable.dev/projects/7e565bf0-b0d0-4c60-b6af-41a0e2ae863d
+A web application that aggregates and displays deals from Telegram channels.
 
-## How can I edit this code?
+## Project Structure
 
-There are several ways of editing your application.
+### Frontend (React + TypeScript + Vite)
+- `/src` - Frontend source code
+  - `/components` - UI components
+  - `/services` - API services
+  - `/types` - TypeScript type definitions
 
-**Use Lovable**
+### Backend (Node.js + Express + MongoDB)
+- `/backend` - Backend source code
+  - `/models` - MongoDB schemas
+  - `/routes` - API routes
+  - `/services` - Business logic
+  - `/utils` - Utility functions
+  - `/scripts` - Helper scripts
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/7e565bf0-b0d0-4c60-b6af-41a0e2ae863d) and start prompting.
+## Getting Started
 
-Changes made via Lovable will be committed automatically to this repo.
+### Prerequisites
+- Node.js (v14+)
+- MongoDB
+- Redis (optional, for caching)
+- Telegram Bot API Token
 
-**Use your preferred IDE**
+### Installation
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+1. Clone the repository
+```
+git clone https://github.com/yourusername/deals24.git
+cd deals24
+```
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+2. Install frontend dependencies
+```
+npm install
+```
 
-Follow these steps:
+3. Install backend dependencies
+```
+cd backend
+npm install
+```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+4. Set up environment variables
+   - Copy `.env.example` to `.env` and fill in your values
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+5. Start the development servers
 
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+**Frontend:**
+```
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+**Backend:**
+```
+cd backend
+npm run dev
+```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Setting up Telegram Bot
 
-**Use GitHub Codespaces**
+1. Create a new bot using BotFather on Telegram
+2. Add bot to your channel as administrator
+3. Set the required environment variables in `.env`:
+   - `TELEGRAM_BOT_TOKEN`
+   - `TELEGRAM_CHANNEL_ID`
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+4. Run the script to fetch historic messages:
+```
+cd backend
+node scripts/fetchHistoricMessages.js
+```
 
-## What technologies are used for this project?
+## API Endpoints
 
-This project is built with .
+### GET /api/telegram/messages
+- Fetches paginated messages
+- Query parameters:
+  - `cursor`: Pagination cursor (ISO date string)
+  - `limit`: Number of messages to fetch (default: 10)
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### GET /api/telegram/messages/:id
+- Fetches a single message by ID
 
-## How can I deploy this project?
+## Deployment
 
-Simply open [Lovable](https://lovable.dev/projects/7e565bf0-b0d0-4c60-b6af-41a0e2ae863d) and click on Share -> Publish.
+### Frontend Deployment
+1. Build the frontend
+```
+npm run build
+```
 
-## I want to use a custom domain - is that possible?
+2. Deploy the `dist` directory to a static hosting service
 
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+### Backend Deployment
+1. Deploy the backend to a Node.js hosting service
+2. Set up MongoDB Atlas or a managed MongoDB instance
+3. Configure environment variables in your hosting environment
