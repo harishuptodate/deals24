@@ -6,6 +6,7 @@ import DealCard from './DealCard';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { TelegramMessage } from '../types/telegram';
 
 const DealGrid = () => {
   const { toast } = useToast();
@@ -20,6 +21,7 @@ const DealGrid = () => {
   } = useInfiniteQuery({
     queryKey: ['telegram-messages'],
     queryFn: ({ pageParam }) => getTelegramMessages(pageParam as string | undefined),
+    initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     meta: {
       onError: () => {
