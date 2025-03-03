@@ -1,9 +1,27 @@
-
 import axios from 'axios';
 import { TelegramResponse, TelegramMessage } from '../types/telegram';
 
-// Get API base URL from environment variables
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://telegram-tweet-trove.lovable.app/api';
+// Get API base URL from environment variables or use a fallback
+// If the URL is already absolute (starts with http), use it as is
+// Otherwise, construct a full URL based on the current origin
+const getBaseUrl = () => {
+  const configuredUrl = import.meta.env.VITE_API_BASE_URL;
+  
+  if (!configuredUrl) {
+    // Fallback to current origin + /api
+    return `${window.location.origin}/api`;
+  }
+  
+  // If it's already a full URL (starts with http/https), use it as is
+  if (configuredUrl.startsWith('http')) {
+    return configuredUrl;
+  }
+  
+  // Otherwise, append it to the current origin
+  return `${window.location.origin}${configuredUrl}`;
+};
+
+const API_BASE_URL = getBaseUrl();
 
 console.log('Using API URL:', API_BASE_URL); // Debug log
 
@@ -61,7 +79,15 @@ export const getTelegramMessages = async (cursor?: string, category?: string): P
     }
     
     console.log('Fetching messages with params:', params);
-    const response = await api.get<TelegramResponse>('/telegram/messages', { params });
+    
+    // Make sure we're requesting JSON and not HTML
+    const response = await api.get<TelegramResponse>('/telegram/messages', { 
+      params,
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
+    
     console.log('Response received:', response.data);
     
     // Ensure data is always an array, even if the response is empty
@@ -73,6 +99,13 @@ export const getTelegramMessages = async (cursor?: string, category?: string): P
     return response.data;
   } catch (error) {
     console.error('Failed to fetch Telegram messages:', error);
+    
+    // Check if the error response contains HTML (which indicates we got the wrong endpoint)
+    if (error.response?.data && typeof error.response.data === 'string' && 
+        error.response.data.includes('<!DOCTYPE html>')) {
+      console.error('Received HTML instead of JSON. API endpoint may be misconfigured.');
+    }
+    
     // Return a default empty response on error
     return { data: [], hasMore: false };
   }

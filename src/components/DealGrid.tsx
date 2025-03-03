@@ -17,6 +17,7 @@ const DealGrid = () => {
     isFetchingNextPage,
     isLoading,
     isError,
+    error,
   } = useInfiniteQuery({
     queryKey: ['telegram-messages'],
     queryFn: ({ pageParam }) => getTelegramMessages(pageParam as string | undefined),
@@ -24,7 +25,8 @@ const DealGrid = () => {
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     retry: 2,
     meta: {
-      onError: () => {
+      onError: (err: any) => {
+        console.error('Error in query:', err);
         toast({
           title: "Error",
           description: "Failed to load deals. Please try again later.",
@@ -43,6 +45,7 @@ const DealGrid = () => {
   }
 
   if (isError) {
+    console.error('Query error:', error);
     return (
       <div className="text-center py-16">
         <p className="text-apple-gray">Unable to load deals. Please try again later.</p>
