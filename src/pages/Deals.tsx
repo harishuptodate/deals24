@@ -98,16 +98,24 @@ const Deals = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {allMessages.map((message) => (
-              <DealCard
-                key={message.id}
-                title={message.text.split('\n')[0] || 'New Deal'} 
-                description={message.text}
-                offerPrice="Check Price"
-                regularPrice="Limited Time"
-                link={message.link || '#'}
-              />
-            ))}
+            {allMessages.map((message) => {
+              // Skip rendering if message is undefined or doesn't have required fields
+              if (!message || !message.text) {
+                console.warn('Skipping invalid message:', message);
+                return null;
+              }
+              
+              return (
+                <DealCard
+                  key={message.id}
+                  title={message.text.split('\n')[0] || 'New Deal'} 
+                  description={message.text}
+                  offerPrice="Check Price"
+                  regularPrice="Limited Time"
+                  link={message.link || '#'}
+                />
+              );
+            })}
           </div>
         )}
 

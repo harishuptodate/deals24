@@ -63,10 +63,18 @@ export const getTelegramMessages = async (cursor?: string, category?: string): P
     console.log('Fetching messages with params:', params);
     const response = await api.get<TelegramResponse>('/telegram/messages', { params });
     console.log('Response received:', response.data);
+    
+    // Ensure data is always an array, even if the response is empty
+    if (!response.data.data || !Array.isArray(response.data.data)) {
+      console.warn('API returned invalid data format, returning empty array');
+      response.data.data = [];
+    }
+    
     return response.data;
   } catch (error) {
     console.error('Failed to fetch Telegram messages:', error);
-    throw error;
+    // Return a default empty response on error
+    return { data: [], hasMore: false };
   }
 };
 
