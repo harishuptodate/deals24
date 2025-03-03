@@ -3,12 +3,14 @@ import axios from 'axios';
 import { TelegramResponse, TelegramMessage } from '../types/telegram';
 
 // Get API base URL from environment variables
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://telegram-tweet-trove.lovable.app/api';
+
+console.log('Using API URL:', API_BASE_URL); // Debug log
 
 // Create an axios instance with the base URL
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000, // 10 seconds
+  timeout: 30000, // Increased timeout to 30 seconds
   headers: {
     'Content-Type': 'application/json',
   },
@@ -17,10 +19,7 @@ const api = axios.create({
 // Add request interceptor for production logging
 api.interceptors.request.use(
   (config) => {
-    // Log requests in development
-    if (import.meta.env.DEV) {
-      console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
-    }
+    console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
     return config;
   },
   (error) => {
@@ -61,7 +60,9 @@ export const getTelegramMessages = async (cursor?: string, category?: string): P
       params.category = category;
     }
     
+    console.log('Fetching messages with params:', params);
     const response = await api.get<TelegramResponse>('/telegram/messages', { params });
+    console.log('Response received:', response.data);
     return response.data;
   } catch (error) {
     console.error('Failed to fetch Telegram messages:', error);
