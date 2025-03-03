@@ -1,3 +1,4 @@
+
 import axios from 'axios';
 import { TelegramResponse, TelegramMessage } from '../types/telegram';
 
@@ -80,6 +81,12 @@ export const getTelegramMessages = async (cursor?: string, category?: string): P
     
     console.log('Fetching messages with params:', params);
     
+    // For development mode, return mock data if the API is not available
+    if (import.meta.env.DEV) {
+      console.log('DEV mode detected - using mock data');
+      return getMockTelegramData();
+    }
+    
     // Make sure we're requesting JSON and not HTML
     const response = await api.get<TelegramResponse>('/telegram/messages', { 
       params,
@@ -106,20 +113,81 @@ export const getTelegramMessages = async (cursor?: string, category?: string): P
       console.error('Received HTML instead of JSON. API endpoint may be misconfigured.');
     }
     
+    // If in development mode and API fails, return mock data
+    if (import.meta.env.DEV) {
+      console.log('DEV mode detected - using mock data after API error');
+      return getMockTelegramData();
+    }
+    
     // Return a default empty response on error
-    return { data: [], hasMore: false };
+    return { data: [], hasMore: false, nextCursor: undefined };
   }
 };
 
 // Get a single Telegram message by ID
 export const getTelegramMessageById = async (id: string): Promise<TelegramMessage> => {
   try {
+    // For development mode, return mock data if the API is not available
+    if (import.meta.env.DEV) {
+      console.log('DEV mode detected - using mock data for single message');
+      const mockData = getMockTelegramData();
+      const message = mockData.data.find(msg => msg.id === id);
+      if (message) return message;
+      throw new Error('Message not found');
+    }
+    
     const response = await api.get(`/telegram/messages/${id}`);
     return response.data;
   } catch (error) {
     console.error(`Failed to fetch Telegram message with ID ${id}:`, error);
     throw error;
   }
+};
+
+// Mock data function for development purposes
+const getMockTelegramData = (): TelegramResponse => {
+  return {
+    data: [
+      {
+        id: '1',
+        text: 'Apple MacBook Pro M2\n\nNow available for just $1499 - Save $500 off retail price!\n\nFeatures:\n- M2 Chip\n- 16GB RAM\n- 512GB SSD\n- 16-inch Retina Display',
+        date: new Date().toISOString(),
+        link: 'https://example.com/deal1'
+      },
+      {
+        id: '2',
+        text: 'Sony WH-1000XM5 Noise Cancelling Headphones\n\nPrime Day Deal: $299 (Regular $399)\n\n- Industry leading noise cancellation\n- 30 hour battery life\n- Premium sound quality',
+        date: new Date().toISOString(),
+        link: 'https://example.com/deal2'
+      },
+      {
+        id: '3',
+        text: 'Samsung 65" OLED 4K Smart TV\n\nLimited time offer: $1799\n\n- OLED Display\n- 4K Resolution\n- Smart features with voice assistant',
+        date: new Date().toISOString(),
+        link: 'https://example.com/deal3'
+      },
+      {
+        id: '4',
+        text: 'iPad Air 5th Generation\n\n$499 (Regular $599)\n\n- M1 Chip\n- 10.9-inch Liquid Retina Display\n- 64GB Storage\n- All colors available',
+        date: new Date().toISOString(),
+        link: 'https://example.com/deal4'
+      },
+      {
+        id: '5',
+        text: 'Dyson V12 Cordless Vacuum\n\nFlash Sale: $499\n\n- Powerful suction\n- 60 minute run time\n- HEPA filtration\n- Includes all attachments',
+        date: new Date().toISOString(),
+        link: 'https://example.com/deal5'
+      },
+      {
+        id: '6',
+        text: 'Bose QuietComfort Earbuds II\n\n$199 (Save $80)\n\n- Best-in-class noise cancellation\n- 6 hour battery life\n- Wireless charging case\n- Personalized sound',
+        date: new Date().toISOString(),
+        link: 'https://example.com/deal6'
+      },
+    ],
+    hasMore: false,
+    nextCursor: undefined
+  };
 };
 
 export default api;

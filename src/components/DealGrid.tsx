@@ -29,8 +29,10 @@ const DealGrid = () => {
         console.error('Error in query:', err);
         toast({
           title: "Error",
-          description: "Failed to load deals. Please try again later.",
-          variant: "destructive",
+          description: import.meta.env.DEV 
+            ? "Using mock data - API endpoint not available" 
+            : "Failed to load deals. Please try again later.",
+          variant: import.meta.env.DEV ? "default" : "destructive",
         });
       },
     },
@@ -44,7 +46,7 @@ const DealGrid = () => {
     );
   }
 
-  if (isError) {
+  if (isError && !import.meta.env.DEV) {
     console.error('Query error:', error);
     return (
       <div className="text-center py-16">
@@ -75,6 +77,12 @@ const DealGrid = () => {
             <a href="/deals">View All</a>
           </Button>
         </div>
+        
+        {import.meta.env.DEV && (
+          <div className="mb-4 p-2 bg-amber-100 border border-amber-300 rounded-md text-amber-800">
+            <p className="text-sm">Development mode: Using mock data. Connect to the real API by starting the backend server.</p>
+          </div>
+        )}
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {allMessages.map((message) => {

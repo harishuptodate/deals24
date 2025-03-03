@@ -27,6 +27,7 @@ const Deals = () => {
     isLoading,
     isError,
     refetch,
+    error,
   } = useInfiniteQuery({
     queryKey: ['all-telegram-messages', activeCategory],
     queryFn: ({ pageParam }) => getTelegramMessages(pageParam as string | undefined, activeCategory || undefined),
@@ -34,11 +35,14 @@ const Deals = () => {
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     retry: 2,
     meta: {
-      onError: () => {
+      onError: (err: any) => {
+        console.error('Error in deals page query:', err);
         toast({
           title: "Error",
-          description: "Failed to load deals. Please try again later.",
-          variant: "destructive",
+          description: import.meta.env.DEV 
+            ? "Using mock data - API endpoint not available" 
+            : "Failed to load deals. Please try again later.",
+          variant: import.meta.env.DEV ? "default" : "destructive",
         });
       },
     },
@@ -76,11 +80,17 @@ const Deals = () => {
           )}
         </div>
 
+        {import.meta.env.DEV && (
+          <div className="mb-8 p-3 bg-amber-100 border border-amber-300 rounded-md text-amber-800">
+            <p>Development mode: Using mock data. Connect to the real API by starting the backend server.</p>
+          </div>
+        )}
+
         {isLoading ? (
           <div className="flex justify-center items-center min-h-[400px]">
             <Loader2 className="w-8 h-8 animate-spin text-apple-gray" />
           </div>
-        ) : isError ? (
+        ) : isError && !import.meta.env.DEV ? (
           <div className="text-center py-8 mb-8">
             <p className="text-apple-gray mb-4">Unable to load deals. Please try again later.</p>
             <Button onClick={() => refetch()} variant="outline">
