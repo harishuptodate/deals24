@@ -6,7 +6,6 @@ import DealCard from './DealCard';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { TelegramMessage } from '../types/telegram';
 
 const DealGrid = () => {
   const { toast } = useToast();
@@ -27,9 +26,9 @@ const DealGrid = () => {
     meta: {
       onError: () => {
         toast({
-          title: "Note",
-          description: "Using locally stored deals while connecting to the server.",
-          variant: "default",
+          title: "Error",
+          description: "Failed to load deals. Please try again later.",
+          variant: "destructive",
         });
       },
     },
@@ -46,12 +45,23 @@ const DealGrid = () => {
   if (isError) {
     return (
       <div className="text-center py-16">
-        <p className="text-apple-gray">Showing available deals. Some features may be limited.</p>
+        <p className="text-apple-gray">Unable to load deals. Please try again later.</p>
+        <Button onClick={() => window.location.reload()} variant="outline" className="mt-4">
+          Refresh
+        </Button>
       </div>
     );
   }
 
   const allMessages = data?.pages.flatMap((page) => page.data) ?? [];
+
+  if (allMessages.length === 0) {
+    return (
+      <div className="text-center py-16">
+        <p className="text-apple-gray">No deals available at the moment.</p>
+      </div>
+    );
+  }
 
   return (
     <section className="py-16 bg-gradient-to-b from-apple-lightGray to-white">
