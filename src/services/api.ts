@@ -1,3 +1,4 @@
+
 import axios from 'axios';
 import { TelegramResponse, TelegramMessage } from '../types/telegram';
 
@@ -64,27 +65,32 @@ api.interceptors.response.use(
   }
 );
 
-// Function to determine category based on message content
+// Enhanced function to determine category based on message content with expanded patterns
 export const detectCategory = (text: string): string | undefined => {
   const lowerText = text.toLowerCase();
   
   // Electronics & Home
-  if (lowerText.match(/tv|television|smart home|refrigerator|fridge|washer|dryer|vacuum|appliance|speaker|audio|camera|gaming console|playstation|xbox|nintendo/i)) {
+  if (lowerText.match(/washing machine|tv|television|sofa|refrigerator|fridge|air conditioner|ac|microwave|oven|toaster|dishwasher|water purifier|home theatre|soundbar|geyser|cooler|vacuum cleaner|iron|induction cooktop|blender|mixer grinder|juicer|coffee maker|rice cooker|heater|fan|chimney|deep freezer|air fryer/i)) {
     return 'electronics-home';
   }
   
   // Laptops
-  if (lowerText.match(/laptop|macbook|notebook|chromebook|gaming laptop|dell|hp|lenovo|asus|acer|msi/i)) {
+  if (lowerText.match(/laptop|notebook|ultrabook|macbook|lenovo|hp|dell|acer|asus|msi|razer|apple macbook|chromebook|gaming laptop|surface laptop|thinkpad|ideapad|legion|vivobook|zenbook|spectre|pavilion|omen|inspiron|latitude|xps|rog|tuf|predator|swift|helios|nitro|blade|stealth|probook/i)) {
     return 'laptops';
   }
   
   // Mobile Phones
-  if (lowerText.match(/phone|smartphone|iphone|android|samsung|pixel|oneplus|xiaomi|vivo|oppo|realme|mobile|earbuds|headphone|earphone/i)) {
+  if (lowerText.match(/iphone|android|smartphone|mobile phone|5g phone|samsung|oneplus|xiaomi|redmi|oppo|vivo|realme|motorola|nokia|google pixel|sony xperia|huawei|asus rog phone|infinix|tecno|honor|iqoo|poco|foldable phone|flip phone|flagship phone|budget phone|mid-range phone|flagship killer/i)) {
     return 'mobile-phones';
   }
   
+  // Accessories
+  if (lowerText.match(/power bank|tws|earphones|earbuds|headphones|bluetooth earphones|neckband|chargers|fast charger|usb charger|wireless charger|cable|usb cable|type-c cable|lightning cable|hdmi cable|adapter|memory card|sd card|pendrive|usb drive|hdd|ssd|laptop bag|keyboard|mouse|gaming mouse|mouse pad|cooling pad|phone case|screen protector|smartwatch|fitness band|vr headset|gaming controller/i)) {
+    return 'gadgets-accessories';
+  }
+  
   // Fashion
-  if (lowerText.match(/shirt|tshirt|t-shirt|jeans|pants|dress|clothing|shoes|footwear|apparel|fashion|jacket|sweater|sweatshirt|hoodie|watch|handbag|bag|backpack|sunglasses/i)) {
+  if (lowerText.match(/clothing|t-shirt|shirt|jeans|trousers|pants|shorts|skirt|dress|jacket|blazer|sweater|hoodie|coat|suit|ethnic wear|kurta|saree|lehenga|salwar|leggings|innerwear|nightwear|sportswear|shoes|sneakers|heels|sandals|flip-flops|boots|formal shoes|loafers|running shoes|belts|wallets|watches|sunglasses|jewelry|rings|necklace|bracelet|earrings|bangles|handbag|clutch|backpack/i)) {
     return 'fashion';
   }
   
@@ -92,7 +98,7 @@ export const detectCategory = (text: string): string | undefined => {
 };
 
 // Get Telegram messages with pagination
-export const getTelegramMessages = async (cursor?: string, category?: string | null): Promise<TelegramResponse> => {
+export const getTelegramMessages = async (cursor?: string, category?: string | null, searchQuery?: string | null): Promise<TelegramResponse> => {
   try {
     const params: Record<string, string | undefined> = { 
       cursor, 
@@ -101,6 +107,10 @@ export const getTelegramMessages = async (cursor?: string, category?: string | n
     
     if (category) {
       params.category = category;
+    }
+    
+    if (searchQuery) {
+      params.search = searchQuery;
     }
     
     console.log('Fetching messages with params:', params);
@@ -125,12 +135,6 @@ export const getTelegramMessages = async (cursor?: string, category?: string | n
   } catch (error) {
     console.error('Failed to fetch Telegram messages:', error);
     
-    // Check if the error response contains HTML (which indicates we got the wrong endpoint)
-    if (error.response?.data && typeof error.response.data === 'string' && 
-        error.response.data.includes('<!DOCTYPE html>')) {
-      console.error('Received HTML instead of JSON. API endpoint may be misconfigured.');
-    }
-    
     // Return a default empty response on error
     return { data: [], hasMore: false, nextCursor: undefined };
   }
@@ -145,6 +149,11 @@ export const getTelegramMessageById = async (id: string): Promise<TelegramMessag
     console.error(`Failed to fetch Telegram message with ID ${id}:`, error);
     throw error;
   }
+};
+
+// Search Telegram messages
+export const searchTelegramMessages = async (query: string): Promise<TelegramResponse> => {
+  return getTelegramMessages(undefined, undefined, query);
 };
 
 export default api;

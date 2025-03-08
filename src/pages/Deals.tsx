@@ -13,6 +13,7 @@ const Deals = () => {
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const categoryParam = searchParams.get('category');
+  const searchQuery = searchParams.get('search');
   const [activeCategory, setActiveCategory] = useState<string | null>(categoryParam);
 
   useEffect(() => {
@@ -29,8 +30,12 @@ const Deals = () => {
     refetch,
     error,
   } = useInfiniteQuery({
-    queryKey: ['all-telegram-messages', activeCategory],
-    queryFn: ({ pageParam }) => getTelegramMessages(pageParam as string | undefined, activeCategory || undefined),
+    queryKey: ['all-telegram-messages', activeCategory, searchQuery],
+    queryFn: ({ pageParam }) => getTelegramMessages(
+      pageParam as string | undefined, 
+      activeCategory || undefined, 
+      searchQuery || undefined
+    ),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     retry: 2,
@@ -39,10 +44,8 @@ const Deals = () => {
         console.error('Error in deals page query:', err);
         toast({
           title: "Error",
-          description: import.meta.env.DEV 
-            ? "Using mock data - API endpoint not available" 
-            : "Failed to load deals. Please try again later.",
-          variant: import.meta.env.DEV ? "default" : "destructive",
+          description: "Failed to load deals. Please try again later.",
+          variant: "destructive",
         });
       },
     },
@@ -56,41 +59,37 @@ const Deals = () => {
     setTimeout(() => refetch(), 0);
   };
 
-  let categoryTitle = "Latest Deals";
-  if (activeCategory) {
-    categoryTitle = `${activeCategory.split('-').map(word => 
+  let pageTitle = "Latest Deals";
+  if (searchQuery) {
+    pageTitle = `Search Results: ${searchQuery}`;
+  } else if (activeCategory) {
+    pageTitle = `${activeCategory.split('-').map(word => 
       word.charAt(0).toUpperCase() + word.slice(1)).join(' ')} Deals`;
   }
 
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
-      <main className="container mx-auto px-4 py-12">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold text-gradient mb-4 sm:mb-0">{categoryTitle}</h1>
-          {activeCategory && (
+      <main className="container mx-auto px-4 py-6 md:py-12">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 md:mb-8">
+          <h1 className="text-2xl md:text-3xl font-bold text-gradient mb-4 sm:mb-0">{pageTitle}</h1>
+          {(activeCategory || searchQuery) && (
             <Button 
               variant="outline" 
               className="flex items-center gap-2 rounded-full"
               onClick={clearFilter}
             >
               <X size={16} />
-              Clear Filter
+              Clear {searchQuery ? "Search" : "Filter"}
             </Button>
           )}
         </div>
-
-        {import.meta.env.DEV && (
-          <div className="mb-8 p-3 bg-amber-100 border border-amber-300 rounded-md text-amber-800">
-            <p>Development mode: Using mock data. Connect to the real API by starting the backend server.</p>
-          </div>
-        )}
 
         {isLoading ? (
           <div className="flex justify-center items-center min-h-[400px]">
             <Loader2 className="w-8 h-8 animate-spin text-apple-gray" />
           </div>
-        ) : isError && !import.meta.env.DEV ? (
+        ) : isError ? (
           <div className="text-center py-8 mb-8">
             <p className="text-apple-gray mb-4">Unable to load deals. Please try again later.</p>
             <Button onClick={() => refetch()} variant="outline">
@@ -99,8 +98,14 @@ const Deals = () => {
           </div>
         ) : allMessages.length === 0 ? (
           <div className="text-center py-8 mb-8">
-            <p className="text-apple-gray mb-4">No deals found for this category.</p>
-            {activeCategory && (
+            <p className="text-apple-gray mb-4">
+              {searchQuery 
+                ? `No deals found for "${searchQuery}".` 
+                : activeCategory 
+                  ? "No deals found for this category." 
+                  : "No deals available at the moment."}
+            </p>
+            {(activeCategory || searchQuery) && (
               <Button onClick={clearFilter} variant="outline">
                 View All Deals
               </Button>
@@ -123,6 +128,7 @@ const Deals = () => {
                   offerPrice="Check Price"
                   regularPrice="Limited Time"
                   link={message.link || '#'}
+                  id={message.id}
                 />
               );
             })}
@@ -130,7 +136,7 @@ const Deals = () => {
         )}
 
         {hasNextPage && (
-          <div className="mt-12 text-center">
+          <div className="mt-8 md:mt-12 text-center">
             <Button
               onClick={() => fetchNextPage()}
               disabled={isFetchingNextPage}

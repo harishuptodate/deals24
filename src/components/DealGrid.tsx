@@ -1,12 +1,12 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { getTelegramMessages } from '../services/api';
 import DealCard from './DealCard';
 import { Button } from '@/components/ui/button';
 import { Loader2, Filter } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 interface CategoryFilterProps {
   onSelect: (category: string | null) => void;
@@ -19,17 +19,18 @@ const CategoryFilter = ({ onSelect, current }: CategoryFilterProps) => {
     { name: 'Electronics & Home', slug: 'electronics-home' },
     { name: 'Laptops', slug: 'laptops' },
     { name: 'Mobile Phones', slug: 'mobile-phones' },
+    { name: 'Gadgets & Accessories', slug: 'gadgets-accessories' },
     { name: 'Fashion', slug: 'fashion' }
   ];
 
   return (
-    <div className="flex items-center mb-6 overflow-x-auto pb-2 gap-2">
-      <Filter size={16} className="text-apple-gray mr-1" />
+    <div className="flex items-center mb-6 overflow-x-auto pb-2 gap-2 max-w-full">
+      <Filter size={16} className="text-apple-gray mr-1 flex-shrink-0" />
       {categories.map((category) => (
         <button
           key={category.name}
           onClick={() => onSelect(category.slug)}
-          className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+          className={`whitespace-nowrap px-3 py-1.5 rounded-full text-sm font-medium transition-colors flex-shrink-0 ${
             (current === category.slug) || (current === null && category.slug === null)
               ? 'bg-apple-darkGray text-white'
               : 'bg-gray-100 text-apple-gray hover:bg-gray-200'
@@ -45,7 +46,9 @@ const CategoryFilter = ({ onSelect, current }: CategoryFilterProps) => {
 const DealGrid = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [activeCategory, setActiveCategory] = React.useState<string | null>(null);
+  const [searchParams] = useSearchParams();
+  const searchQuery = searchParams.get('search');
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
   const {
     data,
@@ -57,8 +60,8 @@ const DealGrid = () => {
     error,
     refetch
   } = useInfiniteQuery({
-    queryKey: ['telegram-messages', activeCategory],
-    queryFn: ({ pageParam }) => getTelegramMessages(pageParam as string | undefined, activeCategory),
+    queryKey: ['telegram-messages', activeCategory, searchQuery],
+    queryFn: ({ pageParam }) => getTelegramMessages(pageParam as string | undefined, activeCategory, searchQuery),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     retry: 2,
@@ -67,19 +70,17 @@ const DealGrid = () => {
         console.error('Error in query:', err);
         toast({
           title: "Error",
-          description: import.meta.env.DEV 
-            ? "Using mock data - API endpoint not available" 
-            : "Failed to load deals. Please try again later.",
-          variant: import.meta.env.DEV ? "default" : "destructive",
+          description: "Failed to load deals. Please try again later.",
+          variant: "destructive",
         });
       },
     },
   });
 
-  // Reset page when category changes
+  // Reset page when category or search changes
   useEffect(() => {
     refetch();
-  }, [activeCategory, refetch]);
+  }, [activeCategory, searchQuery, refetch]);
 
   const handleCategoryChange = (category: string | null) => {
     setActiveCategory(category);
@@ -97,7 +98,7 @@ const DealGrid = () => {
     );
   }
 
-  if (isError && !import.meta.env.DEV) {
+  if (isError) {
     console.error('Query error:', error);
     return (
       <div className="text-center py-16">
@@ -120,15 +121,15 @@ const DealGrid = () => {
   }
 
   return (
-    <section className="py-16 bg-gradient-to-b from-apple-lightGray to-white">
+    <section className="py-8 md:py-16 bg-gradient-to-b from-apple-lightGray to-white">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">
           <h2 className="text-2xl font-semibold text-gradient">Latest Deals</h2>
-          <div className="flex gap-2">
-            <Button variant="ghost" className="text-apple-darkGray hover:text-black" onClick={navigateToCategory}>
+          <div className="flex gap-2 flex-wrap">
+            <Button variant="ghost" className="text-apple-darkGray hover:text-black text-sm px-3 py-1 h-auto" onClick={navigateToCategory}>
               Browse Categories
             </Button>
-            <Button variant="ghost" className="text-apple-darkGray hover:text-black" asChild>
+            <Button variant="ghost" className="text-apple-darkGray hover:text-black text-sm px-3 py-1 h-auto" asChild>
               <a href="/deals">View All</a>
             </Button>
           </div>
@@ -136,13 +137,7 @@ const DealGrid = () => {
         
         <CategoryFilter onSelect={handleCategoryChange} current={activeCategory} />
         
-        {import.meta.env.DEV && (
-          <div className="mb-4 p-2 bg-amber-100 border border-amber-300 rounded-md text-amber-800">
-            <p className="text-sm">Development mode: Using mock data. Connect to the real API by starting the backend server.</p>
-          </div>
-        )}
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {allMessages.map((message) => {
             // Skip rendering if message is undefined or doesn't have required fields
             if (!message || !message.text) {
@@ -158,6 +153,7 @@ const DealGrid = () => {
                 offerPrice="Check Price"
                 regularPrice="Limited Time"
                 link={message.link || '#'}
+                id={message.id}
               />
             );
           })}
