@@ -58,34 +58,34 @@ const Navbar = () => {
           
           {/* Desktop Action Items */}
           <div className="hidden md:flex items-center space-x-4">
-            <Link to="/deals" className="flex items-center font-medium text-apple-gray hover:text-apple-darkGray transition-all duration-300 hover:scale-105">
-              <ShoppingBag className="mr-1.5" size={18} />
+            <Link to="/deals" className="flex items-center text-xs font-medium text-apple-gray hover:text-apple-darkGray transition-all duration-300 hover:scale-105">
+              <ShoppingBag className="mr-1.5" size={16} />
               Deals
             </Link>
-            <Link to="/categories" className="flex items-center font-medium text-apple-gray hover:text-apple-darkGray transition-all duration-300 hover:scale-105">
-              <LayoutGrid className="mr-1.5" size={18} />
+            <Link to="/categories" className="flex items-center text-xs font-medium text-apple-gray hover:text-apple-darkGray transition-all duration-300 hover:scale-105">
+              <LayoutGrid className="mr-1.5" size={16} />
               Categories
             </Link>
             <a 
               href="https://t.me/deals24com" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="text-apple-gray hover:text-apple-darkGray transition-all duration-300 px-3 py-1.5 rounded-full border border-gray-200 hover:border-gray-300 font-medium"
+              className="text-xs text-apple-gray hover:text-apple-darkGray transition-all duration-300 px-3 py-1.5 rounded-full border border-gray-200 hover:border-gray-300 font-medium"
             >
               Join Telegram
             </a>
             <Link 
               to="/wishlist" 
-              className="flex items-center text-apple-gray hover:text-apple-darkGray transition-all duration-300 px-3 py-1.5 rounded-full border border-gray-200 hover:border-gray-300 font-medium"
+              className="flex items-center text-xs text-apple-gray hover:text-apple-darkGray transition-all duration-300 px-3 py-1.5 rounded-full border border-gray-200 hover:border-gray-300 font-medium"
             >
-              <Heart className="mr-1.5" size={16} />
+              <Heart className="mr-1.5" size={14} />
               Wishlist
             </Link>
             <Link 
               to="/admin" 
-              className="flex items-center bg-gradient-to-r from-apple-darkGray to-black text-white px-4 py-1.5 rounded-full hover:shadow-md transition-all font-medium"
+              className="flex items-center text-xs bg-gradient-to-r from-apple-darkGray to-black text-white px-4 py-1.5 rounded-full hover:shadow-md transition-all font-medium"
             >
-              <Lock className="mr-1.5" size={16} />
+              <Lock className="mr-1.5" size={14} />
               Admin
             </Link>
           </div>
@@ -127,23 +127,23 @@ const Navbar = () => {
           <div className="space-y-3">
             <Link 
               to="/deals" 
-              className="flex items-center py-2 font-medium text-apple-gray hover:text-apple-darkGray"
+              className="flex items-center py-2 text-sm font-medium text-apple-gray hover:text-apple-darkGray"
               onClick={() => setIsMenuOpen(false)}
             >
-              <ShoppingBag className="mr-2" size={18} />
+              <ShoppingBag className="mr-2" size={16} />
               Deals
             </Link>
             <Link 
               to="/categories" 
-              className="flex items-center py-2 font-medium text-apple-gray hover:text-apple-darkGray"
+              className="flex items-center py-2 text-sm font-medium text-apple-gray hover:text-apple-darkGray"
               onClick={() => setIsMenuOpen(false)}
             >
-              <LayoutGrid className="mr-2" size={18} />
+              <LayoutGrid className="mr-2" size={16} />
               Categories
             </Link>
             <Link 
               to="/wishlist" 
-              className="flex items-center py-2 font-medium text-apple-gray hover:text-apple-darkGray"
+              className="flex items-center py-2 text-sm font-medium text-apple-gray hover:text-apple-darkGray"
               onClick={() => setIsMenuOpen(false)}
             >
               <Heart className="mr-2" size={16} />
@@ -151,7 +151,7 @@ const Navbar = () => {
             </Link>
             <Link 
               to="/admin" 
-              className="flex items-center py-2 font-medium text-apple-gray hover:text-apple-darkGray"
+              className="flex items-center py-2 text-sm font-medium text-apple-gray hover:text-apple-darkGray"
               onClick={() => setIsMenuOpen(false)}
             >
               <Lock className="mr-2" size={16} />
@@ -161,7 +161,7 @@ const Navbar = () => {
               href="https://t.me/deals24com" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="flex items-center py-2 font-medium text-apple-gray hover:text-apple-darkGray"
+              className="flex items-center py-2 text-sm font-medium text-apple-gray hover:text-apple-darkGray"
               onClick={() => setIsMenuOpen(false)}
             >
               Join Telegram

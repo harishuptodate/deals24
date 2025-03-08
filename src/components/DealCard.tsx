@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Heart, ExternalLink } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -66,6 +67,33 @@ const DealCard = ({ title, offerPrice, regularPrice, description, link, id }: De
     localStorage.setItem('clickData', JSON.stringify(clickData));
   };
 
+  // Function to make links in text clickable
+  const makeLinksClickable = (text: string) => {
+    if (!text) return '';
+    
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = text.split(urlRegex);
+    
+    return parts.map((part, index) => {
+      if (part.match(urlRegex)) {
+        return (
+          <a
+            key={index}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => recordClick(part)}
+            className="text-blue-600 hover:underline break-all inline-flex items-center gap-1"
+          >
+            {truncateLink(part)}
+            <ExternalLink size={12} />
+          </a>
+        );
+      }
+      return part;
+    });
+  };
+
   return (
     <>
       <div className="group animate-fade-up hover-scale">
@@ -119,7 +147,7 @@ const DealCard = ({ title, offerPrice, regularPrice, description, link, id }: De
                 onClick={() => recordClick(link)}
                 className="inline-block w-full text-center px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-apple-darkGray to-black rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-apple-darkGray/20"
               >
-                Shop Now
+                Buy Now
               </a>
             )}
           </div>
@@ -133,24 +161,7 @@ const DealCard = ({ title, offerPrice, regularPrice, description, link, id }: De
           </DialogHeader>
           
           <div className="mt-4 text-sm whitespace-pre-line">
-            {description}
-          </div>
-          
-          <div className="mt-6 space-y-3">
-            <h4 className="font-medium">Available Links:</h4>
-            {links.map((link, index) => (
-              <a
-                key={index}
-                href={link}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => recordClick(link)}
-                className="flex items-center gap-2 p-3 text-sm rounded-md bg-gray-100 hover:bg-gray-200 transition-colors"
-              >
-                <ExternalLink size={16} />
-                <span className="truncate flex-1">{truncateLink(link)}</span>
-              </a>
-            ))}
+            {makeLinksClickable(description)}
           </div>
         </DialogContent>
       </Dialog>

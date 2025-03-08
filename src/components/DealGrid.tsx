@@ -126,10 +126,10 @@ const DealGrid = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">
           <h2 className="text-2xl font-semibold text-gradient">Latest Deals</h2>
           <div className="flex gap-2 flex-wrap">
-            <Button variant="ghost" className="text-apple-darkGray hover:text-black text-sm px-3 py-1 h-auto" onClick={navigateToCategory}>
+            <Button variant="ghost" className="text-apple-darkGray hover:text-black text-xs px-3 py-1 h-auto" onClick={navigateToCategory}>
               Browse Categories
             </Button>
-            <Button variant="ghost" className="text-apple-darkGray hover:text-black text-sm px-3 py-1 h-auto" asChild>
+            <Button variant="ghost" className="text-apple-darkGray hover:text-black text-xs px-3 py-1 h-auto" asChild>
               <a href="/deals">View All</a>
             </Button>
           </div>

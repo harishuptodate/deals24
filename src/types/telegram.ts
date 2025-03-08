@@ -5,6 +5,7 @@ export interface TelegramMessage {
   date: string;
   link?: string;
   imageUrl?: string;
+  category?: string;
 }
 
 export interface ApiResponse {
@@ -13,7 +14,6 @@ export interface ApiResponse {
   nextCursor?: string;
 }
 
-// Add the missing TelegramResponse interface
 export interface TelegramResponse {
   data: TelegramMessage[];
   hasMore: boolean;
