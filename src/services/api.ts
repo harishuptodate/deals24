@@ -67,8 +67,35 @@ api.interceptors.response.use(
   }
 );
 
+// Function to determine category based on message content
+export const detectCategory = (text: string): string | undefined => {
+  const lowerText = text.toLowerCase();
+  
+  // Electronics & Home
+  if (lowerText.match(/tv|television|smart home|refrigerator|fridge|washer|dryer|vacuum|appliance|speaker|audio|camera|gaming console|playstation|xbox|nintendo/i)) {
+    return 'electronics-home';
+  }
+  
+  // Laptops
+  if (lowerText.match(/laptop|macbook|notebook|chromebook|gaming laptop|dell|hp|lenovo|asus|acer|msi/i)) {
+    return 'laptops';
+  }
+  
+  // Mobile Phones
+  if (lowerText.match(/phone|smartphone|iphone|android|samsung|pixel|oneplus|xiaomi|vivo|oppo|realme|mobile|earbuds|headphone|earphone/i)) {
+    return 'mobile-phones';
+  }
+  
+  // Fashion
+  if (lowerText.match(/shirt|tshirt|t-shirt|jeans|pants|dress|clothing|shoes|footwear|apparel|fashion|jacket|sweater|sweatshirt|hoodie|watch|handbag|bag|backpack|sunglasses/i)) {
+    return 'fashion';
+  }
+  
+  return undefined;
+};
+
 // Get Telegram messages with pagination
-export const getTelegramMessages = async (cursor?: string, category?: string): Promise<TelegramResponse> => {
+export const getTelegramMessages = async (cursor?: string, category?: string | null): Promise<TelegramResponse> => {
   try {
     const params: Record<string, string | undefined> = { 
       cursor, 
@@ -84,7 +111,7 @@ export const getTelegramMessages = async (cursor?: string, category?: string): P
     // For development mode, return mock data if the API is not available
     if (import.meta.env.DEV) {
       console.log('DEV mode detected - using mock data');
-      return getMockTelegramData();
+      return getMockTelegramData(category || undefined);
     }
     
     // Make sure we're requesting JSON and not HTML
@@ -116,7 +143,7 @@ export const getTelegramMessages = async (cursor?: string, category?: string): P
     // If in development mode and API fails, return mock data
     if (import.meta.env.DEV) {
       console.log('DEV mode detected - using mock data after API error');
-      return getMockTelegramData();
+      return getMockTelegramData(category || undefined);
     }
     
     // Return a default empty response on error
@@ -145,46 +172,73 @@ export const getTelegramMessageById = async (id: string): Promise<TelegramMessag
 };
 
 // Mock data function for development purposes
-const getMockTelegramData = (): TelegramResponse => {
+const getMockTelegramData = (category?: string): TelegramResponse => {
+  const allData = [
+    {
+      id: '1',
+      text: 'Apple MacBook Pro M2\n\nNow available for just $1499 - Save $500 off retail price!\n\nFeatures:\n- M2 Chip\n- 16GB RAM\n- 512GB SSD\n- 16-inch Retina Display',
+      date: new Date().toISOString(),
+      link: 'https://example.com/deal1',
+      category: 'laptops'
+    },
+    {
+      id: '2',
+      text: 'Sony WH-1000XM5 Noise Cancelling Headphones\n\nPrime Day Deal: $299 (Regular $399)\n\n- Industry leading noise cancellation\n- 30 hour battery life\n- Premium sound quality',
+      date: new Date().toISOString(),
+      link: 'https://example.com/deal2',
+      category: 'electronics-home'
+    },
+    {
+      id: '3',
+      text: 'Samsung 65" OLED 4K Smart TV\n\nLimited time offer: $1799\n\n- OLED Display\n- 4K Resolution\n- Smart features with voice assistant',
+      date: new Date().toISOString(),
+      link: 'https://example.com/deal3',
+      category: 'electronics-home'
+    },
+    {
+      id: '4',
+      text: 'iPad Air 5th Generation\n\n$499 (Regular $599)\n\n- M1 Chip\n- 10.9-inch Liquid Retina Display\n- 64GB Storage\n- All colors available',
+      date: new Date().toISOString(),
+      link: 'https://example.com/deal4',
+      category: 'mobile-phones'
+    },
+    {
+      id: '5',
+      text: 'Dyson V12 Cordless Vacuum\n\nFlash Sale: $499\n\n- Powerful suction\n- 60 minute run time\n- HEPA filtration\n- Includes all attachments',
+      date: new Date().toISOString(),
+      link: 'https://example.com/deal5',
+      category: 'electronics-home'
+    },
+    {
+      id: '6',
+      text: 'Bose QuietComfort Earbuds II\n\n$199 (Save $80)\n\n- Best-in-class noise cancellation\n- 6 hour battery life\n- Wireless charging case\n- Personalized sound',
+      date: new Date().toISOString(),
+      link: 'https://example.com/deal6',
+      category: 'mobile-phones'
+    },
+    {
+      id: '7',
+      text: '#Myntra Upto 90% Off On HRX Clothing.\n\nMen\'s : https://myntr.it/vr7VnfB\nT-Shirt : https://myntr.it/Ea2zkCt\nTrackpants : https://myntr.it/okp5ITi\nShorts : https://myntr.it/fwEs6uR\nSweatshirts : https://myntr.it/TOTpgDL\nJackets : https://myntr.it/yj932bu\nTracksuits  : https://myntr.it/JTyiFlC\n\nWomen\'s : https://myntr.it/d14wa8T\nTrackpants : https://myntr.it/s7L593t\nTights : https://myntr.it/Zb6nW0x',
+      date: new Date().toISOString(),
+      link: 'https://myntr.it/vr7VnfB',
+      category: 'fashion'
+    },
+    {
+      id: '8',
+      text: 'Nike Running Shoes Sale\n\nUp to 40% off select styles\n\nMen\'s: https://example.com/nike-mens\nWomen\'s: https://example.com/nike-womens\nKids\': https://example.com/nike-kids',
+      date: new Date().toISOString(),
+      link: 'https://example.com/nike-sale',
+      category: 'fashion'
+    },
+  ];
+
+  // Filter by category if provided
+  const filteredData = category 
+    ? allData.filter(item => item.category === category)
+    : allData;
+  
   return {
-    data: [
-      {
-        id: '1',
-        text: 'Apple MacBook Pro M2\n\nNow available for just $1499 - Save $500 off retail price!\n\nFeatures:\n- M2 Chip\n- 16GB RAM\n- 512GB SSD\n- 16-inch Retina Display',
-        date: new Date().toISOString(),
-        link: 'https://example.com/deal1'
-      },
-      {
-        id: '2',
-        text: 'Sony WH-1000XM5 Noise Cancelling Headphones\n\nPrime Day Deal: $299 (Regular $399)\n\n- Industry leading noise cancellation\n- 30 hour battery life\n- Premium sound quality',
-        date: new Date().toISOString(),
-        link: 'https://example.com/deal2'
-      },
-      {
-        id: '3',
-        text: 'Samsung 65" OLED 4K Smart TV\n\nLimited time offer: $1799\n\n- OLED Display\n- 4K Resolution\n- Smart features with voice assistant',
-        date: new Date().toISOString(),
-        link: 'https://example.com/deal3'
-      },
-      {
-        id: '4',
-        text: 'iPad Air 5th Generation\n\n$499 (Regular $599)\n\n- M1 Chip\n- 10.9-inch Liquid Retina Display\n- 64GB Storage\n- All colors available',
-        date: new Date().toISOString(),
-        link: 'https://example.com/deal4'
-      },
-      {
-        id: '5',
-        text: 'Dyson V12 Cordless Vacuum\n\nFlash Sale: $499\n\n- Powerful suction\n- 60 minute run time\n- HEPA filtration\n- Includes all attachments',
-        date: new Date().toISOString(),
-        link: 'https://example.com/deal5'
-      },
-      {
-        id: '6',
-        text: 'Bose QuietComfort Earbuds II\n\n$199 (Save $80)\n\n- Best-in-class noise cancellation\n- 6 hour battery life\n- Wireless charging case\n- Personalized sound',
-        date: new Date().toISOString(),
-        link: 'https://example.com/deal6'
-      },
-    ],
+    data: filteredData,
     hasMore: false,
     nextCursor: undefined
   };

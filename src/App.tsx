@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Deals from "./pages/Deals";
 import Categories from "./pages/Categories";
 import Admin from "./pages/Admin";
+import Wishlist from "./pages/Wishlist";
 import NotFound from "./pages/NotFound";
 import { useEffect } from "react";
 
@@ -47,6 +48,7 @@ const App = () => {
             <Route path="/deals" element={<Deals />} />
             <Route path="/categories" element={<Categories />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/wishlist" element={<Wishlist />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
