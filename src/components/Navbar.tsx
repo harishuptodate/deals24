@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Target, ShoppingBag, LayoutGrid, Lock } from 'lucide-react';
+import { Target, ShoppingBag, LayoutGrid, Lock, Heart } from 'lucide-react';
 
 const Navbar = () => {
   return (
@@ -35,6 +35,13 @@ const Navbar = () => {
             >
               Join Telegram
             </a>
+            <Link 
+              to="/wishlist" 
+              className="flex items-center text-apple-gray hover:text-apple-darkGray transition-all duration-300 px-3 py-1.5 rounded-full border border-gray-200 hover:border-gray-300 font-medium"
+            >
+              <Heart className="mr-1.5" size={16} />
+              Wishlist
+            </Link>
             <Link 
               to="/admin" 
               className="flex items-center bg-gradient-to-r from-apple-darkGray to-black text-white px-4 py-1.5 rounded-full hover:shadow-md transition-all font-medium"
