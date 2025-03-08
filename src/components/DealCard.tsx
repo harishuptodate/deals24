@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Heart, ExternalLink } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -10,16 +9,16 @@ interface DealCardProps {
   regularPrice: string;
   description: string;
   link: string;
+  id?: string;
 }
 
-const DealCard = ({ title, offerPrice, regularPrice, description, link }: DealCardProps) => {
+const DealCard = ({ title, offerPrice, regularPrice, description, link, id }: DealCardProps) => {
   const [isFavorite, setIsFavorite] = useState(() => {
     const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
     return favorites.some((fav: any) => fav.title === title);
   });
   const [isOpen, setIsOpen] = useState(false);
 
-  // Extract all links from the description
   const extractLinks = (text: string) => {
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     return text.match(urlRegex) || [];
@@ -28,7 +27,6 @@ const DealCard = ({ title, offerPrice, regularPrice, description, link }: DealCa
   const links = extractLinks(description);
   const hasMultipleLinks = links.length > 1;
 
-  // Truncate link for display
   const truncateLink = (url: string) => {
     try {
       const { hostname } = new URL(url);
@@ -49,6 +47,7 @@ const DealCard = ({ title, offerPrice, regularPrice, description, link }: DealCa
         title, 
         description, 
         link,
+        id,
         timestamp: new Date().toISOString() 
       }];
     }
@@ -58,17 +57,12 @@ const DealCard = ({ title, offerPrice, regularPrice, description, link }: DealCa
   };
 
   const recordClick = (clickedLink: string) => {
-    // Get existing click data or initialize new array
     const clickData = JSON.parse(localStorage.getItem('clickData') || '[]');
-    
-    // Add new click record
     clickData.push({
       title,
       link: clickedLink,
       timestamp: new Date().toISOString()
     });
-    
-    // Save back to localStorage
     localStorage.setItem('clickData', JSON.stringify(clickData));
   };
 
