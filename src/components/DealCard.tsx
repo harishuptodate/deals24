@@ -15,7 +15,7 @@ interface DealCardProps {
 const DealCard = ({ title, offerPrice, regularPrice, description, link }: DealCardProps) => {
   const [isFavorite, setIsFavorite] = useState(() => {
     const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-    return favorites.includes(title);
+    return favorites.some((fav: any) => fav.title === title);
   });
   const [isOpen, setIsOpen] = useState(false);
 

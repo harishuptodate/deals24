@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
-import { Heart, Trash2, Calendar, Filter, X } from 'lucide-react';
+import { Heart, Trash2, Calendar, ExternalLink, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from '@/components/ui/use-toast';
@@ -186,7 +186,7 @@ const Wishlist = () => {
                     onClick={() => recordClick(selectedItem.title, link)}
                     className="flex items-center gap-2 p-3 text-sm rounded-md bg-gray-100 hover:bg-gray-200 transition-colors"
                   >
-                    <Heart size={16} className="text-red-500 fill-red-500" />
+                    <ExternalLink size={16} />
                     <span className="truncate flex-1">{truncateLink(link)}</span>
                   </a>
                 ))}

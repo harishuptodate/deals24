@@ -108,8 +108,8 @@ export const getTelegramMessages = async (cursor?: string, category?: string | n
     
     console.log('Fetching messages with params:', params);
     
-    // For development mode, return mock data if the API is not available
-    if (import.meta.env.DEV) {
+    // For development mode only, return mock data if the API is not available
+    if (import.meta.env.DEV && !import.meta.env.PROD) {
       console.log('DEV mode detected - using mock data');
       return getMockTelegramData(category || undefined);
     }
@@ -141,7 +141,7 @@ export const getTelegramMessages = async (cursor?: string, category?: string | n
     }
     
     // If in development mode and API fails, return mock data
-    if (import.meta.env.DEV) {
+    if (import.meta.env.DEV && !import.meta.env.PROD) {
       console.log('DEV mode detected - using mock data after API error');
       return getMockTelegramData(category || undefined);
     }
@@ -154,8 +154,8 @@ export const getTelegramMessages = async (cursor?: string, category?: string | n
 // Get a single Telegram message by ID
 export const getTelegramMessageById = async (id: string): Promise<TelegramMessage> => {
   try {
-    // For development mode, return mock data if the API is not available
-    if (import.meta.env.DEV) {
+    // For development mode only, return mock data if the API is not available
+    if (import.meta.env.DEV && !import.meta.env.PROD) {
       console.log('DEV mode detected - using mock data for single message');
       const mockData = getMockTelegramData();
       const message = mockData.data.find(msg => msg.id === id);
