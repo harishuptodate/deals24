@@ -2,7 +2,7 @@
 import React from 'react';
 import Navbar from '../components/Navbar';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
-import { ChartContainer, ChartTitle, ChartLegend, ChartTooltip, Chart } from "@/components/ui/chart";
+import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
 import { Line, ResponsiveContainer, LineChart, XAxis, YAxis, Tooltip, BarChart, Bar } from 'recharts';
 
 // Dummy data for demonstration
@@ -45,7 +45,12 @@ const Admin = () => {
                 className="h-[300px]"
                 config={{
                   data: clicksData,
-                  categories: ['clicks'],
+                  categories: {
+                    clicks: {
+                      label: "Clicks",
+                      color: "#8884d8"
+                    }
+                  }
                 }}
               >
                 <ChartTooltip />
@@ -77,7 +82,12 @@ const Admin = () => {
                 className="h-[300px]"
                 config={{
                   data: categoryData,
-                  categories: ['value'],
+                  categories: {
+                    value: {
+                      label: "Value",
+                      color: "#8884d8"
+                    }
+                  }
                 }}
               >
                 <ChartTooltip />
