@@ -3,17 +3,17 @@ import React, { useState } from 'react';
 import { Heart, ExternalLink } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { trackMessageClick } from '../services/api';
 
 interface DealCardProps {
   title: string;
-  offerPrice: string;
-  regularPrice: string;
   description: string;
   link: string;
   id?: string;
+  imageUrl?: string;
 }
 
-const DealCard = ({ title, offerPrice, regularPrice, description, link, id }: DealCardProps) => {
+const DealCard = ({ title, description, link, id, imageUrl }: DealCardProps) => {
   const [isFavorite, setIsFavorite] = useState(() => {
     const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
     return favorites.some((fav: any) => fav.title === title);
@@ -48,6 +48,7 @@ const DealCard = ({ title, offerPrice, regularPrice, description, link, id }: De
         title, 
         description, 
         link,
+        imageUrl,
         id,
         timestamp: new Date().toISOString() 
       }];
@@ -58,6 +59,7 @@ const DealCard = ({ title, offerPrice, regularPrice, description, link, id }: De
   };
 
   const recordClick = (clickedLink: string) => {
+    // Record click to localStorage
     const clickData = JSON.parse(localStorage.getItem('clickData') || '[]');
     clickData.push({
       title,
@@ -65,6 +67,13 @@ const DealCard = ({ title, offerPrice, regularPrice, description, link, id }: De
       timestamp: new Date().toISOString()
     });
     localStorage.setItem('clickData', JSON.stringify(clickData));
+    
+    // Track click to backend if ID is available
+    if (id) {
+      trackMessageClick(id).catch(err => 
+        console.error('Failed to track click for message', id, err)
+      );
+    }
   };
 
   // Function to make links in text clickable
@@ -117,14 +126,18 @@ const DealCard = ({ title, offerPrice, regularPrice, description, link, id }: De
               <h3 className="text-xl font-semibold text-apple-darkGray line-clamp-2">{title}</h3>
             </div>
             
-            <div className="space-y-1">
-              <p className="text-2xl font-bold text-gradient">
-                {offerPrice}
-              </p>
-              <p className="text-sm text-apple-gray line-through">
-                {regularPrice}
-              </p>
-            </div>
+            {imageUrl && (
+              <div className="w-full h-48 overflow-hidden rounded-lg">
+                <img 
+                  src={imageUrl} 
+                  alt={title} 
+                  className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+              </div>
+            )}
 
             <div className="h-20 overflow-hidden">
               <p className="text-sm text-apple-gray line-clamp-4">

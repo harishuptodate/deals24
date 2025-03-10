@@ -44,6 +44,42 @@ function replaceLinksAndText(text) {
 }
 
 /**
+ * Detect category based on message content
+ * @param {string} text - Message text
+ * @returns {string|undefined} - Detected category or undefined
+ */
+function detectCategory(text) {
+  const lowerText = text.toLowerCase();
+  
+  // Electronics & Home
+  if (lowerText.match(/washing machine|tv|television|sofa|refrigerator|fridge|air conditioner|ac|microwave|oven|toaster|dishwasher|water purifier|home theatre|soundbar|geyser|cooler|vacuum cleaner|iron|induction cooktop|blender|mixer grinder|juicer|coffee maker|rice cooker|heater|fan|chimney|deep freezer|air fryer/i)) {
+    return 'electronics-home';
+  }
+  
+  // Laptops
+  if (lowerText.match(/laptop|notebook|ultrabook|macbook|lenovo|hp|dell|acer|asus|msi|razer|apple macbook|chromebook|gaming laptop|surface laptop|thinkpad|ideapad|legion|vivobook|zenbook|spectre|pavilion|omen|inspiron|latitude|xps|rog|tuf|predator|swift|helios|nitro|blade|stealth|probook/i)) {
+    return 'laptops';
+  }
+  
+  // Mobile Phones
+  if (lowerText.match(/iphone|android|smartphone|mobile phone|5g phone|samsung|oneplus|xiaomi|redmi|oppo|vivo|realme|motorola|nokia|google pixel|sony xperia|huawei|asus rog phone|infinix|tecno|honor|iqoo|poco|foldable phone|flip phone|flagship phone|budget phone|mid-range phone|flagship killer/i)) {
+    return 'mobile-phones';
+  }
+  
+  // Accessories
+  if (lowerText.match(/power bank|tws|earphones|earbuds|headphones|bluetooth earphones|neckband|chargers|fast charger|usb charger|wireless charger|cable|usb cable|type-c cable|lightning cable|hdmi cable|adapter|memory card|sd card|pendrive|usb drive|hdd|ssd|laptop bag|keyboard|mouse|gaming mouse|mouse pad|cooling pad|phone case|screen protector|smartwatch|fitness band|vr headset|gaming controller/i)) {
+    return 'gadgets-accessories';
+  }
+  
+  // Fashion
+  if (lowerText.match(/clothing|t-shirt|shirt|jeans|trousers|pants|shorts|skirt|dress|jacket|blazer|sweater|hoodie|coat|suit|ethnic wear|kurta|saree|lehenga|salwar|leggings|innerwear|nightwear|sportswear|shoes|sneakers|heels|sandals|flip-flops|boots|formal shoes|loafers|running shoes|belts|wallets|watches|sunglasses|jewelry|rings|necklace|bracelet|earrings|bangles|handbag|clutch|backpack/i)) {
+    return 'fashion';
+  }
+  
+  return undefined;
+}
+
+/**
  * Check if the message is recent (within 5 minutes)
  * @param {number} messageDate - Message date in Unix timestamp
  * @returns {boolean} - Whether the message is recent
@@ -83,12 +119,9 @@ function isProfitableProduct(text) {
     'side by side', 'intel', 'core', 'ryzen', 'bravia',
   ];
 
-  console.log('Text being checked:', text); // Log the text being checked
-
   for (let keyword of profitableKeywords) {
     const regex = new RegExp(`\\b${keyword}\\b`, 'i'); // Ensure proper boundary matching
     if (regex.test(text)) {
-      console.log(`Match found for keyword: ${keyword}`); // Log matching keywords
       return true;
     }
   }
@@ -103,13 +136,13 @@ function isProfitableProduct(text) {
 async function saveMessage(message) {
   try {
     // Extract message details
-    const { message_id, chat, date, text: originalText, photo } = message;
-    const textContent = originalText || '';
+    const { message_id, chat, date, text: originalText, photo, caption } = message;
+    const textContent = originalText || caption || '';
     const channelId = chat.id.toString();
     
     // Skip if the message is not recent (more than 5 minutes old)
     if (!isRecentMessage(date)) {
-      console.log('Skipping message older than 5 minutes:', textContent);
+      console.log('Skipping message older than 5 minutes');
       return null;
     }
     
@@ -122,14 +155,14 @@ async function saveMessage(message) {
     
     // Skip low-context messages
     if (isLowContext(textContent)) {
-      console.log('Skipping low-context message:', textContent);
+      console.log('Skipping low-context message');
       return null;
     }
     
     // Check if it's a profitable product if in sale mode
     const IS_SALE_MODE = process.env.IS_SALE_MODE === 'true';
     if (IS_SALE_MODE && !isProfitableProduct(textContent)) {
-      console.log('Skipping non-profitable product in sale mode:', textContent);
+      console.log('Skipping non-profitable product in sale mode');
       return null;
     }
     
@@ -151,15 +184,23 @@ async function saveMessage(message) {
     // Extract link from text
     const link = extractLinks(textContent);
     
+    // Determine category based on message content
+    const category = detectCategory(textContent);
+    
     // Get image URL if available
     let imageUrl = null;
     if (photo && photo.length > 0) {
       // Use the largest photo available
       const largestPhoto = photo[photo.length - 1];
       
+      // Log photo information for reference
+      console.log('Photo information:', JSON.stringify(largestPhoto));
+      
       // In a real implementation, you would use the Telegram API to get the file path
-      // and then construct the full URL. This is a placeholder.
-      imageUrl = `https://api.telegram.org/file/bot${process.env.TELEGRAM_BOT_TOKEN}/${largestPhoto.file_id}`;
+      // and then construct the full URL. This is a placeholder that uses the file_id directly.
+      if (process.env.TELEGRAM_BOT_TOKEN) {
+        imageUrl = `https://api.telegram.org/file/bot${process.env.TELEGRAM_BOT_TOKEN}/${largestPhoto.file_id}`;
+      }
     }
     
     // Add hash to processed list
@@ -173,10 +214,12 @@ async function saveMessage(message) {
       date: new Date(date * 1000), // Convert Unix timestamp to Date
       link,
       imageUrl,
+      category,
+      clicks: 0,
       channelId
     });
     
-    console.log('Saving new message to database');
+    console.log('Saving new message with category:', category);
     return await newMessage.save();
   } catch (error) {
     console.error('Error saving message:', error);
@@ -190,7 +233,7 @@ async function saveMessage(message) {
  * @returns {Promise<Object>} - Paginated messages
  */
 async function getMessages(options = {}) {
-  const { limit = 10, cursor, channelId } = options;
+  const { limit = 10, cursor, channelId, category, search } = options;
   
   let query = {};
   if (channelId) {
@@ -199,6 +242,14 @@ async function getMessages(options = {}) {
   
   if (cursor) {
     query.date = { $lt: new Date(cursor) };
+  }
+  
+  if (category) {
+    query.category = category;
+  }
+  
+  if (search) {
+    query.text = { $regex: search, $options: 'i' };
   }
   
   const messages = await TelegramMessage.find(query)
@@ -216,13 +267,28 @@ async function getMessages(options = {}) {
   };
 }
 
+/**
+ * Increment the click count for a message
+ * @param {string} messageId - ID of the message
+ * @returns {Promise<Object>} - Updated message
+ */
+async function incrementClicks(messageId) {
+  return await TelegramMessage.findByIdAndUpdate(
+    messageId, 
+    { $inc: { clicks: 1 } },
+    { new: true }
+  );
+}
+
 module.exports = {
   saveMessage,
   getMessages,
+  incrementClicks,
   calculateHash,
   normalizeMessage,
   isRecentMessage,
   isLowContext,
   isProfitableProduct,
-  replaceLinksAndText
+  replaceLinksAndText,
+  detectCategory
 };

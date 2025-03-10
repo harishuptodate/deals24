@@ -6,6 +6,7 @@ export interface TelegramMessage {
   link?: string;
   imageUrl?: string;
   category?: string;
+  clicks?: number;
 }
 
 export interface ApiResponse {

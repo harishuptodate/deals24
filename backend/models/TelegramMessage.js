@@ -25,6 +25,13 @@ const telegramMessageSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  category: {
+    type: String
+  },
+  clicks: {
+    type: Number,
+    default: 0
+  },
   createdAt: {
     type: Date,
     default: Date.now
@@ -34,6 +41,7 @@ const telegramMessageSchema = new mongoose.Schema({
 // Index for faster querying
 telegramMessageSchema.index({ date: -1 });
 telegramMessageSchema.index({ messageId: 1, channelId: 1 }, { unique: true });
+telegramMessageSchema.index({ category: 1 });
 
 const TelegramMessage = mongoose.model('TelegramMessage', telegramMessageSchema);
 

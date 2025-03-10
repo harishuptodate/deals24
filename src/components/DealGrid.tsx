@@ -57,7 +57,6 @@ const DealGrid = () => {
     isFetchingNextPage,
     isLoading,
     isError,
-    error,
     refetch
   } = useInfiniteQuery({
     queryKey: ['telegram-messages', activeCategory, searchQuery],
@@ -66,8 +65,7 @@ const DealGrid = () => {
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     retry: 2,
     meta: {
-      onError: (err: any) => {
-        console.error('Error in query:', err);
+      onError: () => {
         toast({
           title: "Error",
           description: "Failed to load deals. Please try again later.",
@@ -99,7 +97,6 @@ const DealGrid = () => {
   }
 
   if (isError) {
-    console.error('Query error:', error);
     return (
       <div className="text-center py-16">
         <p className="text-apple-gray">Unable to load deals. Please try again later.</p>
@@ -141,19 +138,17 @@ const DealGrid = () => {
           {allMessages.map((message) => {
             // Skip rendering if message is undefined or doesn't have required fields
             if (!message || !message.text) {
-              console.warn('Skipping invalid message:', message);
               return null;
             }
             
             return (
               <DealCard
                 key={message.id}
-                title={message.text.split('\n')[0] || 'New Deal'} // First line as title
+                title={message.text.split('\n')[0] || 'New Deal'} 
                 description={message.text}
-                offerPrice="Check Price"
-                regularPrice="Limited Time"
                 link={message.link || '#'}
                 id={message.id}
+                imageUrl={message.imageUrl}
               />
             );
           })}

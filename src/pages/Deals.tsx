@@ -5,7 +5,7 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { getTelegramMessages } from '../services/api';
 import DealCard from '../components/DealCard';
 import { Button } from '@/components/ui/button';
-import { Loader2, Filter, X } from 'lucide-react';
+import { Loader2, X } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useSearchParams } from 'react-router-dom';
 
@@ -28,7 +28,6 @@ const Deals = () => {
     isLoading,
     isError,
     refetch,
-    error,
   } = useInfiniteQuery({
     queryKey: ['all-telegram-messages', activeCategory, searchQuery],
     queryFn: ({ pageParam }) => getTelegramMessages(
@@ -40,8 +39,7 @@ const Deals = () => {
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     retry: 2,
     meta: {
-      onError: (err: any) => {
-        console.error('Error in deals page query:', err);
+      onError: () => {
         toast({
           title: "Error",
           description: "Failed to load deals. Please try again later.",
@@ -116,7 +114,6 @@ const Deals = () => {
             {allMessages.map((message) => {
               // Skip rendering if message is undefined or doesn't have required fields
               if (!message || !message.text) {
-                console.warn('Skipping invalid message:', message);
                 return null;
               }
               
@@ -125,10 +122,9 @@ const Deals = () => {
                   key={message.id}
                   title={message.text.split('\n')[0] || 'New Deal'} 
                   description={message.text}
-                  offerPrice="Check Price"
-                  regularPrice="Limited Time"
                   link={message.link || '#'}
                   id={message.id}
+                  imageUrl={message.imageUrl}
                 />
               );
             })}

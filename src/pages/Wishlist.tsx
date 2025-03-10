@@ -1,15 +1,18 @@
 
 import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
-import { Heart, Trash2, Calendar, ExternalLink, X } from 'lucide-react';
+import { Heart, Trash2, Calendar, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from '@/components/ui/use-toast';
+import { trackMessageClick } from '../services/api';
 
 interface FavoriteItem {
   title: string;
   description: string;
   link: string;
+  imageUrl?: string;
+  id?: string;
   timestamp: string;
 }
 
@@ -59,13 +62,6 @@ const Wishlist = () => {
     setIsDialogOpen(true);
   };
 
-  // Extract all links from the description
-  const extractLinks = (text: string) => {
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    return text.match(urlRegex) || [];
-  };
-
-  // Truncate link for display
   const truncateLink = (url: string) => {
     try {
       const { hostname } = new URL(url);
@@ -75,7 +71,7 @@ const Wishlist = () => {
     }
   };
 
-  const recordClick = (title: string, clickedLink: string) => {
+  const recordClick = (title: string, clickedLink: string, itemId?: string) => {
     // Get existing click data or initialize new array
     const clickData = JSON.parse(localStorage.getItem('clickData') || '[]');
     
@@ -88,6 +84,40 @@ const Wishlist = () => {
     
     // Save back to localStorage
     localStorage.setItem('clickData', JSON.stringify(clickData));
+    
+    // Track click to backend if ID is available
+    if (itemId) {
+      trackMessageClick(itemId).catch(err => 
+        console.error('Failed to track click for message', itemId, err)
+      );
+    }
+  };
+
+  // Function to make links in text clickable
+  const makeLinksClickable = (text: string, itemId?: string) => {
+    if (!text) return '';
+    
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = text.split(urlRegex);
+    
+    return parts.map((part, index) => {
+      if (part.match(urlRegex)) {
+        return (
+          <a
+            key={index}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => recordClick(selectedItem?.title || '', part, itemId)}
+            className="text-blue-600 hover:underline break-all inline-flex items-center gap-1"
+          >
+            {truncateLink(part)}
+            <ExternalLink size={12} />
+          </a>
+        );
+      }
+      return part;
+    });
   };
 
   return (
@@ -135,6 +165,19 @@ const Wishlist = () => {
                   </button>
                 </div>
                 
+                {item.imageUrl && (
+                  <div className="w-full h-40 overflow-hidden rounded-lg mb-4">
+                    <img 
+                      src={item.imageUrl} 
+                      alt={item.title} 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                  </div>
+                )}
+                
                 <p className="text-sm text-apple-gray mb-4 line-clamp-3">
                   {item.description}
                 </p>
@@ -171,25 +214,21 @@ const Wishlist = () => {
                 </DialogDescription>
               </DialogHeader>
               
-              <div className="mt-4 text-sm whitespace-pre-line">
-                {selectedItem.description}
-              </div>
+              {selectedItem.imageUrl && (
+                <div className="w-full h-48 overflow-hidden rounded-lg mt-2">
+                  <img 
+                    src={selectedItem.imageUrl} 
+                    alt={selectedItem.title} 
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                </div>
+              )}
               
-              <div className="mt-6 space-y-3">
-                <h4 className="font-medium">Available Links:</h4>
-                {extractLinks(selectedItem.description).map((link, index) => (
-                  <a
-                    key={index}
-                    href={link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => recordClick(selectedItem.title, link)}
-                    className="flex items-center gap-2 p-3 text-sm rounded-md bg-gray-100 hover:bg-gray-200 transition-colors"
-                  >
-                    <ExternalLink size={16} />
-                    <span className="truncate flex-1">{truncateLink(link)}</span>
-                  </a>
-                ))}
+              <div className="mt-4 text-sm whitespace-pre-line">
+                {makeLinksClickable(selectedItem.description, selectedItem.id)}
               </div>
 
               <div className="mt-4 flex justify-end">

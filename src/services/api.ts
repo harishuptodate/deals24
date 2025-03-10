@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 import { TelegramResponse, TelegramMessage } from '../types/telegram';
 
@@ -154,6 +153,32 @@ export const getTelegramMessageById = async (id: string): Promise<TelegramMessag
 // Search Telegram messages
 export const searchTelegramMessages = async (query: string): Promise<TelegramResponse> => {
   return getTelegramMessages(undefined, undefined, query);
+};
+
+// Get messages by category
+export const getCategoryMessages = async (category: string, cursor?: string): Promise<TelegramResponse> => {
+  try {
+    const response = await api.get(`/categories/${category}`, {
+      params: {
+        cursor,
+        limit: '12'
+      }
+    });
+    
+    return response.data;
+  } catch (error) {
+    console.error(`Failed to fetch messages for category ${category}:`, error);
+    return { data: [], hasMore: false, nextCursor: undefined };
+  }
+};
+
+// Track click on a message
+export const trackMessageClick = async (messageId: string): Promise<void> => {
+  try {
+    await api.post(`/telegram/messages/${messageId}/click`);
+  } catch (error) {
+    console.error('Failed to track message click:', error);
+  }
 };
 
 export default api;
