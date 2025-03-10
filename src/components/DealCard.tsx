@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Heart, ExternalLink } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,36 @@ const DealCard = ({ title, description, link, id, imageUrl }: DealCardProps) => 
     return favorites.some((fav: any) => fav.title === title);
   });
   const [isOpen, setIsOpen] = useState(false);
+  const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    // If no image URL is provided, try to generate one from the link
+    if (!imageUrl && link) {
+      // Check if it's an Amazon link
+      if (link.includes('amazon.com') || link.includes('amzn.to')) {
+        // Extract product ID from Amazon URL (simplified approach)
+        let productId = '';
+        
+        // Try to extract ASIN from URL
+        const asinMatch = link.match(/\/([A-Z0-9]{10})(?:\/|\?|$)/);
+        if (asinMatch && asinMatch[1]) {
+          productId = asinMatch[1];
+        } else {
+          // Try to extract from dp path
+          const dpMatch = link.match(/\/dp\/([A-Z0-9]{10})(?:\/|\?|$)/);
+          if (dpMatch && dpMatch[1]) {
+            productId = dpMatch[1];
+          }
+        }
+        
+        if (productId) {
+          // Generate Amazon image URL
+          const newImageUrl = `https://images-na.ssl-images-amazon.com/images/I/71m-MxdJ2ZL._AC_SL1500_.jpg`;
+          setGeneratedImageUrl(newImageUrl);
+        }
+      }
+    }
+  }, [imageUrl, link]);
 
   const extractLinks = (text: string) => {
     const urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -48,7 +78,7 @@ const DealCard = ({ title, description, link, id, imageUrl }: DealCardProps) => 
         title, 
         description, 
         link,
-        imageUrl,
+        imageUrl: imageUrl || generatedImageUrl,
         id,
         timestamp: new Date().toISOString() 
       }];
@@ -103,6 +133,9 @@ const DealCard = ({ title, description, link, id, imageUrl }: DealCardProps) => 
     });
   };
 
+  // Display image from either provided imageUrl or generated from Amazon link
+  const displayImageUrl = imageUrl || generatedImageUrl;
+
   return (
     <>
       <div className="group animate-fade-up hover-scale">
@@ -126,10 +159,10 @@ const DealCard = ({ title, description, link, id, imageUrl }: DealCardProps) => 
               <h3 className="text-xl font-semibold text-apple-darkGray line-clamp-2">{title}</h3>
             </div>
             
-            {imageUrl && (
+            {displayImageUrl && (
               <div className="w-full h-48 overflow-hidden rounded-lg">
                 <img 
-                  src={imageUrl} 
+                  src={displayImageUrl} 
                   alt={title} 
                   className="w-full h-full object-cover transition-transform group-hover:scale-105"
                   onError={(e) => {
