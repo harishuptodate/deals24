@@ -33,18 +33,21 @@ const DealCard = ({ title, description, link, id, imageUrl }: DealCardProps) => 
         const asinMatch = link.match(/\/([A-Z0-9]{10})(?:\/|\?|$)/);
         if (asinMatch && asinMatch[1]) {
           productId = asinMatch[1];
+          // Generate Amazon image URL based on ASIN
+          const newImageUrl = `https://images-na.ssl-images-amazon.com/images/P/${productId}.jpg`;
+          setGeneratedImageUrl(newImageUrl);
         } else {
           // Try to extract from dp path
           const dpMatch = link.match(/\/dp\/([A-Z0-9]{10})(?:\/|\?|$)/);
           if (dpMatch && dpMatch[1]) {
             productId = dpMatch[1];
+            // Generate Amazon image URL based on dp path
+            const newImageUrl = `https://images-na.ssl-images-amazon.com/images/P/${productId}.jpg`;
+            setGeneratedImageUrl(newImageUrl);
+          } else {
+            // Use a fallback image for Amazon products when ASIN can't be extracted
+            setGeneratedImageUrl('https://m.media-amazon.com/images/G/01/social_share_web._CB633270597_.png');
           }
-        }
-        
-        if (productId) {
-          // Generate Amazon image URL
-          const newImageUrl = `https://images-na.ssl-images-amazon.com/images/I/71m-MxdJ2ZL._AC_SL1500_.jpg`;
-          setGeneratedImageUrl(newImageUrl);
         }
       }
     }
@@ -166,7 +169,12 @@ const DealCard = ({ title, description, link, id, imageUrl }: DealCardProps) => 
                   alt={title} 
                   className="w-full h-full object-cover transition-transform group-hover:scale-105"
                   onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = 'none';
+                    // If primary image fails, try a fallback
+                    if (link && (link.includes('amazon.com') || link.includes('amzn.to'))) {
+                      (e.target as HTMLImageElement).src = 'https://m.media-amazon.com/images/G/01/social_share_web._CB633270597_.png';
+                    } else {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }
                   }}
                 />
               </div>

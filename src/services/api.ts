@@ -1,3 +1,4 @@
+
 import axios from 'axios';
 import { TelegramResponse, TelegramMessage } from '../types/telegram';
 
@@ -178,6 +179,32 @@ export const trackMessageClick = async (messageId: string): Promise<void> => {
     await api.post(`/telegram/messages/${messageId}/click`);
   } catch (error) {
     console.error('Failed to track message click:', error);
+  }
+};
+
+// Get click analytics data
+export const getClickAnalytics = async (period: string = 'day'): Promise<any> => {
+  try {
+    const response = await api.get('/telegram/analytics/clicks', {
+      params: { period }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Failed to fetch click analytics:', error);
+    return { clicksData: [], topPerforming: [] };
+  }
+};
+
+// Get top performing deals
+export const getTopPerformingDeals = async (limit: number = 5): Promise<TelegramMessage[]> => {
+  try {
+    const response = await api.get('/telegram/analytics/top-performing', {
+      params: { limit }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Failed to fetch top performing deals:', error);
+    return [];
   }
 };
 
