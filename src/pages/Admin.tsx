@@ -47,8 +47,12 @@ const Admin = () => {
                   data: clicksData,
                   categories: {
                     clicks: {
-                      label: "Clicks",
-                      color: "#8884d8"
+                      label: "Daily Clicks",
+                      color: "#8884d8",
+                      theme: {
+                        light: "#8884d8",
+                        dark: "#8884d8"
+                      }
                     }
                   }
                 }}
@@ -84,8 +88,12 @@ const Admin = () => {
                   data: categoryData,
                   categories: {
                     value: {
-                      label: "Value",
-                      color: "#8884d8"
+                      label: "Distribution",
+                      color: "#8884d8",
+                      theme: {
+                        light: "#8884d8",
+                        dark: "#8884d8"
+                      }
                     }
                   }
                 }}
