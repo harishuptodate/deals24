@@ -44,12 +44,10 @@ const Admin = () => {
               <ChartContainer
                 className="h-[300px]"
                 config={{
-                  // Fix: Properly structure the config object
                   data: clicksData,
                   categories: {
                     clicks: {
                       label: "Daily Clicks",
-                      // Use theme object for colors
                       theme: {
                         light: "#8884d8",
                         dark: "#9b87f5"
@@ -86,12 +84,10 @@ const Admin = () => {
               <ChartContainer
                 className="h-[300px]"
                 config={{
-                  // Fix: Properly structure the config object
                   data: categoryData,
                   categories: {
                     value: {
                       label: "Distribution",
-                      // Use theme object for colors
                       theme: {
                         light: "#7E69AB",
                         dark: "#6E59A5"
