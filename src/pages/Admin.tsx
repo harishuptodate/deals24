@@ -44,14 +44,15 @@ const Admin = () => {
               <ChartContainer
                 className="h-[300px]"
                 config={{
+                  // Fix: Properly structure the config object
                   data: clicksData,
                   categories: {
                     clicks: {
                       label: "Daily Clicks",
-                      color: "#8884d8",
+                      // Use theme object for colors
                       theme: {
                         light: "#8884d8",
-                        dark: "#8884d8"
+                        dark: "#9b87f5"
                       }
                     }
                   }
@@ -85,14 +86,15 @@ const Admin = () => {
               <ChartContainer
                 className="h-[300px]"
                 config={{
+                  // Fix: Properly structure the config object
                   data: categoryData,
                   categories: {
                     value: {
                       label: "Distribution",
-                      color: "#8884d8",
+                      // Use theme object for colors
                       theme: {
-                        light: "#8884d8",
-                        dark: "#8884d8"
+                        light: "#7E69AB",
+                        dark: "#6E59A5"
                       }
                     }
                   }
@@ -104,7 +106,7 @@ const Admin = () => {
                     <XAxis dataKey="name" />
                     <YAxis />
                     <Tooltip />
-                    <Bar dataKey="value" fill="#8884d8" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="value" fill="#7E69AB" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </ChartContainer>
