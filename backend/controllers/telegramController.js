@@ -1,5 +1,36 @@
+
 const TelegramMessage = require('../models/TelegramMessage');
 const { detectCategory } = require('../utils/categoryDetector');
+const { saveMessage } = require('../services/telegramService');
+
+// Handle Telegram webhook updates
+exports.handleTelegramWebhook = async (req, res) => {
+  try {
+    console.log('Received webhook update:', JSON.stringify(req.body));
+    
+    const update = req.body;
+    
+    // Process the message
+    if (update.message || update.channel_post) {
+      const message = update.message || update.channel_post;
+      
+      const result = await saveMessage(message);
+      
+      if (result) {
+        console.log('Message saved successfully:', result.id);
+      } else {
+        console.log('Message was not saved (filtered out by criteria)');
+      }
+    }
+    
+    // Always return 200 OK to Telegram
+    res.status(200).send('OK');
+  } catch (error) {
+    console.error('Error handling webhook:', error);
+    // Always return 200 OK to Telegram even if there's an error
+    res.status(200).send('OK');
+  }
+};
 
 // Get all messages with pagination
 exports.getMessages = async (req, res) => {
@@ -185,7 +216,7 @@ exports.getTopPerforming = async (req, res) => {
   }
 };
 
-// Export for deleting a message by ID
+// Delete a message by ID
 exports.deleteMessage = async (req, res) => {
   try {
     const { id } = req.params;

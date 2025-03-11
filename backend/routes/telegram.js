@@ -1,11 +1,12 @@
+
 const express = require('express');
 const router = express.Router();
 const TelegramMessage = require('../models/TelegramMessage');
-const { handleTelegramWebhook } = require('../controllers/telegramController');
+const telegramController = require('../controllers/telegramController');
 const { getMessages, incrementClicks } = require('../services/telegramService');
 
 // Webhook endpoint for Telegram updates
-router.post('/webhook', handleTelegramWebhook);
+router.post('/webhook', telegramController.handleTelegramWebhook);
 
 // Get paginated messages with support for category and search
 router.get('/messages', async (req, res) => {
@@ -108,5 +109,11 @@ router.get('/search', async (req, res) => {
 
 // Route to delete a message by ID
 router.delete('/messages/:id', telegramController.deleteMessage);
+
+// Get analytics for click tracking
+router.get('/analytics/clicks', telegramController.getClickAnalytics);
+
+// Get top performing messages
+router.get('/analytics/top-performing', telegramController.getTopPerforming);
 
 module.exports = router;
