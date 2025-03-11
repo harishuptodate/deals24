@@ -211,11 +211,38 @@ export const getTopPerformingDeals = async (limit: number = 5): Promise<Telegram
 // Delete a product/message
 export const deleteProduct = async (messageId: string): Promise<boolean> => {
   try {
-    await api.delete(`/telegram/messages/${messageId}`);
-    return true;
+    const response = await api.delete(`/telegram/messages/${messageId}`);
+    console.log('Delete product response:', response);
+    return response.status === 200;
   } catch (error) {
     console.error('Failed to delete message:', error);
     return false;
+  }
+};
+
+// Get Amazon product image URL
+export const getAmazonProductImage = async (productUrl: string): Promise<string | null> => {
+  try {
+    const response = await api.get('/amazon/image', {
+      params: { url: productUrl }
+    });
+    return response.data.imageUrl;
+  } catch (error) {
+    console.error('Failed to fetch Amazon product image:', error);
+    return null;
+  }
+};
+
+// Get Amazon product details
+export const getAmazonProductDetails = async (productUrl: string): Promise<any | null> => {
+  try {
+    const response = await api.get('/amazon/details', {
+      params: { url: productUrl }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Failed to fetch Amazon product details:', error);
+    return null;
   }
 };
 

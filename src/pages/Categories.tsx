@@ -42,6 +42,15 @@ const Categories = () => {
     navigate(`/deals?category=${slug}`);
   };
 
+  const handleSubCategoryClick = (subcategory: string) => {
+    navigate(`/deals?search=${encodeURIComponent(subcategory)}`);
+  };
+
+  const popularSubCategories = [
+    'Smart TVs', '4K TVs', 'Gaming Laptops', 'Ultrabooks', 'iPhones', 'Samsung Galaxy', 
+    'Washing Machines', 'Refrigerators', 'Air Conditioners', 'Headphones', 'T-shirts', 'Watches'
+  ];
+
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
@@ -68,12 +77,11 @@ const Categories = () => {
         <div className="mt-16">
           <h2 className="text-2xl font-semibold text-gradient mb-6">Popular Sub-categories</h2>
           <div className="flex flex-wrap gap-3">
-            {['Smart TVs', '4K TVs', 'Gaming Laptops', 'Ultrabooks', 'iPhones', 'Samsung Galaxy', 
-              'Washing Machines', 'Refrigerators', 'Air Conditioners', 'Headphones', 'T-shirts', 'Watches'].map((tag) => (
+            {popularSubCategories.map((tag) => (
               <a 
-                href={`/deals?category=${tag.toLowerCase().replace(' ', '-')}`}
+                onClick={() => handleSubCategoryClick(tag)}
                 key={tag} 
-                className="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-full text-sm text-apple-darkGray transition-colors"
+                className="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-full text-sm text-apple-darkGray transition-colors cursor-pointer"
               >
                 {tag}
               </a>

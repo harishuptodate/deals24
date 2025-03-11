@@ -1,9 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Heart, ExternalLink } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { trackMessageClick } from '../services/api';
+import { trackMessageClick, getAmazonProductImage } from '../services/api';
 
 interface DealCardProps {
   title: string;
@@ -19,6 +19,25 @@ const DealCard = ({ title, description, link, id, imageUrl }: DealCardProps) => 
     return favorites.some((fav: any) => fav.title === title);
   });
   const [isOpen, setIsOpen] = useState(false);
+  const [productImage, setProductImage] = useState<string | null>(imageUrl || null);
+
+  // Fetch Amazon product image if the link is from Amazon and no image is provided
+  useEffect(() => {
+    const fetchAmazonImage = async () => {
+      if (!imageUrl && link && link.includes('amazon')) {
+        try {
+          const fetchedImageUrl = await getAmazonProductImage(link);
+          if (fetchedImageUrl) {
+            setProductImage(fetchedImageUrl);
+          }
+        } catch (error) {
+          console.error('Failed to fetch Amazon product image:', error);
+        }
+      }
+    };
+
+    fetchAmazonImage();
+  }, [imageUrl, link]);
 
   const extractLinks = (text: string) => {
     const urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -48,7 +67,7 @@ const DealCard = ({ title, description, link, id, imageUrl }: DealCardProps) => 
         title, 
         description, 
         link,
-        imageUrl,
+        imageUrl: productImage,
         id,
         timestamp: new Date().toISOString() 
       }];
@@ -126,10 +145,10 @@ const DealCard = ({ title, description, link, id, imageUrl }: DealCardProps) => 
               <h3 className="text-xl font-semibold text-apple-darkGray line-clamp-2">{title}</h3>
             </div>
             
-            {imageUrl && (
+            {productImage && (
               <div className="w-full h-48 overflow-hidden rounded-lg">
                 <img 
-                  src={imageUrl} 
+                  src={productImage} 
                   alt={title} 
                   className="w-full h-full object-cover transition-transform group-hover:scale-105"
                   onError={(e) => {

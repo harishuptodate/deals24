@@ -1,4 +1,3 @@
-
 const express = require('express');
 const router = express.Router();
 const TelegramMessage = require('../models/TelegramMessage');
@@ -106,5 +105,8 @@ router.get('/search', async (req, res) => {
     res.status(500).json({ error: 'Failed to search messages' });
   }
 });
+
+// Route to delete a message by ID
+router.delete('/messages/:id', telegramController.deleteMessage);
 
 module.exports = router;
