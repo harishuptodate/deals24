@@ -191,7 +191,7 @@ export const getClickAnalytics = async (period: string = 'day'): Promise<any> =>
     return response.data;
   } catch (error) {
     console.error('Failed to fetch click analytics:', error);
-    return { clicksData: [], topPerforming: [] };
+    return { clicksData: [], totalClicks: 0, totalMessages: 0 };
   }
 };
 
@@ -205,6 +205,17 @@ export const getTopPerformingDeals = async (limit: number = 5): Promise<Telegram
   } catch (error) {
     console.error('Failed to fetch top performing deals:', error);
     return [];
+  }
+};
+
+// Delete a product/message
+export const deleteProduct = async (messageId: string): Promise<boolean> => {
+  try {
+    await api.delete(`/telegram/messages/${messageId}`);
+    return true;
+  } catch (error) {
+    console.error('Failed to delete message:', error);
+    return false;
   }
 };
 

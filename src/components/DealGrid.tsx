@@ -4,16 +4,18 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { getTelegramMessages } from '../services/api';
 import DealCard from './DealCard';
 import { Button } from '@/components/ui/button';
-import { Loader2, Filter } from 'lucide-react';
+import { Loader2, Filter, Trash2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { deleteProduct } from '../services/api';
 
 interface CategoryFilterProps {
   onSelect: (category: string | null) => void;
   current: string | null;
+  onSubCategorySelect: (subCategory: string) => void;
 }
 
-const CategoryFilter = ({ onSelect, current }: CategoryFilterProps) => {
+const CategoryFilter = ({ onSelect, current, onSubCategorySelect }: CategoryFilterProps) => {
   const categories = [
     { name: 'All', slug: null },
     { name: 'Electronics & Home', slug: 'electronics-home' },
@@ -23,22 +25,47 @@ const CategoryFilter = ({ onSelect, current }: CategoryFilterProps) => {
     { name: 'Fashion', slug: 'fashion' }
   ];
 
+  // Add popular subcategories for searching
+  const subCategories = {
+    'electronics-home': ['TV', 'Air Conditioner', 'Refrigerator', 'Washing Machine'],
+    'laptops': ['Gaming Laptop', 'MacBook', 'ThinkPad', 'Ultrabook'],
+    'mobile-phones': ['iPhone', 'Samsung', 'OnePlus', 'Pixel'],
+    'gadgets-accessories': ['Headphones', 'Charger', 'Power Bank', 'Smartwatch'],
+    'fashion': ['Shoes', 'T-Shirt', 'Watch', 'Backpack']
+  };
+
   return (
-    <div className="flex items-center mb-6 overflow-x-auto pb-2 gap-2 max-w-full">
-      <Filter size={16} className="text-apple-gray mr-1 flex-shrink-0" />
-      {categories.map((category) => (
-        <button
-          key={category.name}
-          onClick={() => onSelect(category.slug)}
-          className={`whitespace-nowrap px-3 py-1.5 rounded-full text-sm font-medium transition-colors flex-shrink-0 ${
-            (current === category.slug) || (current === null && category.slug === null)
-              ? 'bg-apple-darkGray text-white'
-              : 'bg-gray-100 text-apple-gray hover:bg-gray-200'
-          }`}
-        >
-          {category.name}
-        </button>
-      ))}
+    <div className="space-y-4">
+      <div className="flex items-center mb-6 overflow-x-auto pb-2 gap-2 max-w-full">
+        <Filter size={16} className="text-apple-gray mr-1 flex-shrink-0" />
+        {categories.map((category) => (
+          <button
+            key={category.name}
+            onClick={() => onSelect(category.slug)}
+            className={`whitespace-nowrap px-3 py-1.5 rounded-full text-sm font-medium transition-colors flex-shrink-0 ${
+              (current === category.slug) || (current === null && category.slug === null)
+                ? 'bg-apple-darkGray text-white'
+                : 'bg-gray-100 text-apple-gray hover:bg-gray-200'
+            }`}
+          >
+            {category.name}
+          </button>
+        ))}
+      </div>
+
+      {current && subCategories[current as keyof typeof subCategories] && (
+        <div className="flex flex-wrap gap-2 mb-4">
+          {subCategories[current as keyof typeof subCategories].map((subCat) => (
+            <button
+              key={subCat}
+              onClick={() => onSubCategorySelect(subCat)}
+              className="bg-gray-100 hover:bg-gray-200 text-apple-gray text-xs px-3 py-1.5 rounded-full"
+            >
+              {subCat}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
@@ -46,6 +73,7 @@ const CategoryFilter = ({ onSelect, current }: CategoryFilterProps) => {
 const DealGrid = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const searchQuery = searchParams.get('search');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
@@ -86,6 +114,30 @@ const DealGrid = () => {
 
   const navigateToCategory = () => {
     navigate('/categories');
+  };
+
+  const handleSubCategorySelect = (subCategory: string) => {
+    navigate(`/deals?search=${encodeURIComponent(subCategory)}`);
+  };
+
+  const handleDeleteProduct = async (id: string) => {
+    if (window.confirm('Are you sure you want to delete this deal?')) {
+      const success = await deleteProduct(id);
+      if (success) {
+        toast({
+          title: 'Success',
+          description: 'Deal has been deleted successfully',
+          variant: 'default',
+        });
+        refetch();
+      } else {
+        toast({
+          title: 'Error',
+          description: 'Failed to delete deal',
+          variant: 'destructive',
+        });
+      }
+    }
   };
 
   if (isLoading) {
@@ -132,7 +184,11 @@ const DealGrid = () => {
           </div>
         </div>
         
-        <CategoryFilter onSelect={handleCategoryChange} current={activeCategory} />
+        <CategoryFilter 
+          onSelect={handleCategoryChange} 
+          current={activeCategory} 
+          onSubCategorySelect={handleSubCategorySelect}
+        />
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {allMessages.map((message) => {
@@ -142,14 +198,23 @@ const DealGrid = () => {
             }
             
             return (
-              <DealCard
-                key={message.id}
-                title={message.text.split('\n')[0] || 'New Deal'} 
-                description={message.text}
-                link={message.link || '#'}
-                id={message.id}
-                imageUrl={message.imageUrl}
-              />
+              <div key={message.id} className="relative">
+                <button 
+                  onClick={() => handleDeleteProduct(message.id || '')}
+                  className="absolute top-2 right-2 z-10 bg-white rounded-full p-1 shadow-md opacity-70 hover:opacity-100 transition-opacity"
+                  title="Delete deal"
+                >
+                  <Trash2 size={16} className="text-red-500" />
+                </button>
+                
+                <DealCard
+                  title={message.text.split('\n')[0] || 'New Deal'} 
+                  description={message.text}
+                  link={message.link || '#'}
+                  id={message.id}
+                  imageUrl={message.imageUrl}
+                />
+              </div>
             );
           })}
         </div>

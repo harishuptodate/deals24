@@ -2,10 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { getTelegramMessages } from '../services/api';
+import { getTelegramMessages, deleteProduct } from '../services/api';
 import DealCard from '../components/DealCard';
 import { Button } from '@/components/ui/button';
-import { Loader2, X } from 'lucide-react';
+import { Loader2, X, Trash2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useSearchParams } from 'react-router-dom';
 
@@ -55,6 +55,26 @@ const Deals = () => {
     setActiveCategory(null);
     // Force refetch with updated query params
     setTimeout(() => refetch(), 0);
+  };
+
+  const handleDeleteProduct = async (id: string) => {
+    if (window.confirm('Are you sure you want to delete this deal?')) {
+      const success = await deleteProduct(id);
+      if (success) {
+        toast({
+          title: 'Success',
+          description: 'Deal has been deleted successfully',
+          variant: 'default',
+        });
+        refetch();
+      } else {
+        toast({
+          title: 'Error',
+          description: 'Failed to delete deal',
+          variant: 'destructive',
+        });
+      }
+    }
   };
 
   let pageTitle = "Latest Deals";
@@ -118,14 +138,24 @@ const Deals = () => {
               }
               
               return (
-                <DealCard
-                  key={message.id}
-                  title={message.text.split('\n')[0] || 'New Deal'} 
-                  description={message.text}
-                  link={message.link || '#'}
-                  id={message.id}
-                  imageUrl={message.imageUrl}
-                />
+                <div key={message.id} className="relative">
+                  <button 
+                    onClick={() => handleDeleteProduct(message.id || '')}
+                    className="absolute top-2 right-2 z-10 bg-white rounded-full p-1 shadow-md opacity-70 hover:opacity-100 transition-opacity"
+                    title="Delete deal"
+                  >
+                    <Trash2 size={16} className="text-red-500" />
+                  </button>
+                  
+                  <DealCard
+                    key={message.id}
+                    title={message.text.split('\n')[0] || 'New Deal'} 
+                    description={message.text}
+                    link={message.link || '#'}
+                    id={message.id}
+                    imageUrl={message.imageUrl}
+                  />
+                </div>
               );
             })}
           </div>

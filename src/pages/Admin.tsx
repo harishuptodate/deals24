@@ -16,8 +16,6 @@ import {
 	YAxis,
 	Tooltip,
 	Line,
-	BarChart,
-	Bar,
 } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { getClickAnalytics, getTopPerformingDeals } from '../services/api';
@@ -87,9 +85,17 @@ const Admin = () => {
 			);
 		}
 
+		// Create a Map to ensure uniqueness by ID
+		const uniqueDeals = new Map();
+		topDeals.forEach(deal => {
+			if (!uniqueDeals.has(deal.id)) {
+				uniqueDeals.set(deal.id, deal);
+			}
+		});
+
 		return (
 			<div className="space-y-4">
-				{topDeals.map((deal, index) => (
+				{Array.from(uniqueDeals.values()).map((deal) => (
 					<div key={deal.id} className="flex items-center justify-between p-2 border-b">
 						<div className="flex-1">
 							<p className="font-medium truncate">{deal.text?.substring(0, 50)}...</p>
@@ -113,25 +119,13 @@ const Admin = () => {
 				</div>
 
 				{/* Stats Overview */}
-				<div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+				<div className="grid grid-cols-1 sm:grid-cols-1 gap-6 mb-8">
 					<Card>
 						<CardContent className="pt-6">
 							<div className="flex flex-col">
 								<span className="text-sm text-muted-foreground">Total Messages</span>
 								<div className="flex items-baseline justify-between">
 									<span className="text-3xl font-bold">{totalMessages}</span>
-									<span className="text-sm font-medium text-green-500">All time</span>
-								</div>
-							</div>
-						</CardContent>
-					</Card>
-
-					<Card>
-						<CardContent className="pt-6">
-							<div className="flex flex-col">
-								<span className="text-sm text-muted-foreground">Deal Clicks</span>
-								<div className="flex items-baseline justify-between">
-									<span className="text-3xl font-bold">{totalClicks}</span>
 									<span className="text-sm font-medium text-green-500">All time</span>
 								</div>
 							</div>
