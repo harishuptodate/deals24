@@ -4,6 +4,7 @@ import { Heart, ExternalLink } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { trackMessageClick, getAmazonProductImage } from '../services/api';
+import { useToast } from "@/components/ui/use-toast";
 
 interface DealCardProps {
   title: string;
@@ -14,30 +15,48 @@ interface DealCardProps {
 }
 
 const DealCard = ({ title, description, link, id, imageUrl }: DealCardProps) => {
+  const { toast } = useToast();
   const [isFavorite, setIsFavorite] = useState(() => {
     const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
     return favorites.some((fav: any) => fav.title === title);
   });
   const [isOpen, setIsOpen] = useState(false);
   const [productImage, setProductImage] = useState<string | null>(imageUrl || null);
+  const [isImageLoading, setIsImageLoading] = useState<boolean>(false);
+  const [imageError, setImageError] = useState<boolean>(false);
 
   // Fetch Amazon product image if the link is from Amazon and no image is provided
   useEffect(() => {
     const fetchAmazonImage = async () => {
-      if (!imageUrl && link && link.includes('amazon')) {
+      if (!imageUrl && link && link.includes('amazon') && !productImage && !imageError) {
         try {
+          setIsImageLoading(true);
+          console.log('Fetching Amazon product image for:', link);
           const fetchedImageUrl = await getAmazonProductImage(link);
+          
           if (fetchedImageUrl) {
+            console.log('Successfully fetched image:', fetchedImageUrl);
             setProductImage(fetchedImageUrl);
+          } else {
+            console.log('No image URL returned from Amazon API');
+            setImageError(true);
           }
         } catch (error) {
           console.error('Failed to fetch Amazon product image:', error);
+          setImageError(true);
+          toast({
+            title: "Image Error",
+            description: "Could not load product image",
+            variant: "destructive",
+          });
+        } finally {
+          setIsImageLoading(false);
         }
       }
     };
 
     fetchAmazonImage();
-  }, [imageUrl, link]);
+  }, [imageUrl, link, productImage, imageError, toast]);
 
   const extractLinks = (text: string) => {
     const urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -89,6 +108,7 @@ const DealCard = ({ title, description, link, id, imageUrl }: DealCardProps) => 
     
     // Track click to backend if ID is available
     if (id) {
+      console.log(`Tracking click for message ID: ${id}`);
       trackMessageClick(id).catch(err => 
         console.error('Failed to track click for message', id, err)
       );
@@ -145,18 +165,24 @@ const DealCard = ({ title, description, link, id, imageUrl }: DealCardProps) => 
               <h3 className="text-xl font-semibold text-apple-darkGray line-clamp-2">{title}</h3>
             </div>
             
-            {productImage && (
+            {isImageLoading ? (
+              <div className="w-full h-48 flex items-center justify-center bg-gray-100 rounded-lg">
+                <div className="w-8 h-8 border-4 border-t-apple-darkGray rounded-full animate-spin"></div>
+              </div>
+            ) : productImage && !imageError ? (
               <div className="w-full h-48 overflow-hidden rounded-lg">
                 <img 
                   src={productImage} 
                   alt={title} 
                   className="w-full h-full object-cover transition-transform group-hover:scale-105"
                   onError={(e) => {
+                    console.error('Image failed to load:', productImage);
+                    setImageError(true);
                     (e.target as HTMLImageElement).style.display = 'none';
                   }}
                 />
               </div>
-            )}
+            ) : null}
 
             <div className="h-20 overflow-hidden">
               <p className="text-sm text-apple-gray line-clamp-4">

@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 import { TelegramResponse, TelegramMessage } from '../types/telegram';
 
@@ -182,40 +181,18 @@ export const trackMessageClick = async (messageId: string): Promise<void> => {
   }
 };
 
-// Get click analytics data
-export const getClickAnalytics = async (period: string = 'day'): Promise<any> => {
-  try {
-    const response = await api.get('/telegram/analytics/clicks', {
-      params: { period }
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Failed to fetch click analytics:', error);
-    return { clicksData: [], totalClicks: 0, totalMessages: 0 };
-  }
-};
-
-// Get top performing deals
-export const getTopPerformingDeals = async (limit: number = 5): Promise<TelegramMessage[]> => {
-  try {
-    const response = await api.get('/telegram/analytics/top-performing', {
-      params: { limit }
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Failed to fetch top performing deals:', error);
-    return [];
-  }
-};
-
 // Delete a product/message
 export const deleteProduct = async (messageId: string): Promise<boolean> => {
   try {
+    console.log(`Attempting to delete message with ID: ${messageId}`);
     const response = await api.delete(`/telegram/messages/${messageId}`);
     console.log('Delete product response:', response);
     return response.status === 200;
   } catch (error) {
     console.error('Failed to delete message:', error);
+    if (error.response) {
+      console.error('Error response:', error.response.status, error.response.data);
+    }
     return false;
   }
 };
@@ -223,12 +200,17 @@ export const deleteProduct = async (messageId: string): Promise<boolean> => {
 // Get Amazon product image URL
 export const getAmazonProductImage = async (productUrl: string): Promise<string | null> => {
   try {
+    console.log('Fetching Amazon image for URL:', productUrl);
     const response = await api.get('/amazon/image', {
       params: { url: productUrl }
     });
+    console.log('Amazon image API response:', response.data);
     return response.data.imageUrl;
   } catch (error) {
     console.error('Failed to fetch Amazon product image:', error);
+    if (error.response) {
+      console.error('Error response:', error.response.status, error.response.data);
+    }
     return null;
   }
 };

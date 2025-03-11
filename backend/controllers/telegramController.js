@@ -1,4 +1,3 @@
-
 const TelegramMessage = require('../models/TelegramMessage');
 const { detectCategory } = require('../utils/categoryDetector');
 const { saveMessage } = require('../services/telegramService');
@@ -221,19 +220,25 @@ exports.deleteMessage = async (req, res) => {
   try {
     const { id } = req.params;
     
-    if (!id) {
-      return res.status(400).json({ error: 'Message ID is required' });
-    }
+    console.log(`Attempting to delete message with ID: ${id}`);
     
+    // Verify that id is provided
+    if (!id) {
+      return res.status(400).json({ success: false, message: 'Message ID is required' });
+    }
+
+    // Find and delete the message
     const result = await TelegramMessage.findByIdAndDelete(id);
     
     if (!result) {
-      return res.status(404).json({ error: 'Message not found' });
+      console.log(`Message with ID ${id} not found`);
+      return res.status(404).json({ success: false, message: 'Message not found' });
     }
     
-    return res.status(200).json({ message: 'Message deleted successfully' });
+    console.log(`Successfully deleted message with ID: ${id}`);
+    return res.status(200).json({ success: true, message: 'Message deleted successfully' });
   } catch (error) {
     console.error('Error deleting message:', error);
-    return res.status(500).json({ error: 'Failed to delete message' });
+    return res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 };

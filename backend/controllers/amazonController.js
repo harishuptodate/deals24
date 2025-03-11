@@ -1,52 +1,125 @@
 
+// This file should interact with the Amazon Product Advertising API
 const amazonService = require('../services/amazonService');
 
-// Get product image by URL
+// Get product image URL
 exports.getProductImage = async (req, res) => {
   try {
     const { url } = req.query;
     
     if (!url) {
-      return res.status(400).json({ error: 'URL parameter is required' });
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Product URL is required' 
+      });
     }
     
-    const imageUrl = await amazonService.getProductImageUrl(url);
+    console.log(`Fetching image for Amazon product URL: ${url}`);
+    
+    // Extract ASIN from the URL
+    const asin = amazonService.extractAsinFromUrl(url);
+    
+    if (!asin) {
+      console.log('Could not extract ASIN from URL');
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid Amazon URL. Could not extract product ID.' 
+      });
+    }
+    
+    console.log(`Extracted ASIN: ${asin}`);
+    
+    // Get the image URL from the Amazon API
+    const imageUrl = await amazonService.getProductImageUrl(asin);
     
     if (!imageUrl) {
-      return res.status(404).json({ error: 'Image not found for the given URL' });
+      console.log('No image URL found for the product');
+      return res.status(404).json({ 
+        success: false, 
+        message: 'No image found for this product' 
+      });
     }
     
-    return res.json({ imageUrl });
+    console.log(`Image URL found: ${imageUrl}`);
+    
+    return res.status(200).json({ 
+      success: true, 
+      imageUrl 
+    });
   } catch (error) {
-    console.error('Error in getProductImage controller:', error);
-    return res.status(500).json({ error: 'Failed to fetch product image' });
+    console.error('Error fetching Amazon product image:', error);
+    return res.status(500).json({ 
+      success: false, 
+      message: 'Error fetching product image', 
+      error: error.message 
+    });
   }
 };
 
-// Get product details by URL
+// Get detailed product information
 exports.getProductDetails = async (req, res) => {
   try {
     const { url } = req.query;
     
     if (!url) {
-      return res.status(400).json({ error: 'URL parameter is required' });
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Product URL is required' 
+      });
     }
     
-    const asin = amazonService.extractAsin(url);
+    // Extract ASIN from the URL
+    const asin = amazonService.extractAsinFromUrl(url);
     
     if (!asin) {
-      return res.status(400).json({ error: 'Invalid Amazon product URL' });
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid Amazon URL. Could not extract product ID.' 
+      });
     }
     
+    // Get the product details from the Amazon API
     const productDetails = await amazonService.getProductDetails(asin);
     
     if (!productDetails) {
-      return res.status(404).json({ error: 'Product details not found' });
+      return res.status(404).json({ 
+        success: false, 
+        message: 'No details found for this product' 
+      });
     }
     
-    return res.json(productDetails);
+    return res.status(200).json({ 
+      success: true, 
+      productDetails 
+    });
   } catch (error) {
-    console.error('Error in getProductDetails controller:', error);
-    return res.status(500).json({ error: 'Failed to fetch product details' });
+    console.error('Error fetching Amazon product details:', error);
+    return res.status(500).json({ 
+      success: false, 
+      message: 'Error fetching product details', 
+      error: error.message 
+    });
+  }
+};
+
+// Helper function to check if Amazon API is configured
+exports.checkApiConfiguration = async (req, res) => {
+  try {
+    const isConfigured = amazonService.isApiConfigured();
+    
+    return res.status(200).json({ 
+      success: true, 
+      isConfigured,
+      message: isConfigured 
+        ? 'Amazon API is properly configured' 
+        : 'Amazon API is not configured. Please add credentials to your environment variables.'
+    });
+  } catch (error) {
+    console.error('Error checking Amazon API configuration:', error);
+    return res.status(500).json({ 
+      success: false, 
+      message: 'Error checking API configuration', 
+      error: error.message 
+    });
   }
 };
