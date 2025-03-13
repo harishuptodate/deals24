@@ -1,3 +1,4 @@
+
 const TelegramMessage = require('../models/TelegramMessage');
 const { extractLinks } = require('../utils/messageParser');
 const crypto = require('crypto');
@@ -269,14 +270,20 @@ async function getMessages(options = {}) {
   
   const messages = await TelegramMessage.find(query)
     .sort({ _id: -1 })
-    .limit(limit + 1)
+    .limit(parseInt(limit) + 1)
     .lean();
   
   const hasMore = messages.length > limit;
   const data = hasMore ? messages.slice(0, limit) : messages;
   
+  // Add MongoDB _id to id field for frontend compatibility
+  const processedData = data.map(item => ({
+    ...item,
+    id: item._id.toString(), // Ensure id field exists for frontend
+  }));
+  
   return {
-    data,
+    data: processedData,
     hasMore,
     nextCursor: hasMore && data.length > 0 ? data[data.length - 1]._id : null
   };
@@ -288,11 +295,31 @@ async function getMessages(options = {}) {
  * @returns {Promise<Object>} - Updated message
  */
 async function incrementClicks(messageId) {
-  return await TelegramMessage.findByIdAndUpdate(
-    messageId, 
-    { $inc: { clicks: 1 } },
-    { new: true }
-  );
+  if (!messageId) {
+    console.error('Cannot increment clicks: message ID is missing');
+    return null;
+  }
+  
+  console.log(`Incrementing clicks for message ID: ${messageId}`);
+  
+  try {
+    const updatedMessage = await TelegramMessage.findByIdAndUpdate(
+      messageId, 
+      { $inc: { clicks: 1 } },
+      { new: true }
+    );
+    
+    if (!updatedMessage) {
+      console.log(`No message found with ID: ${messageId} for click tracking`);
+    } else {
+      console.log(`Updated clicks for message ID: ${messageId} to ${updatedMessage.clicks}`);
+    }
+    
+    return updatedMessage;
+  } catch (error) {
+    console.error(`Error incrementing clicks for message ${messageId}:`, error);
+    return null;
+  }
 }
 
 module.exports = {

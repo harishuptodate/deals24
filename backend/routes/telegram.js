@@ -49,12 +49,15 @@ router.get('/messages/:id', async (req, res) => {
 // Track clicks on a message link
 router.post('/messages/:id/click', async (req, res) => {
   try {
+    console.log(`Processing click for message ID: ${req.params.id}`);
     const updatedMessage = await incrementClicks(req.params.id);
     
     if (!updatedMessage) {
+      console.log(`Message with ID ${req.params.id} not found for click tracking`);
       return res.status(404).json({ error: 'Message not found' });
     }
     
+    console.log(`Successfully tracked click for message ID: ${req.params.id}`);
     res.json({ success: true, clicks: updatedMessage.clicks });
   } catch (error) {
     console.error('Error tracking click:', error);
@@ -107,7 +110,7 @@ router.get('/search', async (req, res) => {
   }
 });
 
-// Route to delete a message by ID - making sure this works properly
+// Route to delete a message by ID
 router.delete('/messages/:id', async (req, res) => {
   try {
     const { id } = req.params;

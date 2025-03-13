@@ -1,3 +1,4 @@
+
 import axios from 'axios';
 import { TelegramResponse, TelegramMessage } from '../types/telegram';
 
@@ -21,7 +22,7 @@ const getBaseUrl = () => {
 
 const API_BASE_URL = getBaseUrl();
 
-console.log('Using API URL:', API_BASE_URL); // Debug log
+console.log('API Base URL configured:', API_BASE_URL); // Debug log
 
 // Create an axios instance with the base URL
 const api = axios.create({
@@ -67,6 +68,9 @@ api.interceptors.response.use(
 // Get Telegram messages with pagination
 export const getTelegramMessages = async (cursor?: string, category?: string | null, searchQuery?: string | null): Promise<TelegramResponse> => {
   try {
+    console.log('Running in development mode');
+    console.log('API Base URL:', API_BASE_URL);
+    
     const params: Record<string, string | undefined> = { 
       cursor, 
       limit: '12'

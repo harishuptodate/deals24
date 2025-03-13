@@ -81,6 +81,8 @@ const DealCard = ({ title, description, link, id }: DealCardProps) => {
       trackMessageClick(id).catch(err => 
         console.error('Failed to track click for message', id, err)
       );
+    } else {
+      console.warn('Cannot track click: No message ID provided');
     }
   };
 
@@ -95,7 +97,7 @@ const DealCard = ({ title, description, link, id }: DealCardProps) => {
       if (part.match(urlRegex)) {
         return (
           <a
-            key={`link-${index}-${part}`}
+            key={`link-${index}-${part.substring(0, 10)}`}
             href={part}
             target="_blank"
             rel="noopener noreferrer"

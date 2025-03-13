@@ -1,13 +1,12 @@
 
 import React, { useEffect, useState } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { getTelegramMessages } from '../services/api';
+import { getTelegramMessages, deleteProduct } from '../services/api';
 import DealCard from './DealCard';
 import { Button } from '@/components/ui/button';
 import { Loader2, Filter, Trash2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
-import { deleteProduct } from '../services/api';
 
 interface CategoryFilterProps {
   onSelect: (category: string | null) => void;
@@ -172,7 +171,7 @@ const DealGrid = () => {
     return (
       <div className="text-center py-16">
         <p className="text-apple-gray">Unable to load deals. Please try again later.</p>
-        <Button onClick={() => window.location.reload()} variant="outline" className="mt-4">
+        <Button onClick={() => refetch()} variant="outline" className="mt-4">
           Refresh
         </Button>
       </div>
@@ -218,10 +217,10 @@ const DealGrid = () => {
             }
             
             return (
-              <div key={message.id || `message-${Math.random()}`} className="relative">
-                {message.id && (
+              <div key={message._id || message.id || `message-${Math.random()}`} className="relative">
+                {(message._id || message.id) && (
                   <button 
-                    onClick={() => handleDeleteProduct(message.id)}
+                    onClick={() => handleDeleteProduct(message._id || message.id)}
                     className="absolute top-2 right-2 z-10 bg-white rounded-full p-1 shadow-md opacity-70 hover:opacity-100 transition-opacity"
                     title="Delete deal"
                   >
@@ -233,7 +232,7 @@ const DealGrid = () => {
                   title={message.text.split('\n')[0] || 'New Deal'} 
                   description={message.text}
                   link={message.link || ''}
-                  id={message.id}
+                  id={message._id || message.id}
                 />
               </div>
             );
