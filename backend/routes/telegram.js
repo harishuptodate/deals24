@@ -107,13 +107,37 @@ router.get('/search', async (req, res) => {
   }
 });
 
-// Route to delete a message by ID - Fix the route to match the frontend request
-router.delete('/messages/:id', telegramController.deleteMessage);
+// Route to delete a message by ID
+router.delete('/messages/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    console.log(`Attempting to delete message with ID: ${id}`);
+    
+    if (!id) {
+      return res.status(400).json({ success: false, message: 'Message ID is required' });
+    }
 
-// Get analytics for click tracking - Fix to match frontend URLs
+    // Find and delete the message
+    const result = await TelegramMessage.findByIdAndDelete(id);
+    
+    if (!result) {
+      console.log(`Message with ID ${id} not found`);
+      return res.status(404).json({ success: false, message: 'Message not found' });
+    }
+    
+    console.log(`Successfully deleted message with ID: ${id}`);
+    return res.status(200).json({ success: true, message: 'Message deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting message:', error);
+    return res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+});
+
+// Get analytics for click tracking
 router.get('/analytics/clicks', telegramController.getClickAnalytics);
 
-// Get top performing messages - Fix to match frontend URLs
+// Get top performing messages
 router.get('/analytics/top-performing', telegramController.getTopPerforming);
 
 module.exports = router;

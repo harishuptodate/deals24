@@ -121,6 +121,15 @@ const DealGrid = () => {
   };
 
   const handleDeleteProduct = async (id: string) => {
+    if (!id) {
+      toast({
+        title: 'Error',
+        description: 'Cannot delete: Deal ID is missing',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
     if (window.confirm('Are you sure you want to delete this deal?')) {
       const success = await deleteProduct(id);
       if (success) {
@@ -193,24 +202,26 @@ const DealGrid = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {allMessages.map((message) => {
             // Skip rendering if message is undefined or doesn't have required fields
-            if (!message || !message.text || !message.id) {
+            if (!message || !message.text) {
               return null;
             }
             
             return (
-              <div key={message.id} className="relative">
-                <button 
-                  onClick={() => handleDeleteProduct(message.id || '')}
-                  className="absolute top-2 right-2 z-10 bg-white rounded-full p-1 shadow-md opacity-70 hover:opacity-100 transition-opacity"
-                  title="Delete deal"
-                >
-                  <Trash2 size={16} className="text-red-500" />
-                </button>
+              <div key={message.id || `message-${Math.random()}`} className="relative">
+                {message.id && (
+                  <button 
+                    onClick={() => handleDeleteProduct(message.id)}
+                    className="absolute top-2 right-2 z-10 bg-white rounded-full p-1 shadow-md opacity-70 hover:opacity-100 transition-opacity"
+                    title="Delete deal"
+                  >
+                    <Trash2 size={16} className="text-red-500" />
+                  </button>
+                )}
                 
                 <DealCard
                   title={message.text.split('\n')[0] || 'New Deal'} 
                   description={message.text}
-                  link={message.link || '#'}
+                  link={message.link || ''}
                   id={message.id}
                   imageUrl={message.imageUrl}
                 />

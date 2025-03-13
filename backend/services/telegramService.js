@@ -1,7 +1,7 @@
-
 const TelegramMessage = require('../models/TelegramMessage');
 const { extractLinks } = require('../utils/messageParser');
 const crypto = require('crypto');
+const axios = require('axios');
 
 // Hashes to store unique content (in-memory)
 let contentHashes = [];
@@ -162,6 +162,53 @@ function isProfitableProduct(text) {
 }
 
 /**
+ * Get the highest quality photo from a photo array
+ * @param {Array} photos - Array of Telegram photo objects
+ * @returns {Object|null} - Highest quality photo or null
+ */
+function getHighestQualityPhoto(photos) {
+  if (!photos || photos.length === 0) return null;
+  return photos.reduce(
+    (max, p) => (p.file_size > max.file_size ? p : max),
+    photos[0]
+  );
+}
+
+/**
+ * Download Telegram file and get URL
+ * @param {string} fileId - Telegram file ID
+ * @param {string} botToken - Telegram bot token
+ * @returns {Promise<string|null>} - File URL or null
+ */
+async function getTelegramFileUrl(fileId, botToken) {
+  try {
+    if (!botToken) {
+      console.log('Bot token not available for file URL');
+      return null;
+    }
+    
+    const fileInfoUrl = `https://api.telegram.org/bot${botToken}/getFile?file_id=${fileId}`;
+    console.log('Requesting file info from:', fileInfoUrl);
+    
+    const response = await axios.get(fileInfoUrl);
+    
+    if (!response.data || !response.data.ok || !response.data.result || !response.data.result.file_path) {
+      console.error('Invalid response from Telegram getFile API:', response.data);
+      return null;
+    }
+    
+    const filePath = response.data.result.file_path;
+    const fileUrl = `https://api.telegram.org/file/bot${botToken}/${filePath}`;
+    
+    console.log('Generated file URL:', fileUrl);
+    return fileUrl;
+  } catch (error) {
+    console.error('Error getting Telegram file URL:', error);
+    return null;
+  }
+}
+
+/**
  * Save a new message from Telegram (incorporating core logic)
  * @param {Object} message - Telegram message object
  * @returns {Promise<Object>} - Saved message
@@ -224,15 +271,14 @@ async function saveMessage(message) {
     let imageUrl = null;
     if (photo && photo.length > 0) {
       // Use the largest photo available
-      const largestPhoto = photo[photo.length - 1];
+      const bestPhoto = getHighestQualityPhoto(photo);
       
       // Log photo information for reference
-      console.log('Photo information:', JSON.stringify(largestPhoto));
+      console.log('Photo information:', JSON.stringify(bestPhoto));
       
-      // In a real implementation, you would use the Telegram API to get the file path
-      // and then construct the full URL. This is a placeholder that uses the file_id directly.
+      // Get file URL using Telegram API
       if (process.env.TELEGRAM_BOT_TOKEN) {
-        imageUrl = `https://api.telegram.org/file/bot${process.env.TELEGRAM_BOT_TOKEN}/${largestPhoto.file_id}`;
+        imageUrl = await getTelegramFileUrl(bestPhoto.file_id, process.env.TELEGRAM_BOT_TOKEN);
       }
     }
     
@@ -274,7 +320,7 @@ async function getMessages(options = {}) {
   }
   
   if (cursor) {
-    query.date = { $lt: new Date(cursor) };
+    query._id = { $lt: cursor };
   }
   
   if (category) {
@@ -286,7 +332,7 @@ async function getMessages(options = {}) {
   }
   
   const messages = await TelegramMessage.find(query)
-    .sort({ date: -1 })
+    .sort({ _id: -1 })
     .limit(limit + 1)
     .lean();
   
@@ -296,7 +342,7 @@ async function getMessages(options = {}) {
   return {
     data,
     hasMore,
-    nextCursor: hasMore && data.length > 0 ? data[data.length - 1].date.toISOString() : null
+    nextCursor: hasMore && data.length > 0 ? data[data.length - 1]._id : null
   };
 }
 
@@ -323,5 +369,7 @@ module.exports = {
   isLowContext,
   isProfitableProduct,
   replaceLinksAndText,
-  detectCategory
+  detectCategory,
+  getHighestQualityPhoto,
+  getTelegramFileUrl
 };

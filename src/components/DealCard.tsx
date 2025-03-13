@@ -25,20 +25,6 @@ const DealCard = ({ title, description, link, id, imageUrl }: DealCardProps) => 
   const [isImageLoading, setIsImageLoading] = useState<boolean>(false);
   const [imageError, setImageError] = useState<boolean>(false);
 
-  // Extract Amazon product ID from URL if present
-  const extractAmazonProductId = (url: string): string | null => {
-    try {
-      if (!url.includes('amazon')) return null;
-      
-      // Try to extract the ASIN (product ID)
-      const match = url.match(/\/([A-Z0-9]{10})(?:[/?]|$)/);
-      return match ? match[1] : null;
-    } catch (error) {
-      console.error('Error extracting Amazon product ID:', error);
-      return null;
-    }
-  };
-
   // Extract link from description if not provided
   const extractFirstLink = (text: string): string | null => {
     const urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -61,7 +47,7 @@ const DealCard = ({ title, description, link, id, imageUrl }: DealCardProps) => 
       if (!imageUrl && !productImage && !imageError && !isImageLoading && targetLink && targetLink.includes('amazon')) {
         try {
           setIsImageLoading(true);
-          console.log('Fetching Amazon product image for:', targetLink);
+          console.log('Fetching Amazon image for:', targetLink);
           
           const fetchedImageUrl = await getAmazonProductImage(targetLink);
           
@@ -152,7 +138,7 @@ const DealCard = ({ title, description, link, id, imageUrl }: DealCardProps) => 
       if (part.match(urlRegex)) {
         return (
           <a
-            key={`link-${index}`}
+            key={`link-${index}-${part}`}
             href={part}
             target="_blank"
             rel="noopener noreferrer"
@@ -164,7 +150,7 @@ const DealCard = ({ title, description, link, id, imageUrl }: DealCardProps) => 
           </a>
         );
       }
-      return <span key={`text-${index}`}>{part}</span>;
+      return <span key={`text-${index}-${part.substring(0, 10)}`}>{part}</span>;
     });
   };
 
@@ -225,10 +211,10 @@ const DealCard = ({ title, description, link, id, imageUrl }: DealCardProps) => 
               </Button>
             ) : (
               <a
-                href={link}
+                href={link || extractFirstLink(description) || '#'}
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={() => recordClick(link)}
+                onClick={() => recordClick(link || extractFirstLink(description) || '')}
                 className="inline-block w-full text-center px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-apple-darkGray to-black rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-apple-darkGray/20"
               >
                 Buy Now

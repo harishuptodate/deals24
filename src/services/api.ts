@@ -125,7 +125,7 @@ export const searchTelegramMessages = async (query: string): Promise<TelegramRes
 // Get messages by category
 export const getCategoryMessages = async (category: string, cursor?: string): Promise<TelegramResponse> => {
   try {
-    const response = await api.get(`/categories/${category}`, {
+    const response = await api.get(`/telegram/categories/${category}`, {
       params: {
         cursor,
         limit: '12'
@@ -142,13 +142,19 @@ export const getCategoryMessages = async (category: string, cursor?: string): Pr
 // Track click on a message
 export const trackMessageClick = async (messageId: string): Promise<void> => {
   try {
+    if (!messageId) {
+      console.error('Cannot track click: messageId is undefined or empty');
+      return;
+    }
+    
+    console.log(`Tracking click for message ID: ${messageId}`);
     await api.post(`/telegram/messages/${messageId}/click`);
   } catch (error) {
     console.error('Failed to track message click:', error);
   }
 };
 
-// Delete a product/message - Fix the endpoint to include the messageId parameter
+// Delete a product/message
 export const deleteProduct = async (messageId: string): Promise<boolean> => {
   try {
     if (!messageId) {
@@ -191,10 +197,9 @@ export const getAmazonProductImage = async (productUrl: string): Promise<string 
   }
 };
 
-// Get click analytics data for the admin dashboard - Fix the endpoint to match backend
+// Get click analytics data for the admin dashboard
 export const getClickAnalytics = async (period: string = 'day'): Promise<any> => {
   try {
-    // Changed from /analytics/clicks to /telegram/analytics/clicks
     const response = await api.get('/telegram/analytics/clicks', {
       params: { period }
     });
@@ -210,10 +215,9 @@ export const getClickAnalytics = async (period: string = 'day'): Promise<any> =>
   }
 };
 
-// Get top performing deals for the admin dashboard - Fix the endpoint to match backend
+// Get top performing deals for the admin dashboard
 export const getTopPerformingDeals = async (limit: number = 5): Promise<TelegramMessage[]> => {
   try {
-    // Changed from /analytics/top-deals to /telegram/analytics/top-performing
     const response = await api.get('/telegram/analytics/top-performing', {
       params: { limit }
     });
