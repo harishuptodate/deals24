@@ -4,10 +4,10 @@ const router = express.Router();
 const telegramRoutes = require('./telegram');
 const amazonRoutes = require('./amazon');
 
-// Telegram routes
+// Telegram routes - we'll mount these at /api/telegram in index.js
 router.use('/telegram', telegramRoutes);
 
-// Amazon routes
+// Amazon routes - we'll mount these at /api/amazon in index.js
 router.use('/amazon', amazonRoutes);
 
 module.exports = router;

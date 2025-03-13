@@ -107,13 +107,13 @@ router.get('/search', async (req, res) => {
   }
 });
 
-// Route to delete a message by ID
+// Route to delete a message by ID - Fix the route to match the frontend request
 router.delete('/messages/:id', telegramController.deleteMessage);
 
-// Get analytics for click tracking
+// Get analytics for click tracking - Fix to match frontend URLs
 router.get('/analytics/clicks', telegramController.getClickAnalytics);
 
-// Get top performing messages
+// Get top performing messages - Fix to match frontend URLs
 router.get('/analytics/top-performing', telegramController.getTopPerforming);
 
 module.exports = router;

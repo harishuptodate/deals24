@@ -152,7 +152,7 @@ const DealCard = ({ title, description, link, id, imageUrl }: DealCardProps) => 
       if (part.match(urlRegex)) {
         return (
           <a
-            key={index}
+            key={`link-${index}`}
             href={part}
             target="_blank"
             rel="noopener noreferrer"
@@ -164,7 +164,7 @@ const DealCard = ({ title, description, link, id, imageUrl }: DealCardProps) => 
           </a>
         );
       }
-      return part;
+      return <span key={`text-${index}`}>{part}</span>;
     });
   };
 

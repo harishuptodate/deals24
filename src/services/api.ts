@@ -1,3 +1,4 @@
+
 import axios from 'axios';
 import { TelegramResponse, TelegramMessage } from '../types/telegram';
 
@@ -147,9 +148,14 @@ export const trackMessageClick = async (messageId: string): Promise<void> => {
   }
 };
 
-// Delete a product/message
+// Delete a product/message - Fix the endpoint to include the messageId parameter
 export const deleteProduct = async (messageId: string): Promise<boolean> => {
   try {
+    if (!messageId) {
+      console.error('Cannot delete: messageId is undefined or empty');
+      return false;
+    }
+    
     console.log(`Attempting to delete message with ID: ${messageId}`);
     const response = await api.delete(`/telegram/messages/${messageId}`);
     console.log('Delete product response:', response);
@@ -185,10 +191,11 @@ export const getAmazonProductImage = async (productUrl: string): Promise<string 
   }
 };
 
-// Get click analytics data for the admin dashboard
+// Get click analytics data for the admin dashboard - Fix the endpoint to match backend
 export const getClickAnalytics = async (period: string = 'day'): Promise<any> => {
   try {
-    const response = await api.get('/analytics/clicks', {
+    // Changed from /analytics/clicks to /telegram/analytics/clicks
+    const response = await api.get('/telegram/analytics/clicks', {
       params: { period }
     });
     return response.data;
@@ -203,10 +210,11 @@ export const getClickAnalytics = async (period: string = 'day'): Promise<any> =>
   }
 };
 
-// Get top performing deals for the admin dashboard
+// Get top performing deals for the admin dashboard - Fix the endpoint to match backend
 export const getTopPerformingDeals = async (limit: number = 5): Promise<TelegramMessage[]> => {
   try {
-    const response = await api.get('/analytics/top-deals', {
+    // Changed from /analytics/top-deals to /telegram/analytics/top-performing
+    const response = await api.get('/telegram/analytics/top-performing', {
       params: { limit }
     });
     return response.data || [];
