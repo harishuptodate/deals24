@@ -1,9 +1,9 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Heart, ExternalLink } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { trackMessageClick, getAmazonProductImage } from '../services/api';
+import { trackMessageClick } from '../services/api';
 import { useToast } from "@/components/ui/use-toast";
 
 interface DealCardProps {
@@ -11,19 +11,15 @@ interface DealCardProps {
   description: string;
   link: string;
   id?: string;
-  imageUrl?: string;
 }
 
-const DealCard = ({ title, description, link, id, imageUrl }: DealCardProps) => {
+const DealCard = ({ title, description, link, id }: DealCardProps) => {
   const { toast } = useToast();
   const [isFavorite, setIsFavorite] = useState(() => {
     const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
     return favorites.some((fav: any) => fav.title === title);
   });
   const [isOpen, setIsOpen] = useState(false);
-  const [productImage, setProductImage] = useState<string | null>(imageUrl || null);
-  const [isImageLoading, setIsImageLoading] = useState<boolean>(false);
-  const [imageError, setImageError] = useState<boolean>(false);
 
   // Extract link from description if not provided
   const extractFirstLink = (text: string): string | null => {
@@ -31,44 +27,6 @@ const DealCard = ({ title, description, link, id, imageUrl }: DealCardProps) => 
     const matches = text.match(urlRegex);
     return matches && matches.length > 0 ? matches[0] : null;
   };
-
-  // Fetch Amazon product image if the link is from Amazon and no image is provided
-  useEffect(() => {
-    const fetchAmazonImage = async () => {
-      // Only fetch if:
-      // 1. No image URL is already provided
-      // 2. We have a valid link (either direct or extracted from description)
-      // 3. The link is from Amazon
-      // 4. We haven't already tried and failed
-      // 5. We're not already loading an image
-      
-      const targetLink = link || extractFirstLink(description);
-      
-      if (!imageUrl && !productImage && !imageError && !isImageLoading && targetLink && targetLink.includes('amazon')) {
-        try {
-          setIsImageLoading(true);
-          console.log('Fetching Amazon image for:', targetLink);
-          
-          const fetchedImageUrl = await getAmazonProductImage(targetLink);
-          
-          if (fetchedImageUrl) {
-            console.log('Successfully fetched image:', fetchedImageUrl);
-            setProductImage(fetchedImageUrl);
-          } else {
-            console.log('No image URL returned from Amazon API');
-            setImageError(true);
-          }
-        } catch (error) {
-          console.error('Failed to fetch Amazon product image:', error);
-          setImageError(true);
-        } finally {
-          setIsImageLoading(false);
-        }
-      }
-    };
-
-    fetchAmazonImage();
-  }, [imageUrl, link, description, productImage, imageError, isImageLoading]);
 
   const extractLinks = (text: string) => {
     const urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -98,7 +56,6 @@ const DealCard = ({ title, description, link, id, imageUrl }: DealCardProps) => 
         title, 
         description, 
         link,
-        imageUrl: productImage,
         id,
         timestamp: new Date().toISOString() 
       }];
@@ -177,25 +134,6 @@ const DealCard = ({ title, description, link, id, imageUrl }: DealCardProps) => 
               <h3 className="text-xl font-semibold text-apple-darkGray line-clamp-2">{title}</h3>
             </div>
             
-            {isImageLoading ? (
-              <div className="w-full h-48 flex items-center justify-center bg-gray-100 rounded-lg">
-                <div className="w-8 h-8 border-4 border-t-apple-darkGray rounded-full animate-spin"></div>
-              </div>
-            ) : productImage && !imageError ? (
-              <div className="w-full h-48 overflow-hidden rounded-lg">
-                <img 
-                  src={productImage} 
-                  alt={title} 
-                  className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                  onError={(e) => {
-                    console.error('Image failed to load:', productImage);
-                    setImageError(true);
-                    (e.target as HTMLImageElement).style.display = 'none';
-                  }}
-                />
-              </div>
-            ) : null}
-
             <div className="h-20 overflow-hidden">
               <p className="text-sm text-apple-gray line-clamp-4">
                 {description}

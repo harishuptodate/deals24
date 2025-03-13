@@ -107,7 +107,7 @@ router.get('/search', async (req, res) => {
   }
 });
 
-// Route to delete a message by ID
+// Route to delete a message by ID - making sure this works properly
 router.delete('/messages/:id', async (req, res) => {
   try {
     const { id } = req.params;

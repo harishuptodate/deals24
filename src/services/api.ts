@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 import { TelegramResponse, TelegramMessage } from '../types/telegram';
 
@@ -172,28 +171,6 @@ export const deleteProduct = async (messageId: string): Promise<boolean> => {
       console.error('Error response:', error.response.status, error.response.data);
     }
     return false;
-  }
-};
-
-// Get Amazon product image URL with improved error handling
-export const getAmazonProductImage = async (productUrl: string): Promise<string | null> => {
-  try {
-    console.log('Fetching Amazon image for URL:', productUrl);
-    const response = await api.get('/amazon/image', {
-      params: { url: productUrl },
-      timeout: 10000 // Shorter timeout for image fetching
-    });
-    
-    if (response.data && response.data.imageUrl) {
-      console.log('Amazon image URL received:', response.data.imageUrl);
-      return response.data.imageUrl;
-    } else {
-      console.warn('No valid image URL in response:', response.data);
-      return null;
-    }
-  } catch (error) {
-    console.error('Failed to fetch Amazon product image:', error);
-    return null;
   }
 };
 

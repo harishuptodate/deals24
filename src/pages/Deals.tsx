@@ -58,19 +58,39 @@ const Deals = () => {
   };
 
   const handleDeleteProduct = async (id: string) => {
+    if (!id) {
+      toast({
+        title: 'Error',
+        description: 'Cannot delete: Deal ID is missing',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
     if (window.confirm('Are you sure you want to delete this deal?')) {
-      const success = await deleteProduct(id);
-      if (success) {
-        toast({
-          title: 'Success',
-          description: 'Deal has been deleted successfully',
-          variant: 'default',
-        });
-        refetch();
-      } else {
+      try {
+        console.log(`Attempting to delete deal with ID: ${id}`);
+        const success = await deleteProduct(id);
+        
+        if (success) {
+          toast({
+            title: 'Success',
+            description: 'Deal has been deleted successfully',
+            variant: 'default',
+          });
+          refetch();
+        } else {
+          toast({
+            title: 'Error',
+            description: 'Failed to delete deal',
+            variant: 'destructive',
+          });
+        }
+      } catch (error) {
+        console.error('Error deleting deal:', error);
         toast({
           title: 'Error',
-          description: 'Failed to delete deal',
+          description: 'An error occurred while deleting the deal',
           variant: 'destructive',
         });
       }
@@ -133,14 +153,14 @@ const Deals = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {allMessages.map((message) => {
               // Skip rendering if message is undefined or doesn't have required fields
-              if (!message || !message.text) {
+              if (!message || !message.text || !message.id) {
                 return null;
               }
               
               return (
                 <div key={message.id} className="relative">
                   <button 
-                    onClick={() => handleDeleteProduct(message.id || '')}
+                    onClick={() => handleDeleteProduct(message.id)}
                     className="absolute top-2 right-2 z-10 bg-white rounded-full p-1 shadow-md opacity-70 hover:opacity-100 transition-opacity"
                     title="Delete deal"
                   >
@@ -148,12 +168,10 @@ const Deals = () => {
                   </button>
                   
                   <DealCard
-                    key={message.id}
                     title={message.text.split('\n')[0] || 'New Deal'} 
                     description={message.text}
-                    link={message.link || '#'}
+                    link={message.link || ''}
                     id={message.id}
-                    imageUrl={message.imageUrl}
                   />
                 </div>
               );

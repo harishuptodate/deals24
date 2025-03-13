@@ -131,18 +131,29 @@ const DealGrid = () => {
     }
     
     if (window.confirm('Are you sure you want to delete this deal?')) {
-      const success = await deleteProduct(id);
-      if (success) {
-        toast({
-          title: 'Success',
-          description: 'Deal has been deleted successfully',
-          variant: 'default',
-        });
-        refetch();
-      } else {
+      try {
+        console.log(`Attempting to delete product with ID: ${id}`);
+        const success = await deleteProduct(id);
+        
+        if (success) {
+          toast({
+            title: 'Success',
+            description: 'Deal has been deleted successfully',
+            variant: 'default',
+          });
+          refetch();
+        } else {
+          toast({
+            title: 'Error',
+            description: 'Failed to delete deal',
+            variant: 'destructive',
+          });
+        }
+      } catch (error) {
+        console.error('Error deleting product:', error);
         toast({
           title: 'Error',
-          description: 'Failed to delete deal',
+          description: 'An error occurred while deleting the deal',
           variant: 'destructive',
         });
       }
@@ -223,7 +234,6 @@ const DealGrid = () => {
                   description={message.text}
                   link={message.link || ''}
                   id={message.id}
-                  imageUrl={message.imageUrl}
                 />
               </div>
             );

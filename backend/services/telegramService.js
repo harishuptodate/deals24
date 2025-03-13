@@ -1,7 +1,6 @@
 const TelegramMessage = require('../models/TelegramMessage');
 const { extractLinks } = require('../utils/messageParser');
 const crypto = require('crypto');
-const axios = require('axios');
 
 // Hashes to store unique content (in-memory)
 let contentHashes = [];
@@ -162,53 +161,6 @@ function isProfitableProduct(text) {
 }
 
 /**
- * Get the highest quality photo from a photo array
- * @param {Array} photos - Array of Telegram photo objects
- * @returns {Object|null} - Highest quality photo or null
- */
-function getHighestQualityPhoto(photos) {
-  if (!photos || photos.length === 0) return null;
-  return photos.reduce(
-    (max, p) => (p.file_size > max.file_size ? p : max),
-    photos[0]
-  );
-}
-
-/**
- * Download Telegram file and get URL
- * @param {string} fileId - Telegram file ID
- * @param {string} botToken - Telegram bot token
- * @returns {Promise<string|null>} - File URL or null
- */
-async function getTelegramFileUrl(fileId, botToken) {
-  try {
-    if (!botToken) {
-      console.log('Bot token not available for file URL');
-      return null;
-    }
-    
-    const fileInfoUrl = `https://api.telegram.org/bot${botToken}/getFile?file_id=${fileId}`;
-    console.log('Requesting file info from:', fileInfoUrl);
-    
-    const response = await axios.get(fileInfoUrl);
-    
-    if (!response.data || !response.data.ok || !response.data.result || !response.data.result.file_path) {
-      console.error('Invalid response from Telegram getFile API:', response.data);
-      return null;
-    }
-    
-    const filePath = response.data.result.file_path;
-    const fileUrl = `https://api.telegram.org/file/bot${botToken}/${filePath}`;
-    
-    console.log('Generated file URL:', fileUrl);
-    return fileUrl;
-  } catch (error) {
-    console.error('Error getting Telegram file URL:', error);
-    return null;
-  }
-}
-
-/**
  * Save a new message from Telegram (incorporating core logic)
  * @param {Object} message - Telegram message object
  * @returns {Promise<Object>} - Saved message
@@ -216,7 +168,7 @@ async function getTelegramFileUrl(fileId, botToken) {
 async function saveMessage(message) {
   try {
     // Extract message details
-    const { message_id, chat, date, text: originalText, photo, caption } = message;
+    const { message_id, chat, date, text: originalText, caption } = message;
     const textContent = originalText || caption || '';
     const channelId = chat.id.toString();
     
@@ -267,21 +219,6 @@ async function saveMessage(message) {
     // Determine category based on message content
     const category = detectCategory(textContent);
     
-    // Get image URL if available
-    let imageUrl = null;
-    if (photo && photo.length > 0) {
-      // Use the largest photo available
-      const bestPhoto = getHighestQualityPhoto(photo);
-      
-      // Log photo information for reference
-      console.log('Photo information:', JSON.stringify(bestPhoto));
-      
-      // Get file URL using Telegram API
-      if (process.env.TELEGRAM_BOT_TOKEN) {
-        imageUrl = await getTelegramFileUrl(bestPhoto.file_id, process.env.TELEGRAM_BOT_TOKEN);
-      }
-    }
-    
     // Add hash to processed list
     contentHashes.push(messageHash);
     if (contentHashes.length > 50) contentHashes.shift(); // Limit stored hashes to save memory
@@ -292,7 +229,6 @@ async function saveMessage(message) {
       text: finalCaption, // Use the processed text with hashtag
       date: new Date(date * 1000), // Convert Unix timestamp to Date
       link,
-      imageUrl,
       category,
       clicks: 0,
       channelId
@@ -369,7 +305,5 @@ module.exports = {
   isLowContext,
   isProfitableProduct,
   replaceLinksAndText,
-  detectCategory,
-  getHighestQualityPhoto,
-  getTelegramFileUrl
+  detectCategory
 };

@@ -1,5 +1,5 @@
+
 const TelegramMessage = require('../models/TelegramMessage');
-const { detectCategory } = require('../utils/categoryDetector');
 const { saveMessage } = require('../services/telegramService');
 
 // Handle Telegram webhook updates
