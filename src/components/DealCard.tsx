@@ -25,14 +25,45 @@ const DealCard = ({ title, description, link, id, imageUrl }: DealCardProps) => 
   const [isImageLoading, setIsImageLoading] = useState<boolean>(false);
   const [imageError, setImageError] = useState<boolean>(false);
 
+  // Extract Amazon product ID from URL if present
+  const extractAmazonProductId = (url: string): string | null => {
+    try {
+      if (!url.includes('amazon')) return null;
+      
+      // Try to extract the ASIN (product ID)
+      const match = url.match(/\/([A-Z0-9]{10})(?:[/?]|$)/);
+      return match ? match[1] : null;
+    } catch (error) {
+      console.error('Error extracting Amazon product ID:', error);
+      return null;
+    }
+  };
+
+  // Extract link from description if not provided
+  const extractFirstLink = (text: string): string | null => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const matches = text.match(urlRegex);
+    return matches && matches.length > 0 ? matches[0] : null;
+  };
+
   // Fetch Amazon product image if the link is from Amazon and no image is provided
   useEffect(() => {
     const fetchAmazonImage = async () => {
-      if (!imageUrl && link && link.includes('amazon') && !productImage && !imageError) {
+      // Only fetch if:
+      // 1. No image URL is already provided
+      // 2. We have a valid link (either direct or extracted from description)
+      // 3. The link is from Amazon
+      // 4. We haven't already tried and failed
+      // 5. We're not already loading an image
+      
+      const targetLink = link || extractFirstLink(description);
+      
+      if (!imageUrl && !productImage && !imageError && !isImageLoading && targetLink && targetLink.includes('amazon')) {
         try {
           setIsImageLoading(true);
-          console.log('Fetching Amazon product image for:', link);
-          const fetchedImageUrl = await getAmazonProductImage(link);
+          console.log('Fetching Amazon product image for:', targetLink);
+          
+          const fetchedImageUrl = await getAmazonProductImage(targetLink);
           
           if (fetchedImageUrl) {
             console.log('Successfully fetched image:', fetchedImageUrl);
@@ -44,11 +75,6 @@ const DealCard = ({ title, description, link, id, imageUrl }: DealCardProps) => 
         } catch (error) {
           console.error('Failed to fetch Amazon product image:', error);
           setImageError(true);
-          toast({
-            title: "Image Error",
-            description: "Could not load product image",
-            variant: "destructive",
-          });
         } finally {
           setIsImageLoading(false);
         }
@@ -56,7 +82,7 @@ const DealCard = ({ title, description, link, id, imageUrl }: DealCardProps) => 
     };
 
     fetchAmazonImage();
-  }, [imageUrl, link, productImage, imageError, toast]);
+  }, [imageUrl, link, description, productImage, imageError, isImageLoading]);
 
   const extractLinks = (text: string) => {
     const urlRegex = /(https?:\/\/[^\s]+)/g;

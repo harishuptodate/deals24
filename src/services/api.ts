@@ -64,38 +64,6 @@ api.interceptors.response.use(
   }
 );
 
-// Enhanced function to determine category based on message content with expanded patterns
-export const detectCategory = (text: string): string | undefined => {
-  const lowerText = text.toLowerCase();
-  
-  // Electronics & Home
-  if (lowerText.match(/washing machine|tv|television|sofa|refrigerator|fridge|air conditioner|ac|microwave|oven|toaster|dishwasher|water purifier|home theatre|soundbar|geyser|cooler|vacuum cleaner|iron|induction cooktop|blender|mixer grinder|juicer|coffee maker|rice cooker|heater|fan|chimney|deep freezer|air fryer/i)) {
-    return 'electronics-home';
-  }
-  
-  // Laptops
-  if (lowerText.match(/laptop|notebook|ultrabook|macbook|lenovo|hp|dell|acer|asus|msi|razer|apple macbook|chromebook|gaming laptop|surface laptop|thinkpad|ideapad|legion|vivobook|zenbook|spectre|pavilion|omen|inspiron|latitude|xps|rog|tuf|predator|swift|helios|nitro|blade|stealth|probook/i)) {
-    return 'laptops';
-  }
-  
-  // Mobile Phones
-  if (lowerText.match(/iphone|android|smartphone|mobile phone|5g phone|samsung|oneplus|xiaomi|redmi|oppo|vivo|realme|motorola|nokia|google pixel|sony xperia|huawei|asus rog phone|infinix|tecno|honor|iqoo|poco|foldable phone|flip phone|flagship phone|budget phone|mid-range phone|flagship killer/i)) {
-    return 'mobile-phones';
-  }
-  
-  // Accessories
-  if (lowerText.match(/power bank|tws|earphones|earbuds|headphones|bluetooth earphones|neckband|chargers|fast charger|usb charger|wireless charger|cable|usb cable|type-c cable|lightning cable|hdmi cable|adapter|memory card|sd card|pendrive|usb drive|hdd|ssd|laptop bag|keyboard|mouse|gaming mouse|mouse pad|cooling pad|phone case|screen protector|smartwatch|fitness band|vr headset|gaming controller/i)) {
-    return 'gadgets-accessories';
-  }
-  
-  // Fashion
-  if (lowerText.match(/clothing|t-shirt|shirt|jeans|trousers|pants|shorts|skirt|dress|jacket|blazer|sweater|hoodie|coat|suit|ethnic wear|kurta|saree|lehenga|salwar|leggings|innerwear|nightwear|sportswear|shoes|sneakers|heels|sandals|flip-flops|boots|formal shoes|loafers|running shoes|belts|wallets|watches|sunglasses|jewelry|rings|necklace|bracelet|earrings|bangles|handbag|clutch|backpack/i)) {
-    return 'fashion';
-  }
-  
-  return undefined;
-};
-
 // Get Telegram messages with pagination
 export const getTelegramMessages = async (cursor?: string, category?: string | null, searchQuery?: string | null): Promise<TelegramResponse> => {
   try {
@@ -121,8 +89,6 @@ export const getTelegramMessages = async (cursor?: string, category?: string | n
         'Accept': 'application/json'
       }
     });
-    
-    console.log('Response received:', response.data);
     
     // Ensure data is always an array, even if the response is empty
     if (!response.data.data || !Array.isArray(response.data.data)) {
@@ -197,34 +163,56 @@ export const deleteProduct = async (messageId: string): Promise<boolean> => {
   }
 };
 
-// Get Amazon product image URL
+// Get Amazon product image URL with improved error handling
 export const getAmazonProductImage = async (productUrl: string): Promise<string | null> => {
   try {
     console.log('Fetching Amazon image for URL:', productUrl);
     const response = await api.get('/amazon/image', {
-      params: { url: productUrl }
+      params: { url: productUrl },
+      timeout: 10000 // Shorter timeout for image fetching
     });
-    console.log('Amazon image API response:', response.data);
-    return response.data.imageUrl;
+    
+    if (response.data && response.data.imageUrl) {
+      console.log('Amazon image URL received:', response.data.imageUrl);
+      return response.data.imageUrl;
+    } else {
+      console.warn('No valid image URL in response:', response.data);
+      return null;
+    }
   } catch (error) {
     console.error('Failed to fetch Amazon product image:', error);
-    if (error.response) {
-      console.error('Error response:', error.response.status, error.response.data);
-    }
     return null;
   }
 };
 
-// Get Amazon product details
-export const getAmazonProductDetails = async (productUrl: string): Promise<any | null> => {
+// Get click analytics data for the admin dashboard
+export const getClickAnalytics = async (period: string = 'day'): Promise<any> => {
   try {
-    const response = await api.get('/amazon/details', {
-      params: { url: productUrl }
+    const response = await api.get('/analytics/clicks', {
+      params: { period }
     });
     return response.data;
   } catch (error) {
-    console.error('Failed to fetch Amazon product details:', error);
-    return null;
+    console.error('Failed to fetch click analytics:', error);
+    // Return default data structure if API fails
+    return {
+      clicksData: [],
+      totalClicks: 0,
+      totalMessages: 0
+    };
+  }
+};
+
+// Get top performing deals for the admin dashboard
+export const getTopPerformingDeals = async (limit: number = 5): Promise<TelegramMessage[]> => {
+  try {
+    const response = await api.get('/analytics/top-deals', {
+      params: { limit }
+    });
+    return response.data || [];
+  } catch (error) {
+    console.error('Failed to fetch top performing deals:', error);
+    return [];
   }
 };
 
