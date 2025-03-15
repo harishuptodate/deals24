@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Navbar from '../components/Navbar';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { getTelegramMessages, deleteProduct } from '../services/api';
@@ -7,14 +7,16 @@ import DealCard from '../components/DealCard';
 import { Button } from '@/components/ui/button';
 import { Loader2, X, Trash2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 
 const Deals = () => {
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const categoryParam = searchParams.get('category');
   const searchQuery = searchParams.get('search');
   const [activeCategory, setActiveCategory] = useState<string | null>(categoryParam);
+  const observerTarget = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setActiveCategory(categoryParam);
@@ -49,12 +51,39 @@ const Deals = () => {
     },
   });
 
+  // Implement intersection observer for infinite scrolling
+  const handleObserver = useCallback((entries: IntersectionObserverEntry[]) => {
+    const target = entries[0];
+    if (target.isIntersecting && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(handleObserver, {
+      rootMargin: '0px 0px 200px 0px',
+      threshold: 0.1
+    });
+    
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+    
+    return () => {
+      if (observerTarget.current) {
+        observer.unobserve(observerTarget.current);
+      }
+    };
+  }, [handleObserver, observerTarget]);
+
   const allMessages = data?.pages.flatMap((page) => page.data) ?? [];
   
   const clearFilter = () => {
-    setActiveCategory(null);
-    // Force refetch with updated query params
-    setTimeout(() => refetch(), 0);
+    navigate('/deals');
+  };
+
+  const viewAllDeals = () => {
+    navigate('/deals');
   };
 
   const handleDeleteProduct = async (id: string) => {
@@ -144,13 +173,13 @@ const Deals = () => {
                   : "No deals available at the moment."}
             </p>
             {(activeCategory || searchQuery) && (
-              <Button onClick={clearFilter} variant="outline">
+              <Button onClick={viewAllDeals} variant="outline">
                 View All Deals
               </Button>
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {allMessages.map((message) => {
               // Skip rendering if message is undefined or doesn't have required fields
               if (!message || !message.text) {
@@ -176,6 +205,7 @@ const Deals = () => {
                     description={message.text}
                     link={message.link || ''}
                     id={messageId}
+                    createdAt={message.date || message.createdAt}
                   />
                 </div>
               );
@@ -183,24 +213,15 @@ const Deals = () => {
           </div>
         )}
 
+        {/* Intersection observer target for infinite scrolling */}
         {hasNextPage && (
-          <div className="mt-8 md:mt-12 text-center">
-            <Button
-              onClick={() => fetchNextPage()}
-              disabled={isFetchingNextPage}
-              variant="outline"
-              size="lg"
-              className="rounded-full"
-            >
-              {isFetchingNextPage ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Loading More Deals...
-                </>
-              ) : (
-                'Load More Deals'
-              )}
-            </Button>
+          <div 
+            ref={observerTarget} 
+            className="w-full h-20 flex justify-center items-center mt-4"
+          >
+            {isFetchingNextPage && (
+              <Loader2 className="w-6 h-6 animate-spin text-apple-gray" />
+            )}
           </div>
         )}
       </main>

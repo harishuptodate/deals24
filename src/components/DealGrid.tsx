@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { getTelegramMessages, deleteProduct } from '../services/api';
 import DealCard from './DealCard';
@@ -76,6 +76,7 @@ const DealGrid = () => {
   const [searchParams] = useSearchParams();
   const searchQuery = searchParams.get('search');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const observerTarget = useRef<HTMLDivElement>(null);
 
   const {
     data,
@@ -101,6 +102,31 @@ const DealGrid = () => {
       },
     },
   });
+
+  // Implement intersection observer for infinite scrolling
+  const handleObserver = useCallback((entries: IntersectionObserverEntry[]) => {
+    const target = entries[0];
+    if (target.isIntersecting && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(handleObserver, {
+      rootMargin: '0px 0px 200px 0px',
+      threshold: 0.1
+    });
+    
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+    
+    return () => {
+      if (observerTarget.current) {
+        observer.unobserve(observerTarget.current);
+      }
+    };
+  }, [handleObserver, observerTarget]);
 
   // Reset page when category or search changes
   useEffect(() => {
@@ -159,6 +185,10 @@ const DealGrid = () => {
     }
   };
 
+  const viewAllDeals = () => {
+    navigate('/deals');
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
@@ -183,7 +213,18 @@ const DealGrid = () => {
   if (allMessages.length === 0) {
     return (
       <div className="text-center py-16">
-        <p className="text-apple-gray">No deals available at the moment.</p>
+        <p className="text-apple-gray">
+          {searchQuery 
+            ? `No deals found for "${searchQuery}".` 
+            : activeCategory 
+              ? "No deals found for this category." 
+              : "No deals available at the moment."}
+        </p>
+        {(searchQuery || activeCategory) && (
+          <Button onClick={viewAllDeals} variant="outline" className="mt-4">
+            View All Deals
+          </Button>
+        )}
       </div>
     );
   }
@@ -233,29 +274,22 @@ const DealGrid = () => {
                   description={message.text}
                   link={message.link || ''}
                   id={message._id || message.id}
+                  createdAt={message.date || message.createdAt}
                 />
               </div>
             );
           })}
         </div>
 
+        {/* Intersection observer target for infinite scrolling */}
         {hasNextPage && (
-          <div className="mt-8 text-center">
-            <Button
-              onClick={() => fetchNextPage()}
-              disabled={isFetchingNextPage}
-              variant="outline"
-              className="rounded-full"
-            >
-              {isFetchingNextPage ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Loading...
-                </>
-              ) : (
-                'Load More Deals'
-              )}
-            </Button>
+          <div 
+            ref={observerTarget}
+            className="w-full h-20 flex justify-center items-center mt-4"
+          >
+            {isFetchingNextPage && (
+              <Loader2 className="w-6 h-6 animate-spin text-apple-gray" />
+            )}
           </div>
         )}
       </div>

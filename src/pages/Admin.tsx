@@ -20,7 +20,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { getClickAnalytics, getTopPerformingDeals } from '../services/api';
 import { TelegramMessage } from '../types/telegram';
-import { ChartTooltip } from '@/components/ui/chart';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface ClickData {
 	name: string;
@@ -47,7 +47,15 @@ const Admin = () => {
 				}
 				
 				const topDealsData = await getTopPerformingDeals(5);
-				setTopDeals(topDealsData);
+				if (Array.isArray(topDealsData) && topDealsData.length > 0) {
+                    // Sort by clicks in descending order
+                    const sortedDeals = [...topDealsData].sort((a, b) => 
+                        (b.clicks || 0) - (a.clicks || 0)
+                    );
+                    setTopDeals(sortedDeals.slice(0, 5));
+                } else {
+                    setTopDeals([]);
+                }
 			} catch (error) {
 				console.error('Failed to load analytics data:', error);
 				// Set fallback data if API fails
@@ -85,26 +93,27 @@ const Admin = () => {
 			);
 		}
 
-		// Create a Map to ensure uniqueness by ID
-		const uniqueDeals = new Map();
-		topDeals.forEach(deal => {
-			if (!uniqueDeals.has(deal.id)) {
-				uniqueDeals.set(deal.id, deal);
-			}
-		});
-
-		return (
-			<div className="space-y-4">
-				{Array.from(uniqueDeals.values()).map((deal) => (
-					<div key={deal.id} className="flex items-center justify-between p-2 border-b">
-						<div className="flex-1">
-							<p className="font-medium truncate">{deal.text?.substring(0, 50)}...</p>
-							<p className="text-sm text-muted-foreground">Clicks: {deal.clicks || 0}</p>
-						</div>
-					</div>
-				))}
-			</div>
-		);
+        return (
+            <ScrollArea className="h-[250px] pr-2">
+                <div className="space-y-3">
+                    {topDeals.map((deal, index) => (
+                        <div 
+                            key={deal.id || `deal-${index}`} 
+                            className="flex items-center justify-between p-2 border-b"
+                        >
+                            <div className="flex-1">
+                                <p className="font-medium truncate">
+                                    {deal.text?.substring(0, 50)}...
+                                </p>
+                                <p className="text-sm text-muted-foreground">
+                                    Clicks: {deal.clicks || 0}
+                                </p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </ScrollArea>
+        );
 	};
 
 	return (

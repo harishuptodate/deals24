@@ -5,15 +5,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { trackMessageClick } from '../services/api';
 import { useToast } from "@/components/ui/use-toast";
+import { format } from 'date-fns';
 
 interface DealCardProps {
   title: string;
   description: string;
   link: string;
   id?: string;
+  createdAt?: string;
 }
 
-const DealCard = ({ title, description, link, id }: DealCardProps) => {
+const DealCard = ({ title, description, link, id, createdAt }: DealCardProps) => {
   const { toast } = useToast();
   const [isFavorite, setIsFavorite] = useState(() => {
     const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
@@ -45,7 +47,8 @@ const DealCard = ({ title, description, link, id }: DealCardProps) => {
     }
   };
 
-  const toggleFavorite = () => {
+  const toggleFavorite = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click event
     const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
     let newFavorites;
     
@@ -113,13 +116,19 @@ const DealCard = ({ title, description, link, id }: DealCardProps) => {
     });
   };
 
+  // Format timestamp if available
+  const formattedDate = createdAt ? format(new Date(createdAt), 'MMM d, h:mm a') : '';
+
   return (
     <>
-      <div className="group animate-fade-up hover-scale">
-        <div className="relative glass-effect rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.06)]">
+      <div 
+        className="group animate-fade-up hover-scale cursor-pointer h-full" 
+        onClick={() => setIsOpen(true)}
+      >
+        <div className="relative glass-effect rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.06)] h-[460px] flex flex-col">
           <button
             onClick={toggleFavorite}
-            className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 transition-colors"
+            className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 transition-colors z-10"
           >
             <Heart
               className={`w-5 h-5 transition-colors ${
@@ -128,38 +137,48 @@ const DealCard = ({ title, description, link, id }: DealCardProps) => {
             />
           </button>
           
-          <div className="space-y-4">
+          <div className="space-y-4 flex-1 flex flex-col">
             <div className="space-y-2">
-              <span className="inline-block px-3 py-1 text-xs font-medium bg-gradient-to-r from-apple-lightGray to-white rounded-full text-apple-darkGray shadow-sm">
-                Hot Deal
-              </span>
+              {formattedDate && (
+                <span className="inline-block px-2 py-1 text-xs font-medium bg-gradient-to-r from-apple-lightGray to-white rounded-full text-apple-gray shadow-sm">
+                  {formattedDate}
+                </span>
+              )}
               <h3 className="text-xl font-semibold text-apple-darkGray line-clamp-2">{title}</h3>
             </div>
             
-            <div className="h-20 overflow-hidden">
+            <div className="flex-1 overflow-hidden">
               <p className="text-sm text-apple-gray line-clamp-4">
                 {description}
               </p>
             </div>
 
-            {hasMultipleLinks ? (
-              <Button 
-                onClick={() => setIsOpen(true)}
-                className="inline-block w-full text-center px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-apple-darkGray to-black rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-apple-darkGray/20"
-              >
-                View Deal Details
-              </Button>
-            ) : (
-              <a
-                href={link || extractFirstLink(description) || '#'}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => recordClick(link || extractFirstLink(description) || '')}
-                className="inline-block w-full text-center px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-apple-darkGray to-black rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-apple-darkGray/20"
-              >
-                Buy Now
-              </a>
-            )}
+            <div className="mt-auto">
+              {hasMultipleLinks ? (
+                <Button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsOpen(true);
+                  }}
+                  className="inline-block w-full text-center px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-apple-darkGray to-black rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-apple-darkGray/20"
+                >
+                  View Deal Details
+                </Button>
+              ) : (
+                <a
+                  href={link || extractFirstLink(description) || '#'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    recordClick(link || extractFirstLink(description) || '');
+                  }}
+                  className="inline-block w-full text-center px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-apple-darkGray to-black rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-apple-darkGray/20"
+                >
+                  Buy Now
+                </a>
+              )}
+            </div>
           </div>
         </div>
       </div>
