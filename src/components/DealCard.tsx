@@ -121,7 +121,10 @@ const DealCard = ({ title, description, link, id, createdAt, onDelete }: DealCar
             href={part}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={() => recordClick(part)}
+            onClick={(e) => {
+              e.stopPropagation();
+              recordClick(part);
+            }}
             className="text-blue-600 hover:underline break-all inline-flex items-center gap-1"
           >
             {truncateLink(part)}
@@ -139,11 +142,11 @@ const DealCard = ({ title, description, link, id, createdAt, onDelete }: DealCar
   return (
     <>
       <div 
-        className="group animate-fade-up hover-scale cursor-pointer h-[400px]" 
+        className="group animate-fade-up hover-scale cursor-pointer h-[350px]" 
         onClick={() => setIsOpen(true)}
       >
         <div className="relative glass-effect rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.06)] h-full flex flex-col">
-          <div className="absolute top-4 right-4 flex gap-2 z-10">
+          <div className="absolute top-4 right-4 flex gap-1 z-10">
             {onDelete && (
               <button
                 onClick={handleDelete}
@@ -166,30 +169,30 @@ const DealCard = ({ title, description, link, id, createdAt, onDelete }: DealCar
             </button>
           </div>
           
-          <div className="space-y-4 flex-1 flex flex-col">
-            <div className="space-y-2">
+          <div className="space-y-2 flex-1 flex flex-col">
+            <div className="space-y-1">
               {formattedDate && (
                 <span className="inline-block px-2 py-1 text-xs font-medium bg-gradient-to-r from-apple-lightGray to-white rounded-full text-apple-gray shadow-sm">
                   {formattedDate}
                 </span>
               )}
-              <h3 className="text-xl font-semibold text-apple-darkGray line-clamp-2">{title}</h3>
+              <h3 className="text-lg font-semibold text-apple-darkGray line-clamp-2">{title}</h3>
             </div>
             
-            <div className="flex-1 overflow-hidden">
-              <p className="text-sm text-apple-gray line-clamp-4">
+            <div className="mt-1">
+              <p className="text-sm text-apple-gray line-clamp-5 flex-grow">
                 {description}
               </p>
             </div>
 
-            <div className="mt-2">
+            <div className="mt-auto pt-2">
               {hasMultipleLinks ? (
                 <Button 
                   onClick={(e) => {
                     e.stopPropagation();
                     setIsOpen(true);
                   }}
-                  className="inline-block w-full text-center px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-apple-darkGray to-black rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-apple-darkGray/20"
+                  className="w-full text-center px-6 py-2 text-sm font-medium text-white bg-gradient-to-r from-apple-darkGray to-black rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-apple-darkGray/20"
                 >
                   View Deal Details
                 </Button>
@@ -202,7 +205,7 @@ const DealCard = ({ title, description, link, id, createdAt, onDelete }: DealCar
                     e.stopPropagation();
                     recordClick(link || extractFirstLink(description) || '');
                   }}
-                  className="inline-block w-full text-center px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-apple-darkGray to-black rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-apple-darkGray/20"
+                  className="inline-block w-full text-center px-6 py-2 text-sm font-medium text-white bg-gradient-to-r from-apple-darkGray to-black rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-apple-darkGray/20"
                 >
                   Buy Now
                 </a>
@@ -213,7 +216,7 @@ const DealCard = ({ title, description, link, id, createdAt, onDelete }: DealCar
       </div>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto max-w-[95vw] w-[95vw] sm:w-auto rounded-xl">
+        <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto max-w-[90vw] w-[90vw] sm:w-auto rounded-xl">
           <DialogHeader>
             <DialogTitle className="text-xl">{title}</DialogTitle>
           </DialogHeader>
@@ -225,7 +228,7 @@ const DealCard = ({ title, description, link, id, createdAt, onDelete }: DealCar
       </Dialog>
 
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent className="max-w-[95vw] sm:max-w-md rounded-xl">
+        <AlertDialogContent className="max-w-[90vw] sm:max-w-md rounded-xl">
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>

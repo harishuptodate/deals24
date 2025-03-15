@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { getTelegramMessages, deleteProduct } from '../services/api';
@@ -24,7 +23,6 @@ const CategoryFilter = ({ onSelect, current, onSubCategorySelect }: CategoryFilt
     { name: 'Fashion', slug: 'fashion' }
   ];
 
-  // Add popular subcategories for searching
   const subCategories = {
     'electronics-home': ['TV', 'Air Conditioner', 'Refrigerator', 'Washing Machine'],
     'laptops': ['Gaming Laptop', 'MacBook', 'ThinkPad', 'Ultrabook'],
@@ -103,7 +101,6 @@ const DealGrid = () => {
     },
   });
 
-  // Implement intersection observer for infinite scrolling
   const handleObserver = useCallback((entries: IntersectionObserverEntry[]) => {
     const target = entries[0];
     if (target.isIntersecting && hasNextPage && !isFetchingNextPage) {
@@ -128,7 +125,6 @@ const DealGrid = () => {
     };
   }, [handleObserver, observerTarget]);
 
-  // Reset page when category or search changes
   useEffect(() => {
     refetch();
   }, [activeCategory, searchQuery, refetch]);
@@ -248,9 +244,8 @@ const DealGrid = () => {
           onSubCategorySelect={handleSubCategorySelect}
         />
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {allMessages.map((message) => {
-            // Skip rendering if message is undefined or doesn't have required fields
             if (!message || !message.text) {
               return null;
             }
@@ -272,7 +267,6 @@ const DealGrid = () => {
           })}
         </div>
 
-        {/* Intersection observer target for infinite scrolling */}
         {hasNextPage && (
           <div 
             ref={observerTarget}

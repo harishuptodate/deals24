@@ -1,9 +1,10 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Search, Target, Heart, ShoppingBag } from 'lucide-react';
+import { Search, Target, Heart, ShoppingBag, Menu } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const Navbar = () => {
@@ -12,6 +13,7 @@ const Navbar = () => {
   const isMobile = useIsMobile();
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchPopoverOpen, setIsSearchPopoverOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -91,6 +93,7 @@ const Navbar = () => {
                 <PopoverContent 
                   className="p-2 w-[var(--radix-popover-trigger-width)] rounded-xl mt-1"
                   align="start"
+                  sideOffset={5}
                 >
                   <div className="space-y-2">
                     <h3 className="text-sm font-medium text-apple-darkGray px-2">Popular searches</h3>
@@ -111,37 +114,78 @@ const Navbar = () => {
             </form>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Link to="/deals">
-              <Button variant="ghost" size="sm" className="text-sm rounded-full">
-                <ShoppingBag className="h-5 w-5 mr-1" />
-                {!isMobile && <span>Deals</span>}
+          {isMobile ? (
+            <div className="flex items-center">
+              <Button 
+                variant="ghost" 
+                size="icon"
+                className="ml-2"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              >
+                <Menu className="h-6 w-6" />
               </Button>
-            </Link>
-            <Link to="/categories">
-              <Button variant="ghost" size="sm" className="text-sm rounded-full">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 mr-1">
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Link to="/deals">
+                <Button variant="ghost" size="sm" className="text-sm rounded-full">
+                  <ShoppingBag className="h-5 w-5 mr-1" />
+                  <span>Deals</span>
+                </Button>
+              </Link>
+              <Link to="/categories">
+                <Button variant="ghost" size="sm" className="text-sm rounded-full">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 mr-1">
+                    <rect width="7" height="7" x="3" y="3" rx="1" />
+                    <rect width="7" height="7" x="14" y="3" rx="1" />
+                    <rect width="7" height="7" x="14" y="14" rx="1" />
+                    <rect width="7" height="7" x="3" y="14" rx="1" />
+                  </svg>
+                  <span>Categories</span>
+                </Button>
+              </Link>
+              <Link to="/wishlist">
+                <Button variant="ghost" size="sm" className="text-sm rounded-full">
+                  <Heart className="h-5 w-5 mr-1" />
+                  <span>Wishlist</span>
+                </Button>
+              </Link>
+              <Link to="/admin">
+                <Button className="rounded-full">
+                  Admin
+                </Button>
+              </Link>
+            </div>
+          )}
+        </div>
+
+        {/* Mobile menu */}
+        {isMobile && mobileMenuOpen && (
+          <div className="py-2 border-t border-gray-200 animate-fade-down">
+            <div className="flex flex-col space-y-2">
+              <Link to="/deals" className="px-4 py-2 hover:bg-gray-100 rounded-md flex items-center">
+                <ShoppingBag className="h-5 w-5 mr-2" />
+                Deals
+              </Link>
+              <Link to="/categories" className="px-4 py-2 hover:bg-gray-100 rounded-md flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 mr-2">
                   <rect width="7" height="7" x="3" y="3" rx="1" />
                   <rect width="7" height="7" x="14" y="3" rx="1" />
                   <rect width="7" height="7" x="14" y="14" rx="1" />
                   <rect width="7" height="7" x="3" y="14" rx="1" />
                 </svg>
-                {!isMobile && <span>Categories</span>}
-              </Button>
-            </Link>
-            <Link to="/wishlist">
-              <Button variant="ghost" size="sm" className="text-sm rounded-full">
-                <Heart className="h-5 w-5 mr-1" />
-                {!isMobile && <span>Wishlist</span>}
-              </Button>
-            </Link>
-            <Link to="/admin">
-              <Button className="rounded-full">
+                Categories
+              </Link>
+              <Link to="/wishlist" className="px-4 py-2 hover:bg-gray-100 rounded-md flex items-center">
+                <Heart className="h-5 w-5 mr-2" />
+                Wishlist
+              </Link>
+              <Link to="/admin" className="px-4 py-2 bg-apple-darkGray text-white rounded-md flex items-center justify-center">
                 Admin
-              </Button>
-            </Link>
+              </Link>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </header>
   );
