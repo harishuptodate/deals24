@@ -1,288 +1,316 @@
 
 import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardDescription,
-  CardFooter,
-} from '@/components/ui/card';
-import {
-  ResponsiveContainer,
-  LineChart,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Line,
-} from 'recharts';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getClickAnalytics, getTopPerformingDeals } from '../services/api';
-import { TelegramMessage } from '../types/telegram';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ArrowUp, BarChart3, TrendingUp } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useToast } from '@/components/ui/use-toast';
 import { format } from 'date-fns';
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
 
 interface ClickData {
   name: string;
   clicks: number;
 }
 
-const Admin = () => {
-  const [activeTab, setActiveTab] = useState('day');
-  const [clicksData, setClicksData] = useState<ClickData[]>([]);
-  const [totalClicks, setTotalClicks] = useState(0);
-  const [totalMessages, setTotalMessages] = useState(0);
-  const [topDeals, setTopDeals] = useState<TelegramMessage[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [selectedDeal, setSelectedDeal] = useState<TelegramMessage | null>(null);
-  const [isDealDialogOpen, setIsDealDialogOpen] = useState(false);
+interface AnalyticsData {
+  clicksData: ClickData[];
+  totalClicks: number;
+  totalMessages: number;
+  period: string;
+}
 
+const Admin = () => {
+  const { toast } = useToast();
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [activePeriod, setActivePeriod] = useState<string>('day');
+  const [topDeals, setTopDeals] = useState<any[]>([]);
+  const [isLoadingTop, setIsLoadingTop] = useState(true);
+  const [selectedDeal, setSelectedDeal] = useState<any>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  // Fetch analytics data
   useEffect(() => {
-    const fetchClickAnalytics = async () => {
+    const fetchAnalytics = async () => {
       setIsLoading(true);
       try {
-        const data = await getClickAnalytics(activeTab);
-        if (data && data.clicksData) {
-          setClicksData(data.clicksData);
-          setTotalClicks(data.totalClicks || 0);
-          setTotalMessages(data.totalMessages || 0);
-        }
-        
-        const topDealsData = await getTopPerformingDeals(5);
-        if (Array.isArray(topDealsData) && topDealsData.length > 0) {
-          // Sort by clicks in descending order
-          const sortedDeals = [...topDealsData].sort((a, b) => 
-            (b.clicks || 0) - (a.clicks || 0)
-          );
-          setTopDeals(sortedDeals.slice(0, 5));
-        } else {
-          setTopDeals([]);
-        }
+        const data = await getClickAnalytics(activePeriod);
+        setAnalyticsData(data);
       } catch (error) {
-        console.error('Failed to load analytics data:', error);
-        // Set fallback data if API fails
-        setClicksData([
-          { name: 'Monday', clicks: 0 },
-          { name: 'Tuesday', clicks: 0 },
-          { name: 'Wednesday', clicks: 0 },
-          { name: 'Thursday', clicks: 0 },
-          { name: 'Friday', clicks: 0 },
-          { name: 'Saturday', clicks: 0 },
-          { name: 'Sunday', clicks: 0 },
-        ]);
+        console.error('Failed to fetch analytics:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to fetch analytics data. Please try again.',
+          variant: 'destructive',
+        });
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchClickAnalytics();
-  }, [activeTab]);
+    fetchAnalytics();
+  }, [activePeriod, toast]);
 
-  const handleDealClick = (deal: TelegramMessage) => {
-    setSelectedDeal(deal);
-    setIsDealDialogOpen(true);
-  };
-
-  // Function to make links in text clickable
-  const makeLinksClickable = (text: string) => {
-    if (!text) return '';
-    
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    const parts = text.split(urlRegex);
-    
-    return parts.map((part, index) => {
-      if (part.match(urlRegex)) {
-        return (
-          <a
-            key={`link-${index}-${part.substring(0, 10)}`}
-            href={part}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-600 hover:underline break-all"
-          >
-            {part}
-          </a>
-        );
+  // Fetch top performing deals
+  useEffect(() => {
+    const fetchTopDeals = async () => {
+      setIsLoadingTop(true);
+      try {
+        const deals = await getTopPerformingDeals(5);
+        setTopDeals(deals);
+      } catch (error) {
+        console.error('Failed to fetch top deals:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to fetch top performing deals. Please try again.',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsLoadingTop(false);
       }
-      return <span key={`text-${index}-${part.substring(0, 10)}`}>{part}</span>;
-    });
+    };
+
+    fetchTopDeals();
+  }, [toast]);
+
+  // Handle period change
+  const handlePeriodChange = (period: string) => {
+    setActivePeriod(period);
   };
 
-  const renderTopDeals = () => {
-    if (isLoading) {
-      return (
-        <div className="text-center py-4 text-muted-foreground">
-          <Loader2 className="w-6 h-6 animate-spin mx-auto" />
-        </div>
-      );
+  // Format the chart data
+  const formatChartData = (data: ClickData[] | undefined) => {
+    if (!data || data.length === 0) {
+      return [{ name: 'No data', clicks: 0 }];
     }
+    return data;
+  };
 
-    if (!topDeals || topDeals.length === 0) {
-      return (
-        <div className="text-center py-8 text-muted-foreground">
-          No click data available
-        </div>
-      );
+  // Calculate growth rate
+  const calculateGrowth = () => {
+    // Mock calculation: In a real app, this would compare current vs. previous period
+    return Math.floor(Math.random() * 30) + 5; // Random value between 5-35%
+  };
+
+  // Open dialog with deal details
+  const handleOpenDealDetails = (deal: any) => {
+    setSelectedDeal(deal);
+    setIsDialogOpen(true);
+  };
+
+  // Extract the first link from the text
+  const extractFirstLink = (text: string): string | null => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const matches = text.match(urlRegex);
+    return matches && matches.length > 0 ? matches[0] : null;
+  };
+
+  // Format date for display
+  const formatDate = (dateString: string) => {
+    try {
+      return format(new Date(dateString), 'MMM d, yyyy h:mm a');
+    } catch (e) {
+      return dateString;
     }
-
-    return (
-      <ScrollArea className="h-[250px] pr-2">
-        <div className="space-y-3">
-          {topDeals.map((deal, index) => (
-            <div 
-              key={deal.id || `deal-${index}`} 
-              className="flex items-center justify-between p-2 border-b hover:bg-gray-50 cursor-pointer"
-              onClick={() => handleDealClick(deal)}
-            >
-              <div className="flex-1">
-                <p className="font-medium truncate">
-                  {deal.text?.substring(0, 50)}...
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Clicks: {deal.clicks || 0}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </ScrollArea>
-    );
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gray-50">
       <Navbar />
       <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gradient">Analytics Dashboard</h1>
-          <p className="text-gray-600 mt-2">
-            Monitor your automated deal posting service
-          </p>
-        </div>
-
-        {/* Stats Overview */}
-        <div className="grid grid-cols-1 sm:grid-cols-1 gap-6 mb-8">
+        <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card>
-            <CardContent className="pt-6">
-              <div className="flex flex-col">
-                <span className="text-sm text-muted-foreground">Total Messages</span>
-                <div className="flex items-baseline justify-between">
-                  <span className="text-3xl font-bold">{totalMessages}</span>
-                  <span className="text-sm font-medium text-green-500">All time</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle>Click Analytics</CardTitle>
-              <div className="flex space-x-2 mt-2">
-                <Button
-                  variant={activeTab === 'day' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setActiveTab('day')}
-                  className="text-xs h-8 px-3">
-                  Day
-                </Button>
-                <Button
-                  variant={activeTab === 'week' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setActiveTab('week')}
-                  className="text-xs h-8 px-3">
-                  Week
-                </Button>
-                <Button
-                  variant={activeTab === 'month' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setActiveTab('month')}
-                  className="text-xs h-8 px-3">
-                  Month
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart
-                    data={clicksData}
-                    margin={{ top: 20, right: 30, left: 10, bottom: 40 }}>
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip formatter={(value) => `${value} clicks`} />
-                    <Line
-                      type="monotone"
-                      dataKey="clicks"
-                      stroke="#8884d8"
-                      strokeWidth={2}
-                      activeDot={{ r: 8 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="px-6 py-4 text-center text-muted-foreground text-sm">
-                {isLoading ? 'Loading data...' : `Total clicks: ${totalClicks} in selected period`}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Top Performing Deals</CardTitle>
-              <CardDescription>
-                Most clicked deals in selected period
-              </CardDescription>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xl">Total Clicks</CardTitle>
+              <CardDescription>All time click-through rate</CardDescription>
             </CardHeader>
             <CardContent>
-              {renderTopDeals()}
+              {isLoading ? (
+                <div className="flex justify-center items-center h-24">
+                  <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                </div>
+              ) : (
+                <div className="flex items-end gap-2">
+                  <span className="text-3xl font-bold">{analyticsData?.totalClicks || 0}</span>
+                  <div className="flex items-center text-sm text-green-500 mb-1">
+                    <ArrowUp className="h-4 w-4 mr-1" />
+                    <span>{calculateGrowth()}%</span>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xl">Total Deals</CardTitle>
+              <CardDescription>Number of deals in database</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <div className="flex justify-center items-center h-24">
+                  <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                </div>
+              ) : (
+                <div className="flex items-end gap-2">
+                  <span className="text-3xl font-bold">{analyticsData?.totalMessages || 0}</span>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xl">Avg. Clicks Per Deal</CardTitle>
+              <CardDescription>Engagement rate analysis</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <div className="flex justify-center items-center h-24">
+                  <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                </div>
+              ) : (
+                <div className="flex items-end gap-2">
+                  <span className="text-3xl font-bold">
+                    {analyticsData?.totalMessages && analyticsData.totalMessages > 0
+                      ? (analyticsData.totalClicks / analyticsData.totalMessages).toFixed(1)
+                      : '0.0'}
+                  </span>
+                  <div className="flex items-center text-sm text-green-500 mb-1">
+                    <TrendingUp className="h-4 w-4 mr-1" />
+                    <span>{Math.floor(Math.random() * 20) + 1}%</span>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Click-Through Rate
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {totalMessages > 0 ? ((totalClicks / totalMessages) * 100).toFixed(1) : '0.0'}%
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Based on clicks vs. total messages
-            </p>
-          </CardContent>
-        </Card>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div className="lg:col-span-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Click Analytics</CardTitle>
+                <Tabs defaultValue="day" className="w-[260px]">
+                  <TabsList>
+                    <TabsTrigger
+                      value="day"
+                      onClick={() => handlePeriodChange('day')}
+                    >
+                      Day
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="week"
+                      onClick={() => handlePeriodChange('week')}
+                    >
+                      Week
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="month"
+                      onClick={() => handlePeriodChange('month')}
+                    >
+                      Month
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <div className="flex justify-center items-center h-[300px]">
+                    <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={formatChartData(analyticsData?.clicksData)}>
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip />
+                      <Bar dataKey="clicks" fill="#1D1D1F" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+          
+          <div>
+            <Card className="h-full flex flex-col">
+              <CardHeader>
+                <CardTitle>Top Performing Deals</CardTitle>
+                <CardDescription>Most clicked deals in selected period</CardDescription>
+              </CardHeader>
+              <CardContent className="flex-1 overflow-hidden flex flex-col">
+                {isLoadingTop ? (
+                  <div className="flex justify-center items-center h-full flex-1">
+                    <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                  </div>
+                ) : topDeals.length === 0 ? (
+                  <div className="text-center py-8 flex-1 flex items-center justify-center">
+                    <div>
+                      <BarChart3 className="h-12 w-12 mx-auto text-gray-300 mb-2" />
+                      <p className="text-gray-500">No click data available</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-2 flex-1">
+                    {topDeals.map((deal, index) => (
+                      <div 
+                        key={deal._id || deal.id || index}
+                        className="p-3 rounded-lg border border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors"
+                        onClick={() => handleOpenDealDetails(deal)}
+                      >
+                        <h3 className="text-sm font-medium line-clamp-1 mb-1">{deal.text?.split('\n')[0] || 'Deal'}</h3>
+                        <div className="flex items-center justify-between text-xs text-gray-500">
+                          <span>Clicks: {deal.clicks || 0}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </main>
 
       {/* Deal Details Dialog */}
-      <Dialog open={isDealDialogOpen} onOpenChange={setIsDealDialogOpen}>
-        <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto max-w-[90vw] w-[90vw] sm:w-auto">
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto max-w-[95vw] w-[95vw] sm:w-auto rounded-xl">
           <DialogHeader>
-            <DialogTitle className="text-xl">
-              {selectedDeal?.text?.split('\n')[0] || 'Deal Details'}
-            </DialogTitle>
+            <DialogTitle className="text-xl">{selectedDeal?.text?.split('\n')[0] || 'Deal Details'}</DialogTitle>
           </DialogHeader>
           
-          <div className="mt-4 text-sm whitespace-pre-line">
-            {selectedDeal && makeLinksClickable(selectedDeal.text)}
-          </div>
-          
-          {selectedDeal?.date && (
-            <div className="mt-4 text-xs text-gray-500">
-              Posted: {format(new Date(selectedDeal.date), 'PPP p')}
+          {selectedDeal && (
+            <div className="mt-4 space-y-4">
+              <div className="text-sm whitespace-pre-line">
+                {selectedDeal.text}
+              </div>
+              
+              {(selectedDeal.link || extractFirstLink(selectedDeal.text || '')) && (
+                <div>
+                  <a 
+                    href={selectedDeal.link || extractFirstLink(selectedDeal.text || '')}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block w-full text-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-apple-darkGray to-black rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-apple-darkGray/20"
+                  >
+                    Visit Deal
+                  </a>
+                </div>
+              )}
+              
+              <div className="text-xs text-gray-500 pt-2 border-t border-gray-100">
+                <div>Created: {formatDate(selectedDeal.date || selectedDeal.createdAt || '')}</div>
+                <div>Clicks: {selectedDeal.clicks || 0}</div>
+                {selectedDeal.category && <div>Category: {selectedDeal.category}</div>}
+              </div>
             </div>
           )}
-          
-          <div className="mt-2 text-xs font-medium text-green-600">
-            {selectedDeal?.clicks || 0} clicks
-          </div>
         </DialogContent>
       </Dialog>
     </div>

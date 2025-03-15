@@ -139,7 +139,7 @@ const DealCard = ({ title, description, link, id, createdAt, onDelete }: DealCar
   return (
     <>
       <div 
-        className="group animate-fade-up hover-scale cursor-pointer h-[450px]" 
+        className="group animate-fade-up hover-scale cursor-pointer h-[400px]" 
         onClick={() => setIsOpen(true)}
       >
         <div className="relative glass-effect rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.06)] h-full flex flex-col">
@@ -182,7 +182,7 @@ const DealCard = ({ title, description, link, id, createdAt, onDelete }: DealCar
               </p>
             </div>
 
-            <div className="mt-auto">
+            <div className="mt-2">
               {hasMultipleLinks ? (
                 <Button 
                   onClick={(e) => {
@@ -213,7 +213,7 @@ const DealCard = ({ title, description, link, id, createdAt, onDelete }: DealCar
       </div>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto max-w-[90vw] w-[90vw] sm:w-auto">
+        <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto max-w-[95vw] w-[95vw] sm:w-auto rounded-xl">
           <DialogHeader>
             <DialogTitle className="text-xl">{title}</DialogTitle>
           </DialogHeader>
@@ -225,7 +225,7 @@ const DealCard = ({ title, description, link, id, createdAt, onDelete }: DealCar
       </Dialog>
 
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-[95vw] sm:max-w-md rounded-xl">
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>

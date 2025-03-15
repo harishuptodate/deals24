@@ -84,7 +84,7 @@
 
   /* Make desktop grid layout 4 columns */
   @media (min-width: 1024px) {
-    .lg\:grid-cols-3 {
+    .lg\:grid-cols-3, .lg\:grid-cols-4 {
       grid-template-columns: repeat(4, minmax(0, 1fr));
     }
   }
