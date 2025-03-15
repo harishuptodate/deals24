@@ -12,11 +12,16 @@ export const useClickTracking = ({ messageId, onSuccess, onError }: UseClickTrac
   const [isTracking, setIsTracking] = useState(false);
 
   const trackClick = useCallback(async (url: string) => {
-    if (!messageId) return;
+    if (!messageId) {
+      console.warn('Cannot track click: messageId is undefined');
+      return;
+    }
     
     setIsTracking(true);
     
     try {
+      console.log(`Tracking click for message ID: ${messageId} on URL: ${url}`);
+      
       // Store click in localStorage
       const clickData = JSON.parse(localStorage.getItem('clickData') || '[]');
       clickData.push({
@@ -26,8 +31,9 @@ export const useClickTracking = ({ messageId, onSuccess, onError }: UseClickTrac
       });
       localStorage.setItem('clickData', JSON.stringify(clickData));
       
-      // Track click to backend
+      // Track click to backend - make sure this works on mobile too
       await trackMessageClick(messageId);
+      console.log(`Successfully tracked click for message ID: ${messageId}`);
       
       if (onSuccess) {
         onSuccess();

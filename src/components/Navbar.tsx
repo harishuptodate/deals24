@@ -1,21 +1,19 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Search, Target, Heart, ShoppingBag } from 'lucide-react';
-import { useMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchPopoverOpen, setIsSearchPopoverOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Get search query from URL if it exists
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const queryParam = searchParams.get('search');
@@ -61,7 +59,6 @@ const Navbar = () => {
                 onOpenChange={(open) => {
                   setIsSearchPopoverOpen(open);
                   if (open && inputRef.current) {
-                    // Focus input when popover opens
                     setTimeout(() => {
                       inputRef.current?.focus();
                     }, 0);
