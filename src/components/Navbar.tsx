@@ -38,7 +38,7 @@ const Navbar = () => {
 
   const popularSearches = [
     'Smart TV', '4K TV', 'Gaming Laptop', 'MacBook', 'iPhone', 'Samsung', 
-    'LG', 'Washing Machine', 'Refrigerator', 'Air Conditioner', 'Headphones', 'TWS'
+    'LG', 'Washing Machine', 'Refrigerator', 'Air Conditioner', 'Headphones', 'TWS' , 'T-shirt', 'Watch'
   ];
 
   return (
