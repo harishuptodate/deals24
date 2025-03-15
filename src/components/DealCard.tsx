@@ -1,8 +1,9 @@
 
 import React, { useState } from 'react';
-import { Heart, ExternalLink } from 'lucide-react';
+import { Heart, ExternalLink, Trash2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { trackMessageClick } from '../services/api';
 import { useToast } from "@/components/ui/use-toast";
 import { format } from 'date-fns';
@@ -13,15 +14,17 @@ interface DealCardProps {
   link: string;
   id?: string;
   createdAt?: string;
+  onDelete?: (id: string) => void;
 }
 
-const DealCard = ({ title, description, link, id, createdAt }: DealCardProps) => {
+const DealCard = ({ title, description, link, id, createdAt, onDelete }: DealCardProps) => {
   const { toast } = useToast();
   const [isFavorite, setIsFavorite] = useState(() => {
     const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
     return favorites.some((fav: any) => fav.title === title);
   });
   const [isOpen, setIsOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   // Extract link from description if not provided
   const extractFirstLink = (text: string): string | null => {
@@ -66,6 +69,20 @@ const DealCard = ({ title, description, link, id, createdAt }: DealCardProps) =>
     
     localStorage.setItem('favorites', JSON.stringify(newFavorites));
     setIsFavorite(!isFavorite);
+  };
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click event
+    if (id && onDelete) {
+      setIsDeleteDialogOpen(true);
+    }
+  };
+
+  const confirmDelete = () => {
+    if (id && onDelete) {
+      onDelete(id);
+      setIsDeleteDialogOpen(false);
+    }
   };
 
   const recordClick = (clickedLink: string) => {
@@ -122,20 +139,32 @@ const DealCard = ({ title, description, link, id, createdAt }: DealCardProps) =>
   return (
     <>
       <div 
-        className="group animate-fade-up hover-scale cursor-pointer h-full" 
+        className="group animate-fade-up hover-scale cursor-pointer h-[450px]" 
         onClick={() => setIsOpen(true)}
       >
-        <div className="relative glass-effect rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.06)] h-[460px] flex flex-col">
-          <button
-            onClick={toggleFavorite}
-            className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 transition-colors z-10"
-          >
-            <Heart
-              className={`w-5 h-5 transition-colors ${
-                isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-400'
-              }`}
-            />
-          </button>
+        <div className="relative glass-effect rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.06)] h-full flex flex-col">
+          <div className="absolute top-4 right-4 flex gap-2 z-10">
+            {onDelete && (
+              <button
+                onClick={handleDelete}
+                className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                title="Delete deal"
+              >
+                <Trash2 className="w-5 h-5 text-red-500" />
+              </button>
+            )}
+            <button
+              onClick={toggleFavorite}
+              className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+              title={isFavorite ? "Remove from favorites" : "Add to favorites"}
+            >
+              <Heart
+                className={`w-5 h-5 transition-colors ${
+                  isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-400'
+                }`}
+              />
+            </button>
+          </div>
           
           <div className="space-y-4 flex-1 flex flex-col">
             <div className="space-y-2">
@@ -184,7 +213,7 @@ const DealCard = ({ title, description, link, id, createdAt }: DealCardProps) =>
       </div>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto max-w-[90vw] w-[90vw] sm:w-auto">
           <DialogHeader>
             <DialogTitle className="text-xl">{title}</DialogTitle>
           </DialogHeader>
@@ -194,6 +223,23 @@ const DealCard = ({ title, description, link, id, createdAt }: DealCardProps) =>
           </div>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this deal. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-red-500 hover:bg-red-600">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };

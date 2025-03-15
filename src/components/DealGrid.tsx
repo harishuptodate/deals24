@@ -4,7 +4,7 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { getTelegramMessages, deleteProduct } from '../services/api';
 import DealCard from './DealCard';
 import { Button } from '@/components/ui/button';
-import { Loader2, Filter, Trash2 } from 'lucide-react';
+import { Loader2, Filter } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 
@@ -154,34 +154,32 @@ const DealGrid = () => {
       });
       return;
     }
-    
-    if (window.confirm('Are you sure you want to delete this deal?')) {
-      try {
-        console.log(`Attempting to delete product with ID: ${id}`);
-        const success = await deleteProduct(id);
-        
-        if (success) {
-          toast({
-            title: 'Success',
-            description: 'Deal has been deleted successfully',
-            variant: 'default',
-          });
-          refetch();
-        } else {
-          toast({
-            title: 'Error',
-            description: 'Failed to delete deal',
-            variant: 'destructive',
-          });
-        }
-      } catch (error) {
-        console.error('Error deleting product:', error);
+
+    try {
+      console.log(`Attempting to delete product with ID: ${id}`);
+      const success = await deleteProduct(id);
+      
+      if (success) {
+        toast({
+          title: 'Success',
+          description: 'Deal has been deleted successfully',
+          variant: 'default',
+        });
+        refetch();
+      } else {
         toast({
           title: 'Error',
-          description: 'An error occurred while deleting the deal',
+          description: 'Failed to delete deal',
           variant: 'destructive',
         });
       }
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      toast({
+        title: 'Error',
+        description: 'An error occurred while deleting the deal',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -257,24 +255,17 @@ const DealGrid = () => {
               return null;
             }
             
+            const messageId = message.id || message._id;
+            
             return (
-              <div key={message._id || message.id || `message-${Math.random()}`} className="relative">
-                {(message._id || message.id) && (
-                  <button 
-                    onClick={() => handleDeleteProduct(message._id || message.id)}
-                    className="absolute top-2 right-2 z-10 bg-white rounded-full p-1 shadow-md opacity-70 hover:opacity-100 transition-opacity"
-                    title="Delete deal"
-                  >
-                    <Trash2 size={16} className="text-red-500" />
-                  </button>
-                )}
-                
+              <div key={messageId || `message-${Math.random()}`}>
                 <DealCard
                   title={message.text.split('\n')[0] || 'New Deal'} 
                   description={message.text}
                   link={message.link || ''}
-                  id={message._id || message.id}
+                  id={messageId}
                   createdAt={message.date || message.createdAt}
+                  onDelete={handleDeleteProduct}
                 />
               </div>
             );

@@ -1,6 +1,6 @@
 
 import axios from 'axios';
-import { TelegramResponse, TelegramMessage } from '../types/telegram';
+import { TelegramResponse, TelegramMessage, CategoryCount } from '../types/telegram';
 
 // Get API base URL from environment variables or use a fallback
 const getBaseUrl = () => {
@@ -106,6 +106,17 @@ export const getTelegramMessages = async (cursor?: string, category?: string | n
     
     // Return a default empty response on error
     return { data: [], hasMore: false, nextCursor: undefined };
+  }
+};
+
+// Get category counts
+export const getCategoryCounts = async (): Promise<CategoryCount[]> => {
+  try {
+    const response = await api.get('/telegram/categories/counts');
+    return response.data || [];
+  } catch (error) {
+    console.error('Failed to fetch category counts:', error);
+    return [];
   }
 };
 

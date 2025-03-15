@@ -75,10 +75,17 @@
     @apply bg-gradient-to-r from-apple-darkGray to-black text-white hover:shadow-md transition-all;
   }
 
-  /* Make grid layout 2 columns on small devices */
+  /* Make mobile grid layout 2 columns */
   @media (max-width: 640px) {
     .grid-cols-1 {
       grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  /* Make desktop grid layout 4 columns */
+  @media (min-width: 1024px) {
+    .lg\:grid-cols-3 {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
     }
   }
 }

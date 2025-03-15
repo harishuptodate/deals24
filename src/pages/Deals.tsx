@@ -5,7 +5,7 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { getTelegramMessages, deleteProduct } from '../services/api';
 import DealCard from '../components/DealCard';
 import { Button } from '@/components/ui/button';
-import { Loader2, X, Trash2 } from 'lucide-react';
+import { Loader2, X } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 
@@ -96,33 +96,31 @@ const Deals = () => {
       return;
     }
     
-    if (window.confirm('Are you sure you want to delete this deal?')) {
-      try {
-        console.log(`Attempting to delete deal with ID: ${id}`);
-        const success = await deleteProduct(id);
-        
-        if (success) {
-          toast({
-            title: 'Success',
-            description: 'Deal has been deleted successfully',
-            variant: 'default',
-          });
-          refetch();
-        } else {
-          toast({
-            title: 'Error',
-            description: 'Failed to delete deal',
-            variant: 'destructive',
-          });
-        }
-      } catch (error) {
-        console.error('Error deleting deal:', error);
+    try {
+      console.log(`Attempting to delete deal with ID: ${id}`);
+      const success = await deleteProduct(id);
+      
+      if (success) {
+        toast({
+          title: 'Success',
+          description: 'Deal has been deleted successfully',
+          variant: 'default',
+        });
+        refetch();
+      } else {
         toast({
           title: 'Error',
-          description: 'An error occurred while deleting the deal',
+          description: 'Failed to delete deal',
           variant: 'destructive',
         });
       }
+    } catch (error) {
+      console.error('Error deleting deal:', error);
+      toast({
+        title: 'Error',
+        description: 'An error occurred while deleting the deal',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -186,26 +184,17 @@ const Deals = () => {
                 return null;
               }
               
-              const messageId = message._id || message.id;
+              const messageId = message.id || message._id;
               
               return (
-                <div key={messageId || `message-${Math.random()}`} className="relative">
-                  {messageId && (
-                    <button 
-                      onClick={() => handleDeleteProduct(messageId)}
-                      className="absolute top-2 right-2 z-10 bg-white rounded-full p-1 shadow-md opacity-70 hover:opacity-100 transition-opacity"
-                      title="Delete deal"
-                    >
-                      <Trash2 size={16} className="text-red-500" />
-                    </button>
-                  )}
-                  
+                <div key={messageId || `message-${Math.random()}`}>
                   <DealCard
                     title={message.text.split('\n')[0] || 'New Deal'} 
                     description={message.text}
                     link={message.link || ''}
                     id={messageId}
                     createdAt={message.date || message.createdAt}
+                    onDelete={handleDeleteProduct}
                   />
                 </div>
               );
