@@ -47,8 +47,8 @@ const Categories = () => {
   };
 
   const popularSubCategories = [
-    'Smart TV', '4K TV', 'Gaming Laptop', 'Ultrabook', 'iPhone', 'Samsung Galaxy', 
-    'Washing Machine', 'Refrigerator', 'Air Conditioner', 'Headphone', 'T-shirt', 'Watch'
+    'Smart TV', '4K TV', 'Gaming Laptop', 'MacBook', 'iPhone', 'Samsung', 'LG',  
+    'Washing Machine', 'Refrigerator', 'Air Conditioner', 'Headphones', 'TWS', 'T-shirt', 'Watch' , 'Ultrabook'
   ];
 
   return (
