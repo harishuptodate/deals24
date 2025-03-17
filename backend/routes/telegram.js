@@ -147,11 +147,11 @@ router.get('/categories/counts', async (req, res) => {
   try {
     // Aggregate by category to get counts
     const categoryCounts = await TelegramMessage.aggregate([
-      {
-        $match: {
-          category: { $ne: null }
-        }
-      },
+      // {
+      //   $match: {
+      //     category: { $ne: null }
+      //   }
+      // },
       {
         $group: {
           _id: "$category",
