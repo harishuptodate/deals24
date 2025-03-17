@@ -206,3 +206,4 @@ router.get('/categories/counts', async (req, res) => {
 		]);
 	}
 });
+module.exports = router;
