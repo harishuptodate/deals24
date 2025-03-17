@@ -110,10 +110,14 @@ export const getTelegramMessages = async (cursor?: string, category?: string | n
 };
 
 // Get category counts
+// In api.ts, update the getCategoryCounts function:
 export const getCategoryCounts = async (): Promise<CategoryCount[]> => {
   try {
     const response = await api.get('/telegram/categories/counts');
-    return response.data || [];
+    // Check if response has data property and use it, otherwise use the response directly
+    return (response.data.data && Array.isArray(response.data.data)) 
+      ? response.data.data 
+      : (Array.isArray(response.data) ? response.data : []);
   } catch (error) {
     console.error('Failed to fetch category counts:', error);
     return [];
