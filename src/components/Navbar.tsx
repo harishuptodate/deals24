@@ -64,7 +64,20 @@ const Navbar = () => {
 				<div className="flex h-16 items-center justify-between">
 					<div className="flex items-center">
 						<Link to="/" className="flex items-center">
-							<Target className="h-8 w-8 mr-2" />
+							{/* <Target className="h-8 w-8 mr-2" /> */}
+							<img
+								src="/favicon.ico"
+								alt="Deals24"
+								className="h-8 w-8 mr-2 rounded-full"
+								onError={(e) => {
+									e.currentTarget.style.display = 'none';
+									document
+										.querySelector('.fallback-icon')
+										?.setAttribute('style', 'display: block');
+								}}
+							/>
+							<Target className="h-8 w-8 mr-2 fallback-icon hidden" />
+
 							<span className="text-2xl font-bold">Deals24</span>
 						</Link>
 					</div>
