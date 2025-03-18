@@ -25,7 +25,7 @@ const CategoryFilter = ({ onSelect, current, onSubCategorySelect }: CategoryFilt
 
   const subCategories = {
     'electronics-home': ['TV', 'Air Conditioner', 'Refrigerator', 'Washing Machine'],
-    'laptops': ['Gaming Laptop', 'MacBook', 'Mac & iMac','ThinkPad', 'Chromebook' ],
+    'laptops': ['Gaming Laptop', 'MacBook', 'Mac', 'iMac','ThinkPad', 'Chromebook' ],
     'mobile-phones': ['iPhone', 'Samsung', 'OnePlus', 'Pixel'],
     'gadgets-accessories': ['Headphones', 'Charger', 'Power Bank', 'Smartwatch'],
     'fashion': ['Shoes', 'T-Shirt', 'Watch', 'Backpack']
