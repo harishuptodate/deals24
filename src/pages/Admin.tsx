@@ -149,7 +149,7 @@ const Admin = () => {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-xl">Total Deals</CardTitle>
-              <CardDescription>Number of deals in database</CardDescription>
+              <CardDescription>Number of deals on website</CardDescription>
             </CardHeader>
             <CardContent>
               {isLoading ? (
