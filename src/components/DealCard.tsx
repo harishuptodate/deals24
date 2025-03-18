@@ -142,7 +142,7 @@ const DealCard = ({ title, description, link, id, createdAt, onDelete }: DealCar
   return (
     <>
       <div 
-        className="group animate-fade-up hover-scale cursor-pointer h-[350px]" 
+        className="group animate-fade-up hover-scale cursor-pointer h-[290px]" 
         onClick={() => setIsOpen(true)}
       >
         <div className="relative glass-effect rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.06)] h-full flex flex-col">
