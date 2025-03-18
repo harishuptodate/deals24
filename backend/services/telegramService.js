@@ -49,51 +49,57 @@ function replaceLinksAndText(text) {
  * @returns {string|undefined} - Detected category or undefined
  */
 function detectCategory(text) {
+  console.log('Detecting category for:', text);
   const categories = {
-    'laptops': [
-      'laptop', 'notebook', 'ultrabook', 'macbook', 'lenovo', 'hp', 'dell', 
-      'acer', 'asus', 'msi', 'razer', 'apple macbook', 'chromebook', 
-      'gaming laptop', 'surface laptop', 'thinkpad', 'ideapad', 'legion', 
-      'vivobook', 'zenbook', 'spectre', 'pavilion', 'omen', 'inspiron', 
-      'latitude', 'xps', 'rog', 'tuf', 'predator', 'swift', 'helios', 
-      'nitro', 'blade', 'stealth', 'probook'
+    "laptops": [
+      "laptop", "notebook", "ultrabook", "macbook", "mac", "lenovo", "hp", "dell", 
+      "acer", "asus", "msi", "razer", "apple macbook", "chromebook", 
+      "gaming laptop", "surface", "surface laptop", "thinkpad", "ideapad", 
+      "legion", "vivobook", "zenbook", "spectre", "pavilion", "omen", 
+      "inspiron", "latitude", "xps", "rog", "tuf", "predator", "swift", 
+      "helios", "nitro", "blade", "stealth", "probook"
     ],
-    'electronics-home': [
-      'washing machine', 'tv', 'television', 'sofa', 'refrigerator', 
-      'fridge', 'air conditioner', 'ac', 'microwave', 'oven', 'toaster', 
-      'dishwasher', 'water purifier', 'home theatre', 'soundbar', 'geyser', 
-      'cooler', 'vacuum cleaner', 'iron', 'induction cooktop', 'blender', 
-      'mixer grinder', 'juicer', 'coffee maker', 'rice cooker', 'heater', 
-      'fan', 'chimney', 'deep freezer', 'air fryer'
+    "electronics-home": [
+      "washing machine", "tv", "television", "smart tv", "4k", "uhd", "led", 
+      "oled", "qled", "sofa", "refrigerator", "fridge", "air conditioner", "ac", 
+      "microwave", "oven", "toaster", "dishwasher", "water purifier", "home theatre", 
+      "home theater", "soundbar", "speaker", "audio", "geyser", "cooler", 
+      "vacuum cleaner", "vacuum", "iron", "induction cooktop", "blender", 
+      "mixer grinder", "juicer", "coffee maker", "rice cooker", "heater", 
+      "fan", "chimney", "deep freezer", "air fryer", "smart home", 
+      "alexa", "echo", "google home"
     ],
-    'mobile-phones': [
-      'iphone', 'android', 'smartphone', 'mobile phone', '5g phone', 
-      'samsung', 'oneplus', 'xiaomi', 'redmi', 'oppo', 'vivo', 'realme', 
-      'motorola', 'nokia', 'google pixel', 'sony xperia', 'huawei', 
-      'asus rog phone', 'infinix', 'tecno', 'honor', 'iqoo', 'poco', 
-      'foldable phone', 'flip phone', 'flagship phone', 'budget phone', 
-      'mid-range phone', 'flagship killer'
+    "mobile-phones": [
+      "iphone", "android", "smartphone", "mobile phone", "5g phone", 
+      "samsung", "galaxy", "oneplus", "xiaomi", "redmi", "oppo", "vivo", 
+      "realme", "motorola", "nokia", "google pixel", "pixel", "sony xperia", 
+      "huawei", "asus rog phone", "infinix", "tecno", "honor", "iqoo", 
+      "poco", "foldable phone", "flip phone", "flagship phone", "budget phone", 
+      "mid-range phone", "flagship killer", "phone", "mobile", "tablet", 
+      "ipad", "watch", "smartwatch", "earphones", "airpods"
     ],
-    'gadgets-accessories': [
-      'power bank', 'tws', 'earphones', 'earbuds', 'headphones', 
-      'bluetooth earphones', 'neckband', 'chargers', 'fast charger', 
-      'usb charger', 'wireless charger', 'cable', 'usb cable', 
-      'type-c cable', 'lightning cable', 'hdmi cable', 'adapter', 
-      'memory card', 'sd card', 'pendrive', 'usb drive', 'hdd', 
-      'ssd', 'laptop bag', 'keyboard', 'mouse', 'gaming mouse', 
-      'mouse pad', 'cooling pad', 'phone case', 'screen protector', 
-      'smartwatch', 'fitness band', 'vr headset', 'gaming controller'
+    "gadgets-accessories": [
+      "power bank", "tws", "earphones", "earbuds", "headphones", 
+      "bluetooth earphones", "neckband", "chargers", "fast charger", 
+      "usb charger", "wireless charger", "cable", "usb cable", 
+      "type-c cable", "lightning cable", "hdmi cable", "adapter", 
+      "moniter", "monitor", "memory card", "sd card", "pendrive", 
+      "usb drive", "hdd", "ssd", "laptop bag", "keyboard", "mouse", 
+      "gaming mouse", "mouse pad", "cooling pad", "phone case", 
+      "screen protector", "smartwatch", "fitness band", "vr headset", 
+      "gaming controller"
     ],
-    'fashion': [
-      'clothing', 't-shirt', 'shirt', 'jeans', 'trousers', 'pants', 
-      'shorts', 'skirt', 'dress', 'jacket', 'blazer', 'sweater', 
-      'hoodie', 'coat', 'suit', 'ethnic wear', 'kurta', 'saree', 
-      'lehenga', 'salwar', 'leggings', 'innerwear', 'nightwear', 
-      'sportswear', 'shoes', 'sneakers', 'heels', 'sandals', 
-      'flip-flops', 'boots', 'formal shoes', 'loafers', 'running shoes', 
-      'belts', 'wallets', 'watches', 'sunglasses', 'jewelry', 
-      'rings', 'necklace', 'bracelet', 'earrings', 'bangles', 
-      'handbag', 'clutch', 'backpack'
+    "fashion": [
+      "clothing", "t-shirt", "tshirt", "shirt", "jeans", "trousers", 
+      "pants", "shorts", "skirt", "dress", "jacket", "blazer", "sweater", 
+      "hoodie", "coat", "suit", "ethnic wear", "kurta", "saree", 
+      "lehenga", "salwar", "leggings", "innerwear", "nightwear", 
+      "sportswear", "shoes", "sneakers", "heels", "sandals", 
+      "flip-flops", "boots", "formal shoes", "loafers", "running shoes", 
+      "belts", "wallets", "watches", "watch", "sunglasses", "jewelry", 
+      "rings", "necklace", "bracelet", "earrings", "bangles", 
+      "handbag", "clutch", "backpack", "hat", "cap", "socks", 
+      "underwear", "lingerie"
     ]
   };
 
@@ -199,16 +205,16 @@ async function saveMessage(message) {
       return null;
     }
     
-    // Check if message already exists in database
-    const existingMessage = await TelegramMessage.findOne({
-      messageId: message_id.toString(),
-      channelId
-    });
+     // Check if message already exists in database
+    // const existingMessage = await TelegramMessage.findOne({
+    //   messageId: message_id.toString(),
+    //   channelId
+    // });
     
-    if (existingMessage) {
-      console.log('Message already exists in database');
-      return existingMessage;
-    }
+    // if (existingMessage) {
+    //   console.log('Message already exists in database');
+    //   return existingMessage;
+    // }
     
     // Process the message (using your core logic)
     const processedText = replaceLinksAndText(textContent);

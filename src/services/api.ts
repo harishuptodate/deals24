@@ -128,6 +128,7 @@ export const getCategoryCounts = async (): Promise<CategoryCount[]> => {
           { category: 'fashion', count: 95 }
         ];
       }
+      console.log('API Response:', response.data);
       return response.data.data;
     }
     

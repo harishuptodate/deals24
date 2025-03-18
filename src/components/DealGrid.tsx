@@ -17,7 +17,7 @@ const CategoryFilter = ({ onSelect, current, onSubCategorySelect }: CategoryFilt
   const categories = [
     { name: 'All', slug: null },
     { name: 'Electronics & Home', slug: 'electronics-home' },
-    { name: 'Laptops', slug: 'laptops' },
+    { name: 'Laptops & PCs', slug: 'laptops' },
     { name: 'Mobile Phones', slug: 'mobile-phones' },
     { name: 'Gadgets & Accessories', slug: 'gadgets-accessories' },
     { name: 'Fashion', slug: 'fashion' }
@@ -25,7 +25,7 @@ const CategoryFilter = ({ onSelect, current, onSubCategorySelect }: CategoryFilt
 
   const subCategories = {
     'electronics-home': ['TV', 'Air Conditioner', 'Refrigerator', 'Washing Machine'],
-    'laptops': ['Gaming Laptop', 'MacBook', 'ThinkPad', 'Ultrabook'],
+    'laptops': ['Gaming Laptop', 'MacBook', 'Mac & iMac','ThinkPad', 'Chromebook' ],
     'mobile-phones': ['iPhone', 'Samsung', 'OnePlus', 'Pixel'],
     'gadgets-accessories': ['Headphones', 'Charger', 'Power Bank', 'Smartwatch'],
     'fashion': ['Shoes', 'T-Shirt', 'Watch', 'Backpack']

@@ -54,7 +54,7 @@ const Categories = () => {
       slug: 'electronics-home'
     },
     { 
-      name: 'Laptops', 
+      name: 'Laptops & PCs', 
       count: getCount('laptops'), 
       icon: <Laptop className="w-12 h-12 mb-4" />,
       description: 'Gaming laptops, ultrabooks, and productivity machines',
