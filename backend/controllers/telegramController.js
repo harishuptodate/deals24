@@ -5,10 +5,8 @@ const { saveMessage } = require('../services/telegramService');
 // Handle Telegram webhook updates
 exports.handleTelegramWebhook = async (req, res) => {
   try {
-    console.log('Received webhook update:', JSON.stringify(req.body));
-    console.log('Received webhook update:', JSON.stringify(req.body.channel_post ));
-    console.log('Received webhook update:', JSON.stringify(req.body.caption || req.body.message ));
-    
+    console.log('Received webhook update:', JSON.stringify(req.body.channel_post.caption || req.body.message.caption ));
+        
     const update = req.body;
     
     // Process the message
