@@ -68,12 +68,12 @@ npm run dev
 2. Add bot to your channel as administrator
 3. Set the required environment variables in `.env`:
    - `TELEGRAM_BOT_TOKEN`
-   - `TELEGRAM_CHANNEL_ID`
+   - `TELEGRAM_CHANNEL_ID` not really required imo
 
 4. Run the script to fetch historic messages:
 ```
 cd backend
-node scripts/fetchHistoricMessages.js
+node index.js
 ```
 
 ## API Endpoints
