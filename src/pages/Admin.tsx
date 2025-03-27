@@ -113,7 +113,7 @@
 
     // Format the chart data
     const formatChartData = (data: ClickData[] | undefined) => {
-      if (!data || data.length === 0) {
+      if (!data || !Array.isArray(data) || data.length === 0) {
         return [{ name: 'No data', clicks: 0 }];
       }
       return data;
