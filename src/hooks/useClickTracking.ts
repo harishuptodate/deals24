@@ -1,6 +1,6 @@
 
 import { useState, useCallback } from 'react';
-import { trackMessageClick } from '../services/api';
+import { trackMessageClick, handleTrackedLinkClick } from '../services/api';
 
 interface UseClickTrackingProps {
   messageId?: string;
@@ -22,18 +22,8 @@ export const useClickTracking = ({ messageId, onSuccess, onError }: UseClickTrac
     try {
       console.log(`Tracking click for message ID: ${messageId} on URL: ${url}`);
       
-      // Store click in localStorage
-      const clickData = JSON.parse(localStorage.getItem('clickData') || '[]');
-      clickData.push({
-        messageId,
-        url,
-        timestamp: new Date().toISOString()
-      });
-      localStorage.setItem('clickData', JSON.stringify(clickData));
-      
-      // Track click to backend - make sure this works on mobile too
-      await trackMessageClick(messageId);
-      console.log(`Successfully tracked click for message ID: ${messageId}`);
+      // Use the enhanced click tracking function
+      handleTrackedLinkClick(url, messageId);
       
       if (onSuccess) {
         onSuccess();

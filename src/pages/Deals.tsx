@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Navbar from '../components/Navbar';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { getTelegramMessages, deleteProduct } from '../services/api';
+import { getTelegramMessages, deleteProduct, updateMessageText } from '../services/api';
 import DealCard from '../components/DealCard';
 import { Button } from '@/components/ui/button';
 import { Loader2, X } from 'lucide-react';
@@ -124,6 +124,44 @@ const Deals = () => {
     }
   };
 
+  const handleEditProduct = async (id: string, newText: string) => {
+    if (!id) {
+      toast({
+        title: 'Error',
+        description: 'Cannot edit: Deal ID is missing',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    try {
+      console.log(`Attempting to edit deal with ID: ${id}`);
+      const success = await updateMessageText(id, newText);
+      
+      if (success) {
+        toast({
+          title: 'Success',
+          description: 'Deal has been updated successfully',
+          variant: 'default',
+        });
+        refetch();
+      } else {
+        toast({
+          title: 'Error',
+          description: 'Failed to update deal',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Error updating deal:', error);
+      toast({
+        title: 'Error',
+        description: 'An error occurred while updating the deal',
+        variant: 'destructive',
+      });
+    }
+  };
+
   let pageTitle = "Latest Deals";
   if (searchQuery) {
     pageTitle = `Search Results: ${searchQuery}`;
@@ -195,6 +233,7 @@ const Deals = () => {
                     id={messageId}
                     createdAt={message.date || message.createdAt}
                     onDelete={handleDeleteProduct}
+                    onEdit={handleEditProduct}
                   />
                 </div>
               );

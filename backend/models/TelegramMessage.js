@@ -32,6 +32,11 @@ const telegramMessageSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  dailyClicks: {
+    type: Map,
+    of: Number,
+    default: {}
+  },
   createdAt: {
     type: Date,
     default: Date.now

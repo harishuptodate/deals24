@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 import { TelegramResponse, TelegramMessage, CategoryCount } from '../types/telegram';
 
@@ -110,8 +109,6 @@ export const getTelegramMessages = async (cursor?: string, category?: string | n
 };
 
 // Get category counts
-// In api.ts, update the getCategoryCounts function:
-// api.ts - Updated getCategoryCounts function
 export const getCategoryCounts = async (): Promise<CategoryCount[]> => {
   try {
     const response = await api.get('/telegram/categories/counts');
@@ -196,7 +193,7 @@ export const getCategoryMessages = async (category: string, cursor?: string): Pr
   }
 };
 
-// Track click on a message
+// Track click on a message using Beacon API for better mobile compatibility
 export const trackMessageClick = async (messageId: string): Promise<void> => {
   try {
     if (!messageId) {
@@ -205,9 +202,62 @@ export const trackMessageClick = async (messageId: string): Promise<void> => {
     }
     
     console.log(`Tracking click for message ID: ${messageId}`);
-    await api.post(`/telegram/messages/${messageId}/click`);
+    
+    // Use Beacon API if available for better reliability during page navigation
+    if (navigator.sendBeacon) {
+      const endpoint = `${API_BASE_URL}/telegram/messages/${messageId}/click`;
+      const blob = new Blob([JSON.stringify({})], { type: 'application/json' });
+      const success = navigator.sendBeacon(endpoint, blob);
+      
+      if (!success) {
+        // Fallback to axios if beacon fails
+        await api.post(`/telegram/messages/${messageId}/click`);
+      }
+    } else {
+      // Fallback for browsers that don't support Beacon API
+      await api.post(`/telegram/messages/${messageId}/click`);
+    }
   } catch (error) {
     console.error('Failed to track message click:', error);
+  }
+};
+
+// Use this function to handle link clicks with tracking
+export const handleTrackedLinkClick = (url: string, messageId?: string): void => {
+  // Store click in localStorage
+  if (messageId) {
+    const clickData = JSON.parse(localStorage.getItem('clickData') || '[]');
+    clickData.push({
+      messageId,
+      url,
+      timestamp: new Date().toISOString()
+    });
+    localStorage.setItem('clickData', JSON.stringify(clickData));
+    
+    // Track the click using Beacon API
+    trackMessageClick(messageId);
+  }
+  
+  // Add a tiny delay to ensure the beacon request is sent
+  setTimeout(() => {
+    window.open(url, '_blank');
+  }, 100);
+};
+
+// Edit message text
+export const updateMessageText = async (messageId: string, text: string): Promise<boolean> => {
+  try {
+    if (!messageId) {
+      console.error('Cannot update: messageId is undefined or empty');
+      return false;
+    }
+    
+    console.log(`Updating text for message ID: ${messageId}`);
+    const response = await api.put(`/telegram/messages/${messageId}`, { text });
+    return response.status === 200;
+  } catch (error) {
+    console.error('Failed to update message text:', error);
+    return false;
   }
 };
 
@@ -245,7 +295,9 @@ export const getClickAnalytics = async (period: string = 'day'): Promise<any> =>
     return {
       clicksData: [],
       totalClicks: 0,
-      totalMessages: 0
+      totalMessages: 0,
+      totalMonth: 0,
+      totalYear: 0
     };
   }
 };
