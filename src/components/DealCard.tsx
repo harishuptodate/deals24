@@ -1,11 +1,18 @@
 
-import React, { useState } from 'react';
-import { Heart, ExternalLink, Trash2, PenSquare } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Heart, ExternalLink, Trash2, PenSquare, Tag } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { handleTrackedLinkClick, updateMessageText } from '../services/api';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
+import { handleTrackedLinkClick, updateMessageText, updateMessageCategory, getAllCategories } from '../services/api';
 import { useToast } from "@/components/ui/use-toast";
 import { format } from 'date-fns';
 import { isAuthenticated } from '../services/authService';
@@ -15,13 +22,26 @@ interface DealCardProps {
   description: string;
   link: string;
   id?: string;
+  category?: string;
   createdAt?: string;
   onDelete?: (id: string) => void;
   onEdit?: (id: string, newText: string) => void;
+  onCategoryUpdate?: (id: string, category: string) => void;
   isAdmin?: boolean;
 }
 
-const DealCard = ({ title, description, link, id, createdAt, onDelete, onEdit, isAdmin = false }: DealCardProps) => {
+const DealCard = ({ 
+  title, 
+  description, 
+  link, 
+  id, 
+  category, 
+  createdAt, 
+  onDelete, 
+  onEdit, 
+  onCategoryUpdate, 
+  isAdmin = false 
+}: DealCardProps) => {
   const { toast } = useToast();
   const [isFavorite, setIsFavorite] = useState(() => {
     const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
@@ -30,8 +50,34 @@ const DealCard = ({ title, description, link, id, createdAt, onDelete, onEdit, i
   const [isOpen, setIsOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [editedText, setEditedText] = useState(description);
+  const [selectedCategory, setSelectedCategory] = useState(category || '');
+  const [availableCategories, setAvailableCategories] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(false);
+
+  useEffect(() => {
+    if (isCategoryDialogOpen) {
+      fetchCategories();
+    }
+  }, [isCategoryDialogOpen]);
+
+  const fetchCategories = async () => {
+    setIsLoadingCategories(true);
+    try {
+      const categories = await getAllCategories();
+      setAvailableCategories(categories);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load categories",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoadingCategories(false);
+    }
+  };
 
   // Extract link from description if not provided
   const extractFirstLink = (text: string): string | null => {
@@ -93,6 +139,11 @@ const DealCard = ({ title, description, link, id, createdAt, onDelete, onEdit, i
     }
   };
 
+  const handleOpenCategoryDialog = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click event
+    setIsCategoryDialogOpen(true);
+  };
+
   const confirmDelete = () => {
     if (id && onDelete) {
       onDelete(id);
@@ -130,6 +181,43 @@ const DealCard = ({ title, description, link, id, createdAt, onDelete, onEdit, i
       toast({
         title: "Error",
         description: "An error occurred while updating the deal",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSaveCategory = async () => {
+    if (!id) return;
+    
+    setIsSubmitting(true);
+    
+    try {
+      const success = await updateMessageCategory(id, selectedCategory);
+      if (success) {
+        toast({
+          title: "Success",
+          description: "Category was updated successfully",
+        });
+        setIsCategoryDialogOpen(false);
+        if (onCategoryUpdate) {
+          onCategoryUpdate(id, selectedCategory);
+        } else {
+          // Refresh the page to see changes if no onCategoryUpdate handler
+          window.location.reload();
+        }
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to update category",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An error occurred while updating the category",
         variant: "destructive"
       });
     } finally {
@@ -180,11 +268,11 @@ const DealCard = ({ title, description, link, id, createdAt, onDelete, onEdit, i
             {onDelete && isAuthenticated() && (
               <>
                 <button
-                  onClick={handleDelete}
+                  onClick={handleOpenCategoryDialog}
                   className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-                  title="Delete deal"
+                  title="Change category"
                 >
-                  <Trash2 className="w-5 h-5 text-red-500" />
+                  <Tag className="w-5 h-5 text-purple-500" />
                 </button>
                 <button
                   onClick={handleEdit}
@@ -192,6 +280,13 @@ const DealCard = ({ title, description, link, id, createdAt, onDelete, onEdit, i
                   title="Edit deal"
                 >
                   <PenSquare className="w-5 h-5 text-blue-500" />
+                </button>
+                <button
+                  onClick={handleDelete}
+                  className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                  title="Delete deal"
+                >
+                  <Trash2 className="w-5 h-5 text-red-500" />
                 </button>
               </>
             )}
@@ -309,6 +404,54 @@ const DealCard = ({ title, description, link, id, createdAt, onDelete, onEdit, i
               disabled={isSubmitting || !editedText.trim()}
             >
               {isSubmitting ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
+        <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto max-w-[90vw] w-[90vw] sm:w-auto rounded-xl">
+          <DialogHeader>
+            <DialogTitle>Change Category</DialogTitle>
+          </DialogHeader>
+          
+          <div className="mt-4">
+            <Select 
+              value={selectedCategory}
+              onValueChange={setSelectedCategory}
+              disabled={isLoadingCategories}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select a category" />
+              </SelectTrigger>
+              <SelectContent>
+                {isLoadingCategories ? (
+                  <SelectItem value="loading" disabled>
+                    Loading categories...
+                  </SelectItem>
+                ) : (
+                  availableCategories.map(cat => (
+                    <SelectItem key={cat} value={cat}>
+                      {cat}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsCategoryDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSaveCategory}
+              disabled={isSubmitting || !selectedCategory.trim()}
+            >
+              {isSubmitting ? 'Saving...' : 'Save Category'}
             </Button>
           </DialogFooter>
         </DialogContent>

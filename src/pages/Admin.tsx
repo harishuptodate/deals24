@@ -3,8 +3,8 @@ import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getClickAnalytics, getTopPerformingDeals, deleteProduct, updateMessageText } from '../services/api';
-import { Loader2, ArrowUp, BarChart3, TrendingUp, Calendar, ExternalLink } from 'lucide-react';
+import { getClickAnalytics, getTopPerformingDeals, deleteProduct, updateMessageText, updateMessageCategory, getAllCategories } from '../services/api';
+import { Loader2, ArrowUp, BarChart3, TrendingUp, Calendar, ExternalLink, Tag } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from '@/components/ui/use-toast';
@@ -14,6 +14,8 @@ import { useNavigate } from 'react-router-dom';
 import { AdminLoginDialog } from '../components/AdminLoginDialog';
 import { isAuthenticated, logout } from '../services/authService';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { handleTrackedLinkClick } from '../services/api';
 
 interface ClickData {
   name: string;
@@ -39,8 +41,12 @@ const Admin = () => {
   const [selectedDeal, setSelectedDeal] = useState<any>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [editedText, setEditedText] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [availableCategories, setAvailableCategories] = useState<string[]>([]);
   const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(false);
   const navigate = useNavigate();
   const [showLoginDialog, setShowLoginDialog] = useState(false);
 
@@ -68,6 +74,28 @@ const Admin = () => {
       />
     );
   }
+
+  useEffect(() => {
+    if (isCategoryDialogOpen) {
+      fetchCategories();
+    }
+  }, [isCategoryDialogOpen]);
+
+  const fetchCategories = async () => {
+    setIsLoadingCategories(true);
+    try {
+      const categories = await getAllCategories();
+      setAvailableCategories(categories);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load categories",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoadingCategories(false);
+    }
+  };
 
   // Fetch analytics data
   useEffect(() => {
@@ -146,6 +174,14 @@ const Admin = () => {
     }
   };
 
+  // Open category dialog
+  const handleOpenCategoryDialog = () => {
+    if (selectedDeal) {
+      setSelectedCategory(selectedDeal.category || '');
+      setIsCategoryDialogOpen(true);
+    }
+  };
+
   // Save edited deal
   const handleSaveEdit = async () => {
     if (!selectedDeal || !selectedDeal._id) return;
@@ -184,6 +220,44 @@ const Admin = () => {
     }
   };
 
+  // Save category change
+  const handleSaveCategory = async () => {
+    if (!selectedDeal || !selectedDeal._id) return;
+    
+    setIsSubmittingEdit(true);
+    
+    try {
+      const success = await updateMessageCategory(selectedDeal._id, selectedCategory);
+      if (success) {
+        toast({
+          title: "Success",
+          description: "Category was updated successfully",
+        });
+        // Update the deal in the list
+        const updatedDeals = topDeals.map(deal => 
+          deal._id === selectedDeal._id ? { ...deal, category: selectedCategory } : deal
+        );
+        setTopDeals(updatedDeals);
+        setSelectedDeal({ ...selectedDeal, category: selectedCategory });
+        setIsCategoryDialogOpen(false);
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to update category",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An error occurred while updating the category",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmittingEdit(false);
+    }
+  };
+
   // Delete a deal
   const handleDeleteDeal = async (id: string) => {
     try {
@@ -213,6 +287,16 @@ const Admin = () => {
     }
   };
 
+  // Function to extract links and hostnames from URLs
+  const truncateLink = (url: string) => {
+    try {
+      const { hostname } = new URL(url);
+      return hostname;
+    } catch {
+      return url;
+    }
+  };
+
   // Function to make links in text clickable
   const makeLinksClickable = (text: string) => {
     if (!text) return '';
@@ -228,11 +312,11 @@ const Admin = () => {
             href="#"
             onClick={(e) => {
               e.preventDefault();
-              window.open(part, '_blank');
+              handleTrackedLinkClick(part, selectedDeal?._id);
             }}
             className="text-blue-600 hover:underline break-all inline-flex items-center gap-1"
           >
-            {part}
+            {truncateLink(part)}
             <ExternalLink size={12} />
           </a>
         );
@@ -425,18 +509,23 @@ const Admin = () => {
                 {makeLinksClickable(selectedDeal.text)}
               </div>
               
-              <div className="flex gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 <Button
                   onClick={handleOpenEditDialog}
                   variant="outline"
-                  className="flex-1"
                 >
-                  Edit
+                  Edit Text
+                </Button>
+                <Button
+                  onClick={handleOpenCategoryDialog}
+                  variant="outline"
+                >
+                  Change Category
                 </Button>
                 <Button
                   onClick={() => handleDeleteDeal(selectedDeal._id)}
                   variant="destructive"
-                  className="flex-1"
+                  className="col-span-2"
                 >
                   Delete
                 </Button>
@@ -480,6 +569,55 @@ const Admin = () => {
               disabled={isSubmittingEdit || !editedText.trim()}
             >
               {isSubmittingEdit ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Category Dialog */}
+      <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
+        <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto max-w-[90vw] w-[90vw] sm:w-auto rounded-xl">
+          <DialogHeader>
+            <DialogTitle>Change Category</DialogTitle>
+          </DialogHeader>
+          
+          <div className="mt-4">
+            <Select 
+              value={selectedCategory} 
+              onValueChange={setSelectedCategory}
+              disabled={isLoadingCategories}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select a category" />
+              </SelectTrigger>
+              <SelectContent>
+                {isLoadingCategories ? (
+                  <SelectItem value="loading" disabled>
+                    Loading categories...
+                  </SelectItem>
+                ) : (
+                  availableCategories.map(cat => (
+                    <SelectItem key={cat} value={cat}>
+                      {cat}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsCategoryDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSaveCategory}
+              disabled={isSubmittingEdit || !selectedCategory.trim()}
+            >
+              {isSubmittingEdit ? 'Saving...' : 'Save Category'}
             </Button>
           </DialogFooter>
         </DialogContent>

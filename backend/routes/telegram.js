@@ -1,8 +1,10 @@
+
 const express = require('express');
 const router = express.Router();
 const TelegramMessage = require('../models/TelegramMessage');
 const telegramController = require('../controllers/telegramController');
 const { getMessages, incrementClicks } = require('../services/telegramService');
+const ClickStat = require('../models/clickStat.model');
 
 // Webhook endpoint for Telegram updates
 router.post('/webhook', telegramController.handleTelegramWebhook);
@@ -58,6 +60,19 @@ router.post('/messages/:id/click', async (req, res) => {
       return res.status(404).json({ error: 'Message not found' });
     }
 
+    // Also record in the click stats collection
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set to beginning of day
+
+    await ClickStat.findOneAndUpdate(
+      { 
+        messageId: req.params.id,
+        date: today
+      },
+      { $inc: { clicks: 1 } },
+      { upsert: true, new: true }
+    );
+
     console.log(`Successfully tracked click for message ID: ${req.params.id}`);
     res.json({ success: true, clicks: updatedMessage.clicks });
   } catch (error) {
@@ -68,6 +83,33 @@ router.post('/messages/:id/click', async (req, res) => {
 
 // Edit a message text
 router.put('/messages/:id', telegramController.updateMessageText);
+
+// Update message category
+router.put('/messages/:id/category', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { category } = req.body;
+
+    if (!category) {
+      return res.status(400).json({ error: 'Category is required' });
+    }
+
+    const message = await TelegramMessage.findByIdAndUpdate(
+      id,
+      { category },
+      { new: true }
+    );
+
+    if (!message) {
+      return res.status(404).json({ error: 'Message not found' });
+    }
+
+    res.json({ success: true, message });
+  } catch (error) {
+    console.error('Error updating message category:', error);
+    res.status(500).json({ error: 'Failed to update message category' });
+  }
+});
 
 // Get messages by category
 router.get('/categories/:category', async (req, res) => {
@@ -157,6 +199,20 @@ router.get('/analytics/clicks', telegramController.getClickAnalytics);
 
 // Get top performing messages
 router.get('/analytics/top-performing', telegramController.getTopPerforming);
+
+// Get all available categories
+router.get('/categories', async (req, res) => {
+  try {
+    const categories = await TelegramMessage.distinct('category', { 
+      category: { $exists: true, $ne: null }
+    });
+    
+    res.json(categories.filter(Boolean));
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+    res.status(500).json({ error: 'Failed to fetch categories' });
+  }
+});
 
 // Get category counts
 router.get('/categories/counts', async (req, res) => {
