@@ -4,7 +4,7 @@ import Navbar from '../components/Navbar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getClickAnalytics, getTopPerformingDeals, deleteProduct, updateMessageText } from '../services/api';
-import { Loader2, ArrowUp, BarChart3, TrendingUp, Calendar } from 'lucide-react';
+import { Loader2, ArrowUp, BarChart3, TrendingUp, Calendar, ExternalLink } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from '@/components/ui/use-toast';
