@@ -1,4 +1,3 @@
-
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
@@ -6,6 +5,10 @@ const { Telegraf } = require('telegraf');
 const routes = require('./routes');
 const telegramRoutes = require('./routes/telegram');
 const { saveMessage } = require('./services/telegramService');
+const indexRouter = require('./routes/index');
+const telegramRouter = require('./routes/telegram');
+const amazonRouter = require('./routes/amazon');
+const statsRouter = require('./routes/stats.routes');
 require('dotenv').config();
 
 const app = express();
@@ -20,8 +23,10 @@ app.use(cors({
 }));
 
 // Routes
-app.use('/api', routes); // Use the combined routes
-app.use('/api/telegram', telegramRoutes); // Also keep direct access to telegram routes
+app.use('/api', indexRouter);
+app.use('/api/telegram', telegramRouter);
+app.use('/api/amazon', amazonRouter);
+app.use('/api', statsRouter);  // Make sure the stats routes are registered
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

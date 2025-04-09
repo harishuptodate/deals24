@@ -46,36 +46,51 @@ router.get('/messages/:id', async (req, res) => {
   }
 });
 
-// Track clicks on a message link
+// Track clicks on a message link - original endpoint (kept for compatibility)
 router.post('/messages/:id/click', async (req, res) => {
   try {
-    console.log(`Processing click for message ID: ${req.params.id}`);
-    const updatedMessage = await incrementClicks(req.params.id);
-
-    if (!updatedMessage) {
-      console.log(
-        `Message with ID ${req.params.id} not found for click tracking`,
-      );
-      return res.status(404).json({ error: 'Message not found' });
-    }
-
-    // Also record in the click stats collection
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Set to beginning of day
-
-    await ClickStat.findOneAndUpdate(
-      { date: today },
-      { $inc: { clicks: 1 } },
-      { upsert: true, new: true }
-    );
-
-    console.log(`Successfully tracked click for message ID: ${req.params.id}`);
-    res.json({ success: true, clicks: updatedMessage.clicks });
+    await handleClickTracking(req, res);
   } catch (error) {
     console.error('Error tracking click:', error);
     res.status(500).json({ error: 'Failed to track click' });
   }
 });
+
+// New endpoint with different naming to avoid ad blockers
+router.post('/messages/:id/track-engagement', async (req, res) => {
+  try {
+    await handleClickTracking(req, res);
+  } catch (error) {
+    console.error('Error tracking engagement:', error);
+    res.status(500).json({ error: 'Failed to track engagement' });
+  }
+});
+
+// Helper function for click tracking logic
+async function handleClickTracking(req, res) {
+  console.log(`Processing click for message ID: ${req.params.id}`);
+  const updatedMessage = await incrementClicks(req.params.id);
+
+  if (!updatedMessage) {
+    console.log(
+      `Message with ID ${req.params.id} not found for click tracking`,
+    );
+    return res.status(404).json({ error: 'Message not found' });
+  }
+
+  // Also record in the click stats collection
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Set to beginning of day
+
+  await ClickStat.findOneAndUpdate(
+    { date: today },
+    { $inc: { clicks: 1 } },
+    { upsert: true, new: true }
+  );
+
+  console.log(`Successfully tracked click for message ID: ${req.params.id}`);
+  res.json({ success: true, clicks: updatedMessage.clicks });
+}
 
 // Edit a message text
 router.put('/messages/:id', telegramController.updateMessageText);

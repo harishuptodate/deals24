@@ -193,7 +193,7 @@ export const getCategoryMessages = async (category: string, cursor?: string): Pr
   }
 };
 
-// Track click on a message using Beacon API for better mobile compatibility
+// Track click on a message using a more resilient approach
 export const trackMessageClick = async (messageId: string): Promise<boolean> => {
   try {
     if (!messageId) {
@@ -203,7 +203,8 @@ export const trackMessageClick = async (messageId: string): Promise<boolean> => 
     
     console.log(`Tracking click for message ID: ${messageId}`);
     
-    const endpoint = `${API_BASE_URL}/telegram/messages/${messageId}/click`;
+    // Use a different endpoint naming to avoid ad blockers
+    const endpoint = `${API_BASE_URL}/telegram/messages/${messageId}/track-engagement`;
     
     // For browsers that support Beacon API
     if (navigator.sendBeacon) {
@@ -211,12 +212,35 @@ export const trackMessageClick = async (messageId: string): Promise<boolean> => 
       const formData = new FormData();
       formData.append('messageId', messageId);
       
-      return navigator.sendBeacon(endpoint, formData);
-    } else {
-      // Fallback for browsers that don't support Beacon API
-      await api.post(`/telegram/messages/${messageId}/click`);
-      return true;
+      const success = navigator.sendBeacon(endpoint, formData);
+      
+      if (success) {
+        // Also update the click stat
+        try {
+          // Use a timeout to ensure the first request completes
+          setTimeout(() => {
+            const statEndpoint = `${API_BASE_URL}/stats/record-view`;
+            navigator.sendBeacon(statEndpoint);
+          }, 10);
+        } catch (err) {
+          console.warn('Failed to update daily stats:', err);
+        }
+        
+        return true;
+      }
     }
+    
+    // Fallback for browsers that don't support Beacon API
+    await api.post(`/telegram/messages/${messageId}/track-engagement`);
+    
+    // Also update the click stat
+    try {
+      await api.post('/stats/record-view');
+    } catch (err) {
+      console.warn('Failed to update daily stats:', err);
+    }
+    
+    return true;
   } catch (error) {
     console.error('Failed to track message click:', error);
     return false;
@@ -235,7 +259,7 @@ export const handleTrackedLinkClick = (url: string, messageId?: string, event?: 
     });
     localStorage.setItem('clickData', JSON.stringify(clickData));
     
-    // Track the click using Beacon API
+    // Track the click using the updated method
     const success = trackMessageClick(messageId);
     console.log(`Click tracking sent successfully: ${success}`);
   }
@@ -244,8 +268,6 @@ export const handleTrackedLinkClick = (url: string, messageId?: string, event?: 
   // don't use window.open, but still ensure tracking completes
   if (event && (event.ctrlKey || event.metaKey)) {
     // The browser will handle opening in a new tab naturally
-    // We don't need to do anything else here
-    // The tracking is already initiated above with trackMessageClick
     return;
   }
   
@@ -349,8 +371,13 @@ export const getClickStats = async (): Promise<any> => {
     return response.data;
   } catch (error) {
     console.error('Failed to fetch click stats:', error);
+    // Return a more robust default structure
     return {
-      last7Days: [],
+      last7Days: Array.from({ length: 7 }, (_, i) => {
+        const date = new Date();
+        date.setDate(date.getDate() - (6 - i));
+        return { date: date.toISOString(), clicks: 0 };
+      }),
       monthly: [],
       yearly: [],
       totalClicks: 0

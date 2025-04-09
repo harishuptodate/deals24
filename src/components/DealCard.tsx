@@ -75,6 +75,9 @@ const DealCard = ({
 	const [availableCategories, setAvailableCategories] = useState<string[]>([]);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [isLoadingCategories, setIsLoadingCategories] = useState(false);
+	const [localTitle, setLocalTitle] = useState(title);
+	const [localDescription, setLocalDescription] = useState(description);
+	const [localCategory, setLocalCategory] = useState(category || '');
 
 	useEffect(() => {
 		if (isCategoryDialogOpen) {
@@ -98,7 +101,6 @@ const DealCard = ({
 		}
 	};
 
-	// Extract link from description if not provided
 	const extractFirstLink = (text: string): string | null => {
 		const urlRegex = /(https?:\/\/[^\s]+)/g;
 		const matches = text.match(urlRegex);
@@ -123,7 +125,7 @@ const DealCard = ({
 	};
 
 	const toggleFavorite = (e: React.MouseEvent) => {
-		e.stopPropagation(); // Prevent card click event
+		e.stopPropagation();
 		const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
 		let newFavorites;
 
@@ -147,14 +149,14 @@ const DealCard = ({
 	};
 
 	const handleDelete = (e: React.MouseEvent) => {
-		e.stopPropagation(); // Prevent card click event
+		e.stopPropagation();
 		if (id && onDelete) {
 			setIsDeleteDialogOpen(true);
 		}
 	};
 
 	const handleEdit = (e: React.MouseEvent) => {
-		e.stopPropagation(); // Prevent card click event
+		e.stopPropagation();
 		if (id) {
 			setEditedText(description);
 			setIsEditDialogOpen(true);
@@ -162,7 +164,7 @@ const DealCard = ({
 	};
 
 	const handleOpenCategoryDialog = (e: React.MouseEvent) => {
-		e.stopPropagation(); // Prevent card click event
+		e.stopPropagation();
 		setIsCategoryDialogOpen(true);
 	};
 
@@ -173,7 +175,8 @@ const DealCard = ({
 		}
 	};
 
-	const handleSaveEdit = async () => {
+	const handleSaveEdit = async (e?: React.FormEvent) => {
+		if (e) e.preventDefault();
 		if (!id) return;
 
 		setIsSubmitting(true);
@@ -181,16 +184,17 @@ const DealCard = ({
 		try {
 			const success = await updateMessageText(id, editedText);
 			if (success) {
+				setLocalDescription(editedText);
+				setLocalTitle(editedText.split('\n')[0] || 'New Deal');
+				
 				toast({
 					title: 'Success',
 					description: 'Deal was updated successfully',
 				});
 				setIsEditDialogOpen(false);
+				
 				if (onEdit) {
 					onEdit(id, editedText);
-				} else {
-					// Refresh the page to see changes if no onEdit handler
-					window.location.reload();
 				}
 			} else {
 				toast({
@@ -210,7 +214,8 @@ const DealCard = ({
 		}
 	};
 
-	const handleSaveCategory = async () => {
+	const handleSaveCategory = async (e?: React.FormEvent) => {
+		if (e) e.preventDefault();
 		if (!id) return;
 
 		setIsSubmitting(true);
@@ -218,16 +223,16 @@ const DealCard = ({
 		try {
 			const success = await updateMessageCategory(id, selectedCategory);
 			if (success) {
+				setLocalCategory(selectedCategory);
+				
 				toast({
 					title: 'Success',
 					description: 'Category was updated successfully',
 				});
 				setIsCategoryDialogOpen(false);
+				
 				if (onCategoryUpdate) {
 					onCategoryUpdate(id, selectedCategory);
-				} else {
-					// Refresh the page to see changes if no onCategoryUpdate handler
-					window.location.reload();
 				}
 			} else {
 				toast({
@@ -247,7 +252,6 @@ const DealCard = ({
 		}
 	};
 
-	// Function to make links in text clickable
 	const makeLinksClickable = (text: string) => {
 		if (!text) return '';
 
@@ -284,10 +288,13 @@ const DealCard = ({
 		});
 	};
 
-	// Format timestamp if available
 	const formattedDate = createdAt
 		? format(new Date(createdAt), 'MMM d, h:mm a')
 		: '';
+
+	const displayTitle = localTitle || title;
+	const displayDescription = localDescription || description;
+	const displayCategory = localCategory || category;
 
 	return (
 		<>
@@ -341,13 +348,13 @@ const DealCard = ({
 								</span>
 							)}
 							<h3 className="text-lg font-semibold text-apple-darkGray line-clamp-2">
-								{title}
+								{displayTitle}
 							</h3>
 						</div>
 
 						<div className="mt-1">
 							<p className="text-sm text-apple-gray line-clamp-5 flex-grow">
-								{description}
+								{displayDescription}
 							</p>
 						</div>
 
@@ -373,7 +380,7 @@ const DealCard = ({
 											e.nativeEvent,
 										);
 
-										if (e.ctrlKey || e.metaKey || e.button === 1) return; // Let browser handle new tab
+										if (e.ctrlKey || e.metaKey || e.button === 1) return;
 
 										e.preventDefault();
 										e.stopPropagation();
@@ -397,11 +404,11 @@ const DealCard = ({
 			<Dialog open={isOpen} onOpenChange={setIsOpen}>
 				<DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto max-w-[90vw] w-[90vw] sm:w-auto rounded-xl">
 					<DialogHeader>
-						<DialogTitle className="text-xl">{title}</DialogTitle>
+						<DialogTitle className="text-xl">{displayTitle}</DialogTitle>
 					</DialogHeader>
 
 					<div className="mt-4 text-sm whitespace-pre-line">
-						{makeLinksClickable(description)}
+						{makeLinksClickable(displayDescription)}
 					</div>
 				</DialogContent>
 			</Dialog>
@@ -434,27 +441,33 @@ const DealCard = ({
 						<DialogTitle>Edit Deal</DialogTitle>
 					</DialogHeader>
 
-					<div className="mt-4">
-						<Textarea
-							value={editedText}
-							onChange={(e) => setEditedText(e.target.value)}
-							placeholder="Deal description"
-							className="min-h-[200px]"
-						/>
-					</div>
+					<form onSubmit={(e) => {
+						e.preventDefault();
+						handleSaveEdit();
+					}}>
+						<div className="mt-4">
+							<Textarea
+								value={editedText}
+								onChange={(e) => setEditedText(e.target.value)}
+								placeholder="Deal description"
+								className="min-h-[200px]"
+							/>
+						</div>
 
-					<DialogFooter>
-						<Button
-							variant="outline"
-							onClick={() => setIsEditDialogOpen(false)}>
-							Cancel
-						</Button>
-						<Button
-							onClick={handleSaveEdit}
-							disabled={isSubmitting || !editedText.trim()}>
-							{isSubmitting ? 'Saving...' : 'Save Changes'}
-						</Button>
-					</DialogFooter>
+						<DialogFooter className="mt-4">
+							<Button
+								type="button"
+								variant="outline"
+								onClick={() => setIsEditDialogOpen(false)}>
+								Cancel
+							</Button>
+							<Button
+								type="submit"
+								disabled={isSubmitting || !editedText.trim()}>
+								{isSubmitting ? 'Saving...' : 'Save Changes'}
+							</Button>
+						</DialogFooter>
+					</form>
 				</DialogContent>
 			</Dialog>
 
@@ -466,42 +479,48 @@ const DealCard = ({
 						<DialogTitle>Change Category</DialogTitle>
 					</DialogHeader>
 
-					<div className="mt-4">
-						<Select
-							value={selectedCategory}
-							onValueChange={setSelectedCategory}
-							disabled={isLoadingCategories}>
-							<SelectTrigger className="w-full">
-								<SelectValue placeholder="Select a category" />
-							</SelectTrigger>
-							<SelectContent>
-								{isLoadingCategories ? (
-									<SelectItem value="loading" disabled>
-										Loading categories...
-									</SelectItem>
-								) : (
-									availableCategories.map((cat) => (
-										<SelectItem key={cat} value={cat}>
-											{cat}
+					<form onSubmit={(e) => {
+						e.preventDefault();
+						handleSaveCategory();
+					}}>
+						<div className="mt-4">
+							<Select
+								value={selectedCategory}
+								onValueChange={setSelectedCategory}
+								disabled={isLoadingCategories}>
+								<SelectTrigger className="w-full">
+									<SelectValue placeholder="Select a category" />
+								</SelectTrigger>
+								<SelectContent>
+									{isLoadingCategories ? (
+										<SelectItem value="loading" disabled>
+											Loading categories...
 										</SelectItem>
-									))
-								)}
-							</SelectContent>
-						</Select>
-					</div>
+									) : (
+										availableCategories.map((cat) => (
+											<SelectItem key={cat} value={cat}>
+												{cat}
+											</SelectItem>
+										))
+									)}
+								</SelectContent>
+							</Select>
+						</div>
 
-					<DialogFooter>
-						<Button
-							variant="outline"
-							onClick={() => setIsCategoryDialogOpen(false)}>
-							Cancel
-						</Button>
-						<Button
-							onClick={handleSaveCategory}
-							disabled={isSubmitting || !selectedCategory.trim()}>
-							{isSubmitting ? 'Saving...' : 'Save Category'}
-						</Button>
-					</DialogFooter>
+						<DialogFooter className="mt-4">
+							<Button
+								type="button"
+								variant="outline"
+								onClick={() => setIsCategoryDialogOpen(false)}>
+								Cancel
+							</Button>
+							<Button
+								type="submit"
+								disabled={isSubmitting || !selectedCategory.trim()}>
+								{isSubmitting ? 'Saving...' : 'Save Category'}
+							</Button>
+						</DialogFooter>
+					</form>
 				</DialogContent>
 			</Dialog>
 		</>
