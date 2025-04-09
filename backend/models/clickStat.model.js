@@ -2,22 +2,16 @@
 const mongoose = require('mongoose');
 
 const clickStatSchema = new mongoose.Schema({
-  messageId: {
-    type: String,
-    required: true,
-  },
   date: {
     type: Date,
     required: true,
+    unique: true, // One document per day
   },
   clicks: {
     type: Number,
     default: 1,
   },
 });
-
-// Unique index to avoid duplicate daily entries
-clickStatSchema.index({ messageId: 1, date: 1 }, { unique: true });
 
 const ClickStat = mongoose.model('ClickStat', clickStatSchema);
 

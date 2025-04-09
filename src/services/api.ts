@@ -343,13 +343,18 @@ export const getClickAnalytics = async (period: string = 'day'): Promise<any> =>
 };
 
 // Get specific message click stats
-export const getClickStats = async (messageId: string): Promise<any> => {
+export const getClickStats = async (): Promise<any> => {
   try {
-    const response = await api.get(`/stats/${messageId}`);
+    const response = await api.get('/stats');
     return response.data;
   } catch (error) {
-    console.error('Failed to fetch click stats for message:', error);
-    return null;
+    console.error('Failed to fetch click stats:', error);
+    return {
+      last7Days: [],
+      monthly: [],
+      yearly: [],
+      totalClicks: 0
+    };
   }
 };
 

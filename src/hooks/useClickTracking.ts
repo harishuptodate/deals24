@@ -14,6 +14,7 @@ export const useClickTracking = ({ messageId, onSuccess, onError }: UseClickTrac
   const trackClick = useCallback(async (url: string) => {
     if (!messageId) {
       console.warn('Cannot track click: messageId is undefined');
+      window.open(url, '_blank');
       return;
     }
     
@@ -35,11 +36,16 @@ export const useClickTracking = ({ messageId, onSuccess, onError }: UseClickTrac
       let success = false;
       
       if (navigator.sendBeacon) {
-        const formData = new FormData();
-        formData.append('messageId', messageId);
+        // Create a form data object
+        const data = new FormData();
+        data.append('messageId', messageId);
         
-        const endpoint = `${window.location.origin}/api/telegram/messages/${messageId}/click`;
-        success = navigator.sendBeacon(endpoint, formData);
+        // Use the full URL path for the beacon
+        const apiBaseUrl = window.location.origin;
+        const endpoint = `${apiBaseUrl}/api/telegram/messages/${messageId}/click`;
+        
+        success = navigator.sendBeacon(endpoint, data);
+        console.log(`SendBeacon result: ${success ? 'Success' : 'Failed'}`);
       }
       
       // If beacon is not supported or failed, use standard AJAX

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import {
@@ -15,6 +16,7 @@ import {
 	updateMessageText,
 	updateMessageCategory,
 	getAllCategories,
+	getClickStats,
 } from '../services/api';
 import {
 	Loader2,
@@ -42,6 +44,8 @@ import {
 	XAxis,
 	YAxis,
 	Tooltip,
+	Line,
+	LineChart,
 } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 import { AdminLoginDialog } from '../components/AdminLoginDialog';
@@ -75,6 +79,7 @@ const Admin = () => {
 	const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(
 		null,
 	);
+	const [clickStats, setClickStats] = useState<any>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const [activePeriod, setActivePeriod] = useState<string>('day');
 	const [topDeals, setTopDeals] = useState<any[]>([]);
@@ -145,6 +150,10 @@ const Admin = () => {
 			try {
 				const data = await getClickAnalytics(activePeriod);
 				setAnalyticsData(data);
+				
+				// Also fetch detailed click stats
+				const stats = await getClickStats();
+				setClickStats(stats);
 			} catch (error) {
 				console.error('Failed to fetch analytics:', error);
 				toast({
@@ -195,6 +204,22 @@ const Admin = () => {
 		}
 		return data;
 	};
+	
+	// Format the 7-day chart data
+	const format7DayData = () => {
+		if (!clickStats || !clickStats.last7Days || !Array.isArray(clickStats.last7Days)) {
+			return [];
+		}
+		
+		return clickStats.last7Days.map((item: any) => {
+			const date = new Date(item.date);
+			return {
+				name: format(date, 'MMM d'),
+				clicks: item.clicks,
+				fullDate: date
+			};
+		});
+	};
 
 	// Calculate growth rate
 	const calculateGrowth = () => {
@@ -225,7 +250,8 @@ const Admin = () => {
 	};
 
 	// Save edited deal
-	const handleSaveEdit = async () => {
+	const handleSaveEdit = async (e: React.FormEvent) => {
+		e.preventDefault();
 		if (!selectedDeal || !selectedDeal._id) return;
 
 		setIsSubmittingEdit(true);
@@ -263,7 +289,8 @@ const Admin = () => {
 	};
 
 	// Save category change
-	const handleSaveCategory = async () => {
+	const handleSaveCategory = async (e: React.FormEvent) => {
+		e.preventDefault();
 		if (!selectedDeal || !selectedDeal._id) return;
 
 		setIsSubmittingEdit(true);
@@ -356,21 +383,15 @@ const Admin = () => {
 				return (
 					<a
 						key={`link-${index}-${part.substring(0, 10)}`}
-						href={part}
-						target="_blank"
-						rel="noopener noreferrer"
+						href="#"
 						onClick={(e) => {
-							// Let browser handle Ctrl/Cmd + Click or middle click
-							if (e.ctrlKey || e.metaKey || e.button === 1) return;
-
 							e.preventDefault();
-							e.stopPropagation();
-
-							handleTrackedLinkClick(part, selectedDeal?._id);
-
-							setTimeout(() => {
+							
+							if (selectedDeal?._id) {
+								handleTrackedLinkClick(part, selectedDeal._id);
+							} else {
 								window.open(part, '_blank');
-							}, 100);
+							}
 						}}
 						className="text-blue-600 hover:underline break-all inline-flex items-center gap-1">
 						{truncateLink(part)}
@@ -389,6 +410,19 @@ const Admin = () => {
 		} catch (e) {
 			return dateString;
 		}
+	};
+
+	// Custom tooltip for the chart
+	const CustomTooltip = ({ active, payload, label }: any) => {
+		if (active && payload && payload.length) {
+			return (
+				<div className="bg-white p-4 rounded-lg shadow-lg border border-gray-200">
+					<p className="font-semibold">{label}</p>
+					<p className="text-blue-600">Total Clicks: {payload[0].value}</p>
+				</div>
+			);
+		}
+		return null;
 	};
 
 	return (
@@ -416,7 +450,7 @@ const Admin = () => {
 							) : (
 								<div className="flex items-end gap-2">
 									<span className="text-3xl font-bold">
-										{analyticsData?.totalClicks || 0}
+										{clickStats?.totalClicks || analyticsData?.totalClicks || 0}
 									</span>
 									<div className="flex items-center text-sm text-green-500 mb-1">
 										<ArrowUp className="h-4 w-4 mr-1" />
@@ -440,7 +474,11 @@ const Admin = () => {
 							) : (
 								<div className="flex items-end gap-2">
 									<span className="text-3xl font-bold">
-										{analyticsData?.totalMonth || 0}
+										{clickStats?.monthly?.find((m: any) => {
+											const now = new Date();
+											return m._id.month === now.getMonth() + 1 && 
+												m._id.year === now.getFullYear();
+										})?.totalClicks || analyticsData?.totalMonth || 0}
 									</span>
 									<div className="flex items-center text-sm text-green-500 mb-1">
 										<Calendar className="h-4 w-4 mr-1" />
@@ -478,7 +516,8 @@ const Admin = () => {
 					<div className="lg:col-span-2">
 						<Card>
 							<CardHeader>
-								<CardTitle>Click Analytics</CardTitle>
+								<CardTitle>Performance Metrics</CardTitle>
+								<CardDescription>Last 7 Days Stats</CardDescription>
 								<Tabs defaultValue="day" className="w-[260px]">
 									<TabsList>
 										<TabsTrigger
@@ -504,13 +543,34 @@ const Admin = () => {
 									<div className="flex justify-center items-center h-[300px]">
 										<Loader2 className="h-8 w-8 animate-spin text-gray-400" />
 									</div>
+								) : clickStats ? (
+									<div className="h-[300px]">
+										<ResponsiveContainer width="100%" height="100%">
+											<LineChart 
+												data={format7DayData()} 
+												margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+											>
+												<XAxis dataKey="name" />
+												<YAxis />
+												<Tooltip content={<CustomTooltip />} />
+												<Line 
+													type="monotone" 
+													dataKey="clicks" 
+													stroke="#1D4ED8" 
+													strokeWidth={2} 
+													dot={{ r: 4 }} 
+													activeDot={{ r: 6 }} 
+												/>
+											</LineChart>
+										</ResponsiveContainer>
+									</div>
 								) : (
 									<ResponsiveContainer width="100%" height={300}>
 										<BarChart data={formatChartData(analyticsData?.clicksData)}>
 											<XAxis dataKey="name" />
 											<YAxis />
 											<Tooltip />
-											<Bar dataKey="clicks" fill="#1D1D1F" />
+											<Bar dataKey="clicks" fill="#1D4ED8" />
 										</BarChart>
 									</ResponsiveContainer>
 								)}
@@ -615,27 +675,30 @@ const Admin = () => {
 						<DialogTitle>Edit Deal</DialogTitle>
 					</DialogHeader>
 
-					<div className="mt-4">
-						<Textarea
-							value={editedText}
-							onChange={(e) => setEditedText(e.target.value)}
-							placeholder="Deal description"
-							className="min-h-[200px]"
-						/>
-					</div>
+					<form onSubmit={handleSaveEdit}>
+						<div className="mt-4">
+							<Textarea
+								value={editedText}
+								onChange={(e) => setEditedText(e.target.value)}
+								placeholder="Deal description"
+								className="min-h-[200px]"
+							/>
+						</div>
 
-					<DialogFooter>
-						<Button
-							variant="outline"
-							onClick={() => setIsEditDialogOpen(false)}>
-							Cancel
-						</Button>
-						<Button
-							onClick={handleSaveEdit}
-							disabled={isSubmittingEdit || !editedText.trim()}>
-							{isSubmittingEdit ? 'Saving...' : 'Save Changes'}
-						</Button>
-					</DialogFooter>
+						<DialogFooter className="mt-4">
+							<Button
+								type="button"
+								variant="outline"
+								onClick={() => setIsEditDialogOpen(false)}>
+								Cancel
+							</Button>
+							<Button
+								type="submit"
+								disabled={isSubmittingEdit || !editedText.trim()}>
+								{isSubmittingEdit ? 'Saving...' : 'Save Changes'}
+							</Button>
+						</DialogFooter>
+					</form>
 				</DialogContent>
 			</Dialog>
 
@@ -648,42 +711,45 @@ const Admin = () => {
 						<DialogTitle>Change Category</DialogTitle>
 					</DialogHeader>
 
-					<div className="mt-4">
-						<Select
-							value={selectedCategory}
-							onValueChange={setSelectedCategory}
-							disabled={isLoadingCategories}>
-							<SelectTrigger className="w-full">
-								<SelectValue placeholder="Select a category" />
-							</SelectTrigger>
-							<SelectContent>
-								{isLoadingCategories ? (
-									<SelectItem value="loading" disabled>
-										Loading categories...
-									</SelectItem>
-								) : (
-									availableCategories.map((cat) => (
-										<SelectItem key={cat} value={cat}>
-											{cat}
+					<form onSubmit={handleSaveCategory}>
+						<div className="mt-4">
+							<Select
+								value={selectedCategory}
+								onValueChange={setSelectedCategory}
+								disabled={isLoadingCategories}>
+								<SelectTrigger className="w-full">
+									<SelectValue placeholder="Select a category" />
+								</SelectTrigger>
+								<SelectContent>
+									{isLoadingCategories ? (
+										<SelectItem value="loading" disabled>
+											Loading categories...
 										</SelectItem>
-									))
-								)}
-							</SelectContent>
-						</Select>
-					</div>
+									) : (
+										availableCategories.map((cat) => (
+											<SelectItem key={cat} value={cat}>
+												{cat}
+											</SelectItem>
+										))
+									)}
+								</SelectContent>
+							</Select>
+						</div>
 
-					<DialogFooter>
-						<Button
-							variant="outline"
-							onClick={() => setIsCategoryDialogOpen(false)}>
-							Cancel
-						</Button>
-						<Button
-							onClick={handleSaveCategory}
-							disabled={isSubmittingEdit || !selectedCategory.trim()}>
-							{isSubmittingEdit ? 'Saving...' : 'Save Category'}
-						</Button>
-					</DialogFooter>
+						<DialogFooter className="mt-4">
+							<Button
+								type="button"
+								variant="outline"
+								onClick={() => setIsCategoryDialogOpen(false)}>
+								Cancel
+							</Button>
+							<Button
+								type="submit"
+								disabled={isSubmittingEdit || !selectedCategory.trim()}>
+								{isSubmittingEdit ? 'Saving...' : 'Save Category'}
+							</Button>
+						</DialogFooter>
+					</form>
 				</DialogContent>
 			</Dialog>
 		</div>

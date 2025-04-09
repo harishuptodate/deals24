@@ -1,4 +1,3 @@
-
 const express = require('express');
 const router = express.Router();
 const TelegramMessage = require('../models/TelegramMessage');
@@ -65,10 +64,7 @@ router.post('/messages/:id/click', async (req, res) => {
     today.setHours(0, 0, 0, 0); // Set to beginning of day
 
     await ClickStat.findOneAndUpdate(
-      { 
-        messageId: req.params.id,
-        date: today
-      },
+      { date: today },
       { $inc: { clicks: 1 } },
       { upsert: true, new: true }
     );
