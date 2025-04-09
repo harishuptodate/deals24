@@ -224,7 +224,7 @@ export const trackMessageClick = async (messageId: string): Promise<boolean> => 
 };
 
 // Use this function to handle link clicks with tracking
-export const handleTrackedLinkClick = (url: string, messageId?: string): void => {
+export const handleTrackedLinkClick = (url: string, messageId?: string, event?: MouseEvent): void => {
   // Store click in localStorage
   if (messageId) {
     const clickData = JSON.parse(localStorage.getItem('clickData') || '[]');
@@ -240,7 +240,17 @@ export const handleTrackedLinkClick = (url: string, messageId?: string): void =>
     console.log(`Click tracking sent successfully: ${success}`);
   }
   
-  // Add a tiny delay to ensure the beacon request is sent
+  // If this is called from an event handler and Ctrl/Cmd key is pressed,
+  // don't use window.open, but still ensure tracking completes
+  if (event && (event.ctrlKey || event.metaKey)) {
+    // The browser will handle opening in a new tab naturally
+    // We don't need to do anything else here
+    // The tracking is already initiated above with trackMessageClick
+    return;
+  }
+  
+  // For normal clicks, add a tiny delay to ensure the beacon request is sent
+  // and manually open the link
   setTimeout(() => {
     window.open(url, '_blank');
   }, 100);
