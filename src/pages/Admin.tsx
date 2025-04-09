@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import {
@@ -150,7 +149,7 @@ const Admin = () => {
 			try {
 				const data = await getClickAnalytics(activePeriod);
 				setAnalyticsData(data);
-				
+
 				// Also fetch detailed click stats
 				const stats = await getClickStats();
 				setClickStats(stats);
@@ -204,19 +203,23 @@ const Admin = () => {
 		}
 		return data;
 	};
-	
+
 	// Format the 7-day chart data
 	const format7DayData = () => {
-		if (!clickStats || !clickStats.last7Days || !Array.isArray(clickStats.last7Days)) {
+		if (
+			!clickStats ||
+			!clickStats.last7Days ||
+			!Array.isArray(clickStats.last7Days)
+		) {
 			return [];
 		}
-		
+
 		return clickStats.last7Days.map((item: any) => {
 			const date = new Date(item.date);
 			return {
 				name: format(date, 'MMM d'),
 				clicks: item.clicks,
-				fullDate: date
+				fullDate: date,
 			};
 		});
 	};
@@ -383,15 +386,22 @@ const Admin = () => {
 				return (
 					<a
 						key={`link-${index}-${part.substring(0, 10)}`}
-						href="#"
+						href={part}
+						target="_blank"
+						rel="noopener noreferrer"
 						onClick={(e) => {
-							e.preventDefault();
-							
 							if (selectedDeal?._id) {
-								handleTrackedLinkClick(part, selectedDeal._id);
-							} else {
-								window.open(part, '_blank');
+								handleTrackedLinkClick(part, selectedDeal._id, e.nativeEvent);
 							}
+
+							if (e.ctrlKey || e.metaKey || e.button === 1) return;
+
+							e.preventDefault();
+							e.stopPropagation();
+
+							setTimeout(() => {
+								window.open(part, '_blank');
+							}, 100);
 						}}
 						className="text-blue-600 hover:underline break-all inline-flex items-center gap-1">
 						{truncateLink(part)}
@@ -476,9 +486,13 @@ const Admin = () => {
 									<span className="text-3xl font-bold">
 										{clickStats?.monthly?.find((m: any) => {
 											const now = new Date();
-											return m._id.month === now.getMonth() + 1 && 
-												m._id.year === now.getFullYear();
-										})?.totalClicks || analyticsData?.totalMonth || 0}
+											return (
+												m._id.month === now.getMonth() + 1 &&
+												m._id.year === now.getFullYear()
+											);
+										})?.totalClicks ||
+											analyticsData?.totalMonth ||
+											0}
 									</span>
 									<div className="flex items-center text-sm text-green-500 mb-1">
 										<Calendar className="h-4 w-4 mr-1" />
@@ -546,20 +560,19 @@ const Admin = () => {
 								) : clickStats ? (
 									<div className="h-[300px]">
 										<ResponsiveContainer width="100%" height="100%">
-											<LineChart 
-												data={format7DayData()} 
-												margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
-											>
+											<LineChart
+												data={format7DayData()}
+												margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
 												<XAxis dataKey="name" />
 												<YAxis />
 												<Tooltip content={<CustomTooltip />} />
-												<Line 
-													type="monotone" 
-													dataKey="clicks" 
-													stroke="#1D4ED8" 
-													strokeWidth={2} 
-													dot={{ r: 4 }} 
-													activeDot={{ r: 6 }} 
+												<Line
+													type="monotone"
+													dataKey="clicks"
+													stroke="#1D4ED8"
+													strokeWidth={2}
+													dot={{ r: 4 }}
+													activeDot={{ r: 6 }}
 												/>
 											</LineChart>
 										</ResponsiveContainer>

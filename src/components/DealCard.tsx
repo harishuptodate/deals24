@@ -165,6 +165,7 @@ const DealCard = ({
 
 	const handleOpenCategoryDialog = (e: React.MouseEvent) => {
 		e.stopPropagation();
+		setSelectedCategory(category || ''); // ✅ preselect the right value
 		setIsCategoryDialogOpen(true);
 	};
 
@@ -186,13 +187,13 @@ const DealCard = ({
 			if (success) {
 				setLocalDescription(editedText);
 				setLocalTitle(editedText.split('\n')[0] || 'New Deal');
-				
+
 				toast({
 					title: 'Success',
 					description: 'Deal was updated successfully',
 				});
 				setIsEditDialogOpen(false);
-				
+
 				if (onEdit) {
 					onEdit(id, editedText);
 				}
@@ -224,13 +225,13 @@ const DealCard = ({
 			const success = await updateMessageCategory(id, selectedCategory);
 			if (success) {
 				setLocalCategory(selectedCategory);
-				
+
 				toast({
 					title: 'Success',
 					description: 'Category was updated successfully',
 				});
 				setIsCategoryDialogOpen(false);
-				
+
 				if (onCategoryUpdate) {
 					onCategoryUpdate(id, selectedCategory);
 				}
@@ -441,10 +442,11 @@ const DealCard = ({
 						<DialogTitle>Edit Deal</DialogTitle>
 					</DialogHeader>
 
-					<form onSubmit={(e) => {
-						e.preventDefault();
-						handleSaveEdit();
-					}}>
+					<form
+						onSubmit={(e) => {
+							e.preventDefault();
+							handleSaveEdit();
+						}}>
 						<div className="mt-4">
 							<Textarea
 								value={editedText}
@@ -479,10 +481,11 @@ const DealCard = ({
 						<DialogTitle>Change Category</DialogTitle>
 					</DialogHeader>
 
-					<form onSubmit={(e) => {
-						e.preventDefault();
-						handleSaveCategory();
-					}}>
+					<form
+						onSubmit={(e) => {
+							e.preventDefault();
+							handleSaveCategory();
+						}}>
 						<div className="mt-4">
 							<Select
 								value={selectedCategory}

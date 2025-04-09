@@ -52,11 +52,10 @@ function detectCategory(text) {
   console.log('Detecting category for:', text);
   const categories = {
     "laptops": [
-      "laptop", "notebook", "ultrabook", "macbook", "mac", "lenovo", "hp", "dell", 
-      "acer", "asus", "msi", "razer", "apple macbook", "chromebook", 
+      "laptop", "notebook", "ultrabook", "macbook", "mac", "lenovo", "hp", "dell", "asus", "msi", "razer", "apple macbook", "chromebook", 
       "gaming laptop", "surface", "surface laptop", "thinkpad", "ideapad", 
       "legion", "vivobook", "zenbook", "spectre", "pavilion", "omen", 
-      "inspiron", "latitude", "xps", "rog", "tuf", "predator", "swift", 
+      "inspiron", "latitude", "rog", "tuf", "predator", "swift", 
       "helios", "nitro", "blade", "stealth", "probook"
     ],
     "electronics-home": [
@@ -76,7 +75,7 @@ function detectCategory(text) {
       "huawei", "asus rog phone", "infinix", "tecno", "honor", "iqoo", 
       "poco", "foldable phone", "flip phone", "flagship phone", "budget phone", 
       "mid-range phone", "flagship killer", "phone", "mobile", "tablet", 
-      "ipad", "watch", "smartwatch", "earphones", "airpods"
+      "ipad", "smartwatch", "earphones", "airpods"
     ],
     "gadgets-accessories": [
       "power bank", "tws", "earphones", "earbuds", "headphones", 
