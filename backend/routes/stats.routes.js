@@ -3,7 +3,10 @@ const express = require('express');
 const router = express.Router();
 const { getStats } = require('../controllers/stats.controller');
 
+// Get stats with optional period parameter
 router.get('/stats', getStats);
+
+// Record a view/click
 router.post('/stats/record-view', async (req, res) => {
   try {
     const ClickStat = require('../models/clickStat.model');

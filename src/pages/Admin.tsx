@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import {
@@ -58,10 +59,12 @@ import {
 	SelectValue,
 } from '@/components/ui/select';
 import { handleTrackedLinkClick } from '../services/api';
+import DeleteConfirmDialog from '../components/DeleteConfirmDialog';
 
 interface ClickData {
 	name: string;
 	clicks: number;
+	dateRange?: string;
 }
 
 interface AnalyticsData {
@@ -87,6 +90,7 @@ const Admin = () => {
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
 	const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 	const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
+	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 	const [editedText, setEditedText] = useState('');
 	const [selectedCategory, setSelectedCategory] = useState('');
 	const [availableCategories, setAvailableCategories] = useState<string[]>([]);
@@ -150,8 +154,8 @@ const Admin = () => {
 				const data = await getClickAnalytics(activePeriod);
 				setAnalyticsData(data);
 
-				// Also fetch detailed click stats
-				const stats = await getClickStats();
+				// Also fetch detailed click stats with the current period
+				const stats = await getClickStats(activePeriod);
 				setClickStats(stats);
 			} catch (error) {
 				console.error('Failed to fetch analytics:', error);
@@ -204,24 +208,24 @@ const Admin = () => {
 		return data;
 	};
 
-	// Format the 7-day chart data
-	const format7DayData = () => {
-		if (
-			!clickStats ||
-			!clickStats.last7Days ||
-			!Array.isArray(clickStats.last7Days)
-		) {
+	// Format data based on the active period
+	const formatPeriodData = () => {
+		if (!clickStats) {
 			return [];
 		}
 
-		return clickStats.last7Days.map((item: any) => {
-			const date = new Date(item.date);
-			return {
-				name: format(date, 'MMM d'),
-				clicks: item.clicks,
-				fullDate: date,
-			};
-		});
+		// For day view (7 days)
+		if (activePeriod === 'day' && clickStats.last7Days) {
+			return clickStats.last7Days;
+		}
+		
+		// For week, month, or year views
+		if (clickStats.data && Array.isArray(clickStats.data)) {
+			return clickStats.data;
+		}
+
+		// Fallback
+		return [];
 	};
 
 	// Calculate growth rate
@@ -335,17 +339,24 @@ const Admin = () => {
 		}
 	};
 
-	// Delete a deal
-	const handleDeleteDeal = async (id: string) => {
+	// Prepare to delete a deal
+	const handleDeleteDealClick = (id: string) => {
+		setIsDeleteDialogOpen(true);
+	};
+
+	// Delete a deal after confirmation
+	const handleDeleteDeal = async () => {
+		if (!selectedDeal || !selectedDeal._id) return;
+		
 		try {
-			const success = await deleteProduct(id);
+			const success = await deleteProduct(selectedDeal._id);
 			if (success) {
 				toast({
 					title: 'Success',
 					description: 'Deal was deleted successfully',
 				});
 				// Remove the deal from the list
-				const updatedDeals = topDeals.filter((deal) => deal._id !== id);
+				const updatedDeals = topDeals.filter((deal) => deal._id !== selectedDeal._id);
 				setTopDeals(updatedDeals);
 				setIsDialogOpen(false);
 			} else {
@@ -425,14 +436,32 @@ const Admin = () => {
 	// Custom tooltip for the chart
 	const CustomTooltip = ({ active, payload, label }: any) => {
 		if (active && payload && payload.length) {
+			const data = payload[0]?.payload;
+			
 			return (
 				<div className="bg-white p-4 rounded-lg shadow-lg border border-gray-200">
 					<p className="font-semibold">{label}</p>
+					{data?.dateRange && <p className="text-gray-500 text-xs">{data.dateRange}</p>}
 					<p className="text-blue-600">Total Clicks: {payload[0].value}</p>
 				</div>
 			);
 		}
 		return null;
+	};
+
+	// Get chart title based on active period
+	const getChartTitle = () => {
+		switch (activePeriod) {
+			case 'week':
+				return 'Weekly Performance';
+			case 'month':
+				return 'Monthly Performance';
+			case 'year':
+				return 'Yearly Performance';
+			case 'day':
+			default:
+				return 'Daily Performance';
+		}
 	};
 
 	return (
@@ -530,9 +559,17 @@ const Admin = () => {
 					<div className="lg:col-span-2">
 						<Card>
 							<CardHeader>
-								<CardTitle>Performance Metrics</CardTitle>
-								<CardDescription>Last 7 Days Stats</CardDescription>
-								<Tabs defaultValue="day" className="w-[260px]">
+								<CardTitle>{getChartTitle()}</CardTitle>
+								<CardDescription>
+									{activePeriod === 'day' 
+										? 'Last 7 Days Stats' 
+										: activePeriod === 'week' 
+										? 'Last 7 Weeks Stats' 
+										: activePeriod === 'month' 
+										? 'Last 7 Months Stats' 
+										: 'Last 3 Years Stats'}
+								</CardDescription>
+								<Tabs defaultValue={activePeriod} className="w-[340px]">
 									<TabsList>
 										<TabsTrigger
 											value="day"
@@ -549,6 +586,11 @@ const Admin = () => {
 											onClick={() => handlePeriodChange('month')}>
 											Month
 										</TabsTrigger>
+										<TabsTrigger
+											value="year"
+											onClick={() => handlePeriodChange('year')}>
+											Year
+										</TabsTrigger>
 									</TabsList>
 								</Tabs>
 							</CardHeader>
@@ -557,11 +599,11 @@ const Admin = () => {
 									<div className="flex justify-center items-center h-[300px]">
 										<Loader2 className="h-8 w-8 animate-spin text-gray-400" />
 									</div>
-								) : clickStats ? (
+								) : (
 									<div className="h-[300px]">
 										<ResponsiveContainer width="100%" height="100%">
 											<LineChart
-												data={format7DayData()}
+												data={formatPeriodData()}
 												margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
 												<XAxis dataKey="name" />
 												<YAxis />
@@ -577,15 +619,6 @@ const Admin = () => {
 											</LineChart>
 										</ResponsiveContainer>
 									</div>
-								) : (
-									<ResponsiveContainer width="100%" height={300}>
-										<BarChart data={formatChartData(analyticsData?.clicksData)}>
-											<XAxis dataKey="name" />
-											<YAxis />
-											<Tooltip />
-											<Bar dataKey="clicks" fill="#1D4ED8" />
-										</BarChart>
-									</ResponsiveContainer>
 								)}
 							</CardContent>
 						</Card>
@@ -605,7 +638,7 @@ const Admin = () => {
 										<Loader2 className="h-8 w-8 animate-spin text-gray-400" />
 									</div>
 								) : topDeals.length === 0 ? (
-									<div className="text-center py-8 flex-1 flex items-center justify-center">
+									<div className="text-center py-8 mb-8 flex-1 flex items-center justify-center">
 										<div>
 											<BarChart3 className="h-12 w-12 mx-auto text-gray-300 mb-2" />
 											<p className="text-gray-500">No click data available</p>
@@ -657,7 +690,7 @@ const Admin = () => {
 									Change Category
 								</Button>
 								<Button
-									onClick={() => handleDeleteDeal(selectedDeal._id)}
+									onClick={() => handleDeleteDealClick(selectedDeal._id)}
 									variant="destructive"
 									className="col-span-2">
 									Delete
@@ -765,6 +798,15 @@ const Admin = () => {
 					</form>
 				</DialogContent>
 			</Dialog>
+
+			{/* Delete Confirmation Dialog */}
+			<DeleteConfirmDialog
+				isOpen={isDeleteDialogOpen}
+				onClose={() => setIsDeleteDialogOpen(false)}
+				onConfirm={handleDeleteDeal}
+				title="Delete Deal"
+				description="This deal will be permanently removed. This action cannot be undone."
+			/>
 		</div>
 	);
 };
