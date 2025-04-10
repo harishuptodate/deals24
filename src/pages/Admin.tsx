@@ -9,7 +9,6 @@ import {
 } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-	getClickAnalytics,
 	getTopPerformingDeals,
 	deleteProduct,
 	updateMessageText,
@@ -37,10 +36,7 @@ import {
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
-import { format } from 'date-fns';
-import { 
-  ResponsiveContainer
-} from 'recharts';
+import { subDays, format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { AdminLoginDialog } from '../components/AdminLoginDialog';
 import { isAuthenticated, logout } from '../services/authService';
@@ -55,6 +51,8 @@ import {
 import { handleTrackedLinkClick } from '../services/api';
 import { Input } from '@/components/ui/input';
 import PerformanceMetricsChart from '../components/admin/PerformanceMetricsChart';
+import AvgClicksCard from '@/components/AvgClicksCard';
+import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
 
 interface ClickData {
 	name: string;
@@ -76,10 +74,12 @@ const Admin = () => {
 	const { toast } = useToast();
 	const [clickStats, setClickStats] = useState<StatsData | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
-	const [activePeriod, setActivePeriod] = useState<'day' | 'week' | 'month' | 'year'>('day');
+	const [activePeriod, setActivePeriod] = useState<
+		'day' | 'week' | 'month' | 'year'
+	>('day');
 	const [topDeals, setTopDeals] = useState<any[]>([]);
-	const [isLoadingTop, setIsLoadingTop] = useState(true);
 	const [selectedDeal, setSelectedDeal] = useState<any>(null);
+	const [isLoadingTop, setIsLoadingTop] = useState(true);
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
 	const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 	const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
@@ -94,15 +94,47 @@ const Admin = () => {
 	const navigate = useNavigate();
 	const [showLoginDialog, setShowLoginDialog] = useState(false);
 	const [totalDealsCount, setTotalDealsCount] = useState<number>(0);
-	
+
+	const periodMap = {
+		// this is for Total clicks for selected period Card to plot graph
+		day: 'daily',
+		week: 'weekly',
+		month: 'monthly',
+		year: 'yearly',
+	} as const;
+
+	// Create an array of the last 7 days
+	const getLast7DaysTrend = (deals: any[]) => {
+		// this is for Total deals Card to plot graph
+		const today = new Date();
+		const last7Days = Array.from({ length: 7 }).map((_, i) => {
+			const d = subDays(today, 6 - i);
+			return {
+				date: format(d, 'yyyy-MM-dd'),
+				name: format(d, 'MMM d'),
+				count: 0,
+			};
+		});
+
+		deals.forEach((deal) => {
+			const created = deal.createdAt || deal.date;
+			if (!created) return;
+			const dateStr = format(new Date(created), 'yyyy-MM-dd');
+			const match = last7Days.find((d) => d.date === dateStr);
+			if (match) match.count += 1;
+		});
+
+		return last7Days;
+	};
+	const dealTrendData = getLast7DaysTrend(topDeals);
+
 	// The deletion password should be set in an environment variable
 	// For this implementation, I'll use a hardcoded password as a fallback
 	const correctPassword = import.meta.env.VITE_DELETE_PASSWORD || 'admin123';
-	
+
 	useEffect(() => {
 		if (!isAuthenticated()) {
 			setShowLoginDialog(true);
-			{console.log(totalDealsCount)}
 		}
 	}, []);
 
@@ -154,7 +186,6 @@ const Admin = () => {
 			try {
 				const stats = await getClickStats();
 				setClickStats(stats);
-
 			} catch (error) {
 				console.error('Failed to fetch click stats:', error);
 				toast({
@@ -175,10 +206,9 @@ const Admin = () => {
 		const fetchTopDeals = async () => {
 			setIsLoadingTop(true);
 			try {
-				const {topMessages, totalMessages} = await getTopPerformingDeals(5);
+				const { topMessages, totalMessages } = await getTopPerformingDeals(5);
 				setTopDeals(topMessages);
-				setTotalDealsCount(totalMessages ? totalMessages : 100)
-				
+				setTotalDealsCount(totalMessages ? totalMessages : 100);
 			} catch (error) {
 				console.error('Failed to fetch top deals:', error);
 				toast({
@@ -204,7 +234,7 @@ const Admin = () => {
 	// Get current chart data based on active period
 	const getChartData = () => {
 		if (!clickStats) return [];
-		
+
 		switch (activePeriod) {
 			case 'day':
 				return clickStats.daily || [];
@@ -217,12 +247,6 @@ const Admin = () => {
 			default:
 				return clickStats.daily || [];
 		}
-	};
-
-	// Calculate growth rate
-	const calculateGrowth = () => {
-		// Mock calculation: In a real app, this would compare current vs. previous period
-		return Math.floor(Math.random() * 30) + 5; // Random value between 5-35%
 	};
 
 	// Open dialog with deal details
@@ -340,16 +364,16 @@ const Admin = () => {
 	// Delete a deal with password confirmation
 	const handleDeleteDeal = async (e: React.FormEvent) => {
 		e.preventDefault();
-		
+
 		if (!selectedDeal || !selectedDeal._id) {
 			return;
 		}
-		
+
 		if (deletePassword !== correctPassword) {
 			setDeleteError('Incorrect password. Please try again.');
 			return;
 		}
-		
+
 		try {
 			const success = await deleteProduct(selectedDeal._id);
 			if (success) {
@@ -358,7 +382,9 @@ const Admin = () => {
 					description: 'Deal was deleted successfully',
 				});
 				// Remove the deal from the list
-				const updatedDeals = topDeals.filter((deal) => deal._id !== selectedDeal._id);
+				const updatedDeals = topDeals.filter(
+					(deal) => deal._id !== selectedDeal._id,
+				);
 				setTopDeals(updatedDeals);
 				setIsDeleteDialogOpen(false);
 				setIsDialogOpen(false);
@@ -439,7 +465,7 @@ const Admin = () => {
 	// Get period specific totals
 	const getPeriodTotals = () => {
 		if (!clickStats) return 0;
-		
+
 		switch (activePeriod) {
 			case 'month':
 				return clickStats.totalMonthClicks || 0;
@@ -478,76 +504,75 @@ const Admin = () => {
 				</div>
 
 				<div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-					<Card>
-						<CardHeader className="pb-2">
-							<CardTitle className="text-xl">Total Clicks</CardTitle>
-							<CardDescription>All time click-through rate</CardDescription>
-						</CardHeader>
-						<CardContent>
-							{isLoading ? (
-								<div className="flex justify-center items-center h-24">
-									<Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-								</div>
-							) : (
-								<div className="flex items-end gap-2">
-									<span className="text-3xl font-bold">
-										{clickStats?.totalClicks || 0}
-									</span>
-									<div className="flex items-center text-sm text-green-500 mb-1">
-										<ArrowUp className="h-4 w-4 mr-1" />
-										<span>{calculateGrowth()}%</span>
-									</div>
-								</div>
-							)}
-						</CardContent>
-					</Card>
-
-					<Card>
-						<CardHeader className="pb-2">
-							<CardTitle className="text-xl">This Month</CardTitle>
-							<CardDescription>Clicks this month</CardDescription>
-						</CardHeader>
-						<CardContent>
-							{isLoading ? (
-								<div className="flex justify-center items-center h-24">
-									<Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-								</div>
-							) : (
-								<div className="flex items-end gap-2">
-									<span className="text-3xl font-bold">
-										{clickStats?.totalMonthClicks || 0}
-									</span>
-									<div className="flex items-center text-sm text-green-500 mb-1">
-										<Calendar className="h-4 w-4 mr-1" />
-										<span>
-											{new Date().toLocaleString('default', { month: 'long' })}
-										</span>
-									</div>
-								</div>
-							)}
-						</CardContent>
-					</Card>
+					<AvgClicksCard
+						title={'Avg. Daily Clicks'}
+						description={'Based on last 7 days'}
+						stats={clickStats?.daily || []}
+						isLoading={isLoading}
+						color="#f97316"
+					/>
+					<AvgClicksCard
+						title={'Avg. Monthly Clicks'}
+						description={'Based on last 7 months'}
+						stats={clickStats?.monthly || []}
+						isLoading={isLoading}
+						color="#22c55e"
+					/>
 
 					<Card>
 						<CardHeader className="pb-2">
 							<CardTitle className="text-xl">Total Deals</CardTitle>
 							<CardDescription>Available active deals</CardDescription>
 						</CardHeader>
+
 						<CardContent>
 							{isLoadingTop ? (
 								<div className="flex justify-center items-center h-24">
 									<Loader2 className="h-8 w-8 animate-spin text-gray-400" />
 								</div>
 							) : (
-								<div className="flex items-end gap-2">
-									<span className="text-3xl font-bold">
-										{totalDealsCount}
-									</span>
-									<div className="flex items-center text-sm text-green-500 mb-1">
-										<Package className="h-4 w-4 mr-1" />
-										<span>active</span>
+								<>
+									<div className="flex items-end gap-2 mb-2">
+										<span className="text-3xl font-bold">
+											{totalDealsCount}
+										</span>
+										<div className="flex items-center text-sm text-green-500 mb-1">
+											<Package className="h-4 w-4 mr-1" />
+											<span>active</span>
+										</div>
 									</div>
-								</div>
+
+									{/* 🔥 Trend Line */}
+									<ResponsiveContainer width="100%" height={60}>
+										<LineChart data={dealTrendData}>
+											<XAxis dataKey="name" hide />
+											<Tooltip
+												content={({ active, payload, label }) => {
+													if (active && payload && payload.length) {
+														return (
+															<div className="bg-white text-xs rounded-md shadow px-2 py-1 border border-gray-200">
+																<div className="text-gray-500">{label}</div>
+																<div className="text-orange-600 font-semibold">
+																	{payload[0].value} deals
+																</div>
+															</div>
+														);
+													}
+													return null;
+												}}
+											/>
+
+											<Line
+												type="monotone"
+												dataKey="count"
+												stroke="#3b82f6"
+												strokeWidth={2}
+												dot={false}
+												animationDuration={300}
+											/>
+										</LineChart>
+									</ResponsiveContainer>
+								</>
 							)}
 						</CardContent>
 					</Card>
@@ -555,23 +580,60 @@ const Admin = () => {
 					<Card>
 						<CardHeader className="pb-2">
 							<CardTitle className="text-xl">{getPeriodLabel()}</CardTitle>
-							<CardDescription>Total clicks for selected period</CardDescription>
+							<CardDescription>
+								Total clicks for selected period
+							</CardDescription>
 						</CardHeader>
+
 						<CardContent>
 							{isLoading ? (
 								<div className="flex justify-center items-center h-24">
 									<Loader2 className="h-8 w-8 animate-spin text-gray-400" />
 								</div>
 							) : (
-								<div className="flex items-end gap-2">
-									<span className="text-3xl font-bold">
-										{getPeriodTotals()}
-									</span>
-									<div className="flex items-center text-sm text-green-500 mb-1">
-										<TrendingUp className="h-4 w-4 mr-1" />
-										<span>{activePeriod}</span>
+								<>
+									<div className="flex items-end gap-2 mb-2">
+										<span className="text-3xl font-bold">
+											{getPeriodTotals()}
+										</span>
+										<div className="flex items-center text-sm text-green-500 mb-1">
+											<TrendingUp className="h-4 w-4 mr-1" />
+											<span>{activePeriod}</span>
+										</div>
 									</div>
-								</div>
+
+									{/* 📊 Sparkline below the total */}
+									<ResponsiveContainer width="100%" height={60}>
+										<LineChart
+											data={clickStats?.[periodMap[activePeriod]] || []}>
+											<XAxis dataKey="name" hide />
+											<Tooltip
+												content={({ active, payload, label }) => {
+													if (active && payload && payload.length) {
+														return (
+															<div className="bg-white text-xs rounded-md shadow px-2 py-1 border border-gray-200">
+																<div className="text-gray-500">{label}</div>
+																<div className="text-green-600 font-semibold">
+																	{payload[0].value} clicks
+																</div>
+															</div>
+														);
+													}
+													return null;
+												}}
+											/>
+
+											<Line
+												type="monotone"
+												dataKey="clicks"
+												stroke="#fde047"
+												strokeWidth={2}
+												dot={false}
+												animationDuration={300}
+											/>
+										</LineChart>
+									</ResponsiveContainer>
+								</>
 							)}
 						</CardContent>
 					</Card>
@@ -609,9 +671,9 @@ const Admin = () => {
 								</Tabs>
 							</CardHeader>
 							<CardContent>
-								<PerformanceMetricsChart 
-									data={getChartData()} 
-									isLoading={isLoading} 
+								<PerformanceMetricsChart
+									data={getChartData()}
+									isLoading={isLoading}
 									period={activePeriod}
 								/>
 							</CardContent>
@@ -804,8 +866,10 @@ const Admin = () => {
 
 					<form onSubmit={handleDeleteDeal}>
 						<div className="mt-4 space-y-4">
-							<p className="text-sm">Please enter the admin password to confirm deletion:</p>
-							
+							<p className="text-sm">
+								Please enter the admin password to confirm deletion:
+							</p>
+
 							<Input
 								type="password"
 								value={deletePassword}
@@ -815,7 +879,7 @@ const Admin = () => {
 								}}
 								placeholder="Enter password"
 							/>
-							
+
 							{deleteError && (
 								<p className="text-sm text-red-500">{deleteError}</p>
 							)}

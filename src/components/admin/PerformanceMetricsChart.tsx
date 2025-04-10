@@ -35,7 +35,7 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
     return (
       <div className="bg-white p-4 rounded-lg shadow-lg border border-gray-200">
         <p className="font-semibold">{label}</p>
-        <p className="text-blue-600">Total Clicks: {payload[0].value}</p>
+        <p className="text-green-600">Total Clicks: {payload[0].value}</p>
       </div>
     );
   }
