@@ -18,7 +18,7 @@ router.post('/stats/record-view', async (req, res) => {
       { $inc: { clicks: 1 } },
       { upsert: true, new: true }
     );
-    
+    console.log('Updated or created record:', result);
     res.json({ success: true, data: result });
   } catch (error) {
     console.error('Error recording view:', error);
