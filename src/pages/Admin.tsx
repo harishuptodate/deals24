@@ -153,6 +153,8 @@ const Admin = () => {
 			try {
 				const stats = await getClickStats();
 				setClickStats(stats);
+				// ✅ SET the real total messages count here!
+		setTotalDealsCount(stats.totalMessages);
 			} catch (error) {
 				console.error('Failed to fetch click stats:', error);
 				toast({
@@ -173,19 +175,10 @@ const Admin = () => {
 		const fetchTopDeals = async () => {
 			setIsLoadingTop(true);
 			try {
-				const deals = await getTopPerformingDeals(5);
-				setTopDeals(deals);
+				const {topMessages, totalMessages} = await getTopPerformingDeals(5);
+				setTopDeals(topMessages);
+				setTotalDealsCount(totalMessages ? totalMessages : 100)
 				
-				// Get the total count of deals 
-				// In a real app, this would be a dedicated API call
-				// For now we'll use the top deals API and extract the totalCount property if available
-				if (deals && typeof deals.totalCount === 'number') {
-					setTotalDealsCount(deals.totalCount);
-				} else {
-					// Fallback: Use the API response length or a default value
-					// In a production app, you should have a dedicated endpoint for this
-					setTotalDealsCount(deals.length > 0 ? deals.length * 20 : 245); // Assuming these are just top 5% of deals
-				}
 			} catch (error) {
 				console.error('Failed to fetch top deals:', error);
 				toast({
@@ -638,7 +631,7 @@ const Admin = () => {
 									<div className="flex justify-center items-center h-full flex-1">
 										<Loader2 className="h-8 w-8 animate-spin text-gray-400" />
 									</div>
-								) : topDeals.length === 0 ? (
+								) : !topDeals ? (
 									<div className="text-center py-8 flex-1 flex items-center justify-center">
 										<div>
 											<BarChart3 className="h-12 w-12 mx-auto text-gray-300 mb-2" />
