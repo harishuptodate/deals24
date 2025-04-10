@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import {
@@ -25,6 +26,7 @@ import {
 	Calendar,
 	ExternalLink,
 	Tag,
+	Lock,
 } from 'lucide-react';
 import {
 	Dialog,
@@ -36,15 +38,8 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import { format } from 'date-fns';
-import {
-	Bar,
-	BarChart,
-	ResponsiveContainer,
-	XAxis,
-	YAxis,
-	Tooltip,
-	Line,
-	LineChart,
+import { 
+  ResponsiveContainer
 } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 import { AdminLoginDialog } from '../components/AdminLoginDialog';
@@ -58,42 +53,50 @@ import {
 	SelectValue,
 } from '@/components/ui/select';
 import { handleTrackedLinkClick } from '../services/api';
+import { Input } from '@/components/ui/input';
+import PerformanceMetricsChart from '../components/admin/PerformanceMetricsChart';
 
 interface ClickData {
 	name: string;
 	clicks: number;
+	date: string;
 }
 
-interface AnalyticsData {
-	clicksData: ClickData[];
+interface StatsData {
+	daily: ClickData[];
+	weekly: ClickData[];
+	monthly: ClickData[];
+	yearly: ClickData[];
 	totalClicks: number;
-	totalMessages: number;
-	period: string;
-	totalMonth?: number;
-	totalYear?: number;
+	totalMonthClicks: number;
+	totalYearClicks: number;
 }
 
 const Admin = () => {
 	const { toast } = useToast();
-	const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(
-		null,
-	);
-	const [clickStats, setClickStats] = useState<any>(null);
+	const [clickStats, setClickStats] = useState<StatsData | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
-	const [activePeriod, setActivePeriod] = useState<string>('day');
+	const [activePeriod, setActivePeriod] = useState<'day' | 'week' | 'month' | 'year'>('day');
 	const [topDeals, setTopDeals] = useState<any[]>([]);
 	const [isLoadingTop, setIsLoadingTop] = useState(true);
 	const [selectedDeal, setSelectedDeal] = useState<any>(null);
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
 	const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 	const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
+	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 	const [editedText, setEditedText] = useState('');
 	const [selectedCategory, setSelectedCategory] = useState('');
 	const [availableCategories, setAvailableCategories] = useState<string[]>([]);
 	const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
 	const [isLoadingCategories, setIsLoadingCategories] = useState(false);
+	const [deletePassword, setDeletePassword] = useState('');
+	const [deleteError, setDeleteError] = useState('');
 	const navigate = useNavigate();
 	const [showLoginDialog, setShowLoginDialog] = useState(false);
+	
+	// The deletion password should be set in an environment variable
+	// For this implementation, I'll use a hardcoded password as a fallback
+	const correctPassword = import.meta.env.VITE_DELETE_PASSWORD || 'admin123';
 
 	useEffect(() => {
 		if (!isAuthenticated()) {
@@ -142,19 +145,15 @@ const Admin = () => {
 		}
 	};
 
-	// Fetch analytics data
+	// Fetch statistics data
 	useEffect(() => {
-		const fetchAnalytics = async () => {
+		const fetchStats = async () => {
 			setIsLoading(true);
 			try {
-				const data = await getClickAnalytics(activePeriod);
-				setAnalyticsData(data);
-
-				// Also fetch detailed click stats
 				const stats = await getClickStats();
 				setClickStats(stats);
 			} catch (error) {
-				console.error('Failed to fetch analytics:', error);
+				console.error('Failed to fetch click stats:', error);
 				toast({
 					title: 'Error',
 					description: 'Failed to fetch analytics data. Please try again.',
@@ -165,8 +164,8 @@ const Admin = () => {
 			}
 		};
 
-		fetchAnalytics();
-	}, [activePeriod, toast]);
+		fetchStats();
+	}, [toast]);
 
 	// Fetch top performing deals
 	useEffect(() => {
@@ -192,36 +191,26 @@ const Admin = () => {
 	}, [toast]);
 
 	// Handle period change
-	const handlePeriodChange = (period: string) => {
+	const handlePeriodChange = (period: 'day' | 'week' | 'month' | 'year') => {
 		setActivePeriod(period);
 	};
 
-	// Format the chart data
-	const formatChartData = (data: ClickData[] | undefined) => {
-		if (!data || !Array.isArray(data) || data.length === 0) {
-			return [{ name: 'No data', clicks: 0 }];
+	// Get current chart data based on active period
+	const getChartData = () => {
+		if (!clickStats) return [];
+		
+		switch (activePeriod) {
+			case 'day':
+				return clickStats.daily || [];
+			case 'week':
+				return clickStats.weekly || [];
+			case 'month':
+				return clickStats.monthly || [];
+			case 'year':
+				return clickStats.yearly || [];
+			default:
+				return clickStats.daily || [];
 		}
-		return data;
-	};
-
-	// Format the 7-day chart data
-	const format7DayData = () => {
-		if (
-			!clickStats ||
-			!clickStats.last7Days ||
-			!Array.isArray(clickStats.last7Days)
-		) {
-			return [];
-		}
-
-		return clickStats.last7Days.map((item: any) => {
-			const date = new Date(item.date);
-			return {
-				name: format(date, 'MMM d'),
-				clicks: item.clicks,
-				fullDate: date,
-			};
-		});
 	};
 
 	// Calculate growth rate
@@ -250,6 +239,13 @@ const Admin = () => {
 			setSelectedCategory(selectedDeal.category || '');
 			setIsCategoryDialogOpen(true);
 		}
+	};
+
+	// Open delete confirmation dialog
+	const handleOpenDeleteDialog = () => {
+		setDeletePassword('');
+		setDeleteError('');
+		setIsDeleteDialogOpen(true);
 	};
 
 	// Save edited deal
@@ -335,18 +331,30 @@ const Admin = () => {
 		}
 	};
 
-	// Delete a deal
-	const handleDeleteDeal = async (id: string) => {
+	// Delete a deal with password confirmation
+	const handleDeleteDeal = async (e: React.FormEvent) => {
+		e.preventDefault();
+		
+		if (!selectedDeal || !selectedDeal._id) {
+			return;
+		}
+		
+		if (deletePassword !== correctPassword) {
+			setDeleteError('Incorrect password. Please try again.');
+			return;
+		}
+		
 		try {
-			const success = await deleteProduct(id);
+			const success = await deleteProduct(selectedDeal._id);
 			if (success) {
 				toast({
 					title: 'Success',
 					description: 'Deal was deleted successfully',
 				});
 				// Remove the deal from the list
-				const updatedDeals = topDeals.filter((deal) => deal._id !== id);
+				const updatedDeals = topDeals.filter((deal) => deal._id !== selectedDeal._id);
 				setTopDeals(updatedDeals);
+				setIsDeleteDialogOpen(false);
 				setIsDialogOpen(false);
 			} else {
 				toast({
@@ -422,17 +430,34 @@ const Admin = () => {
 		}
 	};
 
-	// Custom tooltip for the chart
-	const CustomTooltip = ({ active, payload, label }: any) => {
-		if (active && payload && payload.length) {
-			return (
-				<div className="bg-white p-4 rounded-lg shadow-lg border border-gray-200">
-					<p className="font-semibold">{label}</p>
-					<p className="text-blue-600">Total Clicks: {payload[0].value}</p>
-				</div>
-			);
+	// Get period specific totals
+	const getPeriodTotals = () => {
+		if (!clickStats) return 0;
+		
+		switch (activePeriod) {
+			case 'month':
+				return clickStats.totalMonthClicks || 0;
+			case 'year':
+				return clickStats.totalYearClicks || 0;
+			default:
+				return clickStats.totalClicks || 0;
 		}
-		return null;
+	};
+
+	// Get current period label
+	const getPeriodLabel = () => {
+		switch (activePeriod) {
+			case 'day':
+				return 'Last 7 Days';
+			case 'week':
+				return 'Last 7 Weeks';
+			case 'month':
+				return 'Last 7 Months';
+			case 'year':
+				return 'Last 3 Years';
+			default:
+				return 'Period';
+		}
 	};
 
 	return (
@@ -460,7 +485,7 @@ const Admin = () => {
 							) : (
 								<div className="flex items-end gap-2">
 									<span className="text-3xl font-bold">
-										{clickStats?.totalClicks || analyticsData?.totalClicks || 0}
+										{clickStats?.totalClicks || 0}
 									</span>
 									<div className="flex items-center text-sm text-green-500 mb-1">
 										<ArrowUp className="h-4 w-4 mr-1" />
@@ -484,15 +509,7 @@ const Admin = () => {
 							) : (
 								<div className="flex items-end gap-2">
 									<span className="text-3xl font-bold">
-										{clickStats?.monthly?.find((m: any) => {
-											const now = new Date();
-											return (
-												m._id.month === now.getMonth() + 1 &&
-												m._id.year === now.getFullYear()
-											);
-										})?.totalClicks ||
-											analyticsData?.totalMonth ||
-											0}
+										{clickStats?.totalMonthClicks || 0}
 									</span>
 									<div className="flex items-center text-sm text-green-500 mb-1">
 										<Calendar className="h-4 w-4 mr-1" />
@@ -507,8 +524,8 @@ const Admin = () => {
 
 					<Card>
 						<CardHeader className="pb-2">
-							<CardTitle className="text-xl">Deal Count</CardTitle>
-							<CardDescription>Number of deals on website</CardDescription>
+							<CardTitle className="text-xl">{getPeriodLabel()}</CardTitle>
+							<CardDescription>Total clicks for selected period</CardDescription>
 						</CardHeader>
 						<CardContent>
 							{isLoading ? (
@@ -518,8 +535,12 @@ const Admin = () => {
 							) : (
 								<div className="flex items-end gap-2">
 									<span className="text-3xl font-bold">
-										{analyticsData?.totalMessages || 0}
+										{getPeriodTotals()}
 									</span>
+									<div className="flex items-center text-sm text-green-500 mb-1">
+										<TrendingUp className="h-4 w-4 mr-1" />
+										<span>{activePeriod}</span>
+									</div>
 								</div>
 							)}
 						</CardContent>
@@ -531,8 +552,8 @@ const Admin = () => {
 						<Card>
 							<CardHeader>
 								<CardTitle>Performance Metrics</CardTitle>
-								<CardDescription>Last 7 Days Stats</CardDescription>
-								<Tabs defaultValue="day" className="w-[260px]">
+								<CardDescription>{getPeriodLabel()} Stats</CardDescription>
+								<Tabs defaultValue="day" className="w-[360px]">
 									<TabsList>
 										<TabsTrigger
 											value="day"
@@ -549,44 +570,20 @@ const Admin = () => {
 											onClick={() => handlePeriodChange('month')}>
 											Month
 										</TabsTrigger>
+										<TabsTrigger
+											value="year"
+											onClick={() => handlePeriodChange('year')}>
+											Year
+										</TabsTrigger>
 									</TabsList>
 								</Tabs>
 							</CardHeader>
 							<CardContent>
-								{isLoading ? (
-									<div className="flex justify-center items-center h-[300px]">
-										<Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-									</div>
-								) : clickStats ? (
-									<div className="h-[300px]">
-										<ResponsiveContainer width="100%" height="100%">
-											<LineChart
-												data={format7DayData()}
-												margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-												<XAxis dataKey="name" />
-												<YAxis />
-												<Tooltip content={<CustomTooltip />} />
-												<Line
-													type="monotone"
-													dataKey="clicks"
-													stroke="#1D4ED8"
-													strokeWidth={2}
-													dot={{ r: 4 }}
-													activeDot={{ r: 6 }}
-												/>
-											</LineChart>
-										</ResponsiveContainer>
-									</div>
-								) : (
-									<ResponsiveContainer width="100%" height={300}>
-										<BarChart data={formatChartData(analyticsData?.clicksData)}>
-											<XAxis dataKey="name" />
-											<YAxis />
-											<Tooltip />
-											<Bar dataKey="clicks" fill="#1D4ED8" />
-										</BarChart>
-									</ResponsiveContainer>
-								)}
+								<PerformanceMetricsChart 
+									data={getChartData()} 
+									isLoading={isLoading} 
+									period={activePeriod}
+								/>
 							</CardContent>
 						</Card>
 					</div>
@@ -657,7 +654,7 @@ const Admin = () => {
 									Change Category
 								</Button>
 								<Button
-									onClick={() => handleDeleteDeal(selectedDeal._id)}
+									onClick={handleOpenDeleteDialog}
 									variant="destructive"
 									className="col-span-2">
 									Delete
@@ -760,6 +757,52 @@ const Admin = () => {
 								type="submit"
 								disabled={isSubmittingEdit || !selectedCategory.trim()}>
 								{isSubmittingEdit ? 'Saving...' : 'Save Category'}
+							</Button>
+						</DialogFooter>
+					</form>
+				</DialogContent>
+			</Dialog>
+
+			{/* Delete Confirmation Dialog with Password */}
+			<Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+				<DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto max-w-[95vw] w-[95vw] sm:w-auto rounded-xl">
+					<DialogHeader>
+						<DialogTitle className="flex items-center gap-2">
+							<Lock className="h-5 w-5 text-red-500" /> Confirm Deletion
+						</DialogTitle>
+					</DialogHeader>
+
+					<form onSubmit={handleDeleteDeal}>
+						<div className="mt-4 space-y-4">
+							<p className="text-sm">Please enter the admin password to confirm deletion:</p>
+							
+							<Input
+								type="password"
+								value={deletePassword}
+								onChange={(e) => {
+									setDeletePassword(e.target.value);
+									setDeleteError('');
+								}}
+								placeholder="Enter password"
+							/>
+							
+							{deleteError && (
+								<p className="text-sm text-red-500">{deleteError}</p>
+							)}
+						</div>
+
+						<DialogFooter className="mt-6">
+							<Button
+								type="button"
+								variant="outline"
+								onClick={() => setIsDeleteDialogOpen(false)}>
+								Cancel
+							</Button>
+							<Button
+								type="submit"
+								disabled={!deletePassword.trim()}
+								variant="destructive">
+								Confirm Delete
 							</Button>
 						</DialogFooter>
 					</form>

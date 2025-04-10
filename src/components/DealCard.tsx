@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { Heart, ExternalLink, Trash2, PenSquare, Tag } from 'lucide-react';
+import { Heart, ExternalLink, Trash2, PenSquare, Tag, Lock } from 'lucide-react';
 import {
 	Dialog,
 	DialogContent,
@@ -9,6 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -70,6 +72,7 @@ const DealCard = ({
 	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 	const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 	const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
+	const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
 	const [editedText, setEditedText] = useState(description);
 	const [selectedCategory, setSelectedCategory] = useState(category || '');
 	const [availableCategories, setAvailableCategories] = useState<string[]>([]);
@@ -78,6 +81,12 @@ const DealCard = ({
 	const [localTitle, setLocalTitle] = useState(title);
 	const [localDescription, setLocalDescription] = useState(description);
 	const [localCategory, setLocalCategory] = useState(category || '');
+	const [deletePassword, setDeletePassword] = useState('');
+	const [deleteError, setDeleteError] = useState('');
+	
+	// The deletion password should be set in an environment variable
+	// For this implementation, I'll use a hardcoded password as a fallback
+	const correctPassword = import.meta.env.VITE_DELETE_PASSWORD || 'admin123';
 
 	useEffect(() => {
 		if (isCategoryDialogOpen) {
@@ -151,7 +160,10 @@ const DealCard = ({
 	const handleDelete = (e: React.MouseEvent) => {
 		e.stopPropagation();
 		if (id && onDelete) {
-			setIsDeleteDialogOpen(true);
+			// Open password dialog instead of directly opening delete dialog
+			setDeletePassword('');
+			setDeleteError('');
+			setIsPasswordDialogOpen(true);
 		}
 	};
 
@@ -165,7 +177,7 @@ const DealCard = ({
 
 	const handleOpenCategoryDialog = (e: React.MouseEvent) => {
 		e.stopPropagation();
-		setSelectedCategory(category || ''); // ✅ preselect the right value
+		setSelectedCategory(category || '');
 		setIsCategoryDialogOpen(true);
 	};
 
@@ -173,7 +185,20 @@ const DealCard = ({
 		if (id && onDelete) {
 			onDelete(id);
 			setIsDeleteDialogOpen(false);
+			setIsOpen(false);
 		}
+	};
+	
+	const handlePasswordSubmit = (e: React.FormEvent) => {
+		e.preventDefault();
+		
+		if (deletePassword !== correctPassword) {
+			setDeleteError('Incorrect password. Please try again.');
+			return;
+		}
+		
+		setIsPasswordDialogOpen(false);
+		setIsDeleteDialogOpen(true);
 	};
 
 	const handleSaveEdit = async (e?: React.FormEvent) => {
@@ -411,6 +436,58 @@ const DealCard = ({
 					<div className="mt-4 text-sm whitespace-pre-line">
 						{makeLinksClickable(displayDescription)}
 					</div>
+				</DialogContent>
+			</Dialog>
+
+			{/* Password Dialog for Delete Protection */}
+			<Dialog 
+				open={isPasswordDialogOpen} 
+				onOpenChange={setIsPasswordDialogOpen}
+			>
+				<DialogContent className="sm:max-w-[400px] max-w-[90vw] w-[90vw] sm:w-auto rounded-xl">
+					<DialogHeader>
+						<DialogTitle className="flex items-center gap-2">
+							<Lock className="h-5 w-5 text-red-500" /> 
+							Authentication Required
+						</DialogTitle>
+					</DialogHeader>
+
+					<form onSubmit={handlePasswordSubmit}>
+						<div className="mt-4 space-y-4">
+							<p className="text-sm">
+								Please enter the admin password to proceed with deletion:
+							</p>
+							
+							<Input
+								type="password"
+								value={deletePassword}
+								onChange={(e) => {
+									setDeletePassword(e.target.value);
+									setDeleteError('');
+								}}
+								placeholder="Enter password"
+							/>
+							
+							{deleteError && (
+								<p className="text-sm text-red-500">{deleteError}</p>
+							)}
+						</div>
+
+						<DialogFooter className="mt-6">
+							<Button
+								type="button"
+								variant="outline"
+								onClick={() => setIsPasswordDialogOpen(false)}>
+								Cancel
+							</Button>
+							<Button
+								type="submit"
+								disabled={!deletePassword.trim()}
+								variant="destructive">
+								Verify
+							</Button>
+						</DialogFooter>
+					</form>
 				</DialogContent>
 			</Dialog>
 
