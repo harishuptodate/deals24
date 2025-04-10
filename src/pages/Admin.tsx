@@ -98,10 +98,11 @@ const Admin = () => {
 	// The deletion password should be set in an environment variable
 	// For this implementation, I'll use a hardcoded password as a fallback
 	const correctPassword = import.meta.env.VITE_DELETE_PASSWORD || 'admin123';
-
+	
 	useEffect(() => {
 		if (!isAuthenticated()) {
 			setShowLoginDialog(true);
+			{console.log(totalDealsCount)}
 		}
 	}, []);
 
@@ -153,8 +154,7 @@ const Admin = () => {
 			try {
 				const stats = await getClickStats();
 				setClickStats(stats);
-				// ✅ SET the real total messages count here!
-		setTotalDealsCount(stats.totalMessages);
+
 			} catch (error) {
 				console.error('Failed to fetch click stats:', error);
 				toast({
