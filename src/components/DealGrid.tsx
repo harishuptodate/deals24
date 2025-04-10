@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { getTelegramMessages, deleteProduct } from '../services/api';
@@ -7,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Loader2, Filter } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
-import DeleteConfirmDialog from './DeleteConfirmDialog';
 
 interface CategoryFilterProps {
 	onSelect: (category: string | null) => void;
@@ -99,8 +97,6 @@ const DealGrid = () => {
 	const searchQuery = searchParams.get('search');
 	const [activeCategory, setActiveCategory] = useState<string | null>(null);
 	const observerTarget = useRef<HTMLDivElement>(null);
-	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-	const [dealToDelete, setDealToDelete] = useState<string | null>(null);
 
 	const {
 		data,
@@ -175,13 +171,8 @@ const DealGrid = () => {
 		navigate(`/deals?search=${encodeURIComponent(subCategory)}`);
 	};
 
-	const handleDeleteRequest = (id: string) => {
-		setDealToDelete(id);
-		setIsDeleteDialogOpen(true);
-	};
-
-	const handleDeleteConfirm = async () => {
-		if (!dealToDelete) {
+	const handleDeleteProduct = async (id: string) => {
+		if (!id) {
 			toast({
 				title: 'Error',
 				description: 'Cannot delete: Deal ID is missing',
@@ -191,8 +182,8 @@ const DealGrid = () => {
 		}
 
 		try {
-			console.log(`Attempting to delete product with ID: ${dealToDelete}`);
-			const success = await deleteProduct(dealToDelete);
+			console.log(`Attempting to delete product with ID: ${id}`);
+			const success = await deleteProduct(id);
 
 			if (success) {
 				toast({
@@ -215,8 +206,6 @@ const DealGrid = () => {
 				description: 'An error occurred while deleting the deal',
 				variant: 'destructive',
 			});
-		} finally {
-			setDealToDelete(null);
 		}
 	};
 
@@ -310,7 +299,7 @@ const DealGrid = () => {
 									id={messageId}
 									category={message.category || ''}
 									createdAt={message.date || message.createdAt}
-									onDelete={handleDeleteRequest}
+									onDelete={handleDeleteProduct}
 								/>
 							</div>
 						);
@@ -327,15 +316,6 @@ const DealGrid = () => {
 					</div>
 				)}
 			</div>
-
-			{/* Delete Confirmation Dialog */}
-			<DeleteConfirmDialog
-				isOpen={isDeleteDialogOpen}
-				onClose={() => setIsDeleteDialogOpen(false)}
-				onConfirm={handleDeleteConfirm}
-				title="Delete Deal"
-				description="This deal will be permanently removed. This action cannot be undone."
-			/>
 		</section>
 	);
 };

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Navbar from '../components/Navbar';
 import { useInfiniteQuery } from '@tanstack/react-query';
@@ -12,7 +11,6 @@ import { Button } from '@/components/ui/button';
 import { Loader2, X } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import DeleteConfirmDialog from '../components/DeleteConfirmDialog';
 
 const Deals = () => {
 	const { toast } = useToast();
@@ -24,8 +22,6 @@ const Deals = () => {
 		categoryParam,
 	);
 	const observerTarget = useRef<HTMLDivElement>(null);
-	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-	const [dealToDelete, setDealToDelete] = useState<string | null>(null);
 
 	useEffect(() => {
 		setActiveCategory(categoryParam);
@@ -99,13 +95,8 @@ const Deals = () => {
 		navigate('/deals');
 	};
 
-	const handleDeleteRequest = (id: string) => {
-		setDealToDelete(id);
-		setIsDeleteDialogOpen(true);
-	};
-
-	const handleDeleteConfirm = async () => {
-		if (!dealToDelete) {
+	const handleDeleteProduct = async (id: string) => {
+		if (!id) {
 			toast({
 				title: 'Error',
 				description: 'Cannot delete: Deal ID is missing',
@@ -115,8 +106,8 @@ const Deals = () => {
 		}
 
 		try {
-			console.log(`Attempting to delete deal with ID: ${dealToDelete}`);
-			const success = await deleteProduct(dealToDelete);
+			console.log(`Attempting to delete deal with ID: ${id}`);
+			const success = await deleteProduct(id);
 
 			if (success) {
 				toast({
@@ -139,8 +130,6 @@ const Deals = () => {
 				description: 'An error occurred while deleting the deal',
 				variant: 'destructive',
 			});
-		} finally {
-			setDealToDelete(null);
 		}
 	};
 
@@ -258,7 +247,7 @@ const Deals = () => {
 										id={messageId}
 										category={message.category || ''}
 										createdAt={message.date || message.createdAt}
-										onDelete={handleDeleteRequest}
+										onDelete={handleDeleteProduct}
 										onEdit={handleEditProduct}
 									/>
 								</div>
@@ -278,15 +267,6 @@ const Deals = () => {
 					</div>
 				)}
 			</main>
-
-			{/* Delete Confirmation Dialog */}
-			<DeleteConfirmDialog
-				isOpen={isDeleteDialogOpen}
-				onClose={() => setIsDeleteDialogOpen(false)}
-				onConfirm={handleDeleteConfirm}
-				title="Delete Deal"
-				description="This deal will be permanently removed. This action cannot be undone."
-			/>
 		</div>
 	);
 };

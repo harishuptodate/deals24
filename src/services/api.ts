@@ -364,39 +364,24 @@ export const getClickAnalytics = async (period: string = 'day'): Promise<any> =>
   }
 };
 
-// Get specific message click stats with period parameter
-export const getClickStats = async (period: string = 'day'): Promise<any> => {
+// Get specific message click stats
+export const getClickStats = async (): Promise<any> => {
   try {
-    const response = await api.get('/stats', {
-      params: { period }
-    });
+    const response = await api.get('/stats');
     return response.data;
   } catch (error) {
     console.error('Failed to fetch click stats:', error);
     // Return a more robust default structure
-    if (period === 'day') {
-      return {
-        last7Days: Array.from({ length: 7 }, (_, i) => {
-          const date = new Date();
-          date.setDate(date.getDate() - (6 - i));
-          return { name: date.toLocaleDateString(), clicks: 0, date: date.toISOString() };
-        }),
-        monthly: [],
-        yearly: [],
-        totalClicks: 0
-      };
-    } else {
-      return {
-        data: Array.from({ length: period === 'year' ? 3 : 7 }, (_, i) => {
-          return { 
-            name: period === 'year' ? `${new Date().getFullYear() - 2 + i}` : 
-                 period === 'month' ? `Month ${i + 1}` : `Week ${i + 1}`,
-            clicks: 0
-          };
-        }),
-        totalClicks: 0
-      };
-    }
+    return {
+      last7Days: Array.from({ length: 7 }, (_, i) => {
+        const date = new Date();
+        date.setDate(date.getDate() - (6 - i));
+        return { date: date.toISOString(), clicks: 0 };
+      }),
+      monthly: [],
+      yearly: [],
+      totalClicks: 0
+    };
   }
 };
 
