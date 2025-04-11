@@ -3,7 +3,6 @@ const router = express.Router();
 const TelegramMessage = require('../models/TelegramMessage');
 const telegramController = require('../controllers/telegramController');
 const { getMessages, handleClickTracking } = require('../services/telegramService');
-const { getStats } = require('../controllers/stats.controller');
 
 // Webhook endpoint for Telegram updates
 router.post('/webhook', telegramController.handleTelegramWebhook);
@@ -55,8 +54,6 @@ router.post('/messages/:id/click', async (req, res) => {
     res.status(500).json({ error: 'Failed to track click' });
   }
 });
-
-router.get('/stats', getStats);
 
 // New endpoint with different naming to avoid ad blockers
 router.post('/messages/:id/track-engagement', async (req, res) => {

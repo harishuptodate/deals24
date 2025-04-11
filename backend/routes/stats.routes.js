@@ -1,6 +1,9 @@
 
 const express = require('express');
 const router = express.Router();
+const { getStats } = require('../controllers/stats.controller');
+
+router.get('/stats', getStats);
 
 router.post('/stats/record-view', async (req, res) => {
   try {
