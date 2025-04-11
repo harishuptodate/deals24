@@ -3,7 +3,7 @@ const TelegramMessage = require('../models/TelegramMessage');
 const { extractLinks } = require('../utils/messageParser');
 const crypto = require('crypto');
 const ClickStat = require('../models/clickStat.model');
-
+const handleClickTracking = require('../services/telegramService')
 // Hashes to store unique content (in-memory)
 let contentHashes = [];
 
@@ -354,7 +354,6 @@ async function incrementClicks(messageId) {
 module.exports = {
   saveMessage,
   getMessages,
-  incrementClicks,
   calculateHash,
   normalizeMessage,
   isRecentMessage,

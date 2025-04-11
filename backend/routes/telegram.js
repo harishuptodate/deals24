@@ -2,8 +2,7 @@ const express = require('express');
 const router = express.Router();
 const TelegramMessage = require('../models/TelegramMessage');
 const telegramController = require('../controllers/telegramController');
-const { getMessages, incrementClicks } = require('../services/telegramService');
-const handleClickTracking = require('../services/telegramService')
+const { getMessages, handleClickTracking } = require('../services/telegramService');
 const { getStats } = require('../controllers/stats.controller');
 
 // Webhook endpoint for Telegram updates
