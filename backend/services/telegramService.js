@@ -3,7 +3,6 @@ const TelegramMessage = require('../models/TelegramMessage');
 const { extractLinks } = require('../utils/messageParser');
 const crypto = require('crypto');
 const ClickStat = require('../models/clickStat.model');
-const handleClickTracking = require('../services/telegramService')
 // Hashes to store unique content (in-memory)
 let contentHashes = [];
 
@@ -204,17 +203,6 @@ async function saveMessage(message) {
       console.log('Skipping non-profitable product in sale mode');
       return null;
     }
-    
-     // Check if message already exists in database
-    // const existingMessage = await TelegramMessage.findOne({
-    //   messageId: message_id.toString(),
-    //   channelId
-    // });
-    
-    // if (existingMessage) {
-    //   console.log('Message already exists in database');
-    //   return existingMessage;
-    // }
     
     // Process the message (using your core logic)
     const processedText = replaceLinksAndText(textContent);
