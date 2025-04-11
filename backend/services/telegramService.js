@@ -2,6 +2,7 @@
 const TelegramMessage = require('../models/TelegramMessage');
 const { extractLinks } = require('../utils/messageParser');
 const crypto = require('crypto');
+const ClickStat = require('../models/clickStat.model');
 
 // Hashes to store unique content (in-memory)
 let contentHashes = [];
@@ -294,6 +295,31 @@ async function getMessages(options = {}) {
   };
 }
 
+// Helper function for click tracking logic
+async function handleClickTracking(req, res) {
+  const updatedMessage = await incrementClicks(req.params.id);
+
+  if (!updatedMessage) {
+    console.log(
+      `Message with ID ${req.params.id} not found for click tracking`,
+    );
+    return res.status(404).json({ error: 'Message not found' });
+  }
+
+  // Also record in the click stats collection
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Set to beginning of day
+
+  await ClickStat.findOneAndUpdate(
+    { date: today },
+    { $inc: { clicks: 1 } },
+    { upsert: true, new: true }
+  );
+
+  console.log('Successfully created/updated click for the day');
+  res.json({ success: true, clicks: updatedMessage.clicks });
+}
+
 /**
  * Increment the click count for a message
  * @param {string} messageId - ID of the message
@@ -304,8 +330,6 @@ async function incrementClicks(messageId) {
     console.error('Cannot increment clicks: message ID is missing');
     return null;
   }
-  
-  console.log(`Incrementing clicks for message ID: ${messageId}`);
   
   try {
     const updatedMessage = await TelegramMessage.findByIdAndUpdate(
@@ -337,5 +361,6 @@ module.exports = {
   isLowContext,
   isProfitableProduct,
   replaceLinksAndText,
-  detectCategory
+  detectCategory,
+  handleClickTracking
 };

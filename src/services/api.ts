@@ -235,17 +235,7 @@ export const trackMessageClick = async (
 			const success = navigator.sendBeacon(endpoint, formData);
 
 			if (success) {
-				// // Also update the click stat
-				// try {
-				// 	// Use a timeout to ensure the first request completes
-				// 	setTimeout(() => {
-				// 		const statEndpoint = `${API_BASE_URL}/stats/record-view`;
-				// 		navigator.sendBeacon(statEndpoint);
-				// 	}, 10);
-				// } catch (err) {
-				// 	console.warn('Failed to update daily stats:', err);
-				// }
-
+				console.log(`Click tracked for the day and also for message ID: ${messageId}`);
 				return true;
 			}
 		}
@@ -256,6 +246,7 @@ export const trackMessageClick = async (
 		// Also update the click stat
 		try {
 			await api.post('/stats/record-view');
+			console.log('This is not from mobile-phone/BeaconAPI, used fallback approach and Updated/created record',);
 		} catch (err) {
 			console.warn('Failed to update daily stats:', err);
 		}

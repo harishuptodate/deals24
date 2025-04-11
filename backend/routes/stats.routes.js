@@ -1,9 +1,7 @@
 
 const express = require('express');
 const router = express.Router();
-const { getStats } = require('../controllers/stats.controller');
 
-router.get('/stats', getStats);
 router.post('/stats/record-view', async (req, res) => {
   try {
     const ClickStat = require('../models/clickStat.model');
@@ -18,7 +16,7 @@ router.post('/stats/record-view', async (req, res) => {
       { $inc: { clicks: 1 } },
       { upsert: true, new: true }
     );
-    console.log('Updated or created record:', result);
+    console.log('This is not from mobile-phone/BeaconAPI, Updated or created record:', result);
     res.json({ success: true, data: result });
   } catch (error) {
     console.error('Error recording view:', error);
