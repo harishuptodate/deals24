@@ -235,16 +235,16 @@ export const trackMessageClick = async (
 			const success = navigator.sendBeacon(endpoint, formData);
 
 			if (success) {
-				// Also update the click stat
-				try {
-					// Use a timeout to ensure the first request completes
-					setTimeout(() => {
-						const statEndpoint = `${API_BASE_URL}/stats/record-view`;
-						navigator.sendBeacon(statEndpoint);
-					}, 10);
-				} catch (err) {
-					console.warn('Failed to update daily stats:', err);
-				}
+				// // Also update the click stat
+				// try {
+				// 	// Use a timeout to ensure the first request completes
+				// 	setTimeout(() => {
+				// 		const statEndpoint = `${API_BASE_URL}/stats/record-view`;
+				// 		navigator.sendBeacon(statEndpoint);
+				// 	}, 10);
+				// } catch (err) {
+				// 	console.warn('Failed to update daily stats:', err);
+				// }
 
 				return true;
 			}
