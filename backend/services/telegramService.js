@@ -259,12 +259,14 @@ async function getMessages(options = {}) {
   
   if (search) {
     // Escape any special regex characters in the search term to prevent breaking the regex
-    const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  
+    const rawSearch = search.trim();
+    const escapedSearch = rawSearch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const boundedSearch = `\\b${escapedSearch}\\b`; // Add word boundaries 
     // Define the query conditions using $and
     query.$and = [
       {
         // Condition 1: The message text must contain the search term (case-insensitive)
+        // Match only if the term appears as a whole word
         text: { $regex: escapedSearch, $options: 'i' }
       },
       {
