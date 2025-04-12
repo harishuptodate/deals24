@@ -258,23 +258,25 @@ async function getMessages(options = {}) {
   }
   
   if (search) {
-    // Enhanced search approach that excludes URL matches
-    // This regex matches the search term only when it's not part of a URL pattern
-    
-    // Escape special regex characters in the search term
+    // Escape any special regex characters in the search term to prevent breaking the regex
     const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    
-    // Create a regex that excludes matches within URL patterns
-    // This looks for the search term but not when it's part of http/https/www URLs or common URL shorteners
+  
+    // Define the query conditions using $and
     query.$and = [
-      { text: { $regex: escapedSearch, $options: 'i' } },  // Text contains the search term
-      { 
-        // Text doesn't have the search term ONLY inside URL patterns
-        text: { 
+      {
+        // Condition 1: The message text must contain the search term (case-insensitive)
+        text: { $regex: escapedSearch, $options: 'i' }
+      },
+      {
+        text: {
           $not: {
+            // Condition 2: Exclude messages where the search term appears within a URL
+            // This regex matches any text where the search term is part of a URL:
+            // - Starts with http:// or https:// or www.
+            // - Followed by any non-space characters (\S*) that contain the search term
+            // If this condition matches, the message will be excluded
             $regex: new RegExp(
-              // Only match documents where the search term ONLY appears in URLs
-              `^(?:(?!${escapedSearch}).)*(?:https?://|www\\.|[a-z0-9][-a-z0-9]*\\.[a-z0-9]+/).*(${escapedSearch}).*$`,
+              `(https?:\\/\\/\\S*${escapedSearch}\\S*)|(www\\.\\S*${escapedSearch}\\S*)`,
               'i'
             )
           }
