@@ -267,7 +267,7 @@ async function getMessages(options = {}) {
       {
         // Condition 1: The message text must contain the search term (case-insensitive)
         // Match only if the term appears as a whole word
-        text: { $regex: escapedSearch, $options: 'i' }
+        text: { $regex: boundedSearch, $options: 'i' }
       },
       {
         text: {
