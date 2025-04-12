@@ -1,4 +1,3 @@
-
 const TelegramMessage = require('../models/TelegramMessage');
 const { extractLinks } = require('../utils/messageParser');
 const crypto = require('crypto');
@@ -259,7 +258,29 @@ async function getMessages(options = {}) {
   }
   
   if (search) {
-    query.text = { $regex: search, $options: 'i' };
+    // Enhanced search approach that excludes URL matches
+    // This regex matches the search term only when it's not part of a URL pattern
+    
+    // Escape special regex characters in the search term
+    const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    
+    // Create a regex that excludes matches within URL patterns
+    // This looks for the search term but not when it's part of http/https/www URLs or common URL shorteners
+    query.$and = [
+      { text: { $regex: escapedSearch, $options: 'i' } },  // Text contains the search term
+      { 
+        // Text doesn't have the search term ONLY inside URL patterns
+        text: { 
+          $not: {
+            $regex: new RegExp(
+              // Only match documents where the search term ONLY appears in URLs
+              `^(?:(?!${escapedSearch}).)*(?:https?://|www\\.|[a-z0-9][-a-z0-9]*\\.[a-z0-9]+/).*(${escapedSearch}).*$`,
+              'i'
+            )
+          }
+        }
+      }
+    ];
   }
   
   const messages = await TelegramMessage.find(query)
