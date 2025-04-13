@@ -36,7 +36,14 @@ import {
 } from '../services/api';
 import { useToast } from '@/components/ui/use-toast';
 import { format } from 'date-fns';
-import { isAuthenticated } from '../services/authService';
+import { 
+	isAuthenticated, 
+	hasEditPermission, 
+	hasCategoryPermission, 
+	grantEditPermission, 
+	grantCategoryPermission, 
+	verifyActionPassword 
+} from '../services/authService';
 
 interface DealCardProps {
 	title: string;
@@ -73,6 +80,8 @@ const DealCard = ({
 	const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 	const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
 	const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+	const [isEditPasswordDialogOpen, setIsEditPasswordDialogOpen] = useState(false);
+	const [isCategoryPasswordDialogOpen, setIsCategoryPasswordDialogOpen] = useState(false);
 	const [editedText, setEditedText] = useState(description);
 	const [selectedCategory, setSelectedCategory] = useState(category || '');
 	const [availableCategories, setAvailableCategories] = useState<string[]>([]);
@@ -82,7 +91,12 @@ const DealCard = ({
 	const [localDescription, setLocalDescription] = useState(description);
 	const [localCategory, setLocalCategory] = useState(category || '');
 	const [deletePassword, setDeletePassword] = useState('');
+	const [editPassword, setEditPassword] = useState('');
+	const [categoryPassword, setCategoryPassword] = useState('');
 	const [deleteError, setDeleteError] = useState('');
+	const [editError, setEditError] = useState('');
+	const [categoryError, setCategoryError] = useState('');
+	const [currentActionType, setCurrentActionType] = useState<'edit' | 'category' | 'delete' | null>(null);
 	
 	// The deletion password should be set in an environment variable
 	// For this implementation, I'll use a hardcoded password as a fallback
@@ -160,7 +174,8 @@ const DealCard = ({
 	const handleDelete = (e: React.MouseEvent) => {
 		e.stopPropagation();
 		if (id && onDelete) {
-			// Open password dialog instead of directly opening delete dialog
+			// Open password dialog for deletion
+			setCurrentActionType('delete');
 			setDeletePassword('');
 			setDeleteError('');
 			setIsPasswordDialogOpen(true);
@@ -170,15 +185,33 @@ const DealCard = ({
 	const handleEdit = (e: React.MouseEvent) => {
 		e.stopPropagation();
 		if (id) {
-			setEditedText(description);
-			setIsEditDialogOpen(true);
+			// Check if edit permission already granted
+			if (hasEditPermission()) {
+				setEditedText(description);
+				setIsEditDialogOpen(true);
+			} else {
+				// Request password for edit permission
+				setCurrentActionType('edit');
+				setEditPassword('');
+				setEditError('');
+				setIsEditPasswordDialogOpen(true);
+			}
 		}
 	};
 
 	const handleOpenCategoryDialog = (e: React.MouseEvent) => {
 		e.stopPropagation();
-		setSelectedCategory(category || '');
-		setIsCategoryDialogOpen(true);
+		// Check if category permission already granted
+		if (hasCategoryPermission()) {
+			setSelectedCategory(category || '');
+			setIsCategoryDialogOpen(true);
+		} else {
+			// Request password for category permission
+			setCurrentActionType('category');
+			setCategoryPassword('');
+			setCategoryError('');
+			setIsCategoryPasswordDialogOpen(true);
+		}
 	};
 
 	const confirmDelete = () => {
@@ -199,6 +232,40 @@ const DealCard = ({
 		
 		setIsPasswordDialogOpen(false);
 		setIsDeleteDialogOpen(true);
+	};
+
+	const handleEditPasswordSubmit = (e: React.FormEvent) => {
+		e.preventDefault();
+		
+		if (!verifyActionPassword(editPassword)) {
+			setEditError('Incorrect password. Please try again.');
+			return;
+		}
+		
+		// Grant edit permission for this session
+		grantEditPermission();
+		setIsEditPasswordDialogOpen(false);
+		
+		// Open edit dialog
+		setEditedText(description);
+		setIsEditDialogOpen(true);
+	};
+
+	const handleCategoryPasswordSubmit = (e: React.FormEvent) => {
+		e.preventDefault();
+		
+		if (!verifyActionPassword(categoryPassword)) {
+			setCategoryError('Incorrect password. Please try again.');
+			return;
+		}
+		
+		// Grant category permission for this session
+		grantCategoryPermission();
+		setIsCategoryPasswordDialogOpen(false);
+		
+		// Open category dialog
+		setSelectedCategory(category || '');
+		setIsCategoryDialogOpen(true);
 	};
 
 	const handleSaveEdit = async (e?: React.FormEvent) => {
@@ -484,6 +551,108 @@ const DealCard = ({
 								type="submit"
 								disabled={!deletePassword.trim()}
 								variant="destructive">
+								Verify
+							</Button>
+						</DialogFooter>
+					</form>
+				</DialogContent>
+			</Dialog>
+
+			{/* Password Dialog for Edit Protection */}
+			<Dialog 
+				open={isEditPasswordDialogOpen} 
+				onOpenChange={setIsEditPasswordDialogOpen}
+			>
+				<DialogContent className="sm:max-w-[400px] max-w-[90vw] w-[90vw] sm:w-auto rounded-xl">
+					<DialogHeader>
+						<DialogTitle className="flex items-center gap-2">
+							<Lock className="h-5 w-5 text-blue-500" /> 
+							Authentication Required
+						</DialogTitle>
+					</DialogHeader>
+
+					<form onSubmit={handleEditPasswordSubmit}>
+						<div className="mt-4 space-y-4">
+							<p className="text-sm">
+								Please enter the admin password to edit deals:
+							</p>
+							
+							<Input
+								type="password"
+								value={editPassword}
+								onChange={(e) => {
+									setEditPassword(e.target.value);
+									setEditError('');
+								}}
+								placeholder="Enter password"
+							/>
+							
+							{editError && (
+								<p className="text-sm text-red-500">{editError}</p>
+							)}
+						</div>
+
+						<DialogFooter className="mt-6">
+							<Button
+								type="button"
+								variant="outline"
+								onClick={() => setIsEditPasswordDialogOpen(false)}>
+								Cancel
+							</Button>
+							<Button
+								type="submit"
+								disabled={!editPassword.trim()}>
+								Verify
+							</Button>
+						</DialogFooter>
+					</form>
+				</DialogContent>
+			</Dialog>
+
+			{/* Password Dialog for Category Protection */}
+			<Dialog 
+				open={isCategoryPasswordDialogOpen} 
+				onOpenChange={setIsCategoryPasswordDialogOpen}
+			>
+				<DialogContent className="sm:max-w-[400px] max-w-[90vw] w-[90vw] sm:w-auto rounded-xl">
+					<DialogHeader>
+						<DialogTitle className="flex items-center gap-2">
+							<Lock className="h-5 w-5 text-purple-500" /> 
+							Authentication Required
+						</DialogTitle>
+					</DialogHeader>
+
+					<form onSubmit={handleCategoryPasswordSubmit}>
+						<div className="mt-4 space-y-4">
+							<p className="text-sm">
+								Please enter the admin password to change categories:
+							</p>
+							
+							<Input
+								type="password"
+								value={categoryPassword}
+								onChange={(e) => {
+									setCategoryPassword(e.target.value);
+									setCategoryError('');
+								}}
+								placeholder="Enter password"
+							/>
+							
+							{categoryError && (
+								<p className="text-sm text-red-500">{categoryError}</p>
+							)}
+						</div>
+
+						<DialogFooter className="mt-6">
+							<Button
+								type="button"
+								variant="outline"
+								onClick={() => setIsCategoryPasswordDialogOpen(false)}>
+								Cancel
+							</Button>
+							<Button
+								type="submit"
+								disabled={!categoryPassword.trim()}>
 								Verify
 							</Button>
 						</DialogFooter>

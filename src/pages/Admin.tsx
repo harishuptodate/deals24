@@ -39,7 +39,15 @@ import { useToast } from '@/components/ui/use-toast';
 import { subDays, format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { AdminLoginDialog } from '../components/AdminLoginDialog';
-import { isAuthenticated, logout } from '../services/authService';
+import { 
+	isAuthenticated, 
+	logout, 
+	hasEditPermission,
+	hasCategoryPermission,
+	grantEditPermission,
+	grantCategoryPermission,
+	verifyActionPassword 
+} from '../services/authService';
 import { Button } from '@/components/ui/button';
 import {
 	Select,
@@ -84,6 +92,8 @@ const Admin = () => {
 	const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 	const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
 	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+	const [isEditPasswordDialogOpen, setIsEditPasswordDialogOpen] = useState(false);
+	const [isCategoryPasswordDialogOpen, setIsCategoryPasswordDialogOpen] = useState(false);
 	const [editedText, setEditedText] = useState('');
 	const [selectedCategory, setSelectedCategory] = useState('');
 	const [availableCategories, setAvailableCategories] = useState<string[]>([]);
@@ -91,6 +101,10 @@ const Admin = () => {
 	const [isLoadingCategories, setIsLoadingCategories] = useState(false);
 	const [deletePassword, setDeletePassword] = useState('');
 	const [deleteError, setDeleteError] = useState('');
+	const [editPassword, setEditPassword] = useState('');
+	const [categoryPassword, setCategoryPassword] = useState('');
+	const [editError, setEditError] = useState('');
+	const [categoryError, setCategoryError] = useState('');
 	const navigate = useNavigate();
 	const [showLoginDialog, setShowLoginDialog] = useState(false);
 	const [totalDealsCount, setTotalDealsCount] = useState<number>(0);
@@ -258,17 +272,67 @@ const Admin = () => {
 	// Open edit dialog
 	const handleOpenEditDialog = () => {
 		if (selectedDeal) {
-			setEditedText(selectedDeal.text);
-			setIsEditDialogOpen(true);
+			if (hasEditPermission()) {
+				setEditedText(selectedDeal.text);
+				setIsEditDialogOpen(true);
+			} else {
+				// Request password for edit permission
+				setEditPassword('');
+				setEditError('');
+				setIsEditPasswordDialogOpen(true);
+			}
 		}
+	};
+
+	// Handle edit password verification
+	const handleEditPasswordSubmit = (e: React.FormEvent) => {
+		e.preventDefault();
+		
+		if (!verifyActionPassword(editPassword)) {
+			setEditError('Incorrect password. Please try again.');
+			return;
+		}
+		
+		// Grant edit permission for this session
+		grantEditPermission();
+		setIsEditPasswordDialogOpen(false);
+		
+		// Open edit dialog
+		setEditedText(selectedDeal.text);
+		setIsEditDialogOpen(true);
 	};
 
 	// Open category dialog
 	const handleOpenCategoryDialog = () => {
 		if (selectedDeal) {
-			setSelectedCategory(selectedDeal.category || '');
-			setIsCategoryDialogOpen(true);
+			if (hasCategoryPermission()) {
+				setSelectedCategory(selectedDeal.category || '');
+				setIsCategoryDialogOpen(true);
+			} else {
+				// Request password for category permission
+				setCategoryPassword('');
+				setCategoryError('');
+				setIsCategoryPasswordDialogOpen(true);
+			}
 		}
+	};
+
+	// Handle category password verification
+	const handleCategoryPasswordSubmit = (e: React.FormEvent) => {
+		e.preventDefault();
+		
+		if (!verifyActionPassword(categoryPassword)) {
+			setCategoryError('Incorrect password. Please try again.');
+			return;
+		}
+		
+		// Grant category permission for this session
+		grantCategoryPermission();
+		setIsCategoryPasswordDialogOpen(false);
+		
+		// Open category dialog
+		setSelectedCategory(selectedDeal.category || '');
+		setIsCategoryDialogOpen(true);
 	};
 
 	// Open delete confirmation dialog
@@ -770,6 +834,108 @@ const Admin = () => {
 				</DialogContent>
 			</Dialog>
 
+			{/* Edit Password Dialog */}
+			<Dialog 
+				open={isEditPasswordDialogOpen} 
+				onOpenChange={setIsEditPasswordDialogOpen}
+			>
+				<DialogContent className="sm:max-w-[400px] max-w-[90vw] w-[90vw] sm:w-auto rounded-xl">
+					<DialogHeader>
+						<DialogTitle className="flex items-center gap-2">
+							<Lock className="h-5 w-5 text-blue-500" /> 
+							Authentication Required
+						</DialogTitle>
+					</DialogHeader>
+
+					<form onSubmit={handleEditPasswordSubmit}>
+						<div className="mt-4 space-y-4">
+							<p className="text-sm">
+								Please enter the admin password to edit deals:
+							</p>
+							
+							<Input
+								type="password"
+								value={editPassword}
+								onChange={(e) => {
+									setEditPassword(e.target.value);
+									setEditError('');
+								}}
+								placeholder="Enter password"
+							/>
+							
+							{editError && (
+								<p className="text-sm text-red-500">{editError}</p>
+							)}
+						</div>
+
+						<DialogFooter className="mt-6">
+							<Button
+								type="button"
+								variant="outline"
+								onClick={() => setIsEditPasswordDialogOpen(false)}>
+								Cancel
+							</Button>
+							<Button
+								type="submit"
+								disabled={!editPassword.trim()}>
+								Verify
+							</Button>
+						</DialogFooter>
+					</form>
+				</DialogContent>
+			</Dialog>
+
+			{/* Category Password Dialog */}
+			<Dialog 
+				open={isCategoryPasswordDialogOpen} 
+				onOpenChange={setIsCategoryPasswordDialogOpen}
+			>
+				<DialogContent className="sm:max-w-[400px] max-w-[90vw] w-[90vw] sm:w-auto rounded-xl">
+					<DialogHeader>
+						<DialogTitle className="flex items-center gap-2">
+							<Lock className="h-5 w-5 text-purple-500" /> 
+							Authentication Required
+						</DialogTitle>
+					</DialogHeader>
+
+					<form onSubmit={handleCategoryPasswordSubmit}>
+						<div className="mt-4 space-y-4">
+							<p className="text-sm">
+								Please enter the admin password to change categories:
+							</p>
+							
+							<Input
+								type="password"
+								value={categoryPassword}
+								onChange={(e) => {
+									setCategoryPassword(e.target.value);
+									setCategoryError('');
+								}}
+								placeholder="Enter password"
+							/>
+							
+							{categoryError && (
+								<p className="text-sm text-red-500">{categoryError}</p>
+							)}
+						</div>
+
+						<DialogFooter className="mt-6">
+							<Button
+								type="button"
+								variant="outline"
+								onClick={() => setIsCategoryPasswordDialogOpen(false)}>
+								Cancel
+							</Button>
+							<Button
+								type="submit"
+								disabled={!categoryPassword.trim()}>
+								Verify
+							</Button>
+						</DialogFooter>
+					</form>
+				</DialogContent>
+			</Dialog>
+
 			{/* Edit Dialog */}
 			<Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
 				<DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto max-w-[95vw] w-[95vw] sm:w-auto rounded-xl">
@@ -807,7 +973,8 @@ const Admin = () => {
 			{/* Category Dialog */}
 			<Dialog
 				open={isCategoryDialogOpen}
-				onOpenChange={setIsCategoryDialogOpen}>
+				onOpenChange={setIsCategoryDialogOpen}
+			>
 				<DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto max-w-[90vw] w-[90vw] sm:w-auto rounded-xl">
 					<DialogHeader>
 						<DialogTitle>Change Category</DialogTitle>
