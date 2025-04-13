@@ -24,12 +24,14 @@ const Deals = () => {
 		categoryParam,
 	);
 	const observerTarget = useRef<HTMLDivElement>(null);
+	
+	// Use a unique key for this page's pagination state
 	const { 
 		initialCursor, 
 		savePaginationState, 
-		isInitialLoad, 
-		setIsInitialLoad 
-	} = usePaginationState('deals');
+		isInitialLoad,
+		setIsInitialLoad
+	} = usePaginationState('deals-page');
 
 	useEffect(() => {
 		setActiveCategory(categoryParam);
@@ -51,9 +53,9 @@ const Deals = () => {
 				activeCategory || undefined,
 				searchQuery || undefined,
 			),
-		initialPageParam: initialCursor as string | undefined,
+		initialPageParam: initialCursor,
 		getNextPageParam: (lastPage) => {
-			// Save the new cursor whenever it changes
+			// Save cursor state whenever we get new data
 			if (lastPage.nextCursor) {
 				savePaginationState(lastPage.nextCursor);
 			}
@@ -71,17 +73,28 @@ const Deals = () => {
 		},
 	});
 
-	// Save scroll position on scroll
+	// Save scroll position on scroll (with debounce to avoid excessive updates)
 	useEffect(() => {
+		let timeoutId: NodeJS.Timeout;
+		
 		const handleScroll = () => {
-			if (!isInitialLoad) {
-				const currentCursor = searchParams.get('cursor') || undefined;
-				savePaginationState(currentCursor, window.scrollY);
-			}
+			clearTimeout(timeoutId);
+			
+			// Only update after scrolling stops for 150ms
+			timeoutId = setTimeout(() => {
+				if (!isInitialLoad) {
+					const currentCursor = searchParams.get('cursor') || undefined;
+					savePaginationState(currentCursor, window.scrollY);
+				}
+			}, 150);
 		};
 
 		window.addEventListener('scroll', handleScroll, { passive: true });
-		return () => window.removeEventListener('scroll', handleScroll);
+		
+		return () => {
+			window.removeEventListener('scroll', handleScroll);
+			clearTimeout(timeoutId);
+		};
 	}, [isInitialLoad, searchParams, savePaginationState]);
 
 	// Set initial load complete after data is loaded

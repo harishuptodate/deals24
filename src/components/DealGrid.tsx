@@ -98,11 +98,12 @@ const DealGrid = () => {
 	const searchQuery = searchParams.get('search');
 	const [activeCategory, setActiveCategory] = useState<string | null>(null);
 	const observerTarget = useRef<HTMLDivElement>(null);
+	
 	const { 
 		initialCursor, 
 		savePaginationState, 
-		isInitialLoad, 
-		setIsInitialLoad 
+		isInitialLoad,
+		setIsInitialLoad
 	} = usePaginationState('home-deals');
 
 	const {
@@ -121,7 +122,7 @@ const DealGrid = () => {
 				activeCategory,
 				searchQuery,
 			),
-		initialPageParam: initialCursor as string | undefined,
+		initialPageParam: initialCursor,
 		getNextPageParam: (lastPage) => {
 			if (lastPage.nextCursor) {
 				savePaginationState(lastPage.nextCursor);
@@ -141,15 +142,25 @@ const DealGrid = () => {
 	});
 
 	useEffect(() => {
+		let timeoutId: NodeJS.Timeout;
+		
 		const handleScroll = () => {
-			if (!isInitialLoad) {
-				const currentCursor = searchParams.get('cursor') || undefined;
-				savePaginationState(currentCursor, window.scrollY);
-			}
+			clearTimeout(timeoutId);
+			
+			timeoutId = setTimeout(() => {
+				if (!isInitialLoad) {
+					const currentCursor = searchParams.get('cursor') || undefined;
+					savePaginationState(currentCursor, window.scrollY);
+				}
+			}, 150);
 		};
 
 		window.addEventListener('scroll', handleScroll, { passive: true });
-		return () => window.removeEventListener('scroll', handleScroll);
+		
+		return () => {
+			window.removeEventListener('scroll', handleScroll);
+			clearTimeout(timeoutId);
+		};
 	}, [isInitialLoad, searchParams, savePaginationState]);
 
 	useEffect(() => {
@@ -157,6 +168,12 @@ const DealGrid = () => {
 			setIsInitialLoad(false);
 		}
 	}, [data, isInitialLoad, setIsInitialLoad]);
+
+	useEffect(() => {
+		if (!isInitialLoad) {
+			refetch();
+		}
+	}, [activeCategory, searchQuery, refetch, isInitialLoad]);
 
 	const handleObserver = useCallback(
 		(entries: IntersectionObserverEntry[]) => {
@@ -184,12 +201,6 @@ const DealGrid = () => {
 			}
 		};
 	}, [handleObserver, observerTarget]);
-
-	useEffect(() => {
-		if (!isInitialLoad) {
-			refetch();
-		}
-	}, [activeCategory, searchQuery, refetch, isInitialLoad]);
 
 	const handleCategoryChange = (category: string | null) => {
 		setActiveCategory(category);
