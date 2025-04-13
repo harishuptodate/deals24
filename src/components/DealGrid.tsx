@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { getTelegramMessages, deleteProduct } from '../services/api';
 import DealCard from './DealCard';
@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Loader2, Filter } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
 
 interface CategoryFilterProps {
 	onSelect: (category: string | null) => void;
@@ -96,7 +97,6 @@ const DealGrid = () => {
 	const [searchParams] = useSearchParams();
 	const searchQuery = searchParams.get('search');
 	const [activeCategory, setActiveCategory] = useState<string | null>(null);
-	const observerTarget = useRef<HTMLDivElement>(null);
 
 	const {
 		data,
@@ -128,32 +128,12 @@ const DealGrid = () => {
 		},
 	});
 
-	const handleObserver = useCallback(
-		(entries: IntersectionObserverEntry[]) => {
-			const target = entries[0];
-			if (target.isIntersecting && hasNextPage && !isFetchingNextPage) {
-				fetchNextPage();
-			}
-		},
-		[fetchNextPage, hasNextPage, isFetchingNextPage],
-	);
-
-	useEffect(() => {
-		const observer = new IntersectionObserver(handleObserver, {
-			rootMargin: '0px 0px 200px 0px',
-			threshold: 0.1,
-		});
-
-		if (observerTarget.current) {
-			observer.observe(observerTarget.current);
-		}
-
-		return () => {
-			if (observerTarget.current) {
-				observer.unobserve(observerTarget.current);
-			}
-		};
-	}, [handleObserver, observerTarget]);
+	const { observerTarget } = useInfiniteScroll({
+		hasNextPage: !!hasNextPage,
+		isFetchingNextPage,
+		fetchNextPage,
+		isInitialLoading: isLoading,
+	});
 
 	useEffect(() => {
 		refetch();

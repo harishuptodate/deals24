@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import {
@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Loader2, X } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
 
 const Deals = () => {
 	const { toast } = useToast();
@@ -21,7 +22,6 @@ const Deals = () => {
 	const [activeCategory, setActiveCategory] = useState<string | null>(
 		categoryParam,
 	);
-	const observerTarget = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
 		setActiveCategory(categoryParam);
@@ -57,33 +57,12 @@ const Deals = () => {
 		},
 	});
 
-	// Implement intersection observer for infinite scrolling
-	const handleObserver = useCallback(
-		(entries: IntersectionObserverEntry[]) => {
-			const target = entries[0];
-			if (target.isIntersecting && hasNextPage && !isFetchingNextPage) {
-				fetchNextPage();
-			}
-		},
-		[fetchNextPage, hasNextPage, isFetchingNextPage],
-	);
-
-	useEffect(() => {
-		const observer = new IntersectionObserver(handleObserver, {
-			rootMargin: '0px 0px 200px 0px',
-			threshold: 0.1,
-		});
-
-		if (observerTarget.current) {
-			observer.observe(observerTarget.current);
-		}
-
-		return () => {
-			if (observerTarget.current) {
-				observer.unobserve(observerTarget.current);
-			}
-		};
-	}, [handleObserver, observerTarget]);
+	const { observerTarget } = useInfiniteScroll({
+		hasNextPage: !!hasNextPage,
+		isFetchingNextPage,
+		fetchNextPage,
+		isInitialLoading: isLoading,
+	});
 
 	const allMessages = data?.pages.flatMap((page) => page.data) ?? [];
 
@@ -231,7 +210,6 @@ const Deals = () => {
 				) : (
 					<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
 						{allMessages.map((message) => {
-							// Skip rendering if message is undefined or doesn't have required fields
 							if (!message || !message.text) {
 								return null;
 							}
@@ -256,7 +234,6 @@ const Deals = () => {
 					</div>
 				)}
 
-				{/* Intersection observer target for infinite scrolling */}
 				{hasNextPage && (
 					<div
 						ref={observerTarget}
