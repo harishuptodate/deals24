@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Loader2, Filter } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { usePaginationState } from '../hooks/usePaginationState';
 
 interface CategoryFilterProps {
 	onSelect: (category: string | null) => void;
@@ -97,6 +98,12 @@ const DealGrid = () => {
 	const searchQuery = searchParams.get('search');
 	const [activeCategory, setActiveCategory] = useState<string | null>(null);
 	const observerTarget = useRef<HTMLDivElement>(null);
+	const { 
+		initialCursor, 
+		savePaginationState, 
+		isInitialLoad, 
+		setIsInitialLoad 
+	} = usePaginationState('home-deals');
 
 	const {
 		data,
@@ -114,8 +121,13 @@ const DealGrid = () => {
 				activeCategory,
 				searchQuery,
 			),
-		initialPageParam: undefined as string | undefined,
-		getNextPageParam: (lastPage) => lastPage.nextCursor,
+		initialPageParam: initialCursor as string | undefined,
+		getNextPageParam: (lastPage) => {
+			if (lastPage.nextCursor) {
+				savePaginationState(lastPage.nextCursor);
+			}
+			return lastPage.nextCursor;
+		},
 		retry: 2,
 		meta: {
 			onError: () => {
@@ -128,14 +140,32 @@ const DealGrid = () => {
 		},
 	});
 
+	useEffect(() => {
+		const handleScroll = () => {
+			if (!isInitialLoad) {
+				const currentCursor = searchParams.get('cursor') || undefined;
+				savePaginationState(currentCursor, window.scrollY);
+			}
+		};
+
+		window.addEventListener('scroll', handleScroll, { passive: true });
+		return () => window.removeEventListener('scroll', handleScroll);
+	}, [isInitialLoad, searchParams, savePaginationState]);
+
+	useEffect(() => {
+		if (data && isInitialLoad) {
+			setIsInitialLoad(false);
+		}
+	}, [data, isInitialLoad, setIsInitialLoad]);
+
 	const handleObserver = useCallback(
 		(entries: IntersectionObserverEntry[]) => {
 			const target = entries[0];
-			if (target.isIntersecting && hasNextPage && !isFetchingNextPage) {
+			if (target.isIntersecting && hasNextPage && !isFetchingNextPage && !isInitialLoad) {
 				fetchNextPage();
 			}
 		},
-		[fetchNextPage, hasNextPage, isFetchingNextPage],
+		[fetchNextPage, hasNextPage, isFetchingNextPage, isInitialLoad],
 	);
 
 	useEffect(() => {
@@ -156,8 +186,10 @@ const DealGrid = () => {
 	}, [handleObserver, observerTarget]);
 
 	useEffect(() => {
-		refetch();
-	}, [activeCategory, searchQuery, refetch]);
+		if (!isInitialLoad) {
+			refetch();
+		}
+	}, [activeCategory, searchQuery, refetch, isInitialLoad]);
 
 	const handleCategoryChange = (category: string | null) => {
 		setActiveCategory(category);

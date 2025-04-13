@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Navbar from '../components/Navbar';
 import { useInfiniteQuery } from '@tanstack/react-query';
@@ -11,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Loader2, X } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { usePaginationState } from '../hooks/usePaginationState';
 
 const Deals = () => {
 	const { toast } = useToast();
@@ -22,6 +24,12 @@ const Deals = () => {
 		categoryParam,
 	);
 	const observerTarget = useRef<HTMLDivElement>(null);
+	const { 
+		initialCursor, 
+		savePaginationState, 
+		isInitialLoad, 
+		setIsInitialLoad 
+	} = usePaginationState('deals');
 
 	useEffect(() => {
 		setActiveCategory(categoryParam);
@@ -43,8 +51,14 @@ const Deals = () => {
 				activeCategory || undefined,
 				searchQuery || undefined,
 			),
-		initialPageParam: undefined as string | undefined,
-		getNextPageParam: (lastPage) => lastPage.nextCursor,
+		initialPageParam: initialCursor as string | undefined,
+		getNextPageParam: (lastPage) => {
+			// Save the new cursor whenever it changes
+			if (lastPage.nextCursor) {
+				savePaginationState(lastPage.nextCursor);
+			}
+			return lastPage.nextCursor;
+		},
 		retry: 2,
 		meta: {
 			onError: () => {
@@ -57,15 +71,35 @@ const Deals = () => {
 		},
 	});
 
-	// Implement intersection observer for infinite scrolling
+	// Save scroll position on scroll
+	useEffect(() => {
+		const handleScroll = () => {
+			if (!isInitialLoad) {
+				const currentCursor = searchParams.get('cursor') || undefined;
+				savePaginationState(currentCursor, window.scrollY);
+			}
+		};
+
+		window.addEventListener('scroll', handleScroll, { passive: true });
+		return () => window.removeEventListener('scroll', handleScroll);
+	}, [isInitialLoad, searchParams, savePaginationState]);
+
+	// Set initial load complete after data is loaded
+	useEffect(() => {
+		if (data && isInitialLoad) {
+			setIsInitialLoad(false);
+		}
+	}, [data, isInitialLoad, setIsInitialLoad]);
+
+	// Implement intersection observer for infinite scrolling with throttling
 	const handleObserver = useCallback(
 		(entries: IntersectionObserverEntry[]) => {
 			const target = entries[0];
-			if (target.isIntersecting && hasNextPage && !isFetchingNextPage) {
+			if (target.isIntersecting && hasNextPage && !isFetchingNextPage && !isInitialLoad) {
 				fetchNextPage();
 			}
 		},
-		[fetchNextPage, hasNextPage, isFetchingNextPage],
+		[fetchNextPage, hasNextPage, isFetchingNextPage, isInitialLoad],
 	);
 
 	useEffect(() => {
