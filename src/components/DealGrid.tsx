@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Loader2, Filter } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
-import { usePaginationState } from '../hooks/usePaginationState';
 
 interface CategoryFilterProps {
 	onSelect: (category: string | null) => void;
@@ -98,14 +97,6 @@ const DealGrid = () => {
 	const searchQuery = searchParams.get('search');
 	const [activeCategory, setActiveCategory] = useState<string | null>(null);
 	const observerTarget = useRef<HTMLDivElement>(null);
-	const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-	
-	const { 
-		initialCursor, 
-		savePaginationState, 
-		isInitialLoad,
-		setIsInitialLoad
-	} = usePaginationState('home-deals');
 
 	const {
 		data,
@@ -123,10 +114,8 @@ const DealGrid = () => {
 				activeCategory,
 				searchQuery,
 			),
-		initialPageParam: initialCursor,
-		getNextPageParam: (lastPage) => {
-			return lastPage.nextCursor;
-		},
+		initialPageParam: undefined as string | undefined,
+		getNextPageParam: (lastPage) => lastPage.nextCursor,
 		retry: 2,
 		meta: {
 			onError: () => {
@@ -139,60 +128,10 @@ const DealGrid = () => {
 		},
 	});
 
-	useEffect(() => {
-		if (data?.pages?.length > 0) {
-			const lastPage = data.pages[data.pages.length - 1];
-			if (lastPage.nextCursor) {
-				savePaginationState(lastPage.nextCursor);
-			}
-		}
-	}, [data, savePaginationState]);
-
-	useEffect(() => {
-		const handleScroll = () => {
-			if (scrollTimeoutRef.current) {
-				clearTimeout(scrollTimeoutRef.current);
-			}
-			
-			scrollTimeoutRef.current = setTimeout(() => {
-				if (!isInitialLoad) {
-					const currentCursor = searchParams.get('cursor') || undefined;
-					savePaginationState(currentCursor, window.scrollY);
-				}
-			}, 200);
-		};
-
-		window.addEventListener('scroll', handleScroll, { passive: true });
-		
-		return () => {
-			window.removeEventListener('scroll', handleScroll);
-			if (scrollTimeoutRef.current) {
-				clearTimeout(scrollTimeoutRef.current);
-			}
-		};
-	}, [isInitialLoad, searchParams, savePaginationState]);
-
-	useEffect(() => {
-		if (data && isInitialLoad) {
-			const timer = setTimeout(() => {
-				setIsInitialLoad(false);
-			}, 500);
-			
-			return () => clearTimeout(timer);
-		}
-	}, [data, isInitialLoad, setIsInitialLoad]);
-
-	useEffect(() => {
-		if (!isInitialLoad) {
-			refetch();
-		}
-	}, [activeCategory, searchQuery, refetch, isInitialLoad]);
-
 	const handleObserver = useCallback(
 		(entries: IntersectionObserverEntry[]) => {
 			const target = entries[0];
 			if (target.isIntersecting && hasNextPage && !isFetchingNextPage) {
-				console.log('Intersection observer triggered - fetching next page in DealGrid');
 				fetchNextPage();
 			}
 		},
@@ -201,22 +140,24 @@ const DealGrid = () => {
 
 	useEffect(() => {
 		const observer = new IntersectionObserver(handleObserver, {
-			rootMargin: '0px 0px 300px 0px',
+			rootMargin: '0px 0px 200px 0px',
 			threshold: 0.1,
 		});
 
-		const currentObserverTarget = observerTarget.current;
-		
-		if (currentObserverTarget) {
-			observer.observe(currentObserverTarget);
+		if (observerTarget.current) {
+			observer.observe(observerTarget.current);
 		}
 
 		return () => {
-			if (currentObserverTarget) {
-				observer.unobserve(currentObserverTarget);
+			if (observerTarget.current) {
+				observer.unobserve(observerTarget.current);
 			}
 		};
 	}, [handleObserver, observerTarget]);
+
+	useEffect(() => {
+		refetch();
+	}, [activeCategory, searchQuery, refetch]);
 
 	const handleCategoryChange = (category: string | null) => {
 		setActiveCategory(category);
