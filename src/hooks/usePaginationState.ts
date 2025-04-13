@@ -1,34 +1,37 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
-interface PaginationState {
-  cursor: string | undefined;
-  scrollPosition: number;
+interface UsePaginationStateReturn {
+  initialCursor: string | undefined;
+  savePaginationState: (cursor: string | undefined, scrollY?: number) => void;
+  isInitialLoad: boolean;
+  setIsInitialLoad: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-export function usePaginationState(key: string) {
+export function usePaginationState(key: string): UsePaginationStateReturn {
   const [searchParams, setSearchParams] = useSearchParams();
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const scrollRestored = useRef(false);
   
   // Get initial cursor from URL
   const initialCursor = searchParams.get('cursor') || undefined;
   
-  // Get initial scroll position from localStorage
-  const initialScrollPosition = parseInt(localStorage.getItem(`${key}-scrollPosition`) || '0');
-  
-  // Store cursor and scroll position
+  // Store cursor in URL and scroll position in localStorage
   const savePaginationState = (cursor: string | undefined, scrollY = window.scrollY) => {
-    // Update URL with cursor
-    const newSearchParams = new URLSearchParams(searchParams);
-    
-    if (cursor) {
-      newSearchParams.set('cursor', cursor);
-    } else {
-      newSearchParams.delete('cursor');
+    // Only update URL if cursor changes to avoid unnecessary history entries
+    const currentCursor = searchParams.get('cursor');
+    if (currentCursor !== cursor) {
+      const newSearchParams = new URLSearchParams(searchParams);
+      
+      if (cursor) {
+        newSearchParams.set('cursor', cursor);
+      } else {
+        newSearchParams.delete('cursor');
+      }
+      
+      setSearchParams(newSearchParams, { replace: true });
     }
-    
-    setSearchParams(newSearchParams, { replace: true });
     
     // Save scroll position to localStorage
     localStorage.setItem(`${key}-scrollPosition`, scrollY.toString());
@@ -36,23 +39,27 @@ export function usePaginationState(key: string) {
   
   // Restore scroll position on initial load
   useEffect(() => {
-    if (isInitialLoad && initialScrollPosition > 0) {
-      // Add a slight delay to allow content to render before scrolling
-      const timer = setTimeout(() => {
-        window.scrollTo(0, initialScrollPosition);
-        setIsInitialLoad(false);
-      }, 300);
+    if (isInitialLoad && !scrollRestored.current) {
+      const savedScrollPosition = parseInt(localStorage.getItem(`${key}-scrollPosition`) || '0');
       
-      return () => clearTimeout(timer);
-    } else if (isInitialLoad) {
-      // No scroll position to restore, just mark initial load as complete
-      setIsInitialLoad(false);
+      if (savedScrollPosition > 0) {
+        // Add a slight delay to allow content to render before scrolling
+        const timer = setTimeout(() => {
+          window.scrollTo(0, savedScrollPosition);
+          scrollRestored.current = true;
+          // Don't set isInitialLoad to false here as it may affect data fetching
+        }, 300);
+        
+        return () => clearTimeout(timer);
+      } else {
+        // No scroll position to restore
+        scrollRestored.current = true;
+      }
     }
-  }, [isInitialLoad, initialScrollPosition]);
+  }, [isInitialLoad, key]);
   
   return {
     initialCursor,
-    initialScrollPosition,
     savePaginationState,
     isInitialLoad,
     setIsInitialLoad

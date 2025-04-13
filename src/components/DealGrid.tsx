@@ -98,6 +98,7 @@ const DealGrid = () => {
 	const searchQuery = searchParams.get('search');
 	const [activeCategory, setActiveCategory] = useState<string | null>(null);
 	const observerTarget = useRef<HTMLDivElement>(null);
+	const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 	
 	const { 
 		initialCursor, 
@@ -124,9 +125,6 @@ const DealGrid = () => {
 			),
 		initialPageParam: initialCursor,
 		getNextPageParam: (lastPage) => {
-			if (lastPage.nextCursor) {
-				savePaginationState(lastPage.nextCursor);
-			}
 			return lastPage.nextCursor;
 		},
 		retry: 2,
@@ -142,30 +140,45 @@ const DealGrid = () => {
 	});
 
 	useEffect(() => {
-		let timeoutId: NodeJS.Timeout;
-		
+		if (data?.pages?.length > 0) {
+			const lastPage = data.pages[data.pages.length - 1];
+			if (lastPage.nextCursor) {
+				savePaginationState(lastPage.nextCursor);
+			}
+		}
+	}, [data, savePaginationState]);
+
+	useEffect(() => {
 		const handleScroll = () => {
-			clearTimeout(timeoutId);
+			if (scrollTimeoutRef.current) {
+				clearTimeout(scrollTimeoutRef.current);
+			}
 			
-			timeoutId = setTimeout(() => {
+			scrollTimeoutRef.current = setTimeout(() => {
 				if (!isInitialLoad) {
 					const currentCursor = searchParams.get('cursor') || undefined;
 					savePaginationState(currentCursor, window.scrollY);
 				}
-			}, 150);
+			}, 200);
 		};
 
 		window.addEventListener('scroll', handleScroll, { passive: true });
 		
 		return () => {
 			window.removeEventListener('scroll', handleScroll);
-			clearTimeout(timeoutId);
+			if (scrollTimeoutRef.current) {
+				clearTimeout(scrollTimeoutRef.current);
+			}
 		};
 	}, [isInitialLoad, searchParams, savePaginationState]);
 
 	useEffect(() => {
 		if (data && isInitialLoad) {
-			setIsInitialLoad(false);
+			const timer = setTimeout(() => {
+				setIsInitialLoad(false);
+			}, 500);
+			
+			return () => clearTimeout(timer);
 		}
 	}, [data, isInitialLoad, setIsInitialLoad]);
 
@@ -178,26 +191,29 @@ const DealGrid = () => {
 	const handleObserver = useCallback(
 		(entries: IntersectionObserverEntry[]) => {
 			const target = entries[0];
-			if (target.isIntersecting && hasNextPage && !isFetchingNextPage && !isInitialLoad) {
+			if (target.isIntersecting && hasNextPage && !isFetchingNextPage) {
+				console.log('Intersection observer triggered - fetching next page in DealGrid');
 				fetchNextPage();
 			}
 		},
-		[fetchNextPage, hasNextPage, isFetchingNextPage, isInitialLoad],
+		[fetchNextPage, hasNextPage, isFetchingNextPage],
 	);
 
 	useEffect(() => {
 		const observer = new IntersectionObserver(handleObserver, {
-			rootMargin: '0px 0px 200px 0px',
+			rootMargin: '0px 0px 300px 0px',
 			threshold: 0.1,
 		});
 
-		if (observerTarget.current) {
-			observer.observe(observerTarget.current);
+		const currentObserverTarget = observerTarget.current;
+		
+		if (currentObserverTarget) {
+			observer.observe(currentObserverTarget);
 		}
 
 		return () => {
-			if (observerTarget.current) {
-				observer.unobserve(observerTarget.current);
+			if (currentObserverTarget) {
+				observer.unobserve(currentObserverTarget);
 			}
 		};
 	}, [handleObserver, observerTarget]);

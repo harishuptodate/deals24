@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Navbar from '../components/Navbar';
 import { useInfiniteQuery } from '@tanstack/react-query';
@@ -24,6 +23,7 @@ const Deals = () => {
 		categoryParam,
 	);
 	const observerTarget = useRef<HTMLDivElement>(null);
+	const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 	
 	// Use a unique key for this page's pagination state
 	const { 
@@ -55,10 +55,6 @@ const Deals = () => {
 			),
 		initialPageParam: initialCursor,
 		getNextPageParam: (lastPage) => {
-			// Save cursor state whenever we get new data
-			if (lastPage.nextCursor) {
-				savePaginationState(lastPage.nextCursor);
-			}
 			return lastPage.nextCursor;
 		},
 		retry: 2,
@@ -73,64 +69,85 @@ const Deals = () => {
 		},
 	});
 
-	// Save scroll position on scroll (with debounce to avoid excessive updates)
+	// Update cursor state whenever data changes
 	useEffect(() => {
-		let timeoutId: NodeJS.Timeout;
-		
+		if (data?.pages?.length > 0) {
+			const lastPage = data.pages[data.pages.length - 1];
+			if (lastPage.nextCursor) {
+				savePaginationState(lastPage.nextCursor);
+			}
+		}
+	}, [data, savePaginationState]);
+
+	// Save scroll position on scroll with debounce
+	useEffect(() => {
 		const handleScroll = () => {
-			clearTimeout(timeoutId);
+			if (scrollTimeoutRef.current) {
+				clearTimeout(scrollTimeoutRef.current);
+			}
 			
-			// Only update after scrolling stops for 150ms
-			timeoutId = setTimeout(() => {
+			// Only update after scrolling stops for 200ms and not during initial load
+			scrollTimeoutRef.current = setTimeout(() => {
 				if (!isInitialLoad) {
 					const currentCursor = searchParams.get('cursor') || undefined;
 					savePaginationState(currentCursor, window.scrollY);
 				}
-			}, 150);
+			}, 200);
 		};
 
 		window.addEventListener('scroll', handleScroll, { passive: true });
 		
 		return () => {
 			window.removeEventListener('scroll', handleScroll);
-			clearTimeout(timeoutId);
+			if (scrollTimeoutRef.current) {
+				clearTimeout(scrollTimeoutRef.current);
+			}
 		};
 	}, [isInitialLoad, searchParams, savePaginationState]);
 
 	// Set initial load complete after data is loaded
 	useEffect(() => {
 		if (data && isInitialLoad) {
-			setIsInitialLoad(false);
+			// Small delay to ensure content has rendered
+			const timer = setTimeout(() => {
+				setIsInitialLoad(false);
+			}, 500);
+			
+			return () => clearTimeout(timer);
 		}
 	}, [data, isInitialLoad, setIsInitialLoad]);
 
-	// Implement intersection observer for infinite scrolling with throttling
+	// Implement intersection observer for infinite scrolling
 	const handleObserver = useCallback(
 		(entries: IntersectionObserverEntry[]) => {
 			const target = entries[0];
-			if (target.isIntersecting && hasNextPage && !isFetchingNextPage && !isInitialLoad) {
+			// Make sure we're not in initial load and not already fetching
+			if (target.isIntersecting && hasNextPage && !isFetchingNextPage) {
+				console.log('Intersection observer triggered - fetching next page');
 				fetchNextPage();
 			}
 		},
-		[fetchNextPage, hasNextPage, isFetchingNextPage, isInitialLoad],
+		[fetchNextPage, hasNextPage, isFetchingNextPage],
 	);
 
 	useEffect(() => {
 		const observer = new IntersectionObserver(handleObserver, {
-			rootMargin: '0px 0px 200px 0px',
+			rootMargin: '0px 0px 300px 0px',
 			threshold: 0.1,
 		});
 
-		if (observerTarget.current) {
-			observer.observe(observerTarget.current);
+		const currentObserverTarget = observerTarget.current;
+		
+		if (currentObserverTarget) {
+			observer.observe(currentObserverTarget);
 		}
 
 		return () => {
-			if (observerTarget.current) {
-				observer.unobserve(observerTarget.current);
+			if (currentObserverTarget) {
+				observer.unobserve(currentObserverTarget);
 			}
 		};
-	}, [handleObserver, observerTarget]);
+	}, [handleObserver]);
 
 	const allMessages = data?.pages.flatMap((page) => page.data) ?? [];
 
