@@ -34,16 +34,27 @@ const App = () => {
     const savedTheme = localStorage.getItem('theme');
     const root = window.document.documentElement;
     
+    // Remove any existing theme classes
+    root.classList.remove('light', 'dark');
+    
     if (savedTheme) {
-      root.classList.add(savedTheme === 'system' 
-        ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
-        : savedTheme);
+      if (savedTheme === 'system') {
+        // Apply system preference
+        const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches
+          ? 'dark'
+          : 'light';
+        root.classList.add(systemTheme);
+      } else {
+        // Apply saved theme
+        root.classList.add(savedTheme);
+      }
     } else {
       // Default to system preference if no saved preference
       const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches
         ? 'dark'
         : 'light';
       root.classList.add(systemTheme);
+      localStorage.setItem('theme', 'system'); // Save system as default
     }
 
     // Log environment information on startup (only in development)
