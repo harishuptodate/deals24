@@ -30,6 +30,22 @@ console.log("API Base URL configured:", apiBaseUrl || "Not set");
 
 const App = () => {
   useEffect(() => {
+    // Initialize theme based on localStorage or system preference
+    const savedTheme = localStorage.getItem('theme');
+    const root = window.document.documentElement;
+    
+    if (savedTheme) {
+      root.classList.add(savedTheme === 'system' 
+        ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+        : savedTheme);
+    } else {
+      // Default to system preference if no saved preference
+      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches
+        ? 'dark'
+        : 'light';
+      root.classList.add(systemTheme);
+    }
+
     // Log environment information on startup (only in development)
     if (import.meta.env.DEV) {
       console.log("Running in development mode");

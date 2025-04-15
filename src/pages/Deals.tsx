@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import { useInfiniteQuery } from '@tanstack/react-query';
@@ -161,7 +162,7 @@ const Deals = () => {
 	}
 
 	return (
-		<div className="min-h-screen bg-white">
+		<div className="min-h-screen bg-white dark:bg-gray-950">
 			<Navbar />
 			<main className="container mx-auto px-4 py-6 md:py-12">
 				<div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 md:mb-8">
@@ -171,7 +172,7 @@ const Deals = () => {
 					{(activeCategory || searchQuery) && (
 						<Button
 							variant="outline"
-							className="flex items-center gap-2 rounded-full"
+							className="flex items-center gap-2 rounded-full dark:border-gray-700 dark:text-gray-200"
 							onClick={clearFilter}>
 							<X size={16} />
 							Clear {searchQuery ? 'Search' : 'Filter'}
@@ -181,20 +182,20 @@ const Deals = () => {
 
 				{isLoading ? (
 					<div className="flex justify-center items-center min-h-[400px]">
-						<Loader2 className="w-8 h-8 animate-spin text-apple-gray" />
+						<Loader2 className="w-8 h-8 animate-spin text-apple-gray dark:text-gray-400" />
 					</div>
 				) : isError ? (
 					<div className="text-center py-8 mb-8">
-						<p className="text-apple-gray mb-4">
+						<p className="text-apple-gray dark:text-gray-400 mb-4">
 							Unable to load deals. Please try again later.
 						</p>
-						<Button onClick={() => refetch()} variant="outline">
+						<Button onClick={() => refetch()} variant="outline" className="dark:border-gray-700 dark:text-gray-200">
 							Retry
 						</Button>
 					</div>
 				) : allMessages.length === 0 ? (
 					<div className="text-center py-8 mb-8">
-						<p className="text-apple-gray mb-4">
+						<p className="text-apple-gray dark:text-gray-400 mb-4">
 							{searchQuery
 								? `No deals found for "${searchQuery}".`
 								: activeCategory
@@ -202,7 +203,7 @@ const Deals = () => {
 								: 'No deals available at the moment.'}
 						</p>
 						{(activeCategory || searchQuery) && (
-							<Button onClick={viewAllDeals} variant="outline">
+							<Button onClick={viewAllDeals} variant="outline" className="dark:border-gray-700 dark:text-gray-200">
 								View All Deals
 							</Button>
 						)}
@@ -239,7 +240,7 @@ const Deals = () => {
 						ref={observerTarget}
 						className="w-full h-20 flex justify-center items-center mt-4">
 						{isFetchingNextPage && (
-							<Loader2 className="w-6 h-6 animate-spin text-apple-gray" />
+							<Loader2 className="w-6 h-6 animate-spin text-apple-gray dark:text-gray-400" />
 						)}
 					</div>
 				)}
