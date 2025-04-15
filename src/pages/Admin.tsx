@@ -557,11 +557,11 @@ const Admin = () => {
 	};
 
 	return (
-		<div className="min-h-screen bg-gray-50">
+		<div className="min-h-screen bg-gray-50 dark:bg-[#0a0a0a]">
 			<Navbar />
 			<main className="container mx-auto px-4 py-8">
 				<div className="flex justify-between items-center mb-8">
-					<h1 className="text-3xl font-bold">Admin Dashboard</h1>
+					<h1 className="text-3xl font-bold">Analytics</h1>
 					<Button onClick={handleLogout} variant="outline">
 						Logout
 					</Button>
@@ -765,11 +765,11 @@ const Admin = () => {
 										</div>
 									</div>
 								) : (
-									<div className="space-y-2 flex-1">
+									<div className="space-y-1 flex-1">
 										{topDeals.map((deal, index) => (
 											<div
 												key={deal._id || deal.id || index}
-												className="p-3 rounded-lg border border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors"
+												className="p-3 rounded-lg  border-gray-100 hover:bg-gray-50 dark:hover:bg-apple-darkGray cursor-pointer transition-colors"
 												onClick={() => handleOpenDealDetails(deal)}>
 												<h3 className="text-sm font-medium line-clamp-1 mb-1">
 													{deal.text?.split('\n')[0] || 'Deal'}

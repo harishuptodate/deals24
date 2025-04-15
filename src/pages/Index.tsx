@@ -8,7 +8,7 @@ import StayUpdated from '../components/StayUpdated';
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gradient-to-b from-apple-lightGray to-white dark:from-[#1A1A1A] dark:to-[#111111]">
       <Navbar />
       <main>
         <HeroSection />

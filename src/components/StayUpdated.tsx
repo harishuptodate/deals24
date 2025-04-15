@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 
 const StayUpdated = () => {
   return (
-    <section className="relative py-16 overflow-hidden">
+    <section className="relative py-16 overflow-hidden dark:bg-[#0a0a0a]">
       <div className="container mx-auto px-4 text-center relative z-10">
         <div className="glass-effect rounded-3xl p-12 shadow-lg">
           <h2 className="text-2xl font-semibold text-gradient mb-4">Stay Updated</h2>

@@ -196,7 +196,7 @@ const DealGrid = () => {
 
 	if (isLoading) {
 		return (
-			<div className="flex justify-center items-center min-h-[400px]">
+			<div className="flex justify-center items-center min-h-[400px] dark:bg-[#121212]">
 				<Loader2 className="w-8 h-8 animate-spin text-apple-gray dark:text-gray-400" />
 			</div>
 		);
@@ -240,7 +240,7 @@ const DealGrid = () => {
 		<section className="py-8 md:py-16 bg-gradient-to-b from-apple-lightGray to-white dark:from-[#121212] dark:to-[#0a0a0a]">
 			<div className="container mx-auto px-4">
 				<div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">
-					<h2 className="text-2xl font-semibold text-gradient">Latest Deals</h2>
+					<h2 className="text-2xl font-semibold text-gradient dark:text-gradient">Latest Deals</h2>
 					<div className="flex gap-2 flex-wrap">
 						<Button
 							variant="ghost"

@@ -61,7 +61,7 @@ const Navbar = () => {
 	];
 
 	return (
-		<header className="sticky top-0 z-50 w-full bg-white dark:bg-gray-950 border-b border-gray-200 dark:border-gray-800 shadow-sm">
+		<header className="sticky top-0 z-50 w-full bg-transparent backdrop-blur-md border-b border-transparent">
 			<div className="container mx-auto px-4">
 				<div className="flex h-16 items-center justify-between">
 					<div className="flex items-center">
@@ -102,7 +102,7 @@ const Navbar = () => {
 											ref={inputRef}
 											type="text"
 											placeholder="Search deals..."
-											className="w-full pl-10 pr-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-apple-darkGray dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:placeholder-gray-400"
+											className="w-full pl-10 pr-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-apple-darkGray dark:bg-apple-darkGray dark:border-gray-700 dark:text-white dark:placeholder-gray-400"
 											value={searchQuery}
 											onChange={(e) => setSearchQuery(e.target.value)}
 											onClick={() => setIsSearchPopoverOpen(true)}
@@ -119,7 +119,7 @@ const Navbar = () => {
 									</div>
 								</PopoverTrigger>
 								<PopoverContent
-									className="p-2 w-[var(--radix-popover-trigger-width)] rounded-xl mt-1 dark:bg-gray-800 dark:border-gray-700"
+									className="p-2 w-[var(--radix-popover-trigger-width)] rounded-xl mt-1 dark:bg-apple-darkGray dark:border-gray-700"
 									align="start"
 									sideOffset={5}>
 									<div className="space-y-2">
