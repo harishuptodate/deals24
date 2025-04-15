@@ -30,35 +30,36 @@
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --background: 0 0% 5%; /* Much darker background */
+    --foreground: 0 0% 95%; /* Higher contrast for text */
+    --card: 0 0% 7%; /* Darker card background */
+    --card-foreground: 0 0% 95%;
+    --popover: 0 0% 7%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 0 0% 95%;
+    --primary-foreground: 0 0% 7%;
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 95%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 70%;
+    --accent: 0 0% 15%;
+    --accent-foreground: 0 0% 95%;
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --destructive-foreground: 0 0% 95%;
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 0 0% 80%;
   }
 
   body {
-    @apply antialiased text-apple-darkGray dark:text-gray-200 font-inter bg-white dark:bg-[#121212] transition-colors;
+    @apply antialiased text-apple-darkGray dark:text-gray-200 font-inter transition-colors;
+    @apply bg-white dark:bg-[#111111]; /* Even darker background */
     font-feature-settings: "ss01", "ss02", "cv01", "cv02", "cv03", "cv04";
     letter-spacing: -0.01em;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-inter font-bold tracking-tight;
+    @apply font-inter font-bold tracking-tight dark:text-white; /* Ensure headings are white in dark mode */
   }
 
   /* Custom scroll bar */
@@ -67,21 +68,23 @@
   }
 
   ::-webkit-scrollbar-track {
-    @apply bg-gray-100 dark:bg-gray-800;
+    @apply bg-gray-100 dark:bg-gray-900; /* Darker scrollbar track */
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-gray-400 dark:bg-gray-600 rounded;
+    @apply bg-gray-400 dark:bg-gray-700 rounded; /* Darker scrollbar thumb */
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-gray-500 dark:bg-gray-500;
+    @apply bg-gray-500 dark:bg-gray-600;
   }
 }
 
 @layer components {
   .glass-effect {
-    @apply backdrop-blur-md bg-white/90 dark:bg-black/50 border border-white/20 dark:border-white/10 transition-colors;
+    @apply backdrop-blur-md transition-colors;
+    @apply bg-white/90 dark:bg-black/70; /* Darker glass effect */
+    @apply border border-white/20 dark:border-white/5; /* Subtler border in dark mode */
   }
 
   .hover-scale {
@@ -89,11 +92,13 @@
   }
 
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-apple-darkGray to-apple-gray dark:from-white dark:to-gray-400;
+    @apply bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-apple-darkGray to-apple-gray dark:from-white dark:to-gray-400;
   }
 
   .btn-gradient {
-    @apply bg-gradient-to-r from-apple-darkGray to-black dark:from-gray-700 dark:to-gray-900 text-white hover:shadow-md transition-all;
+    @apply bg-gradient-to-r from-apple-darkGray to-black text-white hover:shadow-md transition-all;
+    @apply dark:from-gray-800 dark:to-black; /* Darker gradient in dark mode */
   }
 
   /* Make mobile grid layout 2 columns */

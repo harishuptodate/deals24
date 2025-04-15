@@ -82,6 +82,7 @@ export default {
       },
       boxShadow: {
         'subtle': '0 2px 10px rgba(0, 0, 0, 0.05)',
+        'dark-subtle': '0 2px 10px rgba(0, 0, 0, 0.2)',
       },
     },
   },
