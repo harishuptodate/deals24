@@ -109,7 +109,7 @@ const Wishlist = () => {
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => recordClick(selectedItem?.title || '', part, itemId)}
-            className="text-blue-600 hover:underline break-all inline-flex items-center gap-1"
+            className="text-blue-600 dark:text-blue-400 hover:underline break-all inline-flex items-center gap-1"
           >
             {truncateLink(part)}
             <ExternalLink size={12} />
@@ -121,20 +121,20 @@ const Wishlist = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-[#121212] text-apple-darkGray dark:text-gray-200">
       <Navbar />
       <main className="container mx-auto px-4 py-12">
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gradient">My Wishlist</h1>
-            <p className="text-apple-gray mt-1">Your saved deals</p>
+            <p className="text-apple-gray dark:text-gray-400 mt-1">Your saved deals</p>
           </div>
           
           {favorites.length > 0 && (
             <Button 
               variant="outline" 
               onClick={clearAllFavorites}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
             >
               <Trash2 size={16} />
               Clear All
@@ -143,25 +143,25 @@ const Wishlist = () => {
         </div>
 
         {favorites.length === 0 ? (
-          <div className="text-center py-16 bg-gray-50 rounded-xl">
-            <Heart className="mx-auto h-12 w-12 text-gray-300 mb-4" />
-            <h3 className="text-xl font-semibold text-apple-darkGray mb-2">Your wishlist is empty</h3>
-            <p className="text-apple-gray mb-6">Start saving your favorite deals by clicking the heart icon</p>
-            <Button asChild>
+          <div className="text-center py-16 bg-gray-50 dark:bg-gray-900 rounded-xl">
+            <Heart className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-700 mb-4" />
+            <h3 className="text-xl font-semibold text-apple-darkGray dark:text-gray-200 mb-2">Your wishlist is empty</h3>
+            <p className="text-apple-gray dark:text-gray-400 mb-6">Start saving your favorite deals by clicking the heart icon</p>
+            <Button asChild className="dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700">
               <a href="/deals">Browse Deals</a>
             </Button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {favorites.map((item) => (
-              <div key={item.title} className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
+              <div key={item.title} className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-6 shadow-sm dark:shadow-none hover:shadow-md dark:hover:shadow-none transition-shadow">
                 <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-lg font-semibold text-apple-darkGray line-clamp-2">{item.title}</h3>
+                  <h3 className="text-lg font-semibold text-apple-darkGray dark:text-white line-clamp-2">{item.title}</h3>
                   <button
                     onClick={() => removeFavorite(item.title)}
-                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
                   >
-                    <Trash2 size={16} className="text-gray-400 hover:text-red-500" />
+                    <Trash2 size={16} className="text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400" />
                   </button>
                 </div>
                 
@@ -178,20 +178,21 @@ const Wishlist = () => {
                   </div>
                 )}
                 
-                <p className="text-sm text-apple-gray mb-4 line-clamp-3">
+                <p className="text-sm text-apple-gray dark:text-gray-400 mb-4 line-clamp-3">
                   {item.description}
                 </p>
                 
                 <div className="flex justify-between items-center mt-4">
-                  <div className="flex items-center text-xs text-apple-gray">
+                  <div className="flex items-center text-xs text-apple-gray dark:text-gray-400">
                     <Calendar size={14} className="mr-1" />
                     <span>Saved on {formatDate(item.timestamp)}</span>
                   </div>
                   
                   <Button 
                     variant="outline" 
-                    size="sm" 
+                    size="sm"
                     onClick={() => viewDetails(item)}
+                    className="dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
                   >
                     View Details
                   </Button>
@@ -204,12 +205,12 @@ const Wishlist = () => {
 
       {/* Detail Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto max-w-[90vw] w-[90vw] sm:w-auto rounded-xl dark:bg-gray-900 dark:border-gray-800">
           {selectedItem && (
             <>
               <DialogHeader>
-                <DialogTitle className="text-xl">{selectedItem.title}</DialogTitle>
-                <DialogDescription>
+                <DialogTitle className="text-xl dark:text-white">{selectedItem.title}</DialogTitle>
+                <DialogDescription className="dark:text-gray-400">
                   Saved on {formatDate(selectedItem.timestamp)}
                 </DialogDescription>
               </DialogHeader>
@@ -227,14 +228,14 @@ const Wishlist = () => {
                 </div>
               )}
               
-              <div className="mt-4 text-sm whitespace-pre-line">
+              <div className="mt-4 text-sm whitespace-pre-line dark:text-gray-300">
                 {makeLinksClickable(selectedItem.description, selectedItem.id)}
               </div>
 
               <div className="mt-4 flex justify-end">
                 <Button 
                   variant="outline" 
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
                   onClick={() => removeFavorite(selectedItem.title)}
                 >
                   <Trash2 size={16} />
