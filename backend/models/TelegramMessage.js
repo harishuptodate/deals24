@@ -27,7 +27,8 @@ const telegramMessageSchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    default: ''
+    default: '',
+    required: true
   },
   clicks: {
     type: Number,

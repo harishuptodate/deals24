@@ -235,7 +235,9 @@ router.get('/categories/counts', async (req, res) => {
     }
 
     // Return the data directly, not wrapped in another object
-    res.json(categoryCounts);
+    // res.json(categoryCounts);
+    res.json({ data: categoryCounts });
+
   } catch (error) {
     console.error('Error fetching category counts:', error);
 
