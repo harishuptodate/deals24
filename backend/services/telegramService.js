@@ -113,7 +113,7 @@ function detectCategory(text) {
     }
   }
   
-  return null; // Return undefined if no category matches
+  return null; // Return null if no category matches
 }
 
 /**
