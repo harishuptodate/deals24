@@ -46,7 +46,7 @@ const AvgClicksCard = ({
 	const growth = Math.floor(Math.random() * 30) + 1;
 
 	return (
-		<Card className="dark:bg-apple-darkGray dark:border-gray-800">
+		<Card className="dark:bg-[#171717] dark:border-gray-800">
 			<CardHeader className="pb-2">
 				<CardTitle className="text-xl dark:text-white">{title}</CardTitle>
 				<CardDescription className="dark:text-gray-400">{description}</CardDescription>

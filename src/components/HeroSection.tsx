@@ -23,7 +23,8 @@ const HeroSection = () => {
 
 	return (
 		<motion.section
-			className="relative py-20 overflow-hidden bg-gradient-to-b from-apple-lightGray to-white dark:from-[#1A1A1A] dark:to-[#111111] flex items-center justify-center flex-col"
+			// className="relative py-20 overflow-hidden bg-gradient-to-b from-apple-lightGray to-white dark:from-[#1A1A1A] dark:to-[#111111] flex items-center justify-center flex-col"
+			className="relative py-20 overflow-hidden bg-gradient-to-b from-apple-lightGray to-white dark:from-[#09090B] dark:to-[#09090B] flex items-center justify-center flex-col"
 			variants={staggerContainer}
 			initial="hidden"
 			animate="visible">
@@ -54,8 +55,6 @@ const HeroSection = () => {
 							<span className=" dark:text-neutral-100">
 								deals, discounts, and offers
 							</span>
-							{/* <span className="inline-block bg-gray-200 dark:bg-gray-800 rounded-lg  dark:text-neutral-100">
-              deals, discounts, and offers</span> */}
 						</Cover>
 					</motion.span>
 				</h1>

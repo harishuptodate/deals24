@@ -121,7 +121,7 @@ const Wishlist = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#121212] text-apple-darkGray dark:text-gray-200">
+    <div className="min-h-screen bg-white dark:bg-[#09090B] text-apple-darkGray dark:text-gray-200">
       <Navbar />
       <main className="container mx-auto px-4 py-12">
         <div className="flex justify-between items-center mb-8">
@@ -143,18 +143,18 @@ const Wishlist = () => {
         </div>
 
         {favorites.length === 0 ? (
-          <div className="text-center py-16 bg-gray-50 dark:bg-gray-900 rounded-xl">
+          <div className="text-center py-16 bg-gray-50 dark:bg-apple-darkGray rounded-xl">
             <Heart className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-700 mb-4" />
             <h3 className="text-xl font-semibold text-apple-darkGray dark:text-gray-200 mb-2">Your wishlist is empty</h3>
             <p className="text-apple-gray dark:text-gray-400 mb-6">Start saving your favorite deals by clicking the heart icon</p>
-            <Button asChild className="dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700">
+            <Button asChild className="dark:bg-gray-900 dark:text-white dark:hover:bg-gray-800">
               <a href="/deals">Browse Deals</a>
             </Button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {favorites.map((item) => (
-              <div key={item.title} className="bg-white dark:bg-apple-darkGray border border-gray-100 dark:border-gray-800 rounded-xl p-6 shadow-sm dark:shadow-none hover:shadow-md dark:hover:shadow-none transition-shadow">
+              <div key={item.title} className="bg-white dark:bg-[#171717] border border-gray-100 dark:border-gray-800 rounded-xl p-6 shadow-sm dark:shadow-none hover:shadow-md dark:hover:shadow-none transition-shadow">
                 <div className="flex justify-between items-start mb-4">
                   <h3 className="text-lg font-semibold text-apple-darkGray dark:text-white line-clamp-2">{item.title}</h3>
                   <button
@@ -205,7 +205,7 @@ const Wishlist = () => {
 
       {/* Detail Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto max-w-[90vw] w-[90vw] sm:w-auto rounded-xl dark:bg-gray-900 dark:border-gray-800">
+        <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto max-w-[90vw] w-[90vw] sm:w-auto rounded-xl dark:bg-apple-darkGray dark:border-gray-800">
           {selectedItem && (
             <>
               <DialogHeader>

@@ -121,7 +121,7 @@ const Categories = () => {
 	];
 
 	return (
-		<div className="min-h-screen bg-white dark:bg-[#121212] text-apple-darkGray dark:text-gray-200">
+		<div className="min-h-screen bg-white dark:bg-[#09090B] text-apple-darkGray dark:text-gray-200">
 			<Navbar />
 			<main className="container mx-auto px-4 py-12">
 				<h1 className="text-3xl font-bold text-gradient mb-8">
@@ -138,7 +138,7 @@ const Categories = () => {
 							<a
 								onClick={() => handleCategoryClick(category.slug)}
 								key={category.name}
-								className="bg-white dark:bg-apple-darkGray border border-gray-100 dark:border-gray-800 rounded-xl p-6 text-center transition-all hover:shadow-md dark:hover:shadow-gray-900 hover:-translate-y-1 flex flex-col items-center cursor-pointer">
+								className="bg-white dark:bg-[#171717] border border-gray-200 dark:border-gray-900 rounded-xl p-6 text-center transition-all hover:shadow-md dark:hover:shadow-gray-900 hover:-translate-y-1 flex flex-col items-center cursor-pointer">
 								{category.icon}
 								<h3 className="text-xl font-semibold text-apple-darkGray dark:text-white mb-2">
 									{category.name}
@@ -168,13 +168,13 @@ const Categories = () => {
 							</a>
 						))}
 					</div>
-				</div>
-			</main>
-			<div className=" w-full flex mt-4 items-center justify-center   ">
+					<div className=" w-full flex mt-4 items-center justify-center p-6  ">
 				<h1 className="text-center text-3xl md:text-5xl lg:text-[10rem] font-bold bg-clip-text text-transparent bg-gradient-to-b from-neutral-700 to-neutral-900 !text-transparent dark:!text-transparent">
 					Deals24
 				</h1>
 			</div>
+				</div>
+			</main>
 		</div>
 	);
 };
