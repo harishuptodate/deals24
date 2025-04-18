@@ -7,6 +7,62 @@ const { getMessages, handleClickTracking } = require('../services/telegramServic
 // Webhook endpoint for Telegram updates
 router.post('/webhook', telegramController.handleTelegramWebhook);
 
+// Get category counts
+router.get('/categories/counts', async (req, res) => {
+  try {
+    // Aggregate by category to get counts
+    const categoryCounts = await TelegramMessage.aggregate([
+      {
+        $match: {
+          category: { $exists: true, $ne: null }, // Only include documents with valid category
+        },
+      },
+      {
+        $group: {
+          _id: '$category',
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          category: '$_id',
+          count: 1,
+        },
+      },
+    ]);
+
+    // If no results or if results are empty, provide default data
+    if (!categoryCounts || categoryCounts.length === 0) {
+      return res.json([
+        { category: 'electronics-home', count: 245 },
+        { category: 'laptops', count: 85 },
+        { category: 'mobile-phones', count: 120 },
+        { category: 'gadgets-accessories', count: 175 },
+        { category: 'fashion', count: 95 },
+      ]);
+    }
+
+    // Return the data directly, not wrapped in another object
+    // res.json(categoryCounts);
+    res.json({ data: categoryCounts });
+
+  } catch (error) {
+    console.error('Error fetching category counts:', error);
+
+    // Return default data on error
+    res.json([
+      { category: 'electronics-home', count: 245 },
+      { category: 'laptops', count: 85 },
+      { category: 'mobile-phones', count: 120 },
+      { category: 'gadgets-accessories', count: 175 },
+      { category: 'fashion', count: 95 },
+    ]);
+  }
+});
+
+//Fix — Put This Route First in Your Route File:
+// In your route file (wherever you're declaring routes), move your specific route to the top, before any wildcard or generic ones:
 // Get paginated messages with support for category and search
 router.get('/messages', async (req, res) => {
   try {
@@ -195,60 +251,6 @@ router.get('/categories', async (req, res) => {
   } catch (error) {
     console.error('Error fetching categories:', error);
     res.status(500).json({ error: 'Failed to fetch categories' });
-  }
-});
-
-// Get category counts
-router.get('/categories/counts', async (req, res) => {
-  try {
-    // Aggregate by category to get counts
-    const categoryCounts = await TelegramMessage.aggregate([
-      {
-        $match: {
-          category: { $exists: true, $ne: null }, // Only include documents with valid category
-        },
-      },
-      {
-        $group: {
-          _id: '$category',
-          count: { $sum: 1 },
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          category: '$_id',
-          count: 1,
-        },
-      },
-    ]);
-
-    // If no results or if results are empty, provide default data
-    if (!categoryCounts || categoryCounts.length === 0) {
-      return res.json([
-        { category: 'electronics-home', count: 245 },
-        { category: 'laptops', count: 85 },
-        { category: 'mobile-phones', count: 120 },
-        { category: 'gadgets-accessories', count: 175 },
-        { category: 'fashion', count: 95 },
-      ]);
-    }
-
-    // Return the data directly, not wrapped in another object
-    // res.json(categoryCounts);
-    res.json({ data: categoryCounts });
-
-  } catch (error) {
-    console.error('Error fetching category counts:', error);
-
-    // Return default data on error
-    res.json([
-      { category: 'electronics-home', count: 245 },
-      { category: 'laptops', count: 85 },
-      { category: 'mobile-phones', count: 120 },
-      { category: 'gadgets-accessories', count: 175 },
-      { category: 'fashion', count: 95 },
-    ]);
   }
 });
 
