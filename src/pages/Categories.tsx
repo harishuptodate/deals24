@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { getCategoryCounts } from '../services/api';
 import { CategoryCount } from '../types/telegram';
 import { Loader2 } from 'lucide-react';
+import { BigFooter } from '@/components/BigFooter';
 
 const Categories = () => {
 	const navigate = useNavigate();
@@ -138,7 +139,7 @@ const Categories = () => {
 							<a
 								onClick={() => handleCategoryClick(category.slug)}
 								key={category.name}
-								className="bg-white dark:bg-[#171717] border border-gray-200 dark:border-gray-900 rounded-xl p-6 text-center transition-all hover:shadow-md dark:hover:shadow-gray-900 hover:-translate-y-1 flex flex-col items-center cursor-pointer">
+								className="bg-white dark:bg-[#111111] border border-gray-200 dark:border-gray-900 rounded-xl p-6 text-center transition-all hover:shadow-md dark:hover:shadow-gray-900 hover:-translate-y-1 flex flex-col items-center cursor-pointer">
 								{category.icon}
 								<h3 className="text-xl font-semibold text-apple-darkGray dark:text-white mb-2">
 									{category.name}
@@ -146,7 +147,7 @@ const Categories = () => {
 								<p className="text-apple-gray dark:text-gray-400 text-sm mb-4">
 									{category.description}
 								</p>
-								<span className="text-sm font-medium text-apple-gray dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full">
+								<span className="bg-gray-100 dark:bg-apple-darkGray  px-4 py-2 rounded-full text-sm text-apple-darkGray dark:text-gray-300 transition-colors">
 									{category.count} deals
 								</span>
 							</a>
@@ -168,13 +169,9 @@ const Categories = () => {
 							</a>
 						))}
 					</div>
-					<div className=" w-full flex mt-4 items-center justify-center p-6  ">
-				<h1 className="text-center text-3xl md:text-5xl lg:text-[10rem] font-bold bg-clip-text text-transparent bg-gradient-to-b from-neutral-700 to-neutral-900 !text-transparent dark:!text-transparent">
-					Deals24
-				</h1>
-			</div>
 				</div>
 			</main>
+			<BigFooter/>
 		</div>
 	);
 };

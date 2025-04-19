@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from '@/components/ui/use-toast';
 import { trackMessageClick } from '../services/api';
+import { BigFooter } from '@/components/BigFooter';
 
 interface FavoriteItem {
   title: string;
@@ -143,7 +144,8 @@ const Wishlist = () => {
         </div>
 
         {favorites.length === 0 ? (
-          <div className="text-center py-16 bg-gray-50 dark:bg-apple-darkGray rounded-xl">
+          <>
+          <div className="text-center py-16 bg-gray-50 dark:bg-[#111111] rounded-xl">
             <Heart className="mx-auto h-12 w-12 text-gray-300 dark:text-gray-700 mb-4" />
             <h3 className="text-xl font-semibold text-apple-darkGray dark:text-gray-200 mb-2">Your wishlist is empty</h3>
             <p className="text-apple-gray dark:text-gray-400 mb-6">Start saving your favorite deals by clicking the heart icon</p>
@@ -151,6 +153,10 @@ const Wishlist = () => {
               <a href="/deals">Browse Deals</a>
             </Button>
           </div>
+          <div className="pt-32 sm:pt-0">
+              <BigFooter/>
+          </div>
+          </>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {favorites.map((item) => (
@@ -202,7 +208,9 @@ const Wishlist = () => {
           </div>
         )}
       </main>
-
+      {favorites.length != 0 && (<div className="sm:pt- ">
+            <BigFooter/>
+            </div>)}
       {/* Detail Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto max-w-[90vw] w-[90vw] sm:w-auto rounded-xl dark:bg-apple-darkGray dark:border-gray-800">

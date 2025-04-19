@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
+import { BigFooter } from './BigFooter';
 
 const StayUpdated = () => {
   return (
@@ -21,13 +22,9 @@ const StayUpdated = () => {
               Join Telegram Channel
             </a>
           </Button>
-          <div className=" w-full flex mt-4 items-center justify-center p-2  ">
-				<h1 className="text-center text-5xl md:text-6xl lg:text-[5rem] font-bold bg-clip-text text-transparent bg-gradient-to-b from-neutral-700 to-neutral-900 !text-transparent dark:!text-transparent">
-					Deals24
-				</h1>
-			</div>
         </div>
       </div>
+      <BigFooter/>
     </section>
   );
 };

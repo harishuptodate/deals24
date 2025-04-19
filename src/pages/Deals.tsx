@@ -13,6 +13,7 @@ import { Loader2, X } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
+import { BigFooter } from '@/components/BigFooter';
 
 const Deals = () => {
 	const { toast } = useToast();
@@ -207,6 +208,9 @@ const Deals = () => {
 								View All Deals
 							</Button>
 						)}
+						<div className="pt-96 sm:pt-24 ">
+							<BigFooter/>
+						</div>
 					</div>
 				) : (
 					<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -245,6 +249,9 @@ const Deals = () => {
 					</div>
 				)}
 			</main>
+			{allMessages.length != 0 && (<div className="sm:pt-1">
+			<BigFooter/>
+			</div>)}
 		</div>
 	);
 };
