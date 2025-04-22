@@ -224,16 +224,16 @@ export const trackMessageClick = async (
 
 		console.log(`Tracking click for message ID: ${messageId}`);
 
-		const endpoint = `${API_BASE_URL}/telegram/messages/${messageId}/today`;
+		// const endpoint = `${API_BASE_URL}/telegram/messages/${messageId}/today`;
 
-		// ✅ Fire Beacon (non-blocking)
-		if (navigator.sendBeacon) {
-			const formData = new FormData();
-			formData.append('messageId', messageId);
+		// // ✅ Fire Beacon (non-blocking)
+		// if (navigator.sendBeacon) {
+		// 	const formData = new FormData();
+		// 	formData.append('messageId', messageId);
 
-			const success = navigator.sendBeacon(endpoint, formData);
-			console.log('Beacon attempted. Queued?', success);
-		}
+		// 	const success = navigator.sendBeacon(endpoint, formData);
+		// 	console.log('Beacon attempted. Queued?', success);
+		// }
 
 		// ✅ Always do fallback (for Brave/adblock/mobile safety)
 		try {
@@ -243,13 +243,13 @@ export const trackMessageClick = async (
 			console.warn('Fallback fetch failed (maybe double):', err);
 		}
 
-		// ✅ Stats (optional)
-		try {
-			await api.post('/stats/record-view');
-			console.log('Stats updated');
-		} catch (err) {
-			console.warn('Failed to update daily stats:', err);
-		}
+		// // ✅ Stats (optional)
+		// try {
+		// 	await api.post('/stats/record-view');
+		// 	console.log('Stats updated');
+		// } catch (err) {
+		// 	console.warn('Failed to update daily stats:', err);
+		// }
 
 		return true;
 	} catch (error) {
