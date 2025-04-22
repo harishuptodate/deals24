@@ -112,7 +112,7 @@ router.post('/messages/:id/click', async (req, res) => {
 });
 
 // New endpoint with different naming to avoid ad blockers
-router.post('/messages/:id/track-engagement', async (req, res) => {
+router.post('/messages/:id/today', async (req, res) => {
   try {
     await handleClickTracking(req, res);
   } catch (error) {

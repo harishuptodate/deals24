@@ -224,7 +224,7 @@ export const trackMessageClick = async (
 		console.log(`Tracking click for message ID: ${messageId}`);
 
 		// Use a different endpoint naming to avoid ad blockers
-		const endpoint = `${API_BASE_URL}/telegram/messages/${messageId}/track-engagement`;
+		const endpoint = `${API_BASE_URL}/telegram/messages/${messageId}/today`;
 
 		// For browsers that support Beacon API
 		if (navigator.sendBeacon) {
