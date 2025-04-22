@@ -1,6 +1,5 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Spotlight } from '@/components/ui/Spootlight';
 import { Button } from '@/components/ui/button';
 import { Cover } from '@/components/ui/cover';
 
@@ -28,8 +27,6 @@ const HeroSection = () => {
 			variants={staggerContainer}
 			initial="hidden"
 			animate="visible">
-			{/* Spotlight behind */}
-			<Spotlight className="-top-40 left-0 md:left-60 md:-top-20" fill="gray" />
 			<motion.div
 				className="container px-4 max-w-4xl text-center space-y-6 md:space-y-8"
 				variants={staggerItem}>
