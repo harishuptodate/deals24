@@ -212,8 +212,9 @@ export const getCategoryMessages = async (
 };
 
 // Track click on a message using a more resilient approach
+// Track click on a message using a resilient approach
 export const trackMessageClick = async (
-	messageId: string,
+	messageId: string
 ): Promise<boolean> => {
 	try {
 		if (!messageId) {
@@ -223,30 +224,28 @@ export const trackMessageClick = async (
 
 		console.log(`Tracking click for message ID: ${messageId}`);
 
-		// Use a different endpoint naming to avoid ad blockers
 		const endpoint = `${API_BASE_URL}/telegram/messages/${messageId}/today`;
+		let beaconSent = false;
 
-		// For browsers that support Beacon API
+		// Try sendBeacon first
 		if (navigator.sendBeacon) {
-			// Create a FormData object instead of Blob - better compatibility
 			const formData = new FormData();
 			formData.append('messageId', messageId);
 
-			const success = navigator.sendBeacon(endpoint, formData);
-
-			if (success) {
-				console.log(`Click tracked for the day and also for message ID: ${messageId}`);
-				return true;
-			}
+			beaconSent = navigator.sendBeacon(endpoint, formData);
+			console.log('Beacon attempted. Success?', beaconSent);
 		}
 
-		// Fallback for browsers that don't support Beacon API
-		await api.post(`/telegram/messages/${messageId}/track-engagement`);
+		// If beacon is blocked or failed, fallback to fetch
+		if (!beaconSent) {
+			await api.post(`/telegram/messages/${messageId}/today`);
+			console.log('Fallback: Sent via fetch POST');
+		}
 
-		// Also update the click stat
+		// Also record daily stats
 		try {
 			await api.post('/stats/record-view');
-			console.log('This is not from mobile-phone/BeaconAPI, used fallback approach and Updated/created record',);
+			console.log('Stats updated');
 		} catch (err) {
 			console.warn('Failed to update daily stats:', err);
 		}
@@ -258,13 +257,13 @@ export const trackMessageClick = async (
 	}
 };
 
+
 // Use this function to handle link clicks with tracking
-export const handleTrackedLinkClick = (
+export const handleTrackedLinkClick = async (
 	url: string,
 	messageId?: string,
 	event?: MouseEvent,
-): void => {
-	// Store click in localStorage
+): Promise<void> => {
 	if (messageId) {
 		const clickData = JSON.parse(localStorage.getItem('clickData') || '[]');
 		clickData.push({
@@ -274,24 +273,18 @@ export const handleTrackedLinkClick = (
 		});
 		localStorage.setItem('clickData', JSON.stringify(clickData));
 
-		// Track the click using the updated method
-		const success = trackMessageClick(messageId);
-		console.log(`Click tracking sent successfully: ${success}`);
+		await trackMessageClick(messageId); // ✅ wait before redirect
 	}
 
-	// If this is called from an event handler and Ctrl/Cmd key is pressed,
-	// don't use window.open, but still ensure tracking completes
-	if (event && (event.ctrlKey || event.metaKey)) {
-		// The browser will handle opening in a new tab naturally
-		return;
-	}
+	// Let browser handle new tab if Ctrl/Cmd pressed
+	if (event && (event.ctrlKey || event.metaKey)) return;
 
-	// For normal clicks, add a tiny delay to ensure the beacon request is sent
-	// and manually open the link
+	// Add delay to ensure tracking request gets time
 	setTimeout(() => {
 		window.open(url, '_blank');
 	}, 100);
 };
+
 
 // Edit message text
 export const updateMessageText = async (
