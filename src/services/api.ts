@@ -225,24 +225,25 @@ export const trackMessageClick = async (
 		console.log(`Tracking click for message ID: ${messageId}`);
 
 		const endpoint = `${API_BASE_URL}/telegram/messages/${messageId}/today`;
-		let beaconSent = false;
 
-		// Try sendBeacon first
+		// ✅ Fire Beacon (non-blocking)
 		if (navigator.sendBeacon) {
 			const formData = new FormData();
 			formData.append('messageId', messageId);
 
-			beaconSent = navigator.sendBeacon(endpoint, formData);
-			console.log('Beacon attempted. Success?', beaconSent);
+			const success = navigator.sendBeacon(endpoint, formData);
+			console.log('Beacon attempted. Queued?', success);
 		}
 
-		// If beacon is blocked or failed, fallback to fetch
-		if (!beaconSent) {
+		// ✅ Always do fallback (for Brave/adblock/mobile safety)
+		try {
 			await api.post(`/telegram/messages/${messageId}/today`);
 			console.log('Fallback: Sent via fetch POST');
+		} catch (err) {
+			console.warn('Fallback fetch failed (maybe double):', err);
 		}
 
-		// Also record daily stats
+		// ✅ Stats (optional)
 		try {
 			await api.post('/stats/record-view');
 			console.log('Stats updated');
@@ -256,6 +257,7 @@ export const trackMessageClick = async (
 		return false;
 	}
 };
+
 
 
 // Use this function to handle link clicks with tracking
