@@ -321,13 +321,23 @@ async function handleClickTracking(req, res) {
 
   // Also record in the click stats collection
   const today = new Date();
-  today.setHours(0, 0, 0, 0); // Set to beginning of day
+  console.log('Today (Server Time):', today);
 
+  // Set the time to midnight in the server's timezone
+  today.setHours(0, 0, 0, 0); // Set to beginning of day in server's timezone
+
+  // Convert to Indian Standard Time (IST)
+  const ISTdate = new Date(today.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }));
+
+  console.log('Today at Midnight (IST):', ISTdate);
+
+  // Use istDate for the database operation
   await ClickStat.findOneAndUpdate(
-    { date: today },
+    { date: ISTdate },
     { $inc: { clicks: 1 } },
     { upsert: true, new: true }
   );
+
 
   console.log('Successfully created/updated click for the day');
   res.json({ success: true, clicks: updatedMessage.clicks });
