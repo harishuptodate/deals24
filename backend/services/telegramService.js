@@ -319,29 +319,28 @@ async function handleClickTracking(req, res) {
     return res.status(404).json({ error: 'Message not found' });
   }
 
-  // Also record in the click stats collection
-  const today = new Date();
-  console.log('Today (Server Time):', today);
+  // Server time
+  const serverNow = new Date();
+  console.log('🕒 Server Time (Raw):', serverNow.toISOString());
 
-  // Set the time to midnight in the server's timezone
-  today.setHours(0, 0, 0, 0); // Set to beginning of day in server's timezone
+  // IST time
+  const nowInIST = new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' });
+  const istDate = new Date(nowInIST);
+  console.log('🕒 IST Time (from server):', istDate.toISOString());
 
-  // Convert to Indian Standard Time (IST)
-  const ISTdate = new Date(today.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }));
+  istDate.setHours(0, 0, 0, 0); // Set to IST midnight
+  console.log('📅 Using Date (IST Midnight):', istDate.toISOString());
 
-  console.log('Today at Midnight (IST):', ISTdate);
-
-  // Use istDate for the database operation
   await ClickStat.findOneAndUpdate(
-    { date: ISTdate },
+    { date: istDate },
     { $inc: { clicks: 1 } },
     { upsert: true, new: true }
   );
 
-
-  console.log('Successfully created/updated click for the day');
+  console.log('✅ Successfully created/updated click for the day');
   res.json({ success: true, clicks: updatedMessage.clicks });
 }
+
 
 /**
  * Increment the click count for a message

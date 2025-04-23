@@ -109,6 +109,9 @@ const Admin = () => {
 	const [showLoginDialog, setShowLoginDialog] = useState(false);
 	const [totalDealsCount, setTotalDealsCount] = useState<number>(0);
 
+	console.log("🕒 Frontend Time (Local):", new Date().toString());
+	console.log("🕒 Frontend Time (IST):", new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }));
+
 	const periodMap = {
 		// this is for Total clicks for selected period Card to plot graph
 		day: 'daily',
