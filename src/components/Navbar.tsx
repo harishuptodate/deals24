@@ -66,6 +66,7 @@ const Navbar = () => {
 				<div className="flex h-16 items-center justify-between">
 					<div className="flex items-center">
 						<Link to="/" className="flex items-center">
+							{/* <Target className="h-8 w-8 mr-2" /> */}
 							<img
 								src="/favicon.ico"
 								alt="Deals24"
@@ -118,7 +119,7 @@ const Navbar = () => {
 									</div>
 								</PopoverTrigger>
 								<PopoverContent
-									className="p-2 w-[var(--radix-popover-trigger-width)] max-h-[65vh] overflow-y-auto rounded-xl mt-1 dark:bg-apple-darkGray dark:border-gray-700"
+									className="p-2 w-[var(--radix-popover-trigger-width)] rounded-xl mt-1 dark:bg-apple-darkGray dark:border-gray-700"
 									align="start"
 									sideOffset={5}>
 									<div className="space-y-2">
