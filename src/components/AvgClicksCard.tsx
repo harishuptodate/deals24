@@ -1,4 +1,3 @@
-
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
 import { TrendingUp } from 'lucide-react';
 import {
@@ -15,7 +14,7 @@ const AvgClicksCard = ({
 	isLoading,
   title,
   description,
-  color = "#3b82f6"
+  color
 }: {
 	stats: any;
 	isLoading: boolean;
@@ -25,10 +24,10 @@ const AvgClicksCard = ({
 }) => {
 	if (!stats) {
 		return (
-			<Card className="dark:bg-gray-900 dark:border-gray-800">
+			<Card>
 				<CardHeader className="pb-2">
-					<CardTitle className="text-xl dark:text-white">{title}</CardTitle>
-					<CardDescription className="dark:text-gray-400">{description}</CardDescription>
+					<CardTitle className="text-xl">{title}</CardTitle>
+					<CardDescription>{description}</CardDescription>
 				</CardHeader>
 				<CardContent>
 					<div className="flex justify-center items-center h-24">
@@ -46,10 +45,10 @@ const AvgClicksCard = ({
 	const growth = Math.floor(Math.random() * 30) + 1;
 
 	return (
-		<Card className="dark:bg-[#171717] dark:border-gray-800">
+		<Card>
 			<CardHeader className="pb-2">
-				<CardTitle className="text-xl dark:text-white">{title}</CardTitle>
-				<CardDescription className="dark:text-gray-400">{description}</CardDescription>
+				<CardTitle className="text-xl">{title}</CardTitle>
+				<CardDescription>{description}</CardDescription>
 			</CardHeader>
 
 			<CardContent>
@@ -60,8 +59,8 @@ const AvgClicksCard = ({
 				) : (
 					<>
 						<div className="flex items-end gap-2 mb-2">
-							<span className="text-3xl font-bold dark:text-white">{avg.toFixed(1)}</span>
-							<div className="flex items-center text-sm text-green-500 dark:text-green-400 mb-1">
+							<span className="text-3xl font-bold">{avg.toFixed(1)}</span>
+							<div className="flex items-center text-sm text-green-500 mb-1">
 								<TrendingUp className="h-4 w-4 mr-1" />
 								<span>{growth}%</span>
 							</div>
@@ -74,9 +73,9 @@ const AvgClicksCard = ({
 									content={({ active, payload, label }) => {
 										if (active && payload && payload.length) {
 											return (
-												<div className="bg-white dark:bg-gray-800 text-xs rounded-md shadow px-2 py-1 border border-gray-200 dark:border-gray-700">
-													<div className="text-gray-500 dark:text-gray-400">{label}</div>
-													<div className="text-blue-600 dark:text-blue-400 font-semibold">
+												<div className="bg-white text-xs rounded-md shadow px-2 py-1 border border-gray-200">
+													<div className="text-gray-500">{label}</div>
+													<div className="text-blue-600 font-semibold">
 														{payload[0].value} clicks
 													</div>
 												</div>

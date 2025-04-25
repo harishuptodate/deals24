@@ -29,37 +29,14 @@
     --radius: 0.5rem;
   }
 
-  .dark {
-    --background: 0 0% 7%; /* Darker background */
-    --foreground: 0 0% 98%; /* Higher contrast for text */
-    --card: 0 0% 9%; /* Darker card background */
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 15%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 75%;
-    --accent: 0 0% 15%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 20%;
-    --input: 0 0% 20%;
-    --ring: 0 0% 83%;
-  }
-
   body {
-    @apply antialiased text-apple-darkGray dark:text-gray-200 font-inter transition-colors;
-    @apply bg-white dark:bg-[#121212]; /* Even darker background */
+    @apply antialiased text-apple-darkGray font-inter;
     font-feature-settings: "ss01", "ss02", "cv01", "cv02", "cv03", "cv04";
     letter-spacing: -0.01em;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-inter font-bold tracking-tight dark:text-white; /* Ensure headings are white in dark mode */
+    @apply font-inter font-bold tracking-tight;
   }
 
   /* Custom scroll bar */
@@ -68,23 +45,22 @@
   }
 
   ::-webkit-scrollbar-track {
-    @apply bg-gray-100 dark:bg-gray-800; /* Darker scrollbar track */
+    background: #f1f1f1;
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-gray-400 dark:bg-gray-600 rounded; /* Darker scrollbar thumb */
+    background: #888;
+    border-radius: 4px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-gray-500 dark:bg-gray-500;
+    background: #555;
   }
 }
 
 @layer components {
   .glass-effect {
-    @apply backdrop-blur-md transition-colors;
-    @apply bg-white/90 dark:bg-black/75; /* Darker glass effect */
-    @apply border border-white/20 dark:border-white/5; /* Subtler border in dark mode */
+    @apply backdrop-blur-md bg-white/90 border border-white/20;
   }
 
   .hover-scale {
@@ -92,17 +68,11 @@
   }
 
   .text-gradient {
-    @apply bg-clip-text text-transparent;
-    @apply bg-gradient-to-r from-apple-darkGray to-apple-gray dark:from-white dark:to-gray-400;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-apple-darkGray to-apple-gray;
   }
 
   .btn-gradient {
     @apply bg-gradient-to-r from-apple-darkGray to-black text-white hover:shadow-md transition-all;
-    @apply dark:from-gray-800 dark:to-black; /* Darker gradient in dark mode */
-  }
-
-  .time-badge {
-    @apply inline-block px-2 py-1 text-xs font-medium rounded-full text-apple-gray dark:text-gray-300 dark:bg-gray-800;
   }
 
   /* Make mobile grid layout 2 columns */

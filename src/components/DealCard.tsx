@@ -397,7 +397,7 @@ const DealCard = ({
 					if (e.ctrlKey || e.metaKey || e.button === 1) return;
 					setIsOpen(true);
 				}}>
-				<div className="relative glass-effect rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.06)] h-full flex flex-col border-gray-100 bg-gradient-to-l dark:from-apple-darkGray dark:to-black">
+				<div className="relative glass-effect rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.06)] h-full flex flex-col">
 					<div className="absolute top-4 right-4 flex gap-1 z-10">
 						{onDelete && isAuthenticated() && (
 							<>
@@ -436,7 +436,7 @@ const DealCard = ({
 					<div className="space-y-2 flex-1 flex flex-col">
 						<div className="space-y-1">
 							{formattedDate && (
-								<span className="inline-block px-2 py-1 text-xs font-medium bg-gradient-to-r dark:to-gray-500 rounded-full text-apple-gray shadow-md">
+								<span className="inline-block px-2 py-1 text-xs font-medium bg-gradient-to-r from-apple-lightGray to-white rounded-full text-apple-gray shadow-sm">
 									{formattedDate}
 								</span>
 							)}

@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,7 +9,6 @@ import {
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Search, Target, Heart, ShoppingBag, Menu } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
-import ThemeToggle from '@/components/ThemeToggle';
 
 const Navbar = () => {
 	const navigate = useNavigate();
@@ -61,7 +59,7 @@ const Navbar = () => {
 	];
 
 	return (
-		<header className="sticky top-0 z-50 w-full bg-transparent backdrop-blur-md border-b border-gray-200 dark:border-[#27272A]">
+		<header className="sticky top-0 z-50 w-full bg-white border-b border-gray-200 shadow-sm">
 			<div className="container mx-auto px-4">
 				<div className="flex h-16 items-center justify-between">
 					<div className="flex items-center">
@@ -80,7 +78,7 @@ const Navbar = () => {
 							/>
 							<Target className="h-8 w-8 mr-2 fallback-icon hidden" />
 
-							<span className="text-2xl font-bold dark:text-white">Deals24</span>
+							<span className="text-2xl font-bold">Deals24</span>
 						</Link>
 					</div>
 
@@ -102,7 +100,7 @@ const Navbar = () => {
 											ref={inputRef}
 											type="text"
 											placeholder="Search deals..."
-											className="w-full pl-10 pr-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-apple-darkGray dark:bg-apple-darkGray dark:border-gray-700 dark:text-white dark:placeholder-gray-400"
+											className="w-full pl-10 pr-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-apple-darkGray"
 											value={searchQuery}
 											onChange={(e) => setSearchQuery(e.target.value)}
 											onClick={() => setIsSearchPopoverOpen(true)}
@@ -112,18 +110,18 @@ const Navbar = () => {
 											type="submit"
 											size="icon"
 											variant="ghost"
-											className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+											className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 rounded-full hover:bg-gray-100"
 											onClick={() => handleSearch()}>
 											<Search className="h-5 w-5" />
 										</Button>
 									</div>
 								</PopoverTrigger>
 								<PopoverContent
-									className="p-2 w-[var(--radix-popover-trigger-width)] rounded-xl mt-1 dark:bg-apple-darkGray dark:border-gray-700"
+									className="p-2 w-[var(--radix-popover-trigger-width)] rounded-xl mt-1"
 									align="start"
 									sideOffset={5}>
 									<div className="space-y-2">
-										<h3 className="text-sm font-medium text-apple-darkGray dark:text-gray-300 px-2">
+										<h3 className="text-sm font-medium text-apple-darkGray px-2">
 											Popular searches
 										</h3>
 										<div className="flex flex-wrap gap-2 p-1">
@@ -131,7 +129,7 @@ const Navbar = () => {
 												<button
 													key={search}
 													onClick={() => handlePopularSearch(search)}
-													className="bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 px-3 py-1.5 rounded-full text-xs text-apple-darkGray dark:text-gray-200 transition-colors">
+													className="bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-full text-xs text-apple-darkGray transition-colors">
 													{search}
 												</button>
 											))}
@@ -143,8 +141,7 @@ const Navbar = () => {
 					</div>
 
 					{isMobile ? (
-						<div className="flex items-center gap-2">
-							<ThemeToggle />
+						<div className="flex items-center">
 							<Button
 								variant="ghost"
 								size="icon"
@@ -159,7 +156,7 @@ const Navbar = () => {
 								<Button
 									variant="ghost"
 									size="sm"
-									className="text-sm rounded-full dark:text-gray-200 dark:hover:bg-gray-800">
+									className="text-sm rounded-full">
 									<ShoppingBag className="h-5 w-5 mr-1" />
 									<span>Deals</span>
 								</Button>
@@ -168,7 +165,7 @@ const Navbar = () => {
 								<Button
 									variant="ghost"
 									size="sm"
-									className="text-sm rounded-full dark:text-gray-200 dark:hover:bg-gray-800">
+									className="text-sm rounded-full">
 									<svg
 										xmlns="http://www.w3.org/2000/svg"
 										viewBox="0 0 24 24"
@@ -190,14 +187,13 @@ const Navbar = () => {
 								<Button
 									variant="ghost"
 									size="sm"
-									className="text-sm rounded-full dark:text-gray-200 dark:hover:bg-gray-800">
+									className="text-sm rounded-full">
 									<Heart className="h-5 w-5 mr-1" />
 									<span>Wishlist</span>
 								</Button>
 							</Link>
-							<ThemeToggle />
 							<Link to="/admin">
-								<Button className="rounded-full dark:bg-white dark:text-black dark:hover:bg-gray-200">Admin</Button>
+								<Button className="rounded-full">Admin</Button>
 							</Link>
 						</div>
 					)}
@@ -205,17 +201,17 @@ const Navbar = () => {
 
 				{/* Mobile menu */}
 				{isMobile && mobileMenuOpen && (
-					<div className="py-2 border-t border-gray-200 dark:border-gray-700 animate-fade-down">
+					<div className="py-2 border-t border-gray-200 animate-fade-down">
 						<div className="flex flex-col space-y-2">
 							<Link
 								to="/deals"
-								className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md flex items-center">
+								className="px-4 py-2 hover:bg-gray-100 rounded-md flex items-center">
 								<ShoppingBag className="h-5 w-5 mr-2" />
 								Deals
 							</Link>
 							<Link
 								to="/categories"
-								className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md flex items-center">
+								className="px-4 py-2 hover:bg-gray-100 rounded-md flex items-center">
 								<svg
 									xmlns="http://www.w3.org/2000/svg"
 									viewBox="0 0 24 24"
@@ -234,13 +230,13 @@ const Navbar = () => {
 							</Link>
 							<Link
 								to="/wishlist"
-								className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md flex items-center">
+								className="px-4 py-2 hover:bg-gray-100 rounded-md flex items-center">
 								<Heart className="h-5 w-5 mr-2" />
 								Wishlist
 							</Link>
 							<Link
 								to="/admin"
-								className="px-4 py-2 bg-apple-darkGray dark:bg-white text-white dark:text-black rounded-md flex items-center justify-center">
+								className="px-4 py-2 bg-apple-darkGray text-white rounded-md flex items-center justify-center">
 								Admin
 							</Link>
 						</div>
