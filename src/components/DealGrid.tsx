@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { getTelegramMessages, deleteProduct } from '../services/api';
@@ -56,7 +57,7 @@ const CategoryFilter = ({
 	return (
 		<div className="space-y-4">
 			<div className="flex items-center mb-6 overflow-x-auto pb-2 gap-2 max-w-full">
-				<Filter size={16} className="text-apple-gray mr-1 flex-shrink-0" />
+				<Filter size={16} className="text-apple-gray dark:text-gray-400 mr-1 flex-shrink-0" />
 				{categories.map((category) => (
 					<button
 						key={category.name}
@@ -64,8 +65,8 @@ const CategoryFilter = ({
 						className={`whitespace-nowrap px-3 py-1.5 rounded-full text-sm font-medium transition-colors flex-shrink-0 ${
 							current === category.slug ||
 							(current === null && category.slug === null)
-								? 'bg-apple-darkGray text-white'
-								: 'bg-gray-100 text-apple-gray hover:bg-gray-200'
+								? 'bg-apple-darkGray dark:bg-gray-700 text-white'
+								: 'bg-gray-100 dark:bg-gray-800 text-apple-gray dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
 						}`}>
 						{category.name}
 					</button>
@@ -79,7 +80,7 @@ const CategoryFilter = ({
 							<button
 								key={subCat}
 								onClick={() => onSubCategorySelect(subCat)}
-								className="bg-gray-100 hover:bg-gray-200 text-apple-gray text-xs px-3 py-1.5 rounded-full">
+								className="bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-apple-gray dark:text-gray-300 text-xs px-3 py-1.5 rounded-full transition-colors">
 								{subCat}
 							</button>
 						),
@@ -195,8 +196,8 @@ const DealGrid = () => {
 
 	if (isLoading) {
 		return (
-			<div className="flex justify-center items-center min-h-[400px]">
-				<Loader2 className="w-8 h-8 animate-spin text-apple-gray" />
+			<div className="flex justify-center items-center min-h-[400px] bg-gradient-to-b from-apple-lightGray to-white dark:from-[#09090B] dark:to-[#121212]">
+				<Loader2 className="w-8 h-8 animate-spin text-apple-gray dark:text-gray-400" />
 			</div>
 		);
 	}
@@ -204,10 +205,10 @@ const DealGrid = () => {
 	if (isError) {
 		return (
 			<div className="text-center py-16">
-				<p className="text-apple-gray">
+				<p className="text-apple-gray dark:text-gray-400">
 					Unable to load deals. Please try again later.
 				</p>
-				<Button onClick={() => refetch()} variant="outline" className="mt-4">
+				<Button onClick={() => refetch()} variant="outline" className="mt-4 dark:border-gray-700 dark:text-gray-300">
 					Refresh
 				</Button>
 			</div>
@@ -219,7 +220,7 @@ const DealGrid = () => {
 	if (allMessages.length === 0) {
 		return (
 			<div className="text-center py-16">
-				<p className="text-apple-gray">
+				<p className="text-apple-gray dark:text-gray-400">
 					{searchQuery
 						? `No deals found for "${searchQuery}".`
 						: activeCategory
@@ -227,7 +228,7 @@ const DealGrid = () => {
 						: 'No deals available at the moment.'}
 				</p>
 				{(searchQuery || activeCategory) && (
-					<Button onClick={viewAllDeals} variant="outline" className="mt-4">
+					<Button onClick={viewAllDeals} variant="outline" className="mt-4 dark:border-gray-700 dark:text-gray-300">
 						View All Deals
 					</Button>
 				)}
@@ -236,20 +237,21 @@ const DealGrid = () => {
 	}
 
 	return (
-		<section className="py-8 md:py-16 bg-gradient-to-b from-apple-lightGray to-white">
+		// <section className="py-8 md:py-16 bg-gradient-to-b from-apple-lightGray to-white dark:from-[#121212] dark:to-[#0a0a0a]">
+		<section className="py-8 md:py-16 bg-gradient-to-b from-apple-lightGray to-white dark:from-[#09090B] dark:to-[#121212]">
 			<div className="container mx-auto px-4">
 				<div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">
-					<h2 className="text-2xl font-semibold text-gradient">Latest Deals</h2>
+					<h2 className="text-2xl font-semibold text-gradient dark:text-gradient">Latest Deals</h2>
 					<div className="flex gap-2 flex-wrap">
 						<Button
 							variant="ghost"
-							className="text-apple-darkGray hover:text-black text-xs px-3 py-1 h-auto"
+							className="text-apple-darkGray dark:text-gray-300 hover:text-black dark:hover:text-white text-xs px-3 py-1 h-auto"
 							onClick={navigateToCategory}>
 							Browse Categories
 						</Button>
 						<Button
 							variant="ghost"
-							className="text-apple-darkGray hover:text-black text-xs px-3 py-1 h-auto"
+							className="text-apple-darkGray dark:text-gray-300 hover:text-black dark:hover:text-white text-xs px-3 py-1 h-auto"
 							asChild>
 							<a href="/deals">View All</a>
 						</Button>
@@ -291,7 +293,7 @@ const DealGrid = () => {
 						ref={observerTarget}
 						className="w-full h-20 flex justify-center items-center mt-4">
 						{isFetchingNextPage && (
-							<Loader2 className="w-6 h-6 animate-spin text-apple-gray" />
+							<Loader2 className="w-6 h-6 animate-spin text-apple-gray dark:text-gray-400" />
 						)}
 					</div>
 				)}

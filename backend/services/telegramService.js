@@ -113,7 +113,7 @@ function detectCategory(text) {
     }
   }
   
-  return undefined; // Return undefined if no category matches
+  return null; // Return null if no category matches
 }
 
 /**
@@ -319,19 +319,28 @@ async function handleClickTracking(req, res) {
     return res.status(404).json({ error: 'Message not found' });
   }
 
-  // Also record in the click stats collection
-  const today = new Date();
-  today.setHours(0, 0, 0, 0); // Set to beginning of day
+  // Server time
+  const serverNow = new Date();
+  console.log('🕒 Server Time (Raw):', serverNow.toISOString());
+
+  // IST time
+  const nowInIST = new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' });
+  const istDate = new Date(nowInIST);
+  console.log('🕒 IST Time (from server):', istDate.toISOString());
+
+  istDate.setHours(0, 0, 0, 0); // Set to IST midnight
+  console.log('📅 Using Date (IST Midnight):', istDate.toISOString());
 
   await ClickStat.findOneAndUpdate(
-    { date: today },
+    { date: istDate },
     { $inc: { clicks: 1 } },
     { upsert: true, new: true }
   );
 
-  console.log('Successfully created/updated click for the day');
+  console.log('✅ Successfully created/updated click for the day');
   res.json({ success: true, clicks: updatedMessage.clicks });
 }
+
 
 /**
  * Increment the click count for a message
