@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -22,13 +23,12 @@ const HeroSection = () => {
 
 	return (
 		<motion.section
-			// className="relative py-20 overflow-hidden bg-gradient-to-b from-apple-lightGray to-white dark:from-[#1A1A1A] dark:to-[#111111] flex items-center justify-center flex-col"
-			className="relative py-20 overflow-hidden bg-gradient-to-b from-apple-lightGray to-white dark:from-[#09090B] dark:to-[#09090B] flex items-center justify-center flex-col"
+			className="relative py-10 md:py-14 overflow-hidden bg-gradient-to-b from-apple-lightGray to-white dark:from-[#09090B] dark:to-[#09090B] flex items-center justify-center flex-col"
 			variants={staggerContainer}
 			initial="hidden"
 			animate="visible">
 			<motion.div
-				className="container px-4 max-w-4xl text-center space-y-6 md:space-y-8"
+				className="container px-4 max-w-4xl text-center space-y-4 md:space-y-6"
 				variants={staggerItem}>
 				<span className="relative inline-block text-sm font-medium leading-6 text-white rounded-full p-px shadow-2xl shadow-zinc-900">
 					<span className="absolute inset-0 overflow-hidden rounded-full">
@@ -39,9 +39,9 @@ const HeroSection = () => {
 					</span>
 				</span>
 
-				<h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight leading-tight">
+				<h1 className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight leading-tight">
 					<motion.span
-						className="block text-2xl md:text-3xl lg:text-4xl mb-2 text-gradient dark:text-gradient"
+						className="block text-xl md:text-2xl lg:text-3xl mb-1 text-gradient dark:text-gradient"
 						variants={staggerItem}>
 						Your one-stop destination for
 					</motion.span>
@@ -49,7 +49,7 @@ const HeroSection = () => {
 						className="text-gradient dark:text-gradient"
 						variants={staggerItem}>
 						<Cover>
-							<span className=" dark:text-neutral-100">
+							<span className="dark:text-neutral-100">
 								deals, discounts, and offers
 							</span>
 						</Cover>
@@ -57,7 +57,7 @@ const HeroSection = () => {
 				</h1>
 
 				<motion.div
-					className="flex flex-wrap items-center justify-center gap-4 mt-6"
+					className="flex flex-wrap items-center justify-center gap-4 mt-4"
 					variants={staggerItem}>
 					<Button
 						variant="default"
