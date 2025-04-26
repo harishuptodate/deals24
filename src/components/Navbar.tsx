@@ -112,7 +112,7 @@ const Navbar = () => {
 											type="submit"
 											size="icon"
 											variant="ghost"
-											className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+											className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 rounded-full bg-gray-100 dark:bg-gray-700"
 											onClick={() => handleSearch()}>
 											<Search className="h-5 w-5" />
 										</Button>

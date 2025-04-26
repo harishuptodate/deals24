@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import { useInfiniteQuery } from '@tanstack/react-query';
@@ -168,15 +167,19 @@ const Deals = () => {
 		<div className="min-h-screen bg-white dark:bg-[#09090B]">
 			<Navbar />
 			<main className="container mx-auto px-4 py-6 md:py-12">
-				<div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 md:mb-8">
-					<h1 className="text-2xl md:text-3xl font-bold text-gradient mb-4 sm:mb-0">
-						{pageTitle}
-					</h1>
-					{searchQuery && totalDealsCount > 0 && (
-						<p className="text-sm text-gray-500 dark:text-gray-400">
-							{totalDealsCount} result{totalDealsCount > 1 ? 's' : ''} found
-						</p>
-					)}
+				<div className="flex flex-col gap-2 sm:flex-row sm:items-center justify-between mb-6 md:mb-8">
+					<div>
+						<h1 className="text-2xl md:text-3xl font-bold text-gradient">
+							{pageTitle}
+						</h1>
+
+						{ (searchQuery || activeCategory) && totalDealsCount > 0 && (
+							<p className="text-sm sm:text-md md:text-lg font-medium text-gray-600 dark:text-gray-300">
+								{totalDealsCount} result{totalDealsCount > 1 ? 's' : ''} found
+							</p>
+						)}
+					</div>
+
 					{(activeCategory || searchQuery) && (
 						<Button
 							variant="outline"
@@ -197,7 +200,10 @@ const Deals = () => {
 						<p className="text-apple-gray dark:text-gray-400 mb-4">
 							Unable to load deals. Please try again later.
 						</p>
-						<Button onClick={() => refetch()} variant="outline" className="dark:border-gray-700 dark:text-gray-200">
+						<Button
+							onClick={() => refetch()}
+							variant="outline"
+							className="dark:border-gray-700 dark:text-gray-200">
 							Retry
 						</Button>
 					</div>
@@ -211,12 +217,15 @@ const Deals = () => {
 								: 'No deals available at the moment.'}
 						</p>
 						{(activeCategory || searchQuery) && (
-							<Button onClick={viewAllDeals} variant="outline" className="dark:border-gray-700 dark:text-gray-200">
+							<Button
+								onClick={viewAllDeals}
+								variant="outline"
+								className="dark:border-gray-700 dark:text-gray-200">
 								View All Deals
 							</Button>
 						)}
 						<div className="pt-96 sm:pt-24 ">
-							<BigFooter/>
+							<BigFooter />
 						</div>
 					</div>
 				) : (
@@ -256,9 +265,11 @@ const Deals = () => {
 					</div>
 				)}
 			</main>
-			{allMessages.length != 0 && (<div className="sm:pt-1">
-			<BigFooter/>
-			</div>)}
+			{allMessages.length != 0 && (
+				<div className="sm:pt-1">
+					<BigFooter />
+				</div>
+			)}
 		</div>
 	);
 };

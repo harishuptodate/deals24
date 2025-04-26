@@ -1,50 +1,35 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import Navbar from '../components/Navbar';
 import { Tag, Laptop, Smartphone, Tv, Shirt, Headphones } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { getCategoryCounts } from '../services/api';
-import { CategoryCount } from '../types/telegram';
 import { Loader2 } from 'lucide-react';
 import { BigFooter } from '@/components/BigFooter';
 
 const Categories = () => {
 	const navigate = useNavigate();
-	const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>(
-		{},
-	);
-	const [isLoading, setIsLoading] = useState(true);
 
-	useEffect(() => {
-		const fetchCategoryCounts = async () => {
-			try {
-				const counts = await getCategoryCounts();
-				if (counts && Array.isArray(counts)) {
-					const countMap: Record<string, number> = {};
-					counts.forEach((item: CategoryCount) => {
-						countMap[item.category] = item.count;
-					});
-					setCategoryCounts(countMap);
-				}
-				setIsLoading(false);
-			} catch (error) {
-				console.error('Failed to fetch category counts:', error);
-				// Set default counts if API fails
-				setCategoryCounts({
-					'electronics-home': 245,
-					laptops: 85,
-					'mobile-phones': 120,
-					'gadgets-accessories': 175,
-					fashion: 95,
-				});
-				setIsLoading(false);
-			}
-		};
+	// Fetch category counts using react-query
+	const {
+		data: categoryCountsData,
+		isLoading,
+		isError,
+	} = useQuery({
+		queryKey: ['category-counts'],
+		queryFn: getCategoryCounts,
+	});
 
-		fetchCategoryCounts();
-	}, []);
+	// Prepare a simple map for easy lookup
+	const countMap: Record<string, number> = {};
+	if (categoryCountsData) {
+		categoryCountsData.forEach((item) => {
+			countMap[item.category] = item.count;
+		});
+	}
 
 	const getCount = (categorySlug: string) => {
-		return categoryCounts[categorySlug] || 0;
+		return countMap[categorySlug] || 0;
 	};
 
 	const categories = [
@@ -147,7 +132,7 @@ const Categories = () => {
 								<p className="text-apple-gray dark:text-gray-400 text-sm mb-4">
 									{category.description}
 								</p>
-								<span className="bg-gray-100 dark:bg-apple-darkGray  px-4 py-2 rounded-full text-sm text-apple-darkGray dark:text-gray-300 transition-colors">
+								<span className="bg-gray-100 dark:bg-apple-darkGray px-4 py-2 rounded-full text-sm text-apple-darkGray dark:text-gray-300 transition-colors">
 									{category.count} deals
 								</span>
 							</a>
@@ -171,7 +156,7 @@ const Categories = () => {
 					</div>
 				</div>
 			</main>
-			<BigFooter/>
+			<BigFooter />
 		</div>
 	);
 };

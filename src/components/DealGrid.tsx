@@ -1,7 +1,10 @@
-
 import React, { useEffect, useState } from 'react';
-import { useInfiniteQuery } from '@tanstack/react-query';
-import { getTelegramMessages, deleteProduct } from '../services/api';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import {
+	getTelegramMessages,
+	deleteProduct,
+	getCategoryCounts,
+} from '../services/api';
 import DealCard from './DealCard';
 import { Button } from '@/components/ui/button';
 import { Loader2, Filter } from 'lucide-react';
@@ -32,7 +35,7 @@ const CategoryFilter = ({
 	const subCategories = {
 		'electronics-home': [
 			'TV',
-			'Air Conditioner',
+			'AC',
 			'Refrigerator',
 			'Washing Machine',
 		],
@@ -54,23 +57,47 @@ const CategoryFilter = ({
 		fashion: ['Shoes', 'T-Shirt', 'Watch', 'Backpack'],
 	};
 
+	const {
+		data: categoryCounts,
+		isLoading,
+		isError,
+	} = useQuery({
+		queryKey: ['category-counts'],
+		queryFn: getCategoryCounts,
+		staleTime: 1000 * 60 * 5, // 5 minutes (optional)
+		retry: 1, // optional: retry only once if fails
+	});
+
 	return (
 		<div className="space-y-4">
 			<div className="flex items-center mb-6 overflow-x-auto pb-2 gap-2 max-w-full">
-				<Filter size={16} className="text-apple-gray dark:text-gray-400 mr-1 flex-shrink-0" />
-				{categories.map((category) => (
-					<button
-						key={category.name}
-						onClick={() => onSelect(category.slug)}
-						className={`whitespace-nowrap px-3 py-1.5 rounded-full text-sm font-medium transition-colors flex-shrink-0 ${
-							current === category.slug ||
-							(current === null && category.slug === null)
-								? 'bg-apple-darkGray dark:bg-gray-700 text-white'
-								: 'bg-gray-100 dark:bg-gray-800 text-apple-gray dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-						}`}>
-						{category.name}
-					</button>
-				))}
+				<Filter
+					size={16}
+					className="text-apple-gray dark:text-gray-400 mr-1 flex-shrink-0"
+				/>
+				{categories.map((category) => {
+					const count = category.slug
+						? categoryCounts?.find((c) => c.category === category.slug)?.count
+						: null; // Only get count if slug exists (not for 'All')
+
+					return (
+						<button
+							key={category.name}
+							onClick={() => onSelect(category.slug)}
+							className={`flex items-center gap-2 whitespace-nowrap px-3 py-1.5 rounded-full text-sm font-medium transition-colors flex-shrink-0 ${
+								current === category.slug ||
+								(current === null && category.slug === null)
+									? 'bg-apple-darkGray dark:bg-gray-700 text-white'
+									: 'bg-gray-100 dark:bg-gray-800 text-apple-gray dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+							}`}>
+							{category.name}
+							{/* Only show count if category has a slug and count exists */}
+							{count !== undefined && count !== null && (
+								<span className="text-xs">({count})</span>
+							)}
+						</button>
+					);
+				})}
 			</div>
 
 			{current && subCategories[current as keyof typeof subCategories] && (
@@ -80,7 +107,7 @@ const CategoryFilter = ({
 							<button
 								key={subCat}
 								onClick={() => onSubCategorySelect(subCat)}
-								className="bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-apple-gray dark:text-gray-300 text-xs px-3 py-1.5 rounded-full transition-colors">
+								className="bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-apple-gray dark:text-gray-300 text-xs mb-3 px-3 py-1.5 rounded-full transition-colors">
 								{subCat}
 							</button>
 						),
@@ -208,7 +235,10 @@ const DealGrid = () => {
 				<p className="text-apple-gray dark:text-gray-400">
 					Unable to load deals. Please try again later.
 				</p>
-				<Button onClick={() => refetch()} variant="outline" className="mt-4 dark:border-gray-700 dark:text-gray-300">
+				<Button
+					onClick={() => refetch()}
+					variant="outline"
+					className="mt-4 dark:border-gray-700 dark:text-gray-300">
 					Refresh
 				</Button>
 			</div>
@@ -228,7 +258,10 @@ const DealGrid = () => {
 						: 'No deals available at the moment.'}
 				</p>
 				{(searchQuery || activeCategory) && (
-					<Button onClick={viewAllDeals} variant="outline" className="mt-4 dark:border-gray-700 dark:text-gray-300">
+					<Button
+						onClick={viewAllDeals}
+						variant="outline"
+						className="mt-4 dark:border-gray-700 dark:text-gray-300">
 						View All Deals
 					</Button>
 				)}
@@ -241,7 +274,9 @@ const DealGrid = () => {
 		<section className="py-3 bg-gradient-to-b from-apple-lightGray to-white dark:from-[#09090B] dark:to-[#121212]">
 			<div className="container mx-auto px-4">
 				<div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">
-					<h2 className="text-2xl font-semibold text-gradient dark:text-gradient">Latest Deals</h2>
+					<h2 className="text-2xl font-semibold text-gradient dark:text-gradient">
+						Latest Deals
+					</h2>
 					<div className="flex gap-2 flex-wrap">
 						<Button
 							variant="ghost"

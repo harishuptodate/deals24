@@ -331,10 +331,10 @@ async function handleClickTracking(req, res) {
   // IST time
   const nowInIST = new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' });
   const istDate = new Date(nowInIST);
-  console.log('🕒 IST Time (from server):', istDate.toISOString());
+  // console.log('🕒 IST Time (from server):', istDate.toISOString());
 
   istDate.setHours(0, 0, 0, 0); // Set to IST midnight
-  console.log('📅 Using Date (IST Midnight):', istDate.toISOString());
+  // console.log('📅 Using Date (IST Midnight):', istDate.toISOString());
 
   await ClickStat.findOneAndUpdate(
     { date: istDate },
