@@ -7,6 +7,8 @@ const { getMessages, handleClickTracking } = require('../services/telegramServic
 // Webhook endpoint for Telegram updates
 router.post('/webhook', telegramController.handleTelegramWebhook);
 
+//Fix — Put This Route First in Your Route File:
+// In your route file (wherever you're declaring routes), move your specific route to the top, before any wildcard or generic ones:
 // Get category counts
 router.get('/categories/counts', async (req, res) => {
   try {
@@ -61,8 +63,6 @@ router.get('/categories/counts', async (req, res) => {
   }
 });
 
-//Fix — Put This Route First in Your Route File:
-// In your route file (wherever you're declaring routes), move your specific route to the top, before any wildcard or generic ones:
 // Get paginated messages with support for category and search
 router.get('/messages', async (req, res) => {
   try {

@@ -68,6 +68,8 @@ const Deals = () => {
 
 	const allMessages = data?.pages.flatMap((page) => page.data) ?? [];
 
+	const totalDealsCount = data?.pages?.[0]?.totalDealsCount ?? 0;
+
 	const clearFilter = () => {
 		navigate('/deals');
 	};
@@ -170,6 +172,11 @@ const Deals = () => {
 					<h1 className="text-2xl md:text-3xl font-bold text-gradient mb-4 sm:mb-0">
 						{pageTitle}
 					</h1>
+					{searchQuery && totalDealsCount > 0 && (
+						<p className="text-sm text-gray-500 dark:text-gray-400">
+							{totalDealsCount} result{totalDealsCount > 1 ? 's' : ''} found
+						</p>
+					)}
 					{(activeCategory || searchQuery) && (
 						<Button
 							variant="outline"

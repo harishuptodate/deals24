@@ -20,6 +20,7 @@ export interface TelegramResponse {
 	data: TelegramMessage[];
 	hasMore: boolean;
 	nextCursor?: string;
+	totalDealsCount?: number;
 }
 
 export interface CategoryCount {

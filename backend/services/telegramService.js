@@ -65,7 +65,7 @@ function detectCategory(text) {
       "vacuum cleaner", "vacuum", "iron", "induction cooktop", "blender", 
       "mixer grinder", "juicer", "coffee maker", "rice cooker", "heater", 
       "fan", "chimney", "deep freezer", "air fryer", "smart home", 
-      "alexa", "echo", "google home"
+      "alexa", "echo", "google home", "Mattress", "bed", "pillow",
     ],
     "mobile-phones": [
       "iphone", "android", "smartphone", "mobile phone", "5g phone", 
@@ -287,10 +287,14 @@ async function getMessages(options = {}) {
     ];
   }
   
-  const messages = await TelegramMessage.find(query)
-    .sort({ _id: -1 })
-    .limit(parseInt(limit) + 1)
-    .lean();
+   // 🆕 Fetch count and messages together using Promise.all
+  const [totalDealsCount, messages] = await Promise.all([
+    TelegramMessage.countDocuments(query),
+    TelegramMessage.find(query)
+      .sort({ _id: -1 })
+      .limit(parseInt(limit) + 1)
+      .lean()
+  ]);
   
   const hasMore = messages.length > limit;
   const data = hasMore ? messages.slice(0, limit) : messages;
@@ -304,7 +308,8 @@ async function getMessages(options = {}) {
   return {
     data: processedData,
     hasMore,
-    nextCursor: hasMore && data.length > 0 ? data[data.length - 1]._id : null
+    nextCursor: hasMore && data.length > 0 ? data[data.length - 1]._id : null,
+    totalDealsCount,
   };
 }
 
