@@ -40,7 +40,7 @@ export const ThemeToggle = () => {
       variant="ghost"
       size="icon"
       onClick={toggleTheme}
-      className="rounded-full hover:bg-gray-200 dark:hover:bg-gray-800"
+      className=" size-8rounded-full hover:bg-gray-200 dark:hover:bg-gray-800"
       aria-label="Toggle theme"
     >
       {isDarkMode ? (

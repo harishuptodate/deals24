@@ -70,7 +70,7 @@ const Navbar = () => {
 							<img
 								src="/favicon.ico"
 								alt="Deals24"
-								className="h-8 w-8 mr-2 rounded-full"
+								className="size-8 mr-2 rounded-full"
 								onError={(e) => {
 									e.currentTarget.style.display = 'none';
 									document
@@ -80,7 +80,7 @@ const Navbar = () => {
 							/>
 							<Target className="h-8 w-8 mr-2 fallback-icon hidden" />
 
-							<span className="text-2xl font-bold dark:text-white">Deals24</span>
+							<span className="text-xl sm:text-2xl font-bold dark:text-white">Deals24</span>
 						</Link>
 					</div>
 
@@ -102,12 +102,12 @@ const Navbar = () => {
 											ref={inputRef}
 											type="text"
 											placeholder="Search deals..."
-											className="w-full pl-10 pr-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-apple-darkGray dark:bg-apple-darkGray dark:border-gray-700 dark:text-white dark:placeholder-gray-400"
+											className="w-full placeholder:text-[13px] text-sm sm:pl-10 pr-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-apple-darkGray dark:bg-apple-darkGray dark:border-gray-700 dark:text-white dark:placeholder-gray-400"
 											value={searchQuery}
 											onChange={(e) => setSearchQuery(e.target.value)}
 											onClick={() => setIsSearchPopoverOpen(true)}
 										/>
-										<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+										<Search className="absolute hidden sm:block left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
 										<Button
 											type="submit"
 											size="icon"
@@ -119,8 +119,7 @@ const Navbar = () => {
 									</div>
 								</PopoverTrigger>
 								<PopoverContent
-									className="p-2 w-[var(--radix-popover-trigger-width)] rounded-xl mt-1 dark:bg-apple-darkGray dark:border-gray-700"
-									align="start"
+									className="w-96 p-2 sm:w-[var(--radix-popover-trigger-width)] rounded-xl mt-1 dark:bg-apple-darkGray dark:border-gray-700"
 									sideOffset={5}>
 									<div className="space-y-2">
 										<h3 className="text-sm font-medium text-apple-darkGray dark:text-gray-300 px-2">
@@ -143,12 +142,12 @@ const Navbar = () => {
 					</div>
 
 					{isMobile ? (
-						<div className="flex items-center gap-2">
+						<div className="flex items-center gap-1">
 							<ThemeToggle />
 							<Button
 								variant="ghost"
 								size="icon"
-								className="ml-2"
+								className="size-8"
 								onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
 								<Menu className="h-6 w-6" />
 							</Button>
