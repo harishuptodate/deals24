@@ -44,6 +44,7 @@ const Navbar = () => {
 	};
 
 	const popularSearches = [
+		'AC',
 		'TV',
 		'LG',
 		'TWS',
@@ -57,7 +58,6 @@ const Navbar = () => {
 		'Gaming Laptop',
 		'Refrigerator',
 		'Washing Machine',
-		'Air Conditioner',
 	];
 
 	return (

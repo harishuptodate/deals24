@@ -238,7 +238,7 @@ const DealGrid = () => {
 
 	return (
 		// <section className="py-8 md:py-16 bg-gradient-to-b from-apple-lightGray to-white dark:from-[#121212] dark:to-[#0a0a0a]">
-		<section className="py-8 md:py-16 bg-gradient-to-b from-apple-lightGray to-white dark:from-[#09090B] dark:to-[#121212]">
+		<section className="py-3 bg-gradient-to-b from-apple-lightGray to-white dark:from-[#09090B] dark:to-[#121212]">
 			<div className="container mx-auto px-4">
 				<div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">
 					<h2 className="text-2xl font-semibold text-gradient dark:text-gradient">Latest Deals</h2>
