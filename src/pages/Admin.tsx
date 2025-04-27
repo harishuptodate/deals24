@@ -149,30 +149,30 @@ const Admin = () => {
 	// For this implementation, I'll use a hardcoded password as a fallback
 	const correctPassword = import.meta.env.VITE_DELETE_PASSWORD || 'admin123';
 
-	useEffect(() => {
-		if (!isAuthenticated()) {
-			setShowLoginDialog(true);
-		}
-	}, []);
+	// useEffect(() => {
+	// 	if (!isAuthenticated()) {
+	// 		setShowLoginDialog(true);
+	// 	}
+	// }, []);
 
-	const handleLoginSuccess = () => {
-		setShowLoginDialog(false);
-	};
+	// const handleLoginSuccess = () => {
+	// 	setShowLoginDialog(false);
+	// };
 
-	const handleLogout = () => {
-		logout();
-		navigate('/');
-	};
+	// const handleLogout = () => {
+	// 	logout();
+	// 	navigate('/');
+	// };
 
-	if (!isAuthenticated()) {
-		return (
-			<AdminLoginDialog
-				isOpen={showLoginDialog}
-				onClose={() => navigate('/')}
-				onSuccess={handleLoginSuccess}
-			/>
-		);
-	}
+	// if (!isAuthenticated()) {
+	// 	return (
+	// 		<AdminLoginDialog
+	// 			isOpen={showLoginDialog}
+	// 			onClose={() => navigate('/')}
+	// 			onSuccess={handleLoginSuccess}
+	// 		/>
+	// 	);
+	// }
 
 	useEffect(() => {
 		if (isCategoryDialogOpen) {
@@ -565,9 +565,9 @@ const Admin = () => {
 			<main className="container mx-auto px-4 py-8">
 				<div className="flex justify-between items-center mb-8">
 					<h1 className="text-3xl font-bold">Analytics</h1>
-					<Button onClick={handleLogout} variant="outline">
+					{/* <Button onClick={handleLogout} variant="outline">
 						Logout
-					</Button>
+					</Button> */}
 				</div>
 
 				<div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">

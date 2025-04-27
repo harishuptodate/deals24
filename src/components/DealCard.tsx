@@ -399,7 +399,7 @@ const DealCard = ({
 				}}>
 				<div className="relative glass-effect rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.06)] h-full flex flex-col border-gray-100 bg-gradient-to-l dark:from-apple-darkGray dark:to-black">
 					<div className="absolute top-4 right-4 flex gap-1 z-10">
-						{onDelete && isAuthenticated() && (
+						{onDelete &&  (
 							<>
 								<button
 									onClick={handleOpenCategoryDialog}
@@ -775,5 +775,5 @@ const DealCard = ({
 		</>
 	);
 };
-
+  
 export default DealCard;
