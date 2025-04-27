@@ -8,7 +8,7 @@ import {
 	PopoverTrigger,
 } from '@/components/ui/popover';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Search, Target, Heart, ShoppingBag, Menu } from 'lucide-react';
+import { Search, Target, Heart, ShoppingBag, Menu, User, ChartNoAxesColumn, CommandIcon } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import ThemeToggle from '@/components/ThemeToggle';
 
@@ -28,6 +28,22 @@ const Navbar = () => {
 			setSearchQuery(queryParam);
 		}
 	}, [location.search]);
+
+	useEffect(() => {
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if ((e.ctrlKey || e.metaKey) && e.key === 'k' && document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
+				e.preventDefault();
+				setIsSearchPopoverOpen(true);
+				setTimeout(() => {
+					inputRef.current?.focus();
+				}, 0);
+			}
+		};
+	
+		window.addEventListener('keydown', handleKeyDown);
+		return () => window.removeEventListener('keydown', handleKeyDown);
+	}, []);
+	
 
 	const handleSearch = (e?: React.FormEvent) => {
 		if (e) e.preventDefault();
@@ -101,7 +117,7 @@ const Navbar = () => {
 										<Input
 											ref={inputRef}
 											type="text"
-											placeholder="Search deals..."
+											placeholder={isMobile ? "Search deals..." : "Search deals... (Press Ctrl+K)"}
 											className="w-full placeholder:text-[13px] text-sm sm:pl-10 pr-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-apple-darkGray dark:bg-apple-darkGray dark:border-gray-700 dark:text-white dark:placeholder-gray-400"
 											value={searchQuery}
 											onChange={(e) => setSearchQuery(e.target.value)}
@@ -114,7 +130,16 @@ const Navbar = () => {
 											variant="ghost"
 											className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 rounded-full bg-gray-100 dark:bg-gray-700"
 											onClick={() => handleSearch()}>
-											<Search className="h-5 w-5" />
+											<div className="relative flex items-center justify-center h-full">
+												{isMobile ? (
+													<Search className="h-5 w-5" />
+												) : (
+													<>
+														<CommandIcon className="w-3 h-3" />
+														<span className="text-sm mt-0.5">K</span>
+													</>
+												)}
+											</div>
 										</Button>
 									</div>
 								</PopoverTrigger>
@@ -142,15 +167,17 @@ const Navbar = () => {
 					</div>
 
 					{isMobile ? (
-						<div className="flex items-center gap-1">
+						<div className="flex items-center gap-2">
 							<ThemeToggle />
+							<div className="relative p-[2px] rounded-full bg-gradient-to-r from-pink-300 via-purple-300 to-blue-400 animate-borderMove">
 							<Button
-								variant="ghost"
+								variant="link"
 								size="icon"
-								className="size-8"
+								className="size-8 animate-shakeLift"
 								onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-								<Menu className="h-6 w-6" />
+								<Menu className="h-6 w-6 text-black" />
 							</Button>
+							</div>
 						</div>
 					) : (
 						<div className="flex items-center gap-2">
@@ -195,10 +222,18 @@ const Navbar = () => {
 								</Button>
 							</Link>
 							<ThemeToggle />
-							<Link to="/admin">
-								<Button className="rounded-full dark:bg-white dark:text-black dark:hover:bg-gray-200">Admin</Button>
-							</Link>
-						</div>
+
+								{/* Glow bg */}
+								<div className="relative p-[2px] rounded-full bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 animate-borderMove">
+								<Link to="/admin">
+									<Button
+										className="rounded-full bg-white dark:bg-black dark:text-white text-black hover:bg-white dark:hover:bg-gray-800 px-4 py-2 w-full h-full animate-shakeLift">
+										<User className="h-5 w-5 mr-1" />
+										<ChartNoAxesColumn className="h-5 w-5 mr-1" />
+									</Button>
+								</Link>
+								</div>
+							</div>
 					)}
 				</div>
 
@@ -239,7 +274,7 @@ const Navbar = () => {
 							</Link>
 							<Link
 								to="/admin"
-								className="px-4 py-2 bg-apple-darkGray dark:bg-white text-white dark:text-black rounded-md flex items-center justify-center">
+								className="px-4 py-2 bg-apple-darkGray dark:bg-white text-white dark:text-black rounded-md flex items-center justify-center animate-shakeLift">
 								Admin
 							</Link>
 						</div>

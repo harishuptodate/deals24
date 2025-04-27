@@ -82,12 +82,29 @@ export default {
             transform: "translate(-50%,-40%) scale(1)",
           },
         },
-        
+        shakeAndLift: {
+          '0%, 100%': { transform: 'translateY(0) rotate(0deg)' },
+          '20%': { transform: 'translateY(-2px) rotate(-5deg)' },
+          '40%': { transform: 'translateY(-4px) rotate(5deg)' },
+          '60%': { transform: 'translateY(-2px) rotate(-5deg)' },
+          '80%': { transform: 'translateY(0) rotate(5deg)' },
+        },
+        borderMove: {
+          '0%': { backgroundPosition: '0% 50%' },
+          '50%': { backgroundPosition: '100% 50%' },
+          '100%': { backgroundPosition: '0% 50%' },
+        },
       },
       animation: {
         "fade-up": "fade-up 0.5s ease-out",
         "fade-in": "fade-in 0.3s ease-out",
         spotlight: "spotlight 2s ease .75s 1 forwards",
+        shakeLift: 'shakeAndLift 1s ease-in-out infinite',
+        'spin-slow': 'spin 8s linear infinite',
+        borderMove: 'borderMove 4s linear infinite',
+      },
+      backgroundSize: {
+        '200%': '200% 200%',
       },
       backdropBlur: {
         xs: "2px",
