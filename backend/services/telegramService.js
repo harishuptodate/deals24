@@ -258,27 +258,32 @@ async function getMessages(options = {}) {
   }
   
   if (search) {
-    // Escape any special regex characters in the search term to prevent breaking the regex
-    const rawSearch = search.trim();
-    const escapedSearch = rawSearch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const boundedSearch = `\\b${escapedSearch}\\b`; // Add word boundaries 
-    // Define the query conditions using $and
+    const rawSearch = search.trim(); // Remove leading/trailing spaces
+    const words = rawSearch.split(/\s+/); // Split the search string into words (space-separated)
+  
+    // Build an array of regex queries — one for each word
+    const regexQueries = words.map(word => {
+      // Escape any special regex characters inside the word
+      const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  
+      // Create a regex with word boundaries \b to match the whole word only (case-insensitive)
+      const wordRegex = new RegExp(`\\b${escapedWord}\\b`, 'i');
+  
+      // Return a MongoDB $regex query for this word
+      return { text: { $regex: wordRegex } };
+    });
+  
+    // Build the final query with $and conditions:
+    // 1. All individual words must match somewhere in the text
+    // 2. Exclude cases where the full raw search string appears inside a URL
     query.$and = [
-      {
-        // Condition 1: The message text must contain the search term (case-insensitive)
-        // Match only if the term appears as a whole word
-        text: { $regex: boundedSearch, $options: 'i' }
-      },
+      ...regexQueries, // Add all individual word match conditions
       {
         text: {
           $not: {
-            // Condition 2: Exclude messages where the search term appears within a URL
-            // This regex matches any text where the search term is part of a URL:
-            // - Starts with http:// or https:// or www.
-            // - Followed by any non-space characters (\S*) that contain the search term
-            // If this condition matches, the message will be excluded
+            // Exclude if the full search string appears inside a URL
             $regex: new RegExp(
-              `(https?:\\/\\/\\S*${escapedSearch}\\S*)|(www\\.\\S*${escapedSearch}\\S*)`,
+              `(https?:\\/\\/\\S*${rawSearch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\S*)|(www\\.\\S*${rawSearch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\S*)`,
               'i'
             )
           }
@@ -286,6 +291,7 @@ async function getMessages(options = {}) {
       }
     ];
   }
+  
   
    // 🆕 Fetch count and messages together using Promise.all
   const [totalDealsCount, messages] = await Promise.all([
