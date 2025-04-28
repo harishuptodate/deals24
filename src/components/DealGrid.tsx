@@ -7,7 +7,7 @@ import {
 } from '../services/api';
 import DealCard from './DealCard';
 import { Button } from '@/components/ui/button';
-import { Loader2, Filter } from 'lucide-react';
+import { Loader2, Filter, Heart } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
@@ -33,12 +33,7 @@ const CategoryFilter = ({
 	];
 
 	const subCategories = {
-		'electronics-home': [
-			'TV',
-			'AC',
-			'Refrigerator',
-			'Washing Machine',
-		],
+		'electronics-home': ['TV', 'AC', 'Refrigerator', 'Washing Machine'],
 		laptops: [
 			'Gaming Laptop',
 			'MacBook',
@@ -271,24 +266,22 @@ const DealGrid = () => {
 
 	return (
 		// <section className="py-8 md:py-16 bg-gradient-to-b from-apple-lightGray to-white dark:from-[#121212] dark:to-[#0a0a0a]">
-		<section className="py-3 bg-gradient-to-b from-apple-lightGray to-white dark:from-[#09090B] dark:to-[#121212]">
+		<section className="py-3 bg-gradient-to-t from-apple-lightGray to-white dark:from-[#121212] dark:to-[#09090B]">
 			<div className="container mx-auto px-4">
-				<div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">
+				<div className="flex  sm:flex-row sm:items-center justify-between mb-4 gap-4">
 					<h2 className="text-2xl font-semibold text-gradient dark:text-gradient">
 						Latest Deals
 					</h2>
-					<div className="flex gap-2 flex-wrap">
+					<div className=" justify-center items-center ">
 						<Button
 							variant="ghost"
-							className="text-apple-darkGray dark:text-gray-300 hover:text-black dark:hover:text-white text-xs px-3 py-1 h-auto"
-							onClick={navigateToCategory}>
-							Browse Categories
-						</Button>
-						<Button
-							variant="ghost"
-							className="text-apple-darkGray dark:text-gray-300 hover:text-black dark:hover:text-white text-xs px-3 py-1 h-auto"
-							asChild>
-							<a href="/deals">View All</a>
+							size="sm"
+							className="text-sm rounded-full dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-800">
+							<span></span>
+							<a href="/wishlist">Wishlist</a>
+							<a href="/wishlist">
+								<Heart className="h-4 w-4 mr-1" />
+							</a>
 						</Button>
 					</div>
 				</div>

@@ -397,25 +397,25 @@ const DealCard = ({
 					if (e.ctrlKey || e.metaKey || e.button === 1) return;
 					setIsOpen(true);
 				}}>
-				<div className="relative glass-effect rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.06)] h-full flex flex-col border-gray-100 bg-gradient-to-l dark:from-apple-darkGray dark:to-black">
+				<div className="relative glass-effect rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.06)] h-full flex flex-col border-gray-200 dark:border-gray-900  dark:bg-zinc-950 ">
 					<div className="absolute top-4 right-4 flex gap-1 z-10">
 						{onDelete &&  (
 							<>
 								<button
 									onClick={handleOpenCategoryDialog}
-									className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+									className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
 									title="Change category">
 									<Tag className="w-5 h-5 text-purple-500" />
 								</button>
 								<button
 									onClick={handleEdit}
-									className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+									className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800  transition-colors"
 									title="Edit deal">
 									<PenSquare className="w-5 h-5 text-blue-500" />
 								</button>
 								<button
 									onClick={handleDelete}
-									className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+									className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
 									title="Delete deal">
 									<Trash2 className="w-5 h-5 text-red-500" />
 								</button>
@@ -423,7 +423,7 @@ const DealCard = ({
 						)}
 						<button
 							onClick={toggleFavorite}
-							className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+							className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
 							title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}>
 							<Heart
 								className={`w-5 h-5 transition-colors ${
