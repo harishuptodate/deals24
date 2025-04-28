@@ -9,7 +9,7 @@ import DealCard from './DealCard';
 import { Button } from '@/components/ui/button';
 import { Loader2, Filter, Heart } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation, Link } from 'react-router-dom';
 import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
 
 interface CategoryFilterProps {
@@ -272,17 +272,16 @@ const DealGrid = () => {
 					<h2 className="text-2xl font-semibold text-gradient dark:text-gradient">
 						Latest Deals
 					</h2>
-					<div className=" justify-center items-center ">
-						<Button
-							variant="ghost"
-							size="sm"
-							className="text-sm rounded-full dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-800">
-							<span></span>
-							<a href="/wishlist">Wishlist</a>
-							<a href="/wishlist">
-								<Heart className="h-4 w-4 mr-1" />
-							</a>
-						</Button>
+					<div className=" justify-center items-center ">						
+						<Link to="/wishlist">
+							<Button
+								variant="ghost"
+								size="sm"
+								className="text-sm rounded-full dark:text-gray-200 ">
+								<span>Wishlist</span>
+								<Heart className="h-5 w-5 mr-1" />
+							</Button>
+						</Link>
 					</div>
 				</div>
 
