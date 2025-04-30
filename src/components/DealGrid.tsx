@@ -25,6 +25,7 @@ const CategoryFilter = ({
 }: CategoryFilterProps) => {
 	const categories = [
 		{ name: 'All', slug: null },
+		{ name: 'Best Deals', slug: 'Best-Deals' },
 		{ name: 'Electronics & Home', slug: 'electronics-home' },
 		{ name: 'Laptops & PCs', slug: 'laptops' },
 		{ name: 'Mobile Phones', slug: 'mobile-phones' },

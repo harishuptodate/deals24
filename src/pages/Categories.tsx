@@ -1,6 +1,6 @@
 import React from 'react';
 import Navbar from '../components/Navbar';
-import { Tag, Laptop, Smartphone, Tv, Shirt, Headphones } from 'lucide-react';
+import { Tag, Laptop, Smartphone, Tv, Shirt, Headphones, Megaphone } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getCategoryCounts } from '../services/api';
@@ -33,6 +33,14 @@ const Categories = () => {
 	};
 
 	const categories = [
+		{
+			name: 'Best Deals',
+			count: getCount('Best-Deals'),
+			icon: <Megaphone className="w-12 h-12 mb-4 text-gray-700 dark:text-gray-300" />,
+			description:
+				'All time Top/Hot/Mega/Lowest HandPicked deals ',
+			slug: 'Best-Deals',
+		},
 		{
 			name: 'Electronics & Home',
 			count: getCount('electronics-home'),

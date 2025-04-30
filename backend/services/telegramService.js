@@ -98,6 +98,9 @@ function detectCategory(text) {
       "rings", "necklace", "bracelet", "earrings", "bangles", 
       "handbag", "clutch", "backpack", "hat", "cap", "socks", 
       "underwear", "lingerie"
+    ],
+    "Best-Deals": [
+      ""
     ]
   };
 

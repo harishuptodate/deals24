@@ -56,6 +56,11 @@ const CategorySection = () => {
 
 	const categories = [
 		{
+			name: 'Best Deals',
+			slug: 'Best-Deals',
+			icon: <Tv size={20} className="mr-2" />,
+		},
+		{
 			name: 'Electronics & Home',
 			slug: 'electronics-home',
 			icon: <Tv size={20} className="mr-2" />,
