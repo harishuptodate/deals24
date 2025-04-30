@@ -261,39 +261,66 @@ async function getMessages(options = {}) {
   }
   
   if (search) {
-    const rawSearch = search.trim(); // Remove leading/trailing spaces
-    const words = rawSearch.split(/\s+/); // Split the search string into words (space-separated)
+    const rawSearch = search.trim();
   
-    // Build an array of regex queries — one for each word
-    const regexQueries = words.map(word => {
-      // Escape any special regex characters inside the word
-      const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    // Split search into words (e.g. "32 inch" → ["32", "inch"])
+    const words = rawSearch.split(/\s+/);
   
-      // Create a regex with word boundaries \b to match the whole word only (case-insensitive)
-      const wordRegex = new RegExp(`\\b${escapedWord}\\b`, 'i');
+    // Normalize plural units to singular (e.g. "inches" → "inch")
+    const normalizeWord = (word) => {
+      const lc = word.toLowerCase();
+      const stems = {
+        inches: 'inch',
+        cms: 'cm',
+        kgs: 'kg',
+        lbs: 'lb',
+        tons: 'ton',
+        hz: 'hz', // already singular
+        gbs: 'gb',
+      };
+      return stems[lc] || word;
+    };
   
-      // Return a MongoDB $regex query for this word
-      return { text: { $regex: wordRegex } };
+    const normalizedWords = words.map(normalizeWord);
+  
+    // Define which terms are considered "units" and can use relaxed (substring) match
+    const unitWords = ['cm', 'inch', 'kg', 'gb', 'hz', 'tb', 'ton', 'lb'];
+  
+    // Build regex filters for each word
+    const regexQueries = normalizedWords.map(word => {
+      const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // escape special regex chars
+  
+      const isLooseMatch =
+        /^\d+$/.test(word) ||            // Pure numbers like "32", "55"
+        unitWords.includes(word.toLowerCase()); // Known units like "inch", "cm"
+  
+      const pattern = isLooseMatch
+        ? escapedWord                     // relaxed match: "32" matches "32inch"
+        : `\\b${escapedWord}\\b`;         // strict match: "TV" won't match "tvstand"
+  
+      const wordRegex = new RegExp(pattern, 'i'); // case-insensitive
+  
+      return { text: { $regex: wordRegex } }; // MongoDB partial match condition
     });
   
-    // Build the final query with $and conditions:
-    // 1. All individual words must match somewhere in the text
-    // 2. Exclude cases where the full raw search string appears inside a URL
+    // Exclude results where the **full search string** appears only inside a URL
+    const escapedFullSearch = rawSearch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const urlExclusionRegex = new RegExp(
+      `(https?:\\/\\/\\S*${escapedFullSearch}\\S*)|(www\\.\\S*${escapedFullSearch}\\S*)`,
+      'i'
+    );
+  
+    // Final query combines all word regexes + URL exclusion
     query.$and = [
-      ...regexQueries, // Add all individual word match conditions
+      ...regexQueries,
       {
         text: {
-          $not: {
-            // Exclude if the full search string appears inside a URL
-            $regex: new RegExp(
-              `(https?:\\/\\/\\S*${rawSearch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\S*)|(www\\.\\S*${rawSearch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\S*)`,
-              'i'
-            )
-          }
+          $not: { $regex: urlExclusionRegex }
         }
       }
     ];
   }
+  
   
   
    // 🆕 Fetch count and messages together using Promise.all
