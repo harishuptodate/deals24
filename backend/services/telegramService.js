@@ -100,7 +100,7 @@ function detectCategory(text) {
       "underwear", "lingerie"
     ],
     "Best-Deals": [
-      ""
+      "ThisThingShouldNotMatchWithAnything"
     ]
   };
 
