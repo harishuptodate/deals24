@@ -185,7 +185,7 @@ const Navbar = () => {
 								<Button
 									variant="ghost"
 									size="sm"
-									className="text-sm rounded-full dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-800 hover:animate-bounce">
+									className="text-sm rounded-full dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-800">
 									<ShoppingBag className="h-5 w-5 mr-1" />
 									<span>Deals</span>
 								</Button>
@@ -194,7 +194,7 @@ const Navbar = () => {
 								<Button
 									variant="ghost"
 									size="sm"
-									className="text-sm rounded-full dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-800 hover:animate-bounce">
+									className="text-sm rounded-full dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-800">
 									<svg
 										xmlns="http://www.w3.org/2000/svg"
 										viewBox="0 0 24 24"
@@ -216,7 +216,7 @@ const Navbar = () => {
 								<Button
 									variant="ghost"
 									size="sm"
-									className="text-sm rounded-full dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-800 hover:animate-bounce">
+									className="text-sm rounded-full dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-800">
 									<Heart className="h-5 w-5 mr-1" />
 									<span>Wishlist</span>
 								</Button>
@@ -227,7 +227,7 @@ const Navbar = () => {
 								<div className="relative p-[2px] rounded-full bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500">
 								<Link to="/admin">
 									<Button
-										className="rounded-full bg-white dark:bg-black dark:text-white text-black hover:bg-gray-200 hover:animate-bounce dark:hover:bg-gray-800 px-4 py-2 w-full h-full animate-shakeLift">
+										className="rounded-full bg-white dark:bg-black dark:text-white text-black hover:bg-gray-200 dark:hover:bg-gray-800 px-4 py-2 w-full h-full animate-shakeLift">
 										<User className="h-5 w-5 mr-1" />
 										<ChartNoAxesColumn className="h-5 w-5 mr-1" />
 									</Button>
