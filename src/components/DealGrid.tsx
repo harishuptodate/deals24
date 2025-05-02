@@ -11,6 +11,8 @@ import { Loader2, Filter, Heart } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate, useSearchParams, useLocation, Link } from 'react-router-dom';
 import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
+import ErrorBoundary from './ErrorBoundary';
+import DealCardSkeleton from './DealCardSkeleton';
 
 interface CategoryFilterProps {
 	onSelect: (category: string | null) => void;
@@ -219,8 +221,10 @@ const DealGrid = () => {
 
 	if (isLoading) {
 		return (
-			<div className="flex justify-center items-center min-h-[400px] bg-gradient-to-b from-apple-lightGray to-white dark:from-[#09090B] dark:to-[#121212]">
-				<Loader2 className="w-8 h-8 animate-spin text-apple-gray dark:text-gray-400" />
+			<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+				{[...Array(8)].map((_, index) => (
+					<DealCardSkeleton key={`skeleton-${index}`} />
+				))}
 			</div>
 		);
 	}
@@ -266,14 +270,13 @@ const DealGrid = () => {
 	}
 
 	return (
-		// <section className="py-8 md:py-16 bg-gradient-to-b from-apple-lightGray to-white dark:from-[#121212] dark:to-[#0a0a0a]">
 		<section className="py-3 bg-gradient-to-t from-apple-lightGray to-white dark:from-[#121212] dark:to-[#09090B]">
 			<div className="container mx-auto px-4">
-				<div className="flex  sm:flex-row sm:items-center justify-between mb-4 gap-4">
+				<div className="flex sm:flex-row sm:items-center justify-between mb-4 gap-4">
 					<h2 className="text-2xl font-semibold text-gradient dark:text-gradient">
 						Latest Deals
 					</h2>
-					<div className=" justify-center items-center ">						
+					<div className="justify-center items-center">						
 						<Link to="/wishlist">
 							<Button
 								variant="ghost"
@@ -292,29 +295,31 @@ const DealGrid = () => {
 					onSubCategorySelect={handleSubCategorySelect}
 				/>
 
-				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-					{allMessages.map((message) => {
-						if (!message || !message.text) {
-							return null;
-						}
+				<ErrorBoundary>
+					<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+						{allMessages.map((message) => {
+							if (!message || !message.text) {
+								return null;
+							}
 
-						const messageId = message.id || message._id;
+							const messageId = message.id || message._id;
 
-						return (
-							<div key={messageId || `message-${Math.random()}`}>
-								<DealCard
-									title={message.text.split('\n')[0] || 'New Deal'}
-									description={message.text}
-									link={message.link || ''}
-									id={messageId}
-									category={message.category || ''}
-									createdAt={message.date || message.createdAt}
-									onDelete={handleDeleteProduct}
-								/>
-							</div>
-						);
-					})}
-				</div>
+							return (
+								<div key={messageId || `message-${Math.random()}`}>
+									<DealCard
+										title={message.text.split('\n')[0] || 'New Deal'}
+										description={message.text}
+										link={message.link || ''}
+										id={messageId}
+										category={message.category || ''}
+										createdAt={message.date || message.createdAt}
+										onDelete={handleDeleteProduct}
+									/>
+								</div>
+							);
+						})}
+					</div>
+				</ErrorBoundary>
 
 				{hasNextPage && (
 					<div

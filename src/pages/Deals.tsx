@@ -7,6 +7,8 @@ import {
 	updateMessageText,
 } from '../services/api';
 import DealCard from '../components/DealCard';
+import DealCardSkeleton from '../components/DealCardSkeleton';
+import ErrorBoundary from '../components/ErrorBoundary';
 import { Button } from '@/components/ui/button';
 import { Loader2, X } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
@@ -191,69 +193,73 @@ const Deals = () => {
 					)}
 				</div>
 
-				{isLoading ? (
-					<div className="flex justify-center items-center min-h-[400px]">
-						<Loader2 className="w-8 h-8 animate-spin text-apple-gray dark:text-gray-400" />
-					</div>
-				) : isError ? (
-					<div className="text-center py-8 mb-8">
-						<p className="text-apple-gray dark:text-gray-400 mb-4">
-							Unable to load deals. Please try again later.
-						</p>
-						<Button
-							onClick={() => refetch()}
-							variant="outline"
-							className="dark:border-gray-700 dark:text-gray-200">
-							Retry
-						</Button>
-					</div>
-				) : allMessages.length === 0 ? (
-					<div className="text-center py-8 mb-8">
-						<p className="text-apple-gray dark:text-gray-400 mb-4">
-							{searchQuery
-								? `No deals found for "${searchQuery}".`
-								: activeCategory
-								? 'No deals found for this category.'
-								: 'No deals available at the moment.'}
-						</p>
-						{(activeCategory || searchQuery) && (
+				<ErrorBoundary>
+					{isLoading ? (
+						<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+							{[...Array(12)].map((_, index) => (
+								<DealCardSkeleton key={`skeleton-${index}`} />
+							))}
+						</div>
+					) : isError ? (
+						<div className="text-center py-8 mb-8">
+							<p className="text-apple-gray dark:text-gray-400 mb-4">
+								Unable to load deals. Please try again later.
+							</p>
 							<Button
-								onClick={viewAllDeals}
+								onClick={() => refetch()}
 								variant="outline"
 								className="dark:border-gray-700 dark:text-gray-200">
-								View All Deals
+								Retry
 							</Button>
-						)}
-						<div className="pt-96 sm:pt-24 ">
-							<BigFooter />
 						</div>
-					</div>
-				) : (
-					<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-						{allMessages.map((message) => {
-							if (!message || !message.text) {
-								return null;
-							}
+					) : allMessages.length === 0 ? (
+						<div className="text-center py-8 mb-8">
+							<p className="text-apple-gray dark:text-gray-400 mb-4">
+								{searchQuery
+									? `No deals found for "${searchQuery}".`
+									: activeCategory
+									? 'No deals found for this category.'
+									: 'No deals available at the moment.'}
+							</p>
+							{(activeCategory || searchQuery) && (
+								<Button
+									onClick={viewAllDeals}
+									variant="outline"
+									className="dark:border-gray-700 dark:text-gray-200">
+									View All Deals
+								</Button>
+							)}
+							<div className="pt-96 sm:pt-24 ">
+								<BigFooter />
+							</div>
+						</div>
+					) : (
+						<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+							{allMessages.map((message) => {
+								if (!message || !message.text) {
+									return null;
+								}
 
-							const messageId = message.id || message._id;
+								const messageId = message.id || message._id;
 
-							return (
-								<div key={messageId || `message-${Math.random()}`}>
-									<DealCard
-										title={message.text.split('\n')[0] || 'New Deal'}
-										description={message.text}
-										link={message.link || ''}
-										id={messageId}
-										category={message.category || ''}
-										createdAt={message.date || message.createdAt}
-										onDelete={handleDeleteProduct}
-										onEdit={handleEditProduct}
-									/>
-								</div>
-							);
-						})}
-					</div>
-				)}
+								return (
+									<div key={messageId || `message-${Math.random()}`}>
+										<DealCard
+											title={message.text.split('\n')[0] || 'New Deal'}
+											description={message.text}
+											link={message.link || ''}
+											id={messageId}
+											category={message.category || ''}
+											createdAt={message.date || message.createdAt}
+											onDelete={handleDeleteProduct}
+											onEdit={handleEditProduct}
+										/>
+									</div>
+								);
+							})}
+						</div>
+					)}
+				</ErrorBoundary>
 
 				{hasNextPage && (
 					<div

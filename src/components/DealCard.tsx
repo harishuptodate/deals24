@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import { Heart, ExternalLink, Trash2, PenSquare, Tag, Lock } from 'lucide-react';
 import {
 	Dialog,
@@ -58,7 +57,8 @@ interface DealCardProps {
 	isAdmin?: boolean;
 }
 
-const DealCard = ({
+// Use memo to prevent unnecessary re-renders
+const DealCard = memo(({
 	title,
 	description,
 	link,

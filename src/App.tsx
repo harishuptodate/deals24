@@ -4,13 +4,24 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import Deals from "./pages/Deals";
-import Categories from "./pages/Categories";
-import Admin from "./pages/Admin";
-import Wishlist from "./pages/Wishlist";
-import NotFound from "./pages/NotFound";
-import { useEffect } from "react";
+import { lazy, Suspense } from "react";
+import { Loader2 } from "lucide-react";
+import ErrorBoundary from "./components/ErrorBoundary";
+
+// Lazy load components for code splitting
+const Index = lazy(() => import("./pages/Index"));
+const Deals = lazy(() => import("./pages/Deals"));
+const Categories = lazy(() => import("./pages/Categories"));
+const Admin = lazy(() => import("./pages/Admin"));
+const Wishlist = lazy(() => import("./pages/Wishlist"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+
+// Loading fallback component
+const LoadingFallback = () => (
+  <div className="flex justify-center items-center min-h-screen">
+    <Loader2 className="w-8 h-8 animate-spin text-apple-gray dark:text-gray-400" />
+  </div>
+);
 
 // Create a client with production-appropriate settings
 const queryClient = new QueryClient({
@@ -69,17 +80,21 @@ const App = () => {
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/deals" element={<Deals />} />
-            <Route path="/categories" element={<Categories />} />
-            <Route path="/admin" element={<Admin />} />
-            <Route path="/wishlist" element={<Wishlist />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+        <ErrorBoundary>
+          <BrowserRouter>
+            <Suspense fallback={<LoadingFallback />}>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/deals" element={<Deals />} />
+                <Route path="/categories" element={<Categories />} />
+                <Route path="/admin" element={<Admin />} />
+                <Route path="/wishlist" element={<Wishlist />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
+          </BrowserRouter>
+        </ErrorBoundary>
       </TooltipProvider>
     </QueryClientProvider>
   );

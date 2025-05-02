@@ -4,13 +4,22 @@ const TelegramMessage = require('../models/TelegramMessage');
 const telegramController = require('../controllers/telegramController');
 const { getMessages, handleClickTracking } = require('../services/telegramService');
 
+// Set up cache middleware for stable data
+const cacheMiddleware = (duration) => {
+  return (req, res, next) => {
+    // Set caching headers
+    res.setHeader('Cache-Control', `max-age=${duration}, stale-while-revalidate=300`);
+    next();
+  };
+};
+
 // Webhook endpoint for Telegram updates
 router.post('/webhook', telegramController.handleTelegramWebhook);
 
-//Fix — Put This Route First in Your Route File:
+// Fix — Put This Route First in Your Route File:
 // In your route file (wherever you're declaring routes), move your specific route to the top, before any wildcard or generic ones:
-// Get category counts
-router.get('/categories/counts', async (req, res) => {
+// Get category counts - Cache for 5 minutes
+router.get('/categories/counts', cacheMiddleware(300), async (req, res) => {
   try {
     // Aggregate by category to get counts
     const categoryCounts = await TelegramMessage.aggregate([
@@ -71,6 +80,13 @@ router.get('/messages', async (req, res) => {
     const category = req.query.category;
     const search = req.query.search;
 
+    // Only cache if there's no search parameter
+    if (!search) {
+      res.setHeader('Cache-Control', 'max-age=60, stale-while-revalidate=300');
+    } else {
+      res.setHeader('Cache-Control', 'no-cache');
+    }
+
     const messages = await getMessages({
       cursor,
       limit,
@@ -85,8 +101,8 @@ router.get('/messages', async (req, res) => {
   }
 });
 
-// Get a single message by ID
-router.get('/messages/:id', async (req, res) => {
+// Get a single message by ID - Cache for 5 minutes
+router.get('/messages/:id', cacheMiddleware(300), async (req, res) => {
   try {
     const message = await TelegramMessage.findById(req.params.id).lean();
 
@@ -101,7 +117,7 @@ router.get('/messages/:id', async (req, res) => {
   }
 });
 
-// Track clicks on a message link - original endpoint (kept for compatibility)
+// Track clicks on a message link - No caching
 router.post('/messages/:id/click', async (req, res) => {
   try {
     await handleClickTracking(req, res);
@@ -111,7 +127,7 @@ router.post('/messages/:id/click', async (req, res) => {
   }
 });
 
-// New endpoint with different naming to avoid ad blockers
+// New endpoint with different naming to avoid ad blockers - No caching
 router.post('/messages/:id/today', async (req, res) => {
   try {
     await handleClickTracking(req, res);
@@ -121,10 +137,10 @@ router.post('/messages/:id/today', async (req, res) => {
   }
 });
 
-// Edit a message text
+// Edit a message text - No caching
 router.put('/messages/:id', telegramController.updateMessageText);
 
-// Update message category
+// Update message category - No caching
 router.put('/messages/:id/category', async (req, res) => {
   try {
     const { id } = req.params;
@@ -151,12 +167,14 @@ router.put('/messages/:id/category', async (req, res) => {
   }
 });
 
-// Get messages by category
+// Get messages by category - Moderate caching
 router.get('/categories/:category', async (req, res) => {
   try {
     const { category } = req.params;
     const cursor = req.query.cursor;
     const limit = parseInt(req.query.limit) || 10;
+    
+    res.setHeader('Cache-Control', 'max-age=60, stale-while-revalidate=300');
 
     const messages = await getMessages({
       cursor,
@@ -174,7 +192,7 @@ router.get('/categories/:category', async (req, res) => {
   }
 });
 
-// Search messages
+// Search messages - No caching for search results
 router.get('/search', async (req, res) => {
   try {
     const { query } = req.query;
@@ -199,7 +217,7 @@ router.get('/search', async (req, res) => {
   }
 });
 
-// Route to delete a message by ID
+// Route to delete a message by ID - No caching
 router.delete('/messages/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -234,14 +252,14 @@ router.delete('/messages/:id', async (req, res) => {
   }
 });
 
-// Get analytics for click tracking
-router.get('/analytics/clicks', telegramController.getClickAnalytics);
+// Get analytics for click tracking - Cache for 5 minutes
+router.get('/analytics/clicks', cacheMiddleware(300), telegramController.getClickAnalytics);
 
-// Get top performing messages
-router.get('/analytics/top-performing', telegramController.getTopPerforming);
+// Get top performing messages - Cache for 5 minutes
+router.get('/analytics/top-performing', cacheMiddleware(300), telegramController.getTopPerforming);
 
-// Get all available categories
-router.get('/categories', async (req, res) => {
+// Get all available categories - Cache for 5 minutes
+router.get('/categories', cacheMiddleware(300), async (req, res) => {
   try {
     const categories = await TelegramMessage.distinct('category', { 
       category: { $exists: true, $ne: null }
