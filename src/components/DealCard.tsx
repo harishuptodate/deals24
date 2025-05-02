@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, memo } from 'react';
 import { Heart, ExternalLink, Trash2, PenSquare, Tag, Lock } from 'lucide-react';
 import {
@@ -774,6 +775,6 @@ const DealCard = memo(({
 			</Dialog>
 		</>
 	);
-};
+});
   
 export default DealCard;
