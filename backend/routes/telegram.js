@@ -4,7 +4,7 @@ const TelegramMessage = require('../models/TelegramMessage');
 const telegramController = require('../controllers/telegramController');
 const { getMessages, handleClickTracking } = require('../services/telegramService');
 
-// Improved cache middleware with configurable parameters and defaults
+// Set up cache middleware for stable data with configurable parameters and defaults
 const cacheMiddleware = (maxAge = 60, staleWhileRevalidate = 300) => {
   return (req, res, next) => {
     // Set caching headers with both configurable parameters
@@ -100,8 +100,8 @@ router.get('/messages', async (req, res) => {
   }
 });
 
-// Get a single message by ID - Fresh for 5 minutes, stale for 5 minutes
-router.get('/messages/:id', cacheMiddleware(300, 300), async (req, res) => {
+// Get a single message by ID - Cache for 1 minute, stale for 5 minutes
+router.get('/messages/:id', cacheMiddleware(60, 300), async (req, res) => {
   try {
     const message = await TelegramMessage.findById(req.params.id).lean();
 
@@ -167,15 +167,12 @@ router.put('/messages/:id/category', async (req, res) => {
 });
 
 // Get messages by category - Fresh for 1 minute, stale for 5 minutes
-router.get('/categories/:category', async (req, res) => {
+router.get('/categories/:category', cacheMiddleware(60, 300), async (req, res) => {
   try {
     const { category } = req.params;
     const cursor = req.query.cursor;
     const limit = parseInt(req.query.limit) || 10;
     
-    // Using standard Cache-Control header directly
-    res.setHeader('Cache-Control', 'max-age=60, stale-while-revalidate=300');
-
     const messages = await getMessages({
       cursor,
       limit,
@@ -252,14 +249,14 @@ router.delete('/messages/:id', async (req, res) => {
   }
 });
 
-// Get analytics for click tracking - Fresh for 5 minutes, stale for 10 minutes
-router.get('/analytics/clicks', cacheMiddleware(300, 600), telegramController.getClickAnalytics);
+// Get analytics for click tracking - Fresh for 1 minute, stale for 10 minutes
+router.get('/analytics/clicks', cacheMiddleware(60, 300), telegramController.getClickAnalytics);
 
-// Get top performing messages - Fresh for 5 minutes, stale for 10 minutes
-router.get('/analytics/top-performing', cacheMiddleware(300, 600), telegramController.getTopPerforming);
+// Get top performing messages - Fresh for 1 minute, stale for 5 minutes
+router.get('/analytics/top-performing', cacheMiddleware(60, 300), telegramController.getTopPerforming);
 
-// Get all available categories - Fresh for 5 minutes, stale for 10 minutes
-router.get('/categories', cacheMiddleware(300, 600), async (req, res) => {
+// Get all available categories - Fresh for 5 minutes, stale for 5 minutes
+router.get('/categories', cacheMiddleware(300, 300), async (req, res) => {
   try {
     const categories = await TelegramMessage.distinct('category', { 
       category: { $exists: true, $ne: null }
