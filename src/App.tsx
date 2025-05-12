@@ -15,6 +15,7 @@ const Categories = lazy(() => import("./pages/Categories"));
 const Admin = lazy(() => import("./pages/Admin"));
 const Wishlist = lazy(() => import("./pages/Wishlist"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const Deal = lazy(() => import("./pages/Deal")); // Add new Deal page for individual deals
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -89,6 +90,7 @@ const App = () => {
                 <Route path="/categories" element={<Categories />} />
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/wishlist" element={<Wishlist />} />
+                <Route path="/deal/:id" element={<Deal />} /> {/* Add route for individual deals */}
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

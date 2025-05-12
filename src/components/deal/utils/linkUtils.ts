@@ -55,3 +55,8 @@ export const copyToClipboard = async (text: string): Promise<boolean> => {
     return false;
   }
 };
+
+// Function to create a share URL directly to a specific deal
+export const createDealShareUrl = (id: string): string => {
+  return `${window.location.origin}/deal/${id}`;
+};

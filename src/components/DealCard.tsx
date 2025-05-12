@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, memo } from 'react';
 import { Heart, ExternalLink, Trash2, PenSquare, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -21,6 +20,7 @@ import DeleteConfirmDialog from './deal/DeleteConfirmDialog';
 import EditDealDialog from './deal/EditDealDialog';
 import CategoryDialog from './deal/CategoryDialog';
 import DealDetailDialog from './deal/DealDetailDialog';
+import { useNavigate } from 'react-router-dom';
 
 interface DealCardProps {
   title: string;
@@ -79,6 +79,8 @@ const DealCard = memo(({
   const [localTitle, setLocalTitle] = useState(title);
   const [localDescription, setLocalDescription] = useState(description);
   const [localCategory, setLocalCategory] = useState(category || '');
+
+  const navigate = useNavigate();
 
   // Extract links for UI decision making
   const links = extractLinks(description);
@@ -212,13 +214,27 @@ const DealCard = memo(({
   const displayDescription = localDescription || description;
   const displayCategory = localCategory || category;
 
+  const viewDealPage = (e: React.MouseEvent) => {
+    if (e.ctrlKey || e.metaKey || e.button === 1) return;
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (id) {
+      navigate(`/deal/${id}`);
+    }
+  };
+
   return (
     <>
       <div
         className="group animate-fade-up hover-scale cursor-pointer h-[290px]"
         onClick={(e) => {
           if (e.ctrlKey || e.metaKey || e.button === 1) return;
-          setIsOpen(true);
+          if (hasMultipleLinks || !extractFirstLink(description)) {
+            setIsOpen(true);
+          } else {
+            viewDealPage(e);
+          }
         }}>
         <div className="relative glass-effect rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.06)] h-full flex flex-col border-gray-200 dark:border-gray-900  dark:bg-zinc-950 ">
           <div className="absolute top-4 right-4 flex gap-1 z-10">

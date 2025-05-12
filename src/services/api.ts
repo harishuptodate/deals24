@@ -426,4 +426,14 @@ export const getTopPerformingDeals = async (
 	}
 };
 
+export const getDealById = async (id: string) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/telegram/messages/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching deal by ID:', error);
+    throw error;
+  }
+};
+
 export default api;

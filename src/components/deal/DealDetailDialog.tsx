@@ -12,6 +12,7 @@ import { handleTrackedLinkClick } from '../../services/api';
 import { ExternalLink, Share2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { createShareData, shareContent, copyToClipboard, truncateLink } from './utils/linkUtils';
+import { useNavigate } from 'react-router-dom';
 
 interface DealDetailDialogProps {
   isOpen: boolean;
@@ -30,28 +31,35 @@ const DealDetailDialog = ({
 }: DealDetailDialogProps) => {
   const { toast } = useToast();
   const [isSharing, setIsSharing] = useState(false);
+  const navigate = useNavigate();
 
   const handleShare = async () => {
     setIsSharing(true);
     
     try {
-      const shareData = createShareData(title, description);
+      // Create share data with actual URL to this deal's page
+      const shareUrl = id ? `${window.location.origin}/deal/${id}` : window.location.href;
+      const shareData = {
+        title: title || 'Check out this deal!',
+        text: `Check out this deal: ${title.substring(0, 60)}${title.length > 60 ? '...' : ''}`,
+        url: shareUrl
+      };
+      
       const shared = await shareContent(shareData);
       
       if (!shared) {
-        // Fallback to copying the information to clipboard
-        const shareText = `${title}\n\n${description}\n\nShared via DealsTracker`;
-        const copied = await copyToClipboard(shareText);
+        // Fallback to copying the URL to clipboard
+        const copied = await copyToClipboard(shareUrl);
         
         if (copied) {
           toast({
             title: "Copied to clipboard!",
-            description: "You can now paste and share this deal with others.",
+            description: "Deal link copied. You can now paste and share it with others.",
           });
         } else {
           toast({
             title: "Couldn't share",
-            description: "Failed to copy deal information.",
+            description: "Failed to copy deal link.",
             variant: "destructive",
           });
         }
@@ -65,6 +73,13 @@ const DealDetailDialog = ({
       });
     } finally {
       setIsSharing(false);
+    }
+  };
+
+  const handleViewFullPage = () => {
+    if (id) {
+      onOpenChange(false); // Close the dialog
+      navigate(`/deal/${id}`); // Navigate to the deal page
     }
   };
 
@@ -115,7 +130,16 @@ const DealDetailDialog = ({
           {makeLinksClickable(description)}
         </div>
 
-        <DialogFooter className="mt-4 flex justify-end">
+        <DialogFooter className="mt-4 flex flex-col sm:flex-row gap-2 sm:justify-end">
+          {id && (
+            <Button
+              onClick={handleViewFullPage}
+              className="flex gap-2 items-center"
+              variant="default"
+            >
+              View Full Page
+            </Button>
+          )}
           <Button
             onClick={handleShare}
             disabled={isSharing}
