@@ -117,9 +117,11 @@ const DealCard = memo(({
     try {
       // Create share URL to this deal's dedicated page
       const shareUrl = `${window.location.origin}/deal/${id}`;
+      const shareText = `Check out this deal: ${localTitle.substring(0, 60)}${localTitle.length > 60 ? '...' : ''}`;
+      
       const shareData = {
         title: localTitle || 'Check out this deal!',
-        text: `Check out this deal: ${localTitle.substring(0, 60)}${localTitle.length > 60 ? '...' : ''}`,
+        text: shareText,
         url: shareUrl
       };
       
@@ -127,7 +129,8 @@ const DealCard = memo(({
       
       if (!shared) {
         // Fallback to copying the URL to clipboard
-        const copied = await copyToClipboard(shareUrl);
+        const textToCopy = `${shareText}\n${shareUrl}`;
+        const copied = await copyToClipboard(textToCopy);
         
         if (copied) {
           toast({

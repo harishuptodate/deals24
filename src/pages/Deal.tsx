@@ -35,11 +35,12 @@ const Deal = () => {
     try {
       const title = deal.text.split('\n')[0] || 'Check out this deal!';
       const shareUrl = `${window.location.origin}/deal/${id}`;
+      const shareText = `Check out this deal: ${title.substring(0, 60)}${title.length > 60 ? '...' : ''}`;
       
       // Create share data with actual URL to this page
       const shareData = {
         title: title,
-        text: `Check out this deal: ${title.substring(0, 60)}${title.length > 60 ? '...' : ''}`,
+        text: shareText,
         url: shareUrl
       };
       
@@ -47,7 +48,8 @@ const Deal = () => {
       
       if (!shared) {
         // Fallback to copying the URL to clipboard
-        const copied = await copyToClipboard(shareUrl);
+        const textToCopy = `${shareText}\n${shareUrl}`;
+        const copied = await copyToClipboard(textToCopy);
         
         if (copied) {
           toast({
