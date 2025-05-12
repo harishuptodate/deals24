@@ -277,7 +277,7 @@ const DealCard = memo(({
           setIsOpen(true);
         }}>
         <div className="relative glass-effect rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.06)] h-full flex flex-col border-gray-200 dark:border-gray-900  dark:bg-zinc-950 ">
-          <div className="absolute top-4 right-4 flex gap-1 z-10">
+          <div className="absolute top-4 right-4 flex  z-10">
             {onDelete &&  (
               <>
                 <button

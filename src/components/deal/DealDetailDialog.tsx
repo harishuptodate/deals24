@@ -56,13 +56,14 @@ const DealDetailDialog = ({
             title: "Copied to clipboard!",
             description: "Deal link copied. You can now paste and share it with others.",
           });
-        } else {
-          toast({
-            title: "Couldn't share",
-            description: "Failed to copy deal link.",
-            variant: "destructive",
-          });
-        }
+        } 
+        // else {
+        //   toast({
+        //     title: "Couldn't share",
+        //     description: "Failed to copy deal link.",
+        //     variant: "destructive",
+        //   });
+        // }
       }
     } catch (error) {
       console.error('Error during share:', error);
