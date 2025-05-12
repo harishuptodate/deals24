@@ -1,13 +1,17 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import { handleTrackedLinkClick } from '../../services/api';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, Share2 } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
+import { createShareData, shareContent, copyToClipboard, truncateLink } from './utils/linkUtils';
 
 interface DealDetailDialogProps {
   isOpen: boolean;
@@ -24,12 +28,43 @@ const DealDetailDialog = ({
   description,
   id,
 }: DealDetailDialogProps) => {
-  const truncateLink = (url: string) => {
+  const { toast } = useToast();
+  const [isSharing, setIsSharing] = useState(false);
+
+  const handleShare = async () => {
+    setIsSharing(true);
+    
     try {
-      const { hostname } = new URL(url);
-      return hostname;
-    } catch {
-      return url;
+      const shareData = createShareData(title, description);
+      const shared = await shareContent(shareData);
+      
+      if (!shared) {
+        // Fallback to copying the information to clipboard
+        const shareText = `${title}\n\n${description}\n\nShared via DealsTracker`;
+        const copied = await copyToClipboard(shareText);
+        
+        if (copied) {
+          toast({
+            title: "Copied to clipboard!",
+            description: "You can now paste and share this deal with others.",
+          });
+        } else {
+          toast({
+            title: "Couldn't share",
+            description: "Failed to copy deal information.",
+            variant: "destructive",
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error during share:', error);
+      toast({
+        title: "Sharing failed",
+        description: "Something went wrong while trying to share this deal.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSharing(false);
     }
   };
 
@@ -79,6 +114,18 @@ const DealDetailDialog = ({
         <div className="mt-4 text-sm whitespace-pre-line">
           {makeLinksClickable(description)}
         </div>
+
+        <DialogFooter className="mt-4 flex justify-end">
+          <Button
+            onClick={handleShare}
+            disabled={isSharing}
+            className="flex gap-2 items-center"
+            variant="outline"
+          >
+            <Share2 size={16} />
+            {isSharing ? "Sharing..." : "Share Deal"}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
