@@ -1,5 +1,5 @@
 import React, { useState, useEffect, memo } from 'react';
-import { Heart, ExternalLink, Trash2, PenSquare, Tag } from 'lucide-react';
+import { Heart, ExternalLink, Trash2, PenSquare, Tag, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { 
   deleteProduct,
@@ -108,6 +108,48 @@ const DealCard = memo(({
 
     localStorage.setItem('favorites', JSON.stringify(newFavorites));
     setIsFavorite(!isFavorite);
+  };
+
+  const handleShare = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!id) return;
+    
+    try {
+      // Create share URL to this deal's dedicated page
+      const shareUrl = `${window.location.origin}/deal/${id}`;
+      const shareData = {
+        title: localTitle || 'Check out this deal!',
+        text: `Check out this deal: ${localTitle.substring(0, 60)}${localTitle.length > 60 ? '...' : ''}`,
+        url: shareUrl
+      };
+      
+      const shared = await shareContent(shareData);
+      
+      if (!shared) {
+        // Fallback to copying the URL to clipboard
+        const copied = await copyToClipboard(shareUrl);
+        
+        if (copied) {
+          toast({
+            title: "Copied to clipboard!",
+            description: "Deal link copied. You can now paste and share it with others.",
+          });
+        } else {
+          toast({
+            title: "Couldn't share",
+            description: "Failed to copy deal link.",
+            variant: "destructive",
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error during share:', error);
+      toast({
+        title: "Sharing failed",
+        description: "Something went wrong while trying to share this deal.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleDelete = (e: React.MouseEvent) => {
@@ -260,6 +302,12 @@ const DealCard = memo(({
                 </button>
               </>
             )}
+            <button
+              onClick={handleShare}
+              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              title="Share deal">
+              <Share2 className="w-5 h-5 text-blue-500" />
+            </button>
             <button
               onClick={toggleFavorite}
               className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
