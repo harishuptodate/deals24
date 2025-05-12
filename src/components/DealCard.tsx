@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, memo } from 'react';
 import { Heart, ExternalLink, Trash2, PenSquare, Tag, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,7 +15,7 @@ import {
   grantCategoryPermission, 
   verifyActionPassword 
 } from '../services/authService';
-import { extractFirstLink, extractLinks } from './deal/utils/linkUtils';
+import { extractFirstLink, extractLinks, shareContent, copyToClipboard } from './deal/utils/linkUtils';
 import PasswordDialog from './deal/PasswordDialog';
 import DeleteConfirmDialog from './deal/DeleteConfirmDialog';
 import EditDealDialog from './deal/EditDealDialog';
