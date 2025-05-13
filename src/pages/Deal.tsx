@@ -7,7 +7,7 @@ import Navbar from '../components/Navbar';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ExternalLink, Share2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { extractFirstLink, extractLinks, truncateLink, shareContent, copyToClipboard } from '../components/deal/utils/linkUtils';
+import { extractFirstLink, extractLinks, truncateLink, shareContent, copyToClipboard, extractSecondLink } from '../components/deal/utils/linkUtils';
 import { BigFooter } from '@/components/BigFooter';
 import { handleTrackedLinkClick } from '../services/api';
 
@@ -169,16 +169,16 @@ const Deal = () => {
               {makeLinksClickable(deal.text)}
             </div>
 
-            {extractFirstLink(deal.text) && (
+            {extractSecondLink(deal.text) && (
               <div className="mt-8">
                 <a
-                  href={extractFirstLink(deal.text) || '#'}
-                  onClick={(e) => handleTrackedLinkClick(extractFirstLink(deal.text) || '', id, e.nativeEvent)}
+                  href={extractSecondLink(deal.text) || '#'}
+                  onClick={(e) => handleTrackedLinkClick(extractSecondLink(deal.text) || '', id, e.nativeEvent)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-block w-full sm:w-auto text-center px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-apple-darkGray to-black rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-apple-darkGray/20"
                 >
-                  Go To Deal
+                  Buy Now
                 </a>
               </div>
             )}

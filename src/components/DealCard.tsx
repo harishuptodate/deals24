@@ -14,7 +14,7 @@ import {
   grantCategoryPermission, 
   verifyActionPassword 
 } from '../services/authService';
-import { extractFirstLink, extractLinks, shareContent, copyToClipboard } from './deal/utils/linkUtils';
+import { extractFirstLink, extractLinks, shareContent, copyToClipboard, extractSecondLink } from './deal/utils/linkUtils';
 import PasswordDialog from './deal/PasswordDialog';
 import DeleteConfirmDialog from './deal/DeleteConfirmDialog';
 import EditDealDialog from './deal/EditDealDialog';
@@ -342,14 +342,42 @@ const DealCard = memo(({
 
             <div className="mt-auto pt-2">
               {hasMultipleLinks ? (
-                <Button
+                // <Button
+                //   onClick={(e) => {
+                //     e.stopPropagation();
+                //     setIsOpen(true);
+                //   }}
+                //   className="w-full text-center px-6 py-2 text-sm font-medium text-white bg-gradient-to-r from-apple-darkGray to-black rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-apple-darkGray/20">
+                //   View Deal Details
+                // </Button>
+                <a
+                  href={ extractSecondLink(description) || '#'}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   onClick={(e) => {
+                    handleTrackedLinkClick(
+                      extractSecondLink(description) || '',
+                      id,
+                      e.nativeEvent,
+                    );
+
+                    if (e.ctrlKey || e.metaKey || e.button === 1) return;
+
+                    e.preventDefault();
                     e.stopPropagation();
-                    setIsOpen(true);
+
+                    setTimeout(() => {
+                      window.open(
+                        extractSecondLink(description) || '',
+                        '_blank',
+                      );
+                    }, 100);
                   }}
-                  className="w-full text-center px-6 py-2 text-sm font-medium text-white bg-gradient-to-r from-apple-darkGray to-black rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-apple-darkGray/20">
-                  View Deal Details
-                </Button>
+                  className="inline-block w-full text-center px-6 py-2 text-sm font-medium text-white bg-gradient-to-r from-apple-darkGray to-black rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-apple-darkGray/20">
+                  Buy Now
+                </a>
+
+
               ) : (
                 <a
                   href={link || extractFirstLink(description) || '#'}

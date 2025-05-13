@@ -5,6 +5,12 @@ export const extractFirstLink = (text: string): string | null => {
   return matches && matches.length > 0 ? matches[0] : null;
 };
 
+export const extractSecondLink = (text: string): string | null => {
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const matches = text.match(urlRegex);
+  return matches && matches.length > 0 ? matches[1] : null;
+};
+
 export const extractLinks = (text: string): string[] => {
   const urlRegex = /(https?:\/\/[^\s]+)/g;
   return text.match(urlRegex) || [];
