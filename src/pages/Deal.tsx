@@ -10,6 +10,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { extractFirstLink, extractLinks, truncateLink, shareContent, copyToClipboard, extractSecondLink } from '../components/deal/utils/linkUtils';
 import { BigFooter } from '@/components/BigFooter';
 import { handleTrackedLinkClick } from '../services/api';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Deal = () => {
   const { id } = useParams<{ id: string }>();
@@ -17,6 +18,7 @@ const Deal = () => {
   const { toast } = useToast();
   const [isSharing, setIsSharing] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const isMobile = useIsMobile();
   
   const { data: deal, isLoading, isError } = useQuery({
     queryKey: ['deal', id],
@@ -208,14 +210,32 @@ const Deal = () => {
                 >
                   {isSaved ? (
                     <>
-                      <HeartCrackIcon size={16} />
+                    {isMobile ? (
+                      <HeartCrackIcon size={16} 
+                      className={`w-5 h-5 transition-colors ${
+                  isSaved ? 'fill-red-500 text-red-500' : 'text-gray-400'
+                }`}/>
+                    ):(
+                    <>
+                      <HeartCrackIcon size={16}
+                      className={`w-5 h-5 transition-colors ${
+                  isSaved ? 'fill-red-500 text-red-500' : 'text-gray-400'
+                }`} />
                       Remove from Wishlist
                     </>
-                  ) : (
+                  )} 
+                  </>
+                  ):(
+                    <>
+                  {isMobile ? (
+                      <Heart size={16} />
+                  ):(
                     <>
                       <Heart size={16} />
-                      Add to Wishlist
+                      Add to Wishlist 
                     </>
+                  )}
+                  </>
                   )}
                 </Button>
                 <Button
@@ -224,8 +244,14 @@ const Deal = () => {
                   className="flex gap-2 items-center"
                   variant="outline"
                 >
-                  <Share2 size={16} />
-                  {isSharing ? "Sharing..." : "Share Deal"}
+                  {isMobile ? (
+                    <Share2 size={16} className="w-5 h-5 text-blue-500" />
+                  ) : (
+                    <>
+                      <Share2 size={16} className="w-5 h-5 text-blue-500" />
+                      {isSharing ? "Sharing..." : "Share Deal"}
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
