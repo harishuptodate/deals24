@@ -1,11 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getDealById } from '../services/api';
 import Navbar from '../components/Navbar';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ExternalLink, Share2 } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Share2, BookmarkPlus, BookmarkMinus } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { extractFirstLink, extractLinks, truncateLink, shareContent, copyToClipboard, extractSecondLink } from '../components/deal/utils/linkUtils';
 import { BigFooter } from '@/components/BigFooter';
@@ -16,12 +16,25 @@ const Deal = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isSharing, setIsSharing] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
   
   const { data: deal, isLoading, isError } = useQuery({
     queryKey: ['deal', id],
     queryFn: () => getDealById(id || ''),
     enabled: !!id,
   });
+
+  useEffect(() => {
+    if (deal) {
+      // Check if this deal is already in favorites
+      const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+      const isAlreadySaved = favorites.some((item: any) => 
+        item.id === id || 
+        (item.title === deal.text.split('\n')[0])
+      );
+      setIsSaved(isAlreadySaved);
+    }
+  }, [deal, id]);
 
   const handleGoBack = () => {
     navigate(-1);
@@ -57,13 +70,6 @@ const Deal = () => {
             description: "Deal link copied. You can now paste and share it with others.",
           });
         } 
-        // else {
-        //   toast({
-        //     title: "Couldn't share",
-        //     description: "Failed to copy deal link.",
-        //     variant: "destructive",
-        //   });
-        // }
       }
     } catch (error) {
       console.error('Error during share:', error);
@@ -74,6 +80,46 @@ const Deal = () => {
       });
     } finally {
       setIsSharing(false);
+    }
+  };
+
+  const handleToggleWishlist = () => {
+    if (!deal) return;
+
+    // Get current favorites from localStorage
+    const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+    const title = deal.text.split('\n')[0];
+
+    if (isSaved) {
+      // Remove from favorites
+      const updatedFavorites = favorites.filter((item: any) => 
+        item.id !== id && 
+        item.title !== title
+      );
+      localStorage.setItem('favorites', JSON.stringify(updatedFavorites));
+      setIsSaved(false);
+      toast({
+        title: "Removed from wishlist",
+        description: "This deal has been removed from your wishlist.",
+      });
+    } else {
+      // Add to favorites
+      const newFavorite = {
+        id: id,
+        title: title,
+        description: deal.text,
+        link: extractFirstLink(deal.text) || window.location.href,
+        timestamp: new Date().toISOString(),
+        category: deal.category
+      };
+      
+      favorites.push(newFavorite);
+      localStorage.setItem('favorites', JSON.stringify(favorites));
+      setIsSaved(true);
+      toast({
+        title: "Added to wishlist",
+        description: "This deal has been added to your wishlist.",
+      });
     }
   };
 
@@ -154,15 +200,34 @@ const Deal = () => {
                   </span>
                 )}
               </div>
-              <Button
-                onClick={handleShare}
-                disabled={isSharing}
-                className="flex gap-2 items-center"
-                variant="outline"
-              >
-                <Share2 size={16} />
-                {isSharing ? "Sharing..." : "Share Deal"}
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleToggleWishlist}
+                  className="flex gap-2 items-center"
+                  variant="outline"
+                >
+                  {isSaved ? (
+                    <>
+                      <BookmarkMinus size={16} />
+                      Remove from Wishlist
+                    </>
+                  ) : (
+                    <>
+                      <BookmarkPlus size={16} />
+                      Add to Wishlist
+                    </>
+                  )}
+                </Button>
+                <Button
+                  onClick={handleShare}
+                  disabled={isSharing}
+                  className="flex gap-2 items-center"
+                  variant="outline"
+                >
+                  <Share2 size={16} />
+                  {isSharing ? "Sharing..." : "Share Deal"}
+                </Button>
+              </div>
             </div>
             
             <div className="whitespace-pre-line text-gray-700 dark:text-gray-300 mt-6">
