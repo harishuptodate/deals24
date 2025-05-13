@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getDealById } from '../services/api';
 import Navbar from '../components/Navbar';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ExternalLink, Share2, BookmarkPlus, BookmarkMinus } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Share2, BookmarkPlus, BookmarkMinus, Heart, HeartCrack, HeartCrackIcon, HeartPulseIcon, HeartHandshake } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { extractFirstLink, extractLinks, truncateLink, shareContent, copyToClipboard, extractSecondLink } from '../components/deal/utils/linkUtils';
 import { BigFooter } from '@/components/BigFooter';
@@ -208,12 +208,12 @@ const Deal = () => {
                 >
                   {isSaved ? (
                     <>
-                      <BookmarkMinus size={16} />
+                      <HeartCrackIcon size={16} />
                       Remove from Wishlist
                     </>
                   ) : (
                     <>
-                      <BookmarkPlus size={16} />
+                      <Heart size={16} />
                       Add to Wishlist
                     </>
                   )}
@@ -234,7 +234,7 @@ const Deal = () => {
               {makeLinksClickable(deal.text)}
             </div>
 
-            {extractSecondLink(deal.text) && (
+            {extractFirstLink(deal.text) && (
               <div className="mt-8">
                 <a
                   href={extractSecondLink(deal.text) || '#'}
