@@ -171,7 +171,7 @@ const Deals = () => {
 			<main className="container mx-auto px-4 py-6 md:py-12">
 				<div className="flex flex-col gap-2 sm:flex-row sm:items-center justify-between mb-6 md:mb-8">
 					<div>
-						<h1 className="text-2xl md:text-3xl font-bold text-gradient">
+						<h1 className="text-2xl md:text-3xl font-bold text-gradient dark:text-gradient">
 							{pageTitle}
 						</h1>
 
