@@ -12,6 +12,7 @@ import ErrorBoundary from './ErrorBoundary';
 import DealCardSkeleton from './DealCardSkeleton';
 import CategoryFilter from './filters/CategoryFilter';
 import EmptyDealsState from './deal/EmptyDealsState';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const DealGrid = () => {
   const { toast } = useToast();
@@ -156,17 +157,19 @@ const DealGrid = () => {
           <h2 className="text-2xl font-semibold text-gradient dark:text-gradient">
             Latest Deals
           </h2>
-          <div className="justify-center items-center">						
-            <Link to="/wishlist">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-sm rounded-full dark:text-gray-200 ">
-                <span>Wishlist</span>
-                <Heart className="h-5 w-5 mr-1" />
-              </Button>
-            </Link>
-          </div>
+          {useIsMobile() && (
+            <div className="flex items-center justify-end">
+              <Link to="/wishlist">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-sm rounded-full dark:text-gray-200 ">
+                  <span>Wishlist</span>
+                  <Heart className="h-5 w-5 mr-1" />
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
 
         <CategoryFilter
