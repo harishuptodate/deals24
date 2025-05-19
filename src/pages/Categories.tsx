@@ -1,6 +1,6 @@
 import React from 'react';
 import Navbar from '../components/Navbar';
-import { Tag, Laptop, Smartphone, Tv, Shirt, Headphones, Megaphone } from 'lucide-react';
+import { Tag, Laptop, Smartphone, Tv, Shirt, Headphones, Megaphone, LucideBoxes } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getCategoryCounts } from '../services/api';
@@ -85,6 +85,15 @@ const Categories = () => {
 			),
 			description: 'Clothing, shoes, watches and accessories for all',
 			slug: 'fashion',
+		},
+		{
+			name: 'Miscellaneous',
+			count: getCount('miscellaneous'),
+			icon: (
+				<LucideBoxes className="w-12 h-12 mb-4 text-gray-700 dark:text-gray-300" />
+			),
+			description: 'Books, Stationery, Toys, Sports, Home Decor, NotSoPopular',
+			slug: 'miscellaneous',
 		},
 	];
 

@@ -24,6 +24,7 @@ const CategoryFilter = ({
     { name: 'Mobile Phones', slug: 'mobile-phones' },
     { name: 'Gadgets & Accessories', slug: 'gadgets-accessories' },
     { name: 'Fashion', slug: 'fashion' },
+    { name: 'Miscellaneous', slug: 'miscellaneous' },
   ];
 
   const subCategories = {
@@ -44,6 +45,7 @@ const CategoryFilter = ({
       'Smartwatch',
     ],
     fashion: ['Shoes', 'T-Shirt', 'Watch', 'Backpack'],
+    miscellaneous: ['Books', 'Stationery', 'Toys', 'Sports', 'Home Decor'],
   };
 
   const {

@@ -116,7 +116,7 @@ function detectCategory(text) {
     }
   }
   
-  return null; // Return null if no category matches
+  return 'miscellaneous'; // Return null if no category matches
 }
 
 /**

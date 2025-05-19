@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { Tv, Laptop, Smartphone, Shirt, Headphones } from 'lucide-react';
+import { Tv, Laptop, Smartphone, Shirt, Headphones, LucideBoxes } from 'lucide-react';
 import { getCategoryCounts } from '../services/api';
 import { CategoryCount } from '../types/telegram';
 
@@ -84,6 +84,11 @@ const CategorySection = () => {
 			name: 'Fashion',
 			slug: 'fashion',
 			icon: <Shirt size={20} className="mr-2" />,
+		},
+		{
+			name: 'Miscellaneous',
+			slug: 'miscellaneous',
+			icon: <LucideBoxes size={20} className="mr-2" />,
 		},
 	];
 
