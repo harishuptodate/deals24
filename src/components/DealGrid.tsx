@@ -20,6 +20,7 @@ const DealGrid = () => {
   const [searchParams] = useSearchParams();
   const searchQuery = searchParams.get('search');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const isMobile = useIsMobile();
 
   const {
     data,
@@ -138,7 +139,7 @@ const DealGrid = () => {
     );
   }
 
-  const allMessages = data?.pages.flatMap((page) => page.data) ?? [];
+  const allMessages = data?.pages.flatMap((page) => page.data) || [];
 
   if (allMessages.length === 0) {
     return (
@@ -157,7 +158,7 @@ const DealGrid = () => {
           <h2 className="text-2xl font-semibold text-gradient dark:text-gradient">
             Latest Deals
           </h2>
-          {useIsMobile() && (
+          {isMobile && (
             <div className="flex items-center justify-end">
               <Link to="/wishlist">
                 <Button
