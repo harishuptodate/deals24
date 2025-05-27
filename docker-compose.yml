@@ -1,0 +1,79 @@
+
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_BASE_URL=${VITE_API_BASE_URL:-http://localhost:3000/api}
+        - VITE_ADMIN_USERNAME=${VITE_ADMIN_USERNAME}
+        - VITE_ADMIN_PASSWORD=${VITE_ADMIN_PASSWORD}
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    environment:
+      - VITE_API_BASE_URL=${VITE_API_BASE_URL:-http://localhost:3000/api}
+    networks:
+      - deals24-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mongodb
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - PORT=${PORT:-3000}
+      - MONGODB_URI=${MONGODB_URI}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_CHANNEL_ID=${TELEGRAM_CHANNEL_ID}
+      - WEBHOOK_URL=${WEBHOOK_URL}
+      - REDIS_URL=${REDIS_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS}
+      - IS_SALE_MODE=${IS_SALE_MODE:-false}
+    volumes:
+      - ./backend/logs:/app/logs
+    networks:
+      - deals24-network
+    restart: unless-stopped
+
+  mongodb:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USERNAME:-admin}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD:-password}
+      - MONGO_INITDB_DATABASE=${MONGO_DB_NAME:-deals24}
+    volumes:
+      - mongodb_data:/data/db
+      - ./backend/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      - deals24-network
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - deals24-network
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
+volumes:
+  mongodb_data:
+  redis_data:
+
+networks:
+  deals24-network:
+    driver: bridge

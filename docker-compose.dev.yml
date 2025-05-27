@@ -1,0 +1,70 @@
+
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_BASE_URL=http://localhost:3000/api
+      - VITE_ADMIN_USERNAME=${VITE_ADMIN_USERNAME}
+      - VITE_ADMIN_PASSWORD=${VITE_ADMIN_PASSWORD}
+    networks:
+      - deals24-dev-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - MONGODB_URI=mongodb://mongodb:27017/deals24_dev
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_CHANNEL_ID=${TELEGRAM_CHANNEL_ID}
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=${JWT_SECRET:-dev_secret}
+      - CORS_ALLOWED_ORIGINS=http://localhost:8080
+      - IS_SALE_MODE=${IS_SALE_MODE:-false}
+    depends_on:
+      - mongodb
+      - redis
+    networks:
+      - deals24-dev-network
+
+  mongodb:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_dev_data:/data/db
+    networks:
+      - deals24-dev-network
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_dev_data:/data
+    networks:
+      - deals24-dev-network
+
+volumes:
+  mongodb_dev_data:
+  redis_dev_data:
+
+networks:
+  deals24-dev-network:
+    driver: bridge
