@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { handleTrackedLinkClick } from '../../services/api';
-import { ExternalLink, Share2 } from 'lucide-react';
+import { ExternalLink, MoveDiagonal, Share2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { createShareData, shareContent, copyToClipboard, truncateLink } from './utils/linkUtils';
 import { useNavigate } from 'react-router-dom';
@@ -141,7 +141,8 @@ const DealDetailDialog = ({
               className="flex gap-2 items-center"
               variant="default"
             >
-              View Full Page
+              <ExternalLink size={16} />
+              Visit Full Page
             </Button>
           )}
           <Button
