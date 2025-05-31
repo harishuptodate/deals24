@@ -1,12 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
-import { Heart, Trash2, Calendar, ExternalLink } from 'lucide-react';
+import { Heart, Trash2, Calendar, ExternalLink, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from '@/components/ui/use-toast';
 import { trackMessageClick } from '../services/api';
 import { BigFooter } from '@/components/BigFooter';
+import { shareContent, copyToClipboard } from '@/components/deal/utils/linkUtils';
+import { useNavigate } from 'react-router-dom';
 
 interface FavoriteItem {
   title: string;
@@ -19,6 +21,7 @@ interface FavoriteItem {
 
 const Wishlist = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<FavoriteItem | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -61,6 +64,48 @@ const Wishlist = () => {
   const viewDetails = (item: FavoriteItem) => {
     setSelectedItem(item);
     setIsDialogOpen(true);
+  };
+
+  const viewFullPage = (item: FavoriteItem) => {
+    if (item.id) {
+      navigate(`/deal/${item.id}`);
+    }
+  };
+
+  const handleShare = async (item: FavoriteItem) => {
+    try {
+      // Create share URL to this deal's dedicated page
+      const shareUrl = item.id ? `${window.location.origin}/deal/${item.id}` : window.location.href;
+      const shareText = `Check out this deal: ${item.title.substring(0, 60)}${item.title.length > 60 ? '...' : ''}`;
+      
+      const shareData = {
+        title: item.title || 'Check out this deal!',
+        text: shareText,
+        url: shareUrl
+      };
+      
+      const shared = await shareContent(shareData);
+      
+      if (!shared) {
+        // Fallback to copying the URL to clipboard
+        const textToCopy = `${shareText}\n${shareUrl}`;
+        const copied = await copyToClipboard(textToCopy);
+        
+        if (copied) {
+          toast({
+            title: "Copied to clipboard!",
+            description: "Deal link copied. You can now paste and share it with others.",
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error during share:', error);
+      toast({
+        title: "Sharing failed",
+        description: "Something went wrong while trying to share this deal.",
+        variant: "destructive",
+      });
+    }
   };
 
   const truncateLink = (url: string) => {
@@ -163,12 +208,21 @@ const Wishlist = () => {
               <div key={item.title} className="bg-white dark:bg-[#171717] border border-gray-100 dark:border-gray-800 rounded-xl p-6 shadow-sm dark:shadow-none hover:shadow-md dark:hover:shadow-none transition-shadow">
                 <div className="flex justify-between items-start mb-4">
                   <h3 className="text-lg font-semibold text-apple-darkGray dark:text-white line-clamp-2">{item.title}</h3>
-                  <button
-                    onClick={() => removeFavorite(item.title)}
-                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
-                  >
-                    <Trash2 size={16} className="text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400" />
-                  </button>
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => handleShare(item)}
+                      className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+                      title="Share deal"
+                    >
+                      <Share2 size={16} className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300" />
+                    </button>
+                    <button
+                      onClick={() => removeFavorite(item.title)}
+                      className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+                    >
+                      <Trash2 size={16} className="text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400" />
+                    </button>
+                  </div>
                 </div>
                 
                 {item.imageUrl && (
@@ -194,14 +248,27 @@ const Wishlist = () => {
                     <span>Saved on {formatDate(item.timestamp)}</span>
                   </div>
                   
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => viewDetails(item)}
-                    className="dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-                  >
-                    View Details
-                  </Button>
+                  <div className="flex gap-2">
+                    {item.id && (
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => viewFullPage(item)}
+                        className="dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800 flex items-center gap-1"
+                      >
+                        <ExternalLink size={14} />
+                        View Full Page
+                      </Button>
+                    )}
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => viewDetails(item)}
+                      className="dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                    >
+                      View Details
+                    </Button>
+                  </div>
                 </div>
               </div>
             ))}
