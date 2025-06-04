@@ -12,7 +12,7 @@ export const useOptimisticUpdates = <T,>() => {
   const queryClient = useQueryClient();
   const [optimisticUpdates, setOptimisticUpdates] = useState<Map<string, T>>(new Map());
 
-  const performOptimisticUpdate = useCallback(async <TResult>(
+  const performOptimisticUpdate = useCallback(async <TResult,>(
     update: OptimisticUpdate<T>,
     mutationFn: () => Promise<TResult>
   ): Promise<TResult> => {
