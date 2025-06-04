@@ -1,56 +1,32 @@
 
-import React, { useEffect, useState } from 'react';
-import { useInfiniteQuery } from '@tanstack/react-query';
-import { getTelegramMessages, deleteProduct } from '../services/api';
+import React from 'react';
 import DealCard from './DealCard';
 import { Button } from '@/components/ui/button';
-import { Loader2, Heart } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
-import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
 import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
 import ErrorBoundary from './ErrorBoundary';
 import DealCardSkeleton from './DealCardSkeleton';
 import CategoryFilter from './filters/CategoryFilter';
 import EmptyDealsState from './deal/EmptyDealsState';
-import { useIsMobile } from '@/hooks/use-mobile';
+import DealGridHeader from './grid/DealGridHeader';
+import { useDealGrid } from '../hooks/useDealGrid';
 
 const DealGrid = () => {
-  const { toast } = useToast();
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const searchQuery = searchParams.get('search');
-  const [activeCategory, setActiveCategory] = useState<string | null>(null);
-  const isMobile = useIsMobile();
-
   const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
+    searchQuery,
+    activeCategory,
+    allMessages,
     isLoading,
     isError,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
     refetch,
-  } = useInfiniteQuery({
-    queryKey: ['telegram-messages', activeCategory, searchQuery],
-    queryFn: ({ pageParam }) =>
-      getTelegramMessages(
-        pageParam as string | undefined,
-        activeCategory,
-        searchQuery,
-      ),
-    initialPageParam: undefined as string | undefined,
-    getNextPageParam: (lastPage) => lastPage.nextCursor,
-    retry: 2,
-    meta: {
-      onError: () => {
-        toast({
-          title: 'Error',
-          description: 'Failed to load deals. Please try again later.',
-          variant: 'destructive',
-        });
-      },
-    },
-  });
+    handleCategoryChange,
+    handleSubCategorySelect,
+    handleDeleteProduct,
+    viewAllDeals,
+  } = useDealGrid();
 
   const { observerTarget } = useInfiniteScroll({
     hasNextPage: !!hasNextPage,
@@ -58,60 +34,6 @@ const DealGrid = () => {
     fetchNextPage,
     isInitialLoading: isLoading,
   });
-
-  useEffect(() => {
-    refetch();
-  }, [activeCategory, searchQuery, refetch]);
-
-  const handleCategoryChange = (category: string | null) => {
-    setActiveCategory(category);
-  };
-
-  const handleSubCategorySelect = (subCategory: string) => {
-    navigate(`/deals?search=${encodeURIComponent(subCategory)}`);
-  };
-
-  const handleDeleteProduct = async (id: string) => {
-    if (!id) {
-      toast({
-        title: 'Error',
-        description: 'Cannot delete: Deal ID is missing',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    try {
-      console.log(`Attempting to delete product with ID: ${id}`);
-      const success = await deleteProduct(id);
-
-      if (success) {
-        toast({
-          title: 'Success',
-          description: 'Deal has been deleted successfully',
-          variant: 'default',
-        });
-        refetch();
-      } else {
-        toast({
-          title: 'Error',
-          description: 'Failed to delete deal',
-          variant: 'destructive',
-        });
-      }
-    } catch (error) {
-      console.error('Error deleting product:', error);
-      toast({
-        title: 'Error',
-        description: 'An error occurred while deleting the deal',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const viewAllDeals = () => {
-    navigate('/deals');
-  };
 
   if (isLoading) {
     return (
@@ -139,8 +61,6 @@ const DealGrid = () => {
     );
   }
 
-  const allMessages = data?.pages.flatMap((page) => page.data) || [];
-
   if (allMessages.length === 0) {
     return (
       <EmptyDealsState 
@@ -154,24 +74,7 @@ const DealGrid = () => {
   return (
     <section className="py-3 bg-gradient-to-t from-apple-lightGray to-white dark:from-[#121212] dark:to-[#09090B]">
       <div className="container mx-auto px-4">
-        <div className="flex sm:flex-row sm:items-center justify-between mb-4 gap-4">
-          <h2 className="text-2xl font-semibold text-gradient dark:text-gradient">
-            Latest Deals
-          </h2>
-          {isMobile && (
-            <div className="flex items-center justify-end">
-              <Link to="/wishlist">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-sm rounded-full dark:text-gray-200 ">
-                  <span>Wishlist</span>
-                  <Heart className="h-5 w-5 mr-1" />
-                </Button>
-              </Link>
-            </div>
-          )}
-        </div>
+        <DealGridHeader />
 
         <CategoryFilter
           onSelect={handleCategoryChange}
