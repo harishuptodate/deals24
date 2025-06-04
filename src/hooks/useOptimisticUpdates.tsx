@@ -13,9 +13,10 @@ export const useOptimisticUpdates = <T,>() => {
   const [optimisticUpdates, setOptimisticUpdates] = useState<Map<string, T>>(new Map());
 
   const performOptimisticUpdate = useCallback(async <TResult>(
-    { queryKey, updateFn, rollbackFn }: OptimisticUpdate<T>,
+    update: OptimisticUpdate<T>,
     mutationFn: () => Promise<TResult>
   ): Promise<TResult> => {
+    const { queryKey, updateFn, rollbackFn } = update;
     const key = JSON.stringify(queryKey);
     
     // Store the current data
