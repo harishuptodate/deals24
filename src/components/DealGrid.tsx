@@ -4,12 +4,13 @@ import DealCard from './DealCard';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
-import ErrorBoundary from './ErrorBoundary';
-import DealCardSkeleton from './DealCardSkeleton';
+import EnhancedErrorBoundary from './enhanced/EnhancedErrorBoundary';
+import DealCardSkeletonEnhanced from './skeletons/DealCardSkeletonEnhanced';
 import CategoryFilter from './filters/CategoryFilter';
-import EmptyDealsState from './deal/EmptyDealsState';
+import DealsEmptyState from './empty-states/DealsEmptyState';
 import DealGridHeader from './grid/DealGridHeader';
 import { useDealGrid } from '../hooks/useDealGrid';
+import { usePrefetch } from '../hooks/usePrefetch';
 
 const DealGrid = () => {
   const {
@@ -28,6 +29,8 @@ const DealGrid = () => {
     viewAllDeals,
   } = useDealGrid();
 
+  const { prefetchDeal } = usePrefetch();
+
   const { observerTarget } = useInfiniteScroll({
     hasNextPage: !!hasNextPage,
     isFetchingNextPage,
@@ -35,39 +38,60 @@ const DealGrid = () => {
     isInitialLoading: isLoading,
   });
 
+  // Prefetch deals on hover
+  const handleDealHover = (dealId?: string) => {
+    if (dealId) {
+      prefetchDeal(dealId);
+    }
+  };
+
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {[...Array(8)].map((_, index) => (
-          <DealCardSkeleton key={`skeleton-${index}`} />
-        ))}
-      </div>
+      <section className="py-3 bg-gradient-to-t from-apple-lightGray to-white dark:from-[#121212] dark:to-[#09090B]">
+        <div className="container mx-auto px-4">
+          <DealGridHeader />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[...Array(8)].map((_, index) => (
+              <DealCardSkeletonEnhanced key={`skeleton-${index}`} />
+            ))}
+          </div>
+        </div>
+      </section>
     );
   }
 
   if (isError) {
     return (
-      <div className="text-center py-16">
-        <p className="text-apple-gray dark:text-gray-400">
-          Unable to load deals. Please try again later.
-        </p>
-        <Button
-          onClick={() => refetch()}
-          variant="outline"
-          className="mt-4 dark:border-gray-700 dark:text-gray-300">
-          Refresh
-        </Button>
-      </div>
+      <section className="py-3 bg-gradient-to-t from-apple-lightGray to-white dark:from-[#121212] dark:to-[#09090B]">
+        <div className="container mx-auto px-4">
+          <div className="text-center py-16">
+            <p className="text-apple-gray dark:text-gray-400">
+              Unable to load deals. Please try again later.
+            </p>
+            <Button
+              onClick={() => refetch()}
+              variant="outline"
+              className="mt-4 dark:border-gray-700 dark:text-gray-300">
+              Refresh
+            </Button>
+          </div>
+        </div>
+      </section>
     );
   }
 
   if (allMessages.length === 0) {
     return (
-      <EmptyDealsState 
-        searchQuery={searchQuery} 
-        activeCategory={activeCategory}
-        onViewAllClick={viewAllDeals}
-      />
+      <section className="py-3 bg-gradient-to-t from-apple-lightGray to-white dark:from-[#121212] dark:to-[#09090B]">
+        <div className="container mx-auto px-4">
+          <DealGridHeader />
+          <DealsEmptyState 
+            searchQuery={searchQuery} 
+            activeCategory={activeCategory}
+            onViewAllClick={viewAllDeals}
+          />
+        </div>
+      </section>
     );
   }
 
@@ -82,7 +106,7 @@ const DealGrid = () => {
           onSubCategorySelect={handleSubCategorySelect}
         />
 
-        <ErrorBoundary>
+        <EnhancedErrorBoundary>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {allMessages.map((message) => {
               if (!message || !message.text) {
@@ -92,7 +116,10 @@ const DealGrid = () => {
               const messageId = message.id || message._id;
 
               return (
-                <div key={messageId || `message-${Math.random()}`}>
+                <div 
+                  key={messageId || `message-${Math.random()}`}
+                  onMouseEnter={() => handleDealHover(messageId)}
+                >
                   <DealCard
                     title={message.text.split('\n')[0] || 'New Deal'}
                     description={message.text}
@@ -106,7 +133,7 @@ const DealGrid = () => {
               );
             })}
           </div>
-        </ErrorBoundary>
+        </EnhancedErrorBoundary>
 
         {hasNextPage && (
           <div

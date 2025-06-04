@@ -2,14 +2,16 @@
 import React from 'react';
 import Navbar from '../components/Navbar';
 import DealCard from '../components/DealCard';
-import DealCardSkeleton from '../components/DealCardSkeleton';
-import ErrorBoundary from '../components/ErrorBoundary';
+import DealCardSkeletonEnhanced from '../components/skeletons/DealCardSkeletonEnhanced';
+import EnhancedErrorBoundary from '../components/enhanced/EnhancedErrorBoundary';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
 import { BigFooter } from '@/components/BigFooter';
 import DealsHeader from '../components/deals/DealsHeader';
+import DealsEmptyState from '../components/empty-states/DealsEmptyState';
 import { useDealsPage } from '../hooks/useDealsPage';
+import { usePrefetch } from '../hooks/usePrefetch';
 
 const Deals = () => {
   const {
@@ -30,6 +32,8 @@ const Deals = () => {
     getPageTitle,
   } = useDealsPage();
 
+  const { prefetchDeal } = usePrefetch();
+
   const { observerTarget } = useInfiniteScroll({
     hasNextPage: !!hasNextPage,
     isFetchingNextPage,
@@ -38,6 +42,12 @@ const Deals = () => {
   });
 
   const pageTitle = getPageTitle();
+
+  const handleDealHover = (dealId?: string) => {
+    if (dealId) {
+      prefetchDeal(dealId);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white dark:bg-[#09090B]">
@@ -51,11 +61,11 @@ const Deals = () => {
           onClearFilter={clearFilter}
         />
 
-        <ErrorBoundary>
+        <EnhancedErrorBoundary>
           {isLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {[...Array(12)].map((_, index) => (
-                <DealCardSkeleton key={`skeleton-${index}`} />
+                <DealCardSkeletonEnhanced key={`skeleton-${index}`} />
               ))}
             </div>
           ) : isError ? (
@@ -71,23 +81,13 @@ const Deals = () => {
               </Button>
             </div>
           ) : allMessages.length === 0 ? (
-            <div className="text-center py-8 mb-8">
-              <p className="text-apple-gray dark:text-gray-400 mb-4">
-                {searchQuery
-                  ? `No deals found for "${searchQuery}".`
-                  : activeCategory
-                  ? 'No deals found for this category.'
-                  : 'No deals available at the moment.'}
-              </p>
-              {(activeCategory || searchQuery) && (
-                <Button
-                  onClick={viewAllDeals}
-                  variant="outline"
-                  className="dark:border-gray-700 dark:text-gray-200">
-                  View All Deals
-                </Button>
-              )}
-              <div className="pt-96 sm:pt-24 ">
+            <div className="mb-8">
+              <DealsEmptyState
+                searchQuery={searchQuery}
+                activeCategory={activeCategory}
+                onViewAllClick={viewAllDeals}
+              />
+              <div className="pt-96 sm:pt-24">
                 <BigFooter />
               </div>
             </div>
@@ -101,7 +101,10 @@ const Deals = () => {
                 const messageId = message.id || message._id;
 
                 return (
-                  <div key={messageId || `message-${Math.random()}`}>
+                  <div 
+                    key={messageId || `message-${Math.random()}`}
+                    onMouseEnter={() => handleDealHover(messageId)}
+                  >
                     <DealCard
                       title={message.text.split('\n')[0] || 'New Deal'}
                       description={message.text}
@@ -117,7 +120,7 @@ const Deals = () => {
               })}
             </div>
           )}
-        </ErrorBoundary>
+        </EnhancedErrorBoundary>
 
         {hasNextPage && (
           <div

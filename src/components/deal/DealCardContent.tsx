@@ -14,20 +14,22 @@ const DealCardContent = ({ title, description, createdAt }: DealCardContentProps
     : '';
 
   return (
-    <div className="space-y-2 flex-1 flex flex-col">
-      <div className="space-y-1">
+    <div className="space-y-3 flex-1 flex flex-col">
+      <div className="space-y-2">
         {formattedDate && (
-          <span className="inline-block px-2 py-1 text-xs font-medium bg-gradient-to-r dark:to-gray-500 rounded-full text-apple-gray shadow-md">
-            {formattedDate}
-          </span>
+          <div className="flex items-center">
+            <span className="time-badge">
+              {formattedDate}
+            </span>
+          </div>
         )}
-        <h3 className="text-lg font-semibold text-apple-darkGray line-clamp-2">
+        <h3 className="text-lg font-semibold text-high-contrast line-clamp-2 leading-tight">
           {title}
         </h3>
       </div>
 
-      <div className="mt-1">
-        <p className="text-sm text-apple-gray line-clamp-5 flex-grow">
+      <div className="flex-1">
+        <p className="text-sm text-medium-contrast line-clamp-5 leading-relaxed">
           {description}
         </p>
       </div>
