@@ -22,41 +22,41 @@ const DealCardActions = ({
   showAdminActions = false,
 }: DealCardActionsProps) => {
   return (
-    <div className="absolute top-3 right-3 flex gap-1 z-10">
+    <div className="absolute top-4 right-4 flex z-10">
       {showAdminActions && onDelete && (
         <>
           <button
             onClick={onCategoryEdit}
-            className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             title="Change category">
-            <Tag className="w-4 h-4 text-purple-500" />
+            <Tag className="w-5 h-5 text-purple-500" />
           </button>
           <button
             onClick={onEdit}
-            className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             title="Edit deal">
-            <PenSquare className="w-4 h-4 text-blue-500" />
+            <PenSquare className="w-5 h-5 text-blue-500" />
           </button>
           <button
             onClick={onDelete}
-            className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             title="Delete deal">
-            <Trash2 className="w-4 h-4 text-red-500" />
+            <Trash2 className="w-5 h-5 text-red-500" />
           </button>
         </>
       )}
       <button
         onClick={onShare}
-        className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+        className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
         title="Share deal">
-        <Share2 className="w-4 h-4 text-blue-500" />
+        <Share2 className="w-5 h-5 text-blue-500" />
       </button>
       <button
         onClick={onToggleFavorite}
-        className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+        className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
         title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}>
         <Heart
-          className={`w-4 h-4 transition-colors ${
+          className={`w-5 h-5 transition-colors ${
             isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-400'
           }`}
         />

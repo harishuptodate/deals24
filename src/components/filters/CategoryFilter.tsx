@@ -1,117 +1,110 @@
 
-import React, { useState, useEffect } from 'react';
-import { ChevronDown } from 'lucide-react';
+import React from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Filter } from 'lucide-react';
+import { getCategoryCounts } from '../../services/api';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { getAllCategories } from '../../services/api';
 
 interface CategoryFilterProps {
-  onSelect: (category: string) => void;
-  current: string;
-  onSubCategorySelect?: (subcategory: string) => void;
+  onSelect: (category: string | null) => void;
+  current: string | null;
+  onSubCategorySelect: (subCategory: string) => void;
 }
 
-const CategoryFilter = ({ onSelect, current, onSubCategorySelect }: CategoryFilterProps) => {
-  const [categories, setCategories] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+const CategoryFilter = ({
+  onSelect,
+  current,
+  onSubCategorySelect,
+}: CategoryFilterProps) => {
+  const categories = [
+    { name: 'All', slug: null },
+    { name: 'Best Deals', slug: 'Best-Deals' },
+    { name: 'Electronics & Home', slug: 'electronics-home' },
+    { name: 'Laptops & PCs', slug: 'laptops' },
+    { name: 'Mobile Phones', slug: 'mobile-phones' },
+    { name: 'Gadgets & Accessories', slug: 'gadgets-accessories' },
+    { name: 'Fashion', slug: 'fashion' },
+    { name: 'Miscellaneous', slug: 'miscellaneous' },
+  ];
 
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const fetchedCategories = await getAllCategories();
-        setCategories(fetchedCategories);
-      } catch (error) {
-        console.error('Failed to fetch categories:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchCategories();
-  }, []);
-
-  const handleCategorySelect = (category: string) => {
-    onSelect(category);
+  const subCategories = {
+    'electronics-home': ['TV', 'AC', 'Refrigerator', 'Washing Machine'],
+    laptops: [
+      'Gaming Laptop',
+      'MacBook',
+      'Mac',
+      'iMac',
+      'ThinkPad',
+      'Chromebook',
+    ],
+    'mobile-phones': ['iPhone', 'Samsung', 'OnePlus', 'Pixel'],
+    'gadgets-accessories': [
+      'Headphones',
+      'Charger',
+      'Power Bank',
+      'Smartwatch',
+    ],
+    fashion: ['Shoes', 'T-Shirt', 'Watch', 'Backpack'],
+    miscellaneous: ['Books', 'Stationery', 'Toys', 'Sports', 'Home Decor'],
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex flex-wrap gap-2 mb-6">
-        {[...Array(8)].map((_, i) => (
-          <div
-            key={i}
-            className="h-8 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"
-            style={{ width: `${Math.random() * 60 + 60}px` }}
-          />
-        ))}
-      </div>
-    );
-  }
+  const {
+    data: categoryCounts,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ['category-counts'],
+    queryFn: getCategoryCounts,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 1, // retry only once if fails
+  });
 
   return (
-    <div className="mb-6">
-      {/* Mobile Dropdown */}
-      <div className="sm:hidden">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              className="w-full justify-between text-sm"
-              size="sm"
-            >
-              {current || 'All Categories'}
-              <ChevronDown className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56">
-            <DropdownMenuItem onClick={() => handleCategorySelect('')}>
-              All Categories
-            </DropdownMenuItem>
-            {categories.map((category) => (
-              <DropdownMenuItem
-                key={category}
-                onClick={() => handleCategorySelect(category)}
-              >
-                {category}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+    <div className="space-y-4">
+      <div className="flex items-center mb-6 overflow-x-auto pb-2 gap-2 max-w-full">
+        <Filter
+          size={16}
+          className="text-apple-gray dark:text-gray-400 mr-1 flex-shrink-0"
+        />
+        {categories.map((category) => {
+          const count = category.slug
+            ? categoryCounts?.find((c) => c.category === category.slug)?.count
+            : null; // Only get count if slug exists (not for 'All')
+
+          return (
+            <button
+              key={category.name}
+              onClick={() => onSelect(category.slug)}
+              className={`flex items-center gap-2 whitespace-nowrap px-3 py-1.5 rounded-full text-sm font-medium transition-colors flex-shrink-0 ${
+                current === category.slug ||
+                (current === null && category.slug === null)
+                  ? 'bg-apple-darkGray dark:bg-gray-700 text-white'
+                  : 'bg-gray-100 dark:bg-gray-800 text-apple-gray dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+              }`}>
+              {category.name}
+              {/* Only show count if category has a slug and count exists */}
+              {count !== undefined && count !== null && (
+                <span className="text-xs">({count})</span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
-      {/* Desktop Horizontal Scroll */}
-      <div className="hidden sm:block">
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
-          <button
-            onClick={() => handleCategorySelect('')}
-            className={`flex-shrink-0 px-3 py-1.5 text-xs font-medium rounded-full transition-all ${
-              current === ''
-                ? 'bg-black text-white dark:bg-white dark:text-black'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
-            }`}
-          >
-            All
-          </button>
-          {categories.map((category) => (
-            <button
-              key={category}
-              onClick={() => handleCategorySelect(category)}
-              className={`flex-shrink-0 px-3 py-1.5 text-xs font-medium rounded-full transition-all ${
-                current === category
-                  ? 'bg-black text-white dark:bg-white dark:text-black'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
-              }`}
-            >
-              {category}
-            </button>
-          ))}
+      {current && subCategories[current as keyof typeof subCategories] && (
+        <div className="flex flex-wrap gap-2 mb-4">
+          {subCategories[current as keyof typeof subCategories].map(
+            (subCat) => (
+              <button
+                key={subCat}
+                onClick={() => onSubCategorySelect(subCat)}
+                className="bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-apple-gray dark:text-gray-300 text-xs mb-3 px-3 py-1.5 rounded-full transition-colors">
+                {subCat}
+              </button>
+            ),
+          )}
         </div>
-      </div>
+      )}
     </div>
   );
 };
