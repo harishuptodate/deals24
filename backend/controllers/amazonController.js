@@ -10,12 +10,15 @@ exports.fetchProductImage = async (req, res) => {
       return res.status(400).json({ error: 'Amazon URL is required' });
     }
 
+    console.log('Amazon controller: Processing URL:', url);
     const result = await fetchProductImage(url);
     
     if (result.error) {
+      console.log('Amazon controller: Error occurred:', result.error);
       return res.status(400).json(result);
     }
 
+    console.log('Amazon controller: Success, returning result:', result);
     return res.json(result);
   } catch (error) {
     console.error('Error in fetchProductImage controller:', error);

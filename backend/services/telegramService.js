@@ -1,4 +1,3 @@
-
 const TelegramMessage = require('../models/TelegramMessage');
 const { extractLinks } = require('../utils/messageParser');
 const { fetchProductImage } = require('./amazonService');
@@ -264,9 +263,11 @@ async function saveMessage(message) {
       if (amazonUrls.length > 0) {
         try {
           const result = await fetchProductImage(amazonUrls[0]);
-          if (result.success && result.product) {
-            imageUrl = result.product.imageUrl;
-            console.log('Successfully fetched Amazon product image');
+          if (result.success && result.imageUrl) {
+            imageUrl = result.imageUrl;
+            console.log('Successfully fetched Amazon product image:', imageUrl);
+          } else {
+            console.log('Failed to fetch Amazon image:', result.error);
           }
         } catch (error) {
           console.error('Error fetching Amazon product image:', error);

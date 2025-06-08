@@ -9,7 +9,7 @@ router.post('/fetch-product-image', amazonController.fetchProductImage);
 // Get stored products
 router.get('/products', amazonController.getStoredProducts);
 
-// Download image proxy endpoint for Telegram images
+// Download image proxy endpoint for Telegram images - NO CACHING
 router.get('/download-image/:fileId', async (req, res) => {
   const { fileId } = req.params;
   const token = process.env.TELEGRAM_BOT_TOKEN;
@@ -38,10 +38,12 @@ router.get('/download-image/:fileId', async (req, res) => {
 
     const buffer = await fileResponse.arrayBuffer();
 
-    // Set appropriate headers
+    // Set appropriate headers WITHOUT caching
     res.setHeader('Content-Type', 'image/jpeg');
     res.setHeader('Content-Disposition', `inline; filename=${filePath.split('/').pop()}`);
-    res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 24 hours
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate'); // Disable caching
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     
     res.send(Buffer.from(buffer));
   } catch (error) {
