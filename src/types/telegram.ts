@@ -1,3 +1,4 @@
+
 export interface TelegramMessage {
 	id: string;
 	_id?: string; // MongoDB ID field
@@ -5,6 +6,7 @@ export interface TelegramMessage {
 	date: string;
 	link?: string;
 	imageUrl?: string;
+	telegramFileId?: string;
 	category?: string;
 	clicks?: number;
 	createdAt?: string; // Added for compatibility

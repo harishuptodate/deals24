@@ -20,6 +20,8 @@ interface DealDetailDialogProps {
   title: string;
   description: string;
   id?: string;
+  imageUrl?: string;
+  telegramFileId?: string;
 }
 
 const DealDetailDialog = ({
@@ -28,6 +30,8 @@ const DealDetailDialog = ({
   title,
   description,
   id,
+  imageUrl,
+  telegramFileId,
 }: DealDetailDialogProps) => {
   const { toast } = useToast();
   const [isSharing, setIsSharing] = useState(false);
@@ -123,6 +127,18 @@ const DealDetailDialog = ({
     });
   };
 
+  // Determine the image source
+  const getImageSrc = () => {
+    if (imageUrl) {
+      return imageUrl; // Amazon product image
+    } else if (telegramFileId) {
+      return `/api/amazon/download-image/${telegramFileId}`; // Telegram image proxy
+    }
+    return null;
+  };
+
+  const imageSrc = getImageSrc();
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto max-w-[90vw] w-[90vw] sm:w-auto rounded-xl">
@@ -130,8 +146,25 @@ const DealDetailDialog = ({
           <DialogTitle className="text-xl">{title}</DialogTitle>
         </DialogHeader>
 
-        <div className="mt-4 text-sm whitespace-pre-line">
-          {makeLinksClickable(description)}
+        <div className="mt-4">
+          {imageSrc && (
+            <div className="mb-4">
+              <img 
+                src={imageSrc} 
+                alt={title}
+                className="w-full h-48 object-cover rounded-lg"
+                onError={(e) => {
+                  console.error('Failed to load image:', imageSrc);
+                  // Hide the image if it fails to load
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            </div>
+          )}
+          
+          <div className="text-sm whitespace-pre-line">
+            {makeLinksClickable(description)}
+          </div>
         </div>
 
         <DialogFooter className="mt-4 flex flex-col sm:flex-row gap-2 sm:justify-end">
