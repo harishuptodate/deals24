@@ -1,9 +1,45 @@
+
 const TelegramMessage = require('../models/TelegramMessage');
 const { extractLinks } = require('../utils/messageParser');
+const { fetchProductImage } = require('./amazonService');
 const crypto = require('crypto');
 const ClickStat = require('../models/clickStat.model');
+
 // Hashes to store unique content (in-memory)
 let contentHashes = [];
+
+// Helper function to check if text contains Amazon links
+function hasAmazonLinks(text) {
+  if (!text) return false;
+  const amazonRegex = /(https?:\/\/)?(www\.)?(amazon\.[a-z]{2,}|amzn\.to)\/[^\s]*/gi;
+  return amazonRegex.test(text);
+}
+
+// Helper function to extract Amazon URLs from text
+function extractAmazonUrls(text) {
+  if (!text) return [];
+  const amazonRegex = /(https?:\/\/)?(www\.)?(amazon\.[a-z]{2,}|amzn\.to)\/[^\s]*/gi;
+  const matches = text.match(amazonRegex) || [];
+  return matches.map(url => {
+    // Ensure URL has protocol
+    if (!url.startsWith('http')) {
+      return 'https://' + url;
+    }
+    return url;
+  });
+}
+
+// Helper function to get highest quality photo from Telegram message
+function getHighestQualityPhoto(photos) {
+  if (!photos || photos.length === 0) return null;
+  
+  // Sort by file_size in descending order and return the largest
+  return photos.reduce((largest, current) => {
+    return (!largest || (current.file_size && current.file_size > (largest.file_size || 0))) 
+      ? current 
+      : largest;
+  });
+}
 
 /**
  * Calculate hash of a message's content
@@ -169,14 +205,14 @@ function isProfitableProduct(text) {
 }
 
 /**
- * Save a new message from Telegram (incorporating core logic)
+ * Save a new message from Telegram (incorporating core logic with image handling)
  * @param {Object} message - Telegram message object
  * @returns {Promise<Object>} - Saved message
  */
 async function saveMessage(message) {
   try {
     // Extract message details
-    const { message_id, chat, date, text: originalText, caption } = message;
+    const { message_id, chat, date, text: originalText, caption, photo } = message;
     const textContent = originalText || caption || '';
     const channelId = chat.id.toString();
     
@@ -216,6 +252,37 @@ async function saveMessage(message) {
     // Determine category based on message content
     const category = detectCategory(textContent);
     
+    // Image handling logic
+    let imageUrl = null;
+    let telegramFileId = null;
+    
+    // Check if message has Amazon links
+    if (hasAmazonLinks(textContent)) {
+      console.log('Message contains Amazon links, attempting to fetch product image');
+      const amazonUrls = extractAmazonUrls(textContent);
+      
+      if (amazonUrls.length > 0) {
+        try {
+          const result = await fetchProductImage(amazonUrls[0]);
+          if (result.success && result.product) {
+            imageUrl = result.product.imageUrl;
+            console.log('Successfully fetched Amazon product image');
+          }
+        } catch (error) {
+          console.error('Error fetching Amazon product image:', error);
+        }
+      }
+    } else if (photo && photo.length > 0) {
+      // Handle Telegram direct images
+      console.log('Message contains Telegram photo, extracting file ID');
+      const highestQualityPhoto = getHighestQualityPhoto(photo);
+      
+      if (highestQualityPhoto) {
+        telegramFileId = highestQualityPhoto.file_id;
+        console.log('Extracted Telegram file ID:', telegramFileId);
+      }
+    }
+    
     // Add hash to processed list
     contentHashes.push(messageHash);
     if (contentHashes.length > 50) contentHashes.shift(); // Limit stored hashes to save memory
@@ -226,12 +293,14 @@ async function saveMessage(message) {
       text: finalCaption, // Use the processed text with hashtag
       date: new Date(date * 1000), // Convert Unix timestamp to Date
       link,
+      imageUrl,
+      telegramFileId,
       category,
       clicks: 0,
       channelId
     });
     
-    console.log('Saving new message with category:', category);
+    console.log('Saving new message with category:', category, 'and image data:', { imageUrl, telegramFileId });
     return await newMessage.save();
   } catch (error) {
     console.error('Error saving message:', error);

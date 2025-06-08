@@ -112,6 +112,8 @@ const Deals = () => {
                       id={messageId}
                       category={message.category || ''}
                       createdAt={message.date || message.createdAt}
+                      imageUrl={message.imageUrl}
+                      telegramFileId={message.telegramFileId}
                       onDelete={handleDeleteProduct}
                       onEdit={handleEditProduct}
                     />

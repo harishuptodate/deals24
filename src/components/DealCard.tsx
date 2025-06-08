@@ -1,4 +1,3 @@
-
 import React, { memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { extractLinks } from './deal/utils/linkUtils';
@@ -28,6 +27,8 @@ interface DealCardProps {
   id?: string;
   category?: string;
   createdAt?: string;
+  imageUrl?: string;
+  telegramFileId?: string;
   onDelete?: (id: string) => void;
   onEdit?: (id: string, newText: string) => void;
   onCategoryUpdate?: (id: string, category: string) => void;
@@ -41,6 +42,8 @@ const DealCard = memo(({
   id,
   category,
   createdAt,
+  imageUrl,
+  telegramFileId,
   onDelete,
   onEdit,
   onCategoryUpdate,
@@ -240,6 +243,8 @@ const DealCard = memo(({
             title={displayTitle}
             description={displayDescription}
             createdAt={createdAt}
+            imageUrl={imageUrl}
+            telegramFileId={telegramFileId}
           />
 
           <DealCardButton
@@ -258,6 +263,8 @@ const DealCard = memo(({
         title={displayTitle}
         description={displayDescription}
         id={id}
+        imageUrl={imageUrl}
+        telegramFileId={telegramFileId}
       />
 
       <PasswordDialog

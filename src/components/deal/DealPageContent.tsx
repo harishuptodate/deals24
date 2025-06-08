@@ -10,6 +10,8 @@ interface DealPageContentProps {
     category?: string;
     date?: string;
     createdAt?: string;
+    imageUrl?: string;
+    telegramFileId?: string;
   };
   id?: string;
 }
@@ -51,6 +53,18 @@ const DealPageContent = ({ deal, id }: DealPageContentProps) => {
     });
   };
 
+  // Determine the image source
+  const getImageSrc = () => {
+    if (deal.imageUrl) {
+      return deal.imageUrl; // Amazon product image
+    } else if (deal.telegramFileId) {
+      return `/api/amazon/download-image/${deal.telegramFileId}`; // Telegram image proxy
+    }
+    return null;
+  };
+
+  const imageSrc = getImageSrc();
+
   return (
     <div className="glass-effect rounded-2xl p-6 md:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-200 dark:border-gray-900 dark:bg-zinc-950">
       <div className="flex justify-between items-start mb-6">
@@ -65,6 +79,22 @@ const DealPageContent = ({ deal, id }: DealPageContentProps) => {
           )}
         </div>
       </div>
+
+      {/* Display image if available */}
+      {imageSrc && (
+        <div className="mb-6">
+          <img 
+            src={imageSrc} 
+            alt={deal.text?.split('\n')[0] || 'Product Image'}
+            className="w-full max-w-md mx-auto h-auto object-cover rounded-lg"
+            onError={(e) => {
+              console.error('Failed to load image:', imageSrc);
+              // Hide the image if it fails to load
+              e.currentTarget.style.display = 'none';
+            }}
+          />
+        </div>
+      )}
       
       <div className="whitespace-pre-line text-gray-700 dark:text-gray-300 mt-6">
         {makeLinksClickable(deal.text || '')}

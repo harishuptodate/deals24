@@ -127,6 +127,8 @@ const DealGrid = () => {
                     id={messageId}
                     category={message.category || ''}
                     createdAt={message.date || message.createdAt}
+                    imageUrl={message.imageUrl}
+                    telegramFileId={message.telegramFileId}
                     onDelete={handleDeleteProduct}
                   />
                 </div>

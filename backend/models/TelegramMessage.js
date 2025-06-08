@@ -21,6 +21,9 @@ const telegramMessageSchema = new mongoose.Schema({
   imageUrl: {
     type: String
   },
+  telegramFileId: {
+    type: String
+  },
   channelId: {
     type: String,
     required: true
