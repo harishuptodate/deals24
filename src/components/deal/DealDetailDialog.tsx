@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -36,6 +35,24 @@ const DealDetailDialog = ({
   const { toast } = useToast();
   const [isSharing, setIsSharing] = useState(false);
   const navigate = useNavigate();
+
+  // Get API base URL from environment variables or use a fallback
+  const getApiBaseUrl = () => {
+    const configuredUrl = import.meta.env.VITE_API_BASE_URL;
+
+    if (!configuredUrl) {
+      // Fallback to current origin + /api
+      return `${window.location.origin}/api`;
+    }
+
+    // If it's already a full URL (starts with http/https), use it as is
+    if (configuredUrl.startsWith('http')) {
+      return configuredUrl;
+    }
+
+    // Otherwise, append it to the current origin
+    return `${window.location.origin}${configuredUrl}`;
+  };
 
   const handleShare = async () => {
     setIsSharing(true);
@@ -132,7 +149,8 @@ const DealDetailDialog = ({
     if (imageUrl) {
       return imageUrl; // Amazon product image
     } else if (telegramFileId) {
-      return `/api/amazon/download-image/${telegramFileId}`; // Telegram image proxy
+      const apiBaseUrl = getApiBaseUrl();
+      return `${apiBaseUrl}/amazon/download-image/${telegramFileId}`; // Telegram image proxy
     }
     return null;
   };

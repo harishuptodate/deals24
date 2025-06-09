@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { format } from 'date-fns';
 
@@ -15,12 +14,31 @@ const DealCardContent = ({ title, description, createdAt, imageUrl, telegramFile
     ? format(new Date(createdAt), 'MMM d, h:mm a')
     : '';
 
+  // Get API base URL from environment variables or use a fallback
+  const getApiBaseUrl = () => {
+    const configuredUrl = import.meta.env.VITE_API_BASE_URL;
+
+    if (!configuredUrl) {
+      // Fallback to current origin + /api
+      return `${window.location.origin}/api`;
+    }
+
+    // If it's already a full URL (starts with http/https), use it as is
+    if (configuredUrl.startsWith('http')) {
+      return configuredUrl;
+    }
+
+    // Otherwise, append it to the current origin
+    return `${window.location.origin}${configuredUrl}`;
+  };
+
   // Determine the image source
   const getImageSrc = () => {
     if (imageUrl) {
       return imageUrl; // Amazon product image
     } else if (telegramFileId) {
-      return `/api/amazon/download-image/${telegramFileId}`; // Telegram image proxy
+      const apiBaseUrl = getApiBaseUrl();
+      return `${apiBaseUrl}/amazon/download-image/${telegramFileId}`; // Telegram image proxy
     }
     return null;
   };
