@@ -89,7 +89,7 @@ function normalizeMessage(text) {
 function replaceLinksAndText(text) {
   return text
     .replace(
-      /https:\/\/t.me\/\/nikhilfkm\/|https:\/\/t.me\/trtpremiumdeals/g,
+      /https:\/\/t.me\/\/telugutechtvdeals\/|https:\/\/t.me\/trtpremiumdeals/g,
       'https://t.me/deals24com'
     )
     .replace(/TRT Premium Deals/g, 'Deals24');
@@ -260,8 +260,7 @@ async function saveMessage(message) {
     }
     
     // Process the message (using your core logic)
-    const processedText = replaceLinksAndText(textContent);
-    const finalCaption = processedText + '\n\n#Deals24';
+    const finalCaption = replaceLinksAndText(textContent);
     
     // Extract link from text
     const link = extractLinks(textContent);
