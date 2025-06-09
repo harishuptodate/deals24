@@ -22,13 +22,13 @@ router.get('/download-image/:fileId', async (req, res) => {
     // Get file info from Telegram
     const fileInfoResponse = await fetch(`https://api.telegram.org/bot${token}/getFile?file_id=${fileId}`);
     const fileInfoData = await fileInfoResponse.json();
-    
+
     if (!fileInfoData.ok) {
       return res.status(404).json({ error: 'File not found' });
     }
-
+    console.log(fileInfoData);
     const filePath = fileInfoData.result.file_path;
-
+    console.log(filePath);
     // Download the actual file
     const fileResponse = await fetch(`https://api.telegram.org/file/bot${token}/${filePath}`);
     
