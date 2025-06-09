@@ -7,6 +7,10 @@ const ClickStat = require('../models/clickStat.model');
 // Hashes to store unique content (in-memory)
 let contentHashes = [];
 
+// Track last Amazon API call time to implement rate limiting
+let lastAmazonApiCall = 0;
+const MIN_API_DELAY = 2000; // Minimum 2 seconds between API calls
+
 // Helper function to check if text contains Amazon links
 function hasAmazonLinks(text) {
   if (!text) return false;
@@ -38,6 +42,20 @@ function getHighestQualityPhoto(photos) {
       ? current 
       : largest;
   });
+}
+
+// Helper function to implement rate limiting for Amazon API
+async function waitForApiRateLimit() {
+  const now = Date.now();
+  const timeSinceLastCall = now - lastAmazonApiCall;
+  
+  if (timeSinceLastCall < MIN_API_DELAY) {
+    const waitTime = MIN_API_DELAY - timeSinceLastCall;
+    console.log(`Rate limiting: waiting ${waitTime}ms before Amazon API call`);
+    await new Promise(resolve => setTimeout(resolve, waitTime));
+  }
+  
+  lastAmazonApiCall = Date.now();
 }
 
 /**
@@ -257,24 +275,27 @@ async function saveMessage(message) {
     
     // Check if message has Amazon links
     if (hasAmazonLinks(textContent)) {
-      console.log('Message contains Amazon links, attempting to fetch product image');
+      console.log('Message contains Amazon links, attempting to fetch product image via API');
       const amazonUrls = extractAmazonUrls(textContent);
       
       if (amazonUrls.length > 0) {
         try {
+          // Implement rate limiting before API call
+          await waitForApiRateLimit();
+          
           const result = await fetchProductImage(amazonUrls[0]);
           if (result.success && result.imageUrl) {
             imageUrl = result.imageUrl;
-            console.log('Successfully fetched Amazon product image:', imageUrl);
+            console.log('Successfully fetched Amazon product image via API:', imageUrl);
           } else {
-            console.log('Failed to fetch Amazon image:', result.error);
+            console.log('Failed to fetch Amazon image via API:', result.error);
           }
         } catch (error) {
-          console.error('Error fetching Amazon product image:', error);
+          console.error('Error fetching Amazon product image via API:', error);
         }
       }
     } else if (photo && photo.length > 0) {
-      // Handle Telegram direct images
+      // Handle Telegram direct images - KEEP THIS LOGIC
       console.log('Message contains Telegram photo, extracting file ID');
       const highestQualityPhoto = getHighestQualityPhoto(photo);
       
