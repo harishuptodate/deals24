@@ -35,14 +35,14 @@ function extractAmazonUrls(text) {
 // Helper function to get highest quality photo from Telegram message
 function getHighestQualityPhoto(photos) {
   if (!photos || photos.length === 0) return null;
-  
-  // Sort by file_size in descending order and return the largest
+
   return photos.reduce((largest, current) => {
-    return (!largest || (current.file_size && current.file_size > (largest.file_size || 0))) 
-      ? current 
-      : largest;
-  });
+    const largestSize = largest?.file_size || 0;
+    const currentSize = current?.file_size || 0;
+    return currentSize > largestSize ? current : largest;
+  }, null);
 }
+
 
 // Helper function to implement rate limiting for Amazon API
 async function waitForApiRateLimit() {
