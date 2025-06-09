@@ -2,12 +2,14 @@
 import React from 'react';
 import { Calendar, ExternalLink, Share2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import CachedTelegramImage from '../images/CachedTelegramImage';
 
 interface FavoriteItem {
   title: string;
   description: string;
   link: string;
   imageUrl?: string;
+  telegramFileId?: string;
   id?: string;
   timestamp: string;
 }
@@ -29,6 +31,32 @@ const WishlistCard = ({
   onShare,
   formatDate,
 }: WishlistCardProps) => {
+  const renderImage = () => {
+    if (item.imageUrl) {
+      return (
+        <img 
+          src={item.imageUrl} 
+          alt={item.title} 
+          className="w-full h-full object-cover"
+          onError={(e) => {
+            (e.target as HTMLImageElement).style.display = 'none';
+          }}
+        />
+      );
+    } else if (item.telegramFileId) {
+      return (
+        <CachedTelegramImage
+          telegramFileId={item.telegramFileId}
+          alt={item.title}
+          className="w-full h-full"
+        />
+      );
+    }
+    return null;
+  };
+
+  const hasImage = item.imageUrl || item.telegramFileId;
+
   return (
     <div className="bg-white dark:bg-[#171717] border border-gray-100 dark:border-gray-800 rounded-xl p-6 shadow-sm dark:shadow-none hover:shadow-md dark:hover:shadow-none transition-shadow">
       <div className="flex justify-between items-start mb-4">
@@ -50,16 +78,9 @@ const WishlistCard = ({
         </div>
       </div>
       
-      {item.imageUrl && (
+      {hasImage && (
         <div className="w-full h-40 overflow-hidden rounded-lg mb-4">
-          <img 
-            src={item.imageUrl} 
-            alt={item.title} 
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              (e.target as HTMLImageElement).style.display = 'none';
-            }}
-          />
+          {renderImage()}
         </div>
       )}
       

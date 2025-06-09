@@ -9,7 +9,7 @@ router.post('/fetch-product-image', amazonController.fetchProductImage);
 // Get stored products
 router.get('/products', amazonController.getStoredProducts);
 
-// Download image proxy endpoint for Telegram images - NO CACHING
+// Download image proxy endpoint for Telegram images - WITH CACHING
 router.get('/download-image/:fileId', async (req, res) => {
   const { fileId } = req.params;
   const token = process.env.TELEGRAM_BOT_TOKEN;
@@ -38,12 +38,13 @@ router.get('/download-image/:fileId', async (req, res) => {
 
     const buffer = await fileResponse.arrayBuffer();
 
-    // Set appropriate headers WITHOUT caching
+    // Set appropriate headers WITH AGGRESSIVE CACHING
     res.setHeader('Content-Type', 'image/jpeg');
     res.setHeader('Content-Disposition', `inline; filename=${filePath.split('/').pop()}`);
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate'); // Disable caching
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable'); // Cache for 1 year
+    res.setHeader('ETag', `"${fileId}"`); // Use fileId as ETag for caching
+    res.setHeader('Last-Modified', new Date().toUTCString());
+    res.setHeader('Expires', new Date(Date.now() + 31536000000).toUTCString()); // 1 year from now
     
     res.send(Buffer.from(buffer));
   } catch (error) {

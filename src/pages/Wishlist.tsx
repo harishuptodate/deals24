@@ -9,6 +9,7 @@ import { BigFooter } from '@/components/BigFooter';
 import WishlistHeader from '../components/wishlist/WishlistHeader';
 import WishlistEmptyState from '../components/wishlist/WishlistEmptyState';
 import WishlistCard from '../components/wishlist/WishlistCard';
+import CachedTelegramImage from '../components/images/CachedTelegramImage';
 import { useWishlist } from '../hooks/useWishlist';
 
 const Wishlist = () => {
@@ -78,6 +79,34 @@ const Wishlist = () => {
     });
   };
 
+  const renderDialogImage = () => {
+    if (!selectedItem) return null;
+
+    if (selectedItem.imageUrl) {
+      return (
+        <img 
+          src={selectedItem.imageUrl} 
+          alt={selectedItem.title} 
+          className="w-full h-full object-cover"
+          onError={(e) => {
+            (e.target as HTMLImageElement).style.display = 'none';
+          }}
+        />
+      );
+    } else if (selectedItem.telegramFileId) {
+      return (
+        <CachedTelegramImage
+          telegramFileId={selectedItem.telegramFileId}
+          alt={selectedItem.title}
+          className="w-full h-full"
+        />
+      );
+    }
+    return null;
+  };
+
+  const hasDialogImage = selectedItem && (selectedItem.imageUrl || selectedItem.telegramFileId);
+
   return (
     <div className="min-h-screen bg-white dark:bg-[#09090B] text-apple-darkGray dark:text-gray-200">
       <Navbar />
@@ -123,16 +152,9 @@ const Wishlist = () => {
                 </DialogDescription>
               </DialogHeader>
               
-              {selectedItem.imageUrl && (
+              {hasDialogImage && (
                 <div className="w-full h-48 overflow-hidden rounded-lg mt-2">
-                  <img 
-                    src={selectedItem.imageUrl} 
-                    alt={selectedItem.title} 
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none';
-                    }}
-                  />
+                  {renderDialogImage()}
                 </div>
               )}
               

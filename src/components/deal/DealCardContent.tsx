@@ -1,5 +1,7 @@
+
 import React from 'react';
 import { format } from 'date-fns';
+import CachedTelegramImage from '../images/CachedTelegramImage';
 
 interface DealCardContentProps {
   title: string;
@@ -14,70 +16,60 @@ const DealCardContent = ({ title, description, createdAt, imageUrl, telegramFile
     ? format(new Date(createdAt), 'MMM d, h:mm a')
     : '';
 
-  // Get API base URL from environment variables or use a fallback
-  const getApiBaseUrl = () => {
-    const configuredUrl = import.meta.env.VITE_API_BASE_URL;
-
-    if (!configuredUrl) {
-      // Fallback to current origin + /api
-      return `${window.location.origin}/api`;
-    }
-
-    // If it's already a full URL (starts with http/https), use it as is
-    if (configuredUrl.startsWith('http')) {
-      return configuredUrl;
-    }
-
-    // Otherwise, append it to the current origin
-    return `${window.location.origin}${configuredUrl}`;
-  };
-
-  // Determine the image source
-  const getImageSrc = () => {
+  const renderImage = () => {
     if (imageUrl) {
-      return imageUrl; // Amazon product image
+      return (
+        <img 
+          src={imageUrl} 
+          alt={title}
+          className="w-full h-40 object-cover rounded-lg"
+          loading="lazy"
+          onError={(e) => {
+            console.error('Failed to load Amazon image:', imageUrl);
+            e.currentTarget.style.display = 'none';
+          }}
+        />
+      );
     } else if (telegramFileId) {
-      const apiBaseUrl = getApiBaseUrl();
-      return `${apiBaseUrl}/amazon/download-image/${telegramFileId}`; // Telegram image proxy
+      return (
+        <CachedTelegramImage
+          telegramFileId={telegramFileId}
+          alt={title}
+          className="w-full h-40 rounded-lg"
+        />
+      );
     }
     return null;
   };
 
-  const imageSrc = getImageSrc();
+  const hasImage = imageUrl || telegramFileId;
 
   return (
-    <div className="space-y-3 flex-1 flex flex-col">
-      <div className="space-y-2">
+    <div className="space-y-3 flex-1 flex flex-col min-h-0">
+      <div className="space-y-2 flex-shrink-0">
         {formattedDate && (
           <div className="flex items-center">
-            <span className="time-badge">
+            <span className="time-badge text-xs">
               {formattedDate}
             </span>
           </div>
         )}
-        <h3 className="text-lg font-semibold text-high-contrast line-clamp-2 leading-tight">
+        <h3 className="text-lg font-semibold text-high-contrast line-clamp-2 leading-tight pr-20">
           {title}
         </h3>
       </div>
 
-      <div className="flex-1">
-        {imageSrc ? (
-          <div className="mb-3">
-            <img 
-              src={imageSrc} 
-              alt={title}
-              className="w-full h-32 object-cover rounded-lg"
-              onError={(e) => {
-                console.error('Failed to load image:', imageSrc);
-                // Hide the image if it fails to load
-                e.currentTarget.style.display = 'none';
-              }}
-            />
+      <div className="flex-1 min-h-0 flex flex-col">
+        {hasImage ? (
+          <div className="mb-3 flex-shrink-0">
+            {renderImage()}
           </div>
         ) : (
-          <p className="text-sm text-medium-contrast line-clamp-5 leading-relaxed">
-            {description}
-          </p>
+          <div className="flex-1 overflow-hidden">
+            <p className="text-sm text-medium-contrast line-clamp-6 leading-relaxed">
+              {description}
+            </p>
+          </div>
         )}
       </div>
     </div>

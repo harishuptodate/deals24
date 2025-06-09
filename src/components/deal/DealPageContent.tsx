@@ -1,7 +1,9 @@
+
 import React from 'react';
 import { ExternalLink } from 'lucide-react';
 import { extractFirstLink, extractSecondLink, truncateLink } from './utils/linkUtils';
 import { handleTrackedLinkClick } from '../../services/api';
+import CachedTelegramImage from '../images/CachedTelegramImage';
 
 interface DealPageContentProps {
   deal: {
@@ -16,24 +18,6 @@ interface DealPageContentProps {
 }
 
 const DealPageContent = ({ deal, id }: DealPageContentProps) => {
-  // Get API base URL from environment variables or use a fallback
-  const getApiBaseUrl = () => {
-    const configuredUrl = import.meta.env.VITE_API_BASE_URL;
-
-    if (!configuredUrl) {
-      // Fallback to current origin + /api
-      return `${window.location.origin}/api`;
-    }
-
-    // If it's already a full URL (starts with http/https), use it as is
-    if (configuredUrl.startsWith('http')) {
-      return configuredUrl;
-    }
-
-    // Otherwise, append it to the current origin
-    return `${window.location.origin}${configuredUrl}`;
-  };
-
   const makeLinksClickable = (text: string) => {
     if (!text) return '';
 
@@ -70,18 +54,32 @@ const DealPageContent = ({ deal, id }: DealPageContentProps) => {
     });
   };
 
-  // Determine the image source
-  const getImageSrc = () => {
+  const renderImage = () => {
     if (deal.imageUrl) {
-      return deal.imageUrl; // Amazon product image
+      return (
+        <img 
+          src={deal.imageUrl} 
+          alt={deal.text?.split('\n')[0] || 'Product Image'}
+          className="w-full max-w-md mx-auto h-auto object-cover rounded-lg"
+          onError={(e) => {
+            console.error('Failed to load image:', deal.imageUrl);
+            e.currentTarget.style.display = 'none';
+          }}
+        />
+      );
     } else if (deal.telegramFileId) {
-      const apiBaseUrl = getApiBaseUrl();
-      return `${apiBaseUrl}/amazon/download-image/${deal.telegramFileId}`; // Telegram image proxy
+      return (
+        <CachedTelegramImage
+          telegramFileId={deal.telegramFileId}
+          alt={deal.text?.split('\n')[0] || 'Product Image'}
+          className="w-full max-w-md mx-auto h-auto rounded-lg"
+        />
+      );
     }
     return null;
   };
 
-  const imageSrc = getImageSrc();
+  const hasImage = deal.imageUrl || deal.telegramFileId;
 
   return (
     <div className="glass-effect rounded-2xl p-6 md:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-200 dark:border-gray-900 dark:bg-zinc-950">
@@ -99,18 +97,9 @@ const DealPageContent = ({ deal, id }: DealPageContentProps) => {
       </div>
 
       {/* Display image if available */}
-      {imageSrc && (
+      {hasImage && (
         <div className="mb-6">
-          <img 
-            src={imageSrc} 
-            alt={deal.text?.split('\n')[0] || 'Product Image'}
-            className="w-full max-w-md mx-auto h-auto object-cover rounded-lg"
-            onError={(e) => {
-              console.error('Failed to load image:', imageSrc);
-              // Hide the image if it fails to load
-              e.currentTarget.style.display = 'none';
-            }}
-          />
+          {renderImage()}
         </div>
       )}
       

@@ -1,3 +1,4 @@
+
 import React, { memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { extractLinks } from './deal/utils/linkUtils';
@@ -223,7 +224,7 @@ const DealCard = memo(({
   return (
     <>
       <div
-        className="group animate-fade-up hover-scale cursor-pointer h-[290px]"
+        className="group animate-fade-up hover-scale cursor-pointer h-[392px]"
         onClick={(e) => {
           if (e.ctrlKey || e.metaKey || e.button === 1) return;
           setIsOpen(true);

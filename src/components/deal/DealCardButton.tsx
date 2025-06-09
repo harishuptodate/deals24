@@ -29,13 +29,14 @@ const DealCardButton = ({ description, link, id, hasMultipleLinks }: DealCardBut
     : link || extractFirstLink(description) || '#';
 
   return (
-    <div className="mt-auto pt-2">
+    <div className="mt-auto pt-3 flex-shrink-0">
       <a
         href={primaryLink}
         target="_blank"
         rel="noopener noreferrer"
         onClick={(e) => handleLinkClick(primaryLink, e)}
-        className="inline-block w-full text-center px-6 py-2 text-sm font-medium text-white bg-gradient-to-r from-apple-darkGray to-black rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-apple-darkGray/20">
+        className="inline-block w-full text-center px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-apple-darkGray to-black rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-apple-darkGray/20 flex items-center justify-center"
+      >
         Buy Now
       </a>
     </div>

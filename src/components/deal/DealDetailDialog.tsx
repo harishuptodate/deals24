@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -12,6 +13,7 @@ import { ExternalLink, MoveDiagonal, Share2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { createShareData, shareContent, copyToClipboard, truncateLink } from './utils/linkUtils';
 import { useNavigate } from 'react-router-dom';
+import CachedTelegramImage from '../images/CachedTelegramImage';
 
 interface DealDetailDialogProps {
   isOpen: boolean;
@@ -35,24 +37,6 @@ const DealDetailDialog = ({
   const { toast } = useToast();
   const [isSharing, setIsSharing] = useState(false);
   const navigate = useNavigate();
-
-  // Get API base URL from environment variables or use a fallback
-  const getApiBaseUrl = () => {
-    const configuredUrl = import.meta.env.VITE_API_BASE_URL;
-
-    if (!configuredUrl) {
-      // Fallback to current origin + /api
-      return `${window.location.origin}/api`;
-    }
-
-    // If it's already a full URL (starts with http/https), use it as is
-    if (configuredUrl.startsWith('http')) {
-      return configuredUrl;
-    }
-
-    // Otherwise, append it to the current origin
-    return `${window.location.origin}${configuredUrl}`;
-  };
 
   const handleShare = async () => {
     setIsSharing(true);
@@ -81,13 +65,6 @@ const DealDetailDialog = ({
             description: "Deal link copied. You can now paste and share it with others.",
           });
         } 
-        // else {
-        //   toast({
-        //     title: "Couldn't share",
-        //     description: "Failed to copy deal link.",
-        //     variant: "destructive",
-        //   });
-        // }
       }
     } catch (error) {
       console.error('Error during share:', error);
@@ -144,18 +121,32 @@ const DealDetailDialog = ({
     });
   };
 
-  // Determine the image source
-  const getImageSrc = () => {
+  const renderImage = () => {
     if (imageUrl) {
-      return imageUrl; // Amazon product image
+      return (
+        <img 
+          src={imageUrl} 
+          alt={title}
+          className="w-full h-48 object-cover rounded-lg"
+          onError={(e) => {
+            console.error('Failed to load image:', imageUrl);
+            e.currentTarget.style.display = 'none';
+          }}
+        />
+      );
     } else if (telegramFileId) {
-      const apiBaseUrl = getApiBaseUrl();
-      return `${apiBaseUrl}/amazon/download-image/${telegramFileId}`; // Telegram image proxy
+      return (
+        <CachedTelegramImage
+          telegramFileId={telegramFileId}
+          alt={title}
+          className="w-full h-48 rounded-lg"
+        />
+      );
     }
     return null;
   };
 
-  const imageSrc = getImageSrc();
+  const hasImage = imageUrl || telegramFileId;
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -165,18 +156,9 @@ const DealDetailDialog = ({
         </DialogHeader>
 
         <div className="mt-4">
-          {imageSrc && (
+          {hasImage && (
             <div className="mb-4">
-              <img 
-                src={imageSrc} 
-                alt={title}
-                className="w-full h-48 object-cover rounded-lg"
-                onError={(e) => {
-                  console.error('Failed to load image:', imageSrc);
-                  // Hide the image if it fails to load
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
+              {renderImage()}
             </div>
           )}
           
