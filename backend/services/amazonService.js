@@ -1,5 +1,4 @@
 const { parse } = require('node-html-parser');
-const fetch = require('node-fetch'); // Only if needed for Node environments
 
 function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
