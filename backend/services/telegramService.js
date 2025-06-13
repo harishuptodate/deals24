@@ -101,7 +101,6 @@ function replaceLinksAndText(text) {
  * @returns {string|undefined} - Detected category or undefined
  */
 function detectCategory(text) {
-  console.log('Detecting category for:', text);
   const categories = {
     "laptops": [
       "laptop", "notebook", "ultrabook", "macbook", "mac", "lenovo", "hp", "dell", "asus", "msi", "razer", "apple macbook", "chromebook", 
@@ -274,7 +273,7 @@ async function saveMessage(message) {
     
     // Check if message has Amazon links
     if (hasAmazonLinks(textContent)) {
-      console.log('Message contains Amazon links, attempting to fetch product image via API');
+      // console.log('Message contains Amazon links, attempting to fetch product image via API');
       const amazonUrls = extractAmazonUrls(textContent);
       
       if (amazonUrls.length > 0) {
@@ -282,10 +281,9 @@ async function saveMessage(message) {
           // Implement rate limiting before API call
           await waitForApiRateLimit();
           
-          const result = await fetchProductImage(amazonUrls[0]);
+          const result = await fetchProductImage(amazonUrls[amazonUrls.length - 1]);
           if (result.success && result.imageUrl) {
             imageUrl = result.imageUrl;
-            console.log('Successfully fetched Amazon product image via API:', imageUrl);
           } else {
             console.log('Failed to fetch Amazon image via API:', result.error);
           }
@@ -452,7 +450,6 @@ async function handleClickTracking(req, res) {
 
   // Server time
   const serverNow = new Date();
-  console.log('🕒 Server Time (Raw):', serverNow.toISOString());
 
   // IST time
   const nowInIST = new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' });
@@ -468,7 +465,6 @@ async function handleClickTracking(req, res) {
     { upsert: true, new: true }
   );
 
-  console.log('✅ Successfully created/updated click for the day');
   res.json({ success: true, clicks: updatedMessage.clicks });
 }
 
@@ -494,7 +490,7 @@ async function incrementClicks(messageId) {
     if (!updatedMessage) {
       console.log(`No message found with ID: ${messageId} for click tracking`);
     } else {
-      console.log(`Updated clicks for message ID: ${messageId} to ${updatedMessage.clicks}`);
+      console.log(`✅ Successfully Updated clicks for message ID: ${messageId} to ${updatedMessage.clicks}`);
     }
     
     return updatedMessage;

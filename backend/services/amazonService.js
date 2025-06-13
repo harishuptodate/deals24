@@ -32,7 +32,7 @@ async function fetchProductImage(amazonUrl) {
     }
 
     // Add delay before making the API call to be respectful
-    console.log('Adding initial delay before API call...');
+    // console.log('Adding initial delay before API call...');
     await delay(1000);
 
     // Use the new API endpoint
@@ -49,7 +49,7 @@ async function fetchProductImage(amazonUrl) {
     }, 2, 3000); // Retry 2 times with 3 second delays
 
     const result = await response.json();
-    console.log('Amazon API response:', result);
+    // console.log('Amazon API response:', result);
 
     if (result.success && result.data && result.data.imageUrl) {
       console.log('Successfully fetched image URL from API:', result.data.imageUrl);
