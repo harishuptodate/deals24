@@ -48,7 +48,7 @@ router.get('/download-image/:fileId', async (req, res) => {
     
     res.send(Buffer.from(buffer));
   } catch (error) {
-    console.error('Failed to download image:', error);
+    console.error(`Failed to download image: ${error.name}: ${error.message}`);
     res.status(500).json({ error: 'Image download failed' });
   }
 });
