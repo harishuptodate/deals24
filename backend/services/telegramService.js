@@ -284,11 +284,23 @@ async function saveMessage(message) {
           const result = await fetchProductImage(amazonUrls[amazonUrls.length - 1]);
           if (result.success && result.imageUrl) {
             imageUrl = result.imageUrl;
-          } else {
+          }
+          if(!result.success && !result.imageUrl) {
             console.log('Failed to fetch Amazon image via API:', result.error);
+            console.log('Falling back to Telegram image');
+            if (photo && photo.length > 0) {
+            // Handle Telegram direct images - KEEP THIS LOGIC
+            console.log('Message contains Telegram photo, extracting file ID');
+            const highestQualityPhoto = getHighestQualityPhoto(photo);
+            
+            if (highestQualityPhoto) {
+              telegramFileId = highestQualityPhoto.file_id;
+              console.log('Extracted Telegram file ID:', telegramFileId);
+            }
+          }
           }
         } catch (error) {
-          console.error('Error fetching Amazon product image via API:', error);
+          console.error('Error fetching Amazon product image via API & using fallback Telegram image function :', error);
         }
       }
     } else if (photo && photo.length > 0) {
