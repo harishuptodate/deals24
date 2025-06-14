@@ -88,10 +88,13 @@ const DealCard = memo(({
   } = useDealCardActions({
     id,
     title: localTitle,
-    description: localDescription,
+    description: localDescription || description, // Pass the full description
     link,
     imageUrl,
     telegramFileId,
+    fullText: localDescription || description, // Also pass as fullText
+    createdAt,
+    category: localCategory || category,
   });
 
   // Extract links for UI decision making
