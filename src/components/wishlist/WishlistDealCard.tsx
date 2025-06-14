@@ -34,7 +34,7 @@ const WishlistDealCard = memo(({
   onShare,
   formatDate,
 }: WishlistDealCardProps) => {
-  const createdDate = item.createdAt ? format(new Date(item.createdAt), 'MMM d, yyyy') : null;
+  const createdDate = item.createdAt ? format(new Date(item.createdAt), 'h:mm a, MMM d, yyyy') : null;
 
   const handleLinkClick = (url: string, e: React.MouseEvent) => {
     handleTrackedLinkClick(url, item.id, e.nativeEvent);
@@ -165,7 +165,7 @@ const WishlistDealCard = memo(({
         {/* Wishlisted date at the bottom */}
         <div className="mt-2 flex-shrink-0">
           <span className="time-badge text-xs">
-            Wishlisted {format(new Date(item.timestamp), 'MMM d, h:mm a')}
+            ❤️-> {format(new Date(item.timestamp), 'h:mm a, MMM d, yyyy')}
           </span>
         </div>
       </div>

@@ -13,7 +13,7 @@ interface DealCardContentProps {
 
 const DealCardContent = ({ title, description, createdAt, imageUrl, telegramFileId }: DealCardContentProps) => {
   const formattedDate = createdAt
-    ? format(new Date(createdAt), 'MMM d, h:mm a')
+    ? format(new Date(createdAt), 'h:mm a-MMM-d-yy')
     : '';
 
   const renderImage = () => {
@@ -49,7 +49,7 @@ const DealCardContent = ({ title, description, createdAt, imageUrl, telegramFile
       <div className="space-y-2 flex-shrink-0">
         {formattedDate && (
           <div className="flex items-center">
-            <span className="time-badge text-xs">
+            <span className="time-badge py-1 text-[10px]">
               {formattedDate}
             </span>
           </div>
