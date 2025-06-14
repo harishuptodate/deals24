@@ -165,7 +165,7 @@ const WishlistDealCard = memo(({
         {/* Wishlisted date at the bottom */}
         <div className="mt-2 flex-shrink-0">
           <span className="time-badge text-xs">
-            ❤️-> {format(new Date(item.timestamp), 'h:mm a, MMM d, yyyy')}
+            {'❤️->'} {format(new Date(item.timestamp), 'h:mm a, MMM d, yyyy')}
           </span>
         </div>
       </div>
