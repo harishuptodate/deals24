@@ -83,7 +83,7 @@ const DealPageContent = ({ deal, id }: DealPageContentProps) => {
 
   return (
     <div className="glass-effect rounded-2xl p-6 md:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-200 dark:border-gray-900 dark:bg-zinc-950">
-      <div className="flex justify-between items-start mb-6">
+      <div className="flex justify-center items-start mb-6">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold mb-2">
             {deal.text?.split('\n')[0] || 'Deal Title'}
@@ -103,25 +103,25 @@ const DealPageContent = ({ deal, id }: DealPageContentProps) => {
         </div>
       )}
       
-      <div className="whitespace-pre-line text-gray-700 dark:text-gray-300 mt-6">
+      <div className="whitespace-pre-line text-gray-700 dark:text-gray-300 mt-6 text-center">
         {makeLinksClickable(deal.text || '')}
       </div>
 
       {extractFirstLink(deal.text || '') && (
-        <div className="mt-8">
+        <div className="mt-8 flex justify-center">
           <a
             href={extractSecondLink(deal.text || '') || extractFirstLink(deal.text || '') || '#'}
             onClick={(e) => handleTrackedLinkClick(extractSecondLink(deal.text || '') || (extractFirstLink(deal.text || '')) || '', id, e.nativeEvent)}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block w-full sm:w-auto text-center px-6 py-3 text-sm font-medium text-white bg-gradient-to-t from-apple-darkGray to-indigo-950 rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-apple-darkGray/20 hover:shadow-indigo-950/20 hover:scale-105"
+            className="inline-block w-full sm:w-auto text-center px-6 py-3 text-sm font-medium text-white bg-gradient-to-b from-apple-darkGray to-indigo-950 rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-apple-darkGray/20 hover:scale-105"
           >
             Buy Now
           </a>
         </div>
       )}
       
-      <div className="mt-6 text-sm text-gray-500 dark:text-gray-400">
+      <div className="mt-6 text-sm text-gray-500 dark:text-gray-400 text-center">
         Deal added: {new Date(deal.date || deal.createdAt || '').toLocaleDateString()}
       </div>
     </div>

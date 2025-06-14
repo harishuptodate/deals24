@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { handleTrackedLinkClick } from '../../services/api';
 import { ExternalLink, MoveDiagonal, Share2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { createShareData, shareContent, copyToClipboard, truncateLink } from './utils/linkUtils';
+import { createShareData, shareContent, copyToClipboard, truncateLink, extractFirstLink, extractSecondLink } from './utils/linkUtils';
 import { useNavigate } from 'react-router-dom';
 import CachedTelegramImage from '../images/CachedTelegramImage';
 
@@ -162,26 +162,40 @@ const DealDetailDialog = ({
             </div>
           )}
           
-          <div className="text-sm whitespace-pre-line">
+          <div className="text-sm whitespace-pre-line text-center">
             {makeLinksClickable(description)}
           </div>
         </div>
 
-        <DialogFooter className="mt-4 flex flex-col sm:flex-row gap-2 sm:justify-end">
+        <DialogFooter className="mt-4 flex flex-col sm:flex-row gap-2 sm:justify-between">
           {id && (
             <Button
               onClick={handleViewFullPage}
-              className="flex gap-2 items-center active:scale-95 transition-transform duration-150 ease-in-out"
+              className="flex gap-2 items-center hover:scale-105 active:scale-95 transition-transform duration-150 ease-in-out"
               variant="default"
             >
               <ExternalLink size={16} />
               Visit Full Page
             </Button>
           )}
+
+          {extractFirstLink(description || '') && (
+                  <div >
+                    <a
+                      href={extractSecondLink(description || '') || extractFirstLink(description || '') || '#'}
+                      onClick={(e) => handleTrackedLinkClick(extractSecondLink(description || '') || (extractFirstLink(description || '')) || '', id, e.nativeEvent)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block w-full sm:w-auto text-center px-9 py-3 text-sm font-medium text-white bg-gradient-to-b from-apple-darkGray to-indigo-950 rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-apple-darkGray/20 hover:scale-105"
+                    >
+                      Buy Now
+                    </a>
+                  </div>
+                )}
           <Button
             onClick={handleShare}
             disabled={isSharing}
-            className="flex gap-2 items-center active:scale-95 transition-transform duration-150 ease-in-out"
+            className="flex gap-2 items-center hover:scale-105 active:scale-95 transition-transform duration-150 ease-in-out"
             variant="outline"
           >
             <Share2 size={16} />

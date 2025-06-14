@@ -182,7 +182,7 @@ const Wishlist = () => {
                 {makeLinksClickable(selectedItem.description, selectedItem.id)}
               </div>
 
-              <DialogFooter className="mt-4 flex flex-col sm:flex-row gap-2 sm:justify-end">
+              <DialogFooter className="mt-4 flex flex-col sm:flex-row gap-2 sm:justify-center">
                 <a
                   href={getPrimaryLink()}
                   target="_blank"
@@ -197,25 +197,7 @@ const Wishlist = () => {
                     <ExternalLink size={16} />
                     Buy Now
                   </Button>
-                </a>
-                {selectedItem.id && (
-                  <Button
-                    onClick={() => viewFullPage(selectedItem)}
-                    className="flex gap-2 items-center active:scale-95 transition-transform duration-150 ease-in-out"
-                    variant="outline"
-                  >
-                    <ExternalLink size={16} />
-                    Visit Full Page
-                  </Button>
-                )}
-                <Button 
-                  variant="outline" 
-                  className="flex items-center gap-2 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-                  onClick={() => removeFavorite(selectedItem.title)}
-                >
-                  <Trash2 size={16} />
-                  Remove from Wishlist
-                </Button>
+                </a> 
               </DialogFooter>
             </>
           )}
