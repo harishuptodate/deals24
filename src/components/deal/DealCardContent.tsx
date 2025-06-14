@@ -22,7 +22,7 @@ const DealCardContent = ({ title, description, createdAt, imageUrl, telegramFile
         <img 
           src={imageUrl} 
           alt={title}
-          className="w-full h-40 object-cover rounded-lg"
+          className="w-full h-40 object-contain rounded-lg"
           loading="lazy"
           onError={(e) => {
             console.error('Failed to load Amazon image:', imageUrl);
@@ -35,7 +35,7 @@ const DealCardContent = ({ title, description, createdAt, imageUrl, telegramFile
         <CachedTelegramImage
           telegramFileId={telegramFileId}
           alt={title}
-          className="w-full h-40 rounded-lg"
+          className="w-full h-40  rounded-lg"
         />
       );
     }
