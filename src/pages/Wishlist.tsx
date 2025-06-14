@@ -8,9 +8,9 @@ import { trackMessageClick } from '../services/api';
 import { BigFooter } from '@/components/BigFooter';
 import WishlistHeader from '../components/wishlist/WishlistHeader';
 import WishlistEmptyState from '../components/wishlist/WishlistEmptyState';
-import WishlistCard from '../components/wishlist/WishlistCard';
 import CachedTelegramImage from '../components/images/CachedTelegramImage';
 import { useWishlist } from '../hooks/useWishlist';
+import WishlistDealCard from '../components/wishlist/WishlistDealCard';
 
 const Wishlist = () => {
   const {
@@ -110,7 +110,7 @@ const Wishlist = () => {
   return (
     <div className="min-h-screen bg-white dark:bg-[#09090B] text-apple-darkGray dark:text-gray-200">
       <Navbar />
-      <main className="container mx-auto px-4 py-12">
+      <main className="container mx-auto px-4 py-6 md:py-12">
         <WishlistHeader 
           favoriteCount={favorites.length} 
           onClearAll={clearAllFavorites} 
@@ -119,9 +119,9 @@ const Wishlist = () => {
         {favorites.length === 0 ? (
           <WishlistEmptyState />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {favorites.map((item) => (
-              <WishlistCard
+              <WishlistDealCard
                 key={item.title}
                 item={item}
                 onRemove={removeFavorite}
