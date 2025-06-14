@@ -97,12 +97,7 @@
   ::-webkit-scrollbar-thumb:hover {
     @apply bg-gray-400 dark:bg-gray-600;
   }
-
-  /* Touch target optimization */
-  button, a, [role="button"] {
-    min-height: 44px;
-    min-width: 44px;
-  }
+  
 
   /* Focus indicators for accessibility */
   :focus-visible {
