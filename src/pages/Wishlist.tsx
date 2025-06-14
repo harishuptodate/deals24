@@ -3,14 +3,15 @@ import React from 'react';
 import Navbar from '../components/Navbar';
 import { ExternalLink, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { trackMessageClick } from '../services/api';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { trackMessageClick, handleTrackedLinkClick } from '../services/api';
 import { BigFooter } from '@/components/BigFooter';
 import WishlistHeader from '../components/wishlist/WishlistHeader';
 import WishlistEmptyState from '../components/wishlist/WishlistEmptyState';
 import CachedTelegramImage from '../components/images/CachedTelegramImage';
 import { useWishlist } from '../hooks/useWishlist';
 import WishlistDealCard from '../components/wishlist/WishlistDealCard';
+import { extractFirstLink, extractSecondLink } from '../components/deal/utils/linkUtils';
 
 const Wishlist = () => {
   const {
@@ -53,6 +54,19 @@ const Wishlist = () => {
     }
   };
 
+  const handleDialogLinkClick = (url: string, e: React.MouseEvent) => {
+    handleTrackedLinkClick(url, selectedItem?.id, e.nativeEvent);
+
+    if (e.ctrlKey || e.metaKey || e.button === 1) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    setTimeout(() => {
+      window.open(url, '_blank');
+    }, 100);
+  };
+
   const makeLinksClickable = (text: string, itemId?: string) => {
     if (!text) return '';
     
@@ -87,8 +101,9 @@ const Wishlist = () => {
         <img 
           src={selectedItem.imageUrl} 
           alt={selectedItem.title} 
-          className="w-full h-full object-contain"
+          className="w-full h-48 object-contain rounded-lg"
           onError={(e) => {
+            console.error('Failed to load image:', selectedItem.imageUrl);
             (e.target as HTMLImageElement).style.display = 'none';
           }}
         />
@@ -98,7 +113,7 @@ const Wishlist = () => {
         <CachedTelegramImage
           telegramFileId={selectedItem.telegramFileId}
           alt={selectedItem.title}
-          className="w-full h-full"
+          className="w-full h-48 rounded-lg"
         />
       );
     }
@@ -106,6 +121,11 @@ const Wishlist = () => {
   };
 
   const hasDialogImage = selectedItem && (selectedItem.imageUrl || selectedItem.telegramFileId);
+
+  const getPrimaryLink = () => {
+    if (!selectedItem) return '#';
+    return selectedItem.link || extractSecondLink(selectedItem.description) || extractFirstLink(selectedItem.description) || '#';
+  };
 
   return (
     <div className="min-h-screen bg-white dark:bg-[#09090B] text-apple-darkGray dark:text-gray-200">
@@ -162,7 +182,32 @@ const Wishlist = () => {
                 {makeLinksClickable(selectedItem.description, selectedItem.id)}
               </div>
 
-              <div className="mt-4 flex justify-end">
+              <DialogFooter className="mt-4 flex flex-col sm:flex-row gap-2 sm:justify-end">
+                <a
+                  href={getPrimaryLink()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => handleDialogLinkClick(getPrimaryLink(), e)}
+                  className="inline-block"
+                >
+                  <Button
+                    className="flex gap-2 items-center active:scale-95 transition-transform duration-150 ease-in-out w-full sm:w-auto"
+                    variant="default"
+                  >
+                    <ExternalLink size={16} />
+                    Buy Now
+                  </Button>
+                </a>
+                {selectedItem.id && (
+                  <Button
+                    onClick={() => viewFullPage(selectedItem)}
+                    className="flex gap-2 items-center active:scale-95 transition-transform duration-150 ease-in-out"
+                    variant="outline"
+                  >
+                    <ExternalLink size={16} />
+                    Visit Full Page
+                  </Button>
+                )}
                 <Button 
                   variant="outline" 
                   className="flex items-center gap-2 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
@@ -171,7 +216,7 @@ const Wishlist = () => {
                   <Trash2 size={16} />
                   Remove from Wishlist
                 </Button>
-              </div>
+              </DialogFooter>
             </>
           )}
         </DialogContent>

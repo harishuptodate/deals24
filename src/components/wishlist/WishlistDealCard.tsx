@@ -58,6 +58,11 @@ const WishlistDealCard = memo(({
     onShare(item);
   };
 
+  const handleViewFullPage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onViewFullPage(item);
+  };
+
   const primaryLink = item.link || extractSecondLink(item.description) || extractFirstLink(item.description) || '#';
 
   const renderImage = () => {
@@ -98,6 +103,14 @@ const WishlistDealCard = memo(({
       <div className="relative glass-effect rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.06)] h-full flex flex-col border-gray-200 dark:border-gray-900 dark:bg-zinc-950">
         {/* Action buttons */}
         <div className="absolute top-3 right-3 flex items-center gap-1 z-10">
+          {item.id && (
+            <button
+              onClick={handleViewFullPage}
+              className="p-2 mt-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center"
+              title="Visit full page">
+              <ExternalLink className="w-4 h-4 text-green-500" />
+            </button>
+          )}
           <button
             onClick={handleShare}
             className="p-2 mt-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center"
@@ -117,10 +130,10 @@ const WishlistDealCard = memo(({
           <div className="space-y-2 flex-shrink-0">
             <div className="flex items-center">
               <span className="time-badge text-xs">
-                {formattedDate}
+                Saved {formattedDate}
               </span>
             </div>
-            <h3 className="text-lg font-semibold text-high-contrast line-clamp-2 leading-tight pr-20">
+            <h3 className="text-lg font-semibold text-high-contrast line-clamp-2 leading-tight pr-24">
               {item.title}
             </h3>
           </div>

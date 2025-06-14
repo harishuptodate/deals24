@@ -31,6 +31,11 @@ export const useWishlist = () => {
     localStorage.setItem('favorites', JSON.stringify(updatedFavorites));
     setFavorites(updatedFavorites);
     
+    if (selectedItem && selectedItem.title === title) {
+      setIsDialogOpen(false);
+      setSelectedItem(null);
+    }
+    
     toast({
       title: "Removed from wishlist",
       description: "The item has been removed from your saved deals",
@@ -40,6 +45,8 @@ export const useWishlist = () => {
   const clearAllFavorites = () => {
     localStorage.setItem('favorites', JSON.stringify([]));
     setFavorites([]);
+    setIsDialogOpen(false);
+    setSelectedItem(null);
     
     toast({
       title: "Wishlist cleared",
@@ -54,6 +61,7 @@ export const useWishlist = () => {
 
   const viewFullPage = (item: FavoriteItem) => {
     if (item.id) {
+      setIsDialogOpen(false);
       navigate(`/deal/${item.id}`);
     }
   };
