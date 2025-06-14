@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Navbar from '../components/Navbar';
 import { ExternalLink, Trash2 } from 'lucide-react';
@@ -8,6 +7,7 @@ import { trackMessageClick, handleTrackedLinkClick } from '../services/api';
 import { BigFooter } from '@/components/BigFooter';
 import WishlistHeader from '../components/wishlist/WishlistHeader';
 import WishlistEmptyState from '../components/wishlist/WishlistEmptyState';
+import RemoveDealConfirmDialog from '../components/wishlist/RemoveDealConfirmDialog';
 import CachedTelegramImage from '../components/images/CachedTelegramImage';
 import { useWishlist } from '../hooks/useWishlist';
 import WishlistDealCard from '../components/wishlist/WishlistDealCard';
@@ -20,6 +20,10 @@ const Wishlist = () => {
     isDialogOpen,
     setIsDialogOpen,
     removeFavorite,
+    confirmRemoveFavorite,
+    cancelRemoveFavorite,
+    isRemoveConfirmOpen,
+    itemToRemove,
     clearAllFavorites,
     viewDetails,
     viewFullPage,
@@ -169,6 +173,9 @@ const Wishlist = () => {
                 <DialogTitle className="text-xl dark:text-white">{selectedItem.title}</DialogTitle>
                 <DialogDescription className="dark:text-gray-400">
                   Saved on {formatDate(selectedItem.timestamp)}
+                  {selectedItem.createdAt && (
+                    <> • Created on {formatDate(selectedItem.createdAt)}</>
+                  )}
                 </DialogDescription>
               </DialogHeader>
               
@@ -179,7 +186,7 @@ const Wishlist = () => {
               )}
               
               <div className="mt-4 text-sm whitespace-pre-line dark:text-gray-300">
-                {makeLinksClickable(selectedItem.description, selectedItem.id)}
+                {makeLinksClickable(selectedItem.description || "No description available", selectedItem.id)}
               </div>
 
               <DialogFooter className="mt-4 flex flex-col sm:flex-row gap-2 sm:justify-center">
@@ -203,6 +210,13 @@ const Wishlist = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      <RemoveDealConfirmDialog
+        isOpen={isRemoveConfirmOpen}
+        onOpenChange={cancelRemoveFavorite}
+        onConfirm={confirmRemoveFavorite}
+        dealTitle={itemToRemove || ''}
+      />
     </div>
   );
 };

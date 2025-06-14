@@ -12,6 +12,7 @@ interface FavoriteItem {
   telegramFileId?: string;
   id?: string;
   timestamp: string;
+  createdAt?: string;
 }
 
 export const useWishlist = () => {
@@ -20,6 +21,8 @@ export const useWishlist = () => {
   const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<FavoriteItem | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isRemoveConfirmOpen, setIsRemoveConfirmOpen] = useState(false);
+  const [itemToRemove, setItemToRemove] = useState<string | null>(null);
 
   useEffect(() => {
     const storedFavorites = JSON.parse(localStorage.getItem('favorites') || '[]');
@@ -27,19 +30,34 @@ export const useWishlist = () => {
   }, []);
 
   const removeFavorite = (title: string) => {
-    const updatedFavorites = favorites.filter(item => item.title !== title);
+    setItemToRemove(title);
+    setIsRemoveConfirmOpen(true);
+  };
+
+  const confirmRemoveFavorite = () => {
+    if (!itemToRemove) return;
+    
+    const updatedFavorites = favorites.filter(item => item.title !== itemToRemove);
     localStorage.setItem('favorites', JSON.stringify(updatedFavorites));
     setFavorites(updatedFavorites);
     
-    if (selectedItem && selectedItem.title === title) {
+    if (selectedItem && selectedItem.title === itemToRemove) {
       setIsDialogOpen(false);
       setSelectedItem(null);
     }
+    
+    setIsRemoveConfirmOpen(false);
+    setItemToRemove(null);
     
     toast({
       title: "Removed from wishlist",
       description: "The item has been removed from your saved deals",
     });
+  };
+
+  const cancelRemoveFavorite = () => {
+    setIsRemoveConfirmOpen(false);
+    setItemToRemove(null);
   };
 
   const clearAllFavorites = () => {
@@ -115,6 +133,10 @@ export const useWishlist = () => {
     isDialogOpen,
     setIsDialogOpen,
     removeFavorite,
+    confirmRemoveFavorite,
+    cancelRemoveFavorite,
+    isRemoveConfirmOpen,
+    itemToRemove,
     clearAllFavorites,
     viewDetails,
     viewFullPage,

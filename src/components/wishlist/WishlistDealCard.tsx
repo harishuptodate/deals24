@@ -5,6 +5,7 @@ import { Heart, Share2, Trash2, ExternalLink } from 'lucide-react';
 import CachedTelegramImage from '../images/CachedTelegramImage';
 import { handleTrackedLinkClick } from '../../services/api';
 import { extractFirstLink, extractSecondLink } from '../deal/utils/linkUtils';
+import RemoveDealConfirmDialog from './RemoveDealConfirmDialog';
 
 interface FavoriteItem {
   title: string;
@@ -14,6 +15,7 @@ interface FavoriteItem {
   telegramFileId?: string;
   id?: string;
   timestamp: string;
+  createdAt?: string;
 }
 
 interface WishlistDealCardProps {
@@ -33,7 +35,8 @@ const WishlistDealCard = memo(({
   onShare,
   formatDate,
 }: WishlistDealCardProps) => {
-  const formattedDate = format(new Date(item.timestamp), 'MMM d, h:mm a');
+  const savedDate = format(new Date(item.timestamp), 'MMM d, h:mm a');
+  const createdDate = item.createdAt ? format(new Date(item.createdAt), 'MMM d, yyyy') : null;
 
   const handleLinkClick = (url: string, e: React.MouseEvent) => {
     handleTrackedLinkClick(url, item.id, e.nativeEvent);
@@ -95,7 +98,7 @@ const WishlistDealCard = memo(({
 
   return (
     <div
-      className="group animate-fade-up hover-scale cursor-pointer h-[392px]"
+      className="group animate-fade-up hover-scale cursor-pointer h-[450px]"
       onClick={(e) => {
         if (e.ctrlKey || e.metaKey || e.button === 1) return;
         onViewDetails(item);
@@ -128,10 +131,15 @@ const WishlistDealCard = memo(({
         {/* Content */}
         <div className="space-y-3 flex-1 flex flex-col min-h-0">
           <div className="space-y-2 flex-shrink-0">
-            <div className="flex items-center">
+            <div className="flex flex-col gap-1">
               <span className="time-badge text-xs">
-                Saved {formattedDate}
+                Saved {savedDate}
               </span>
+              {createdDate && (
+                <span className="time-badge text-xs opacity-75">
+                  Created {createdDate}
+                </span>
+              )}
             </div>
             <h3 className="text-lg font-semibold text-high-contrast line-clamp-2 leading-tight pr-24">
               {item.title}
@@ -145,7 +153,16 @@ const WishlistDealCard = memo(({
               </div>
             ) : (
               <div className="flex-1 overflow-hidden">
-                <p className="text-sm text-medium-contrast line-clamp-6 leading-relaxed">
+                <p className="text-sm text-medium-contrast line-clamp-4 leading-relaxed">
+                  {item.description || "No description available"}
+                </p>
+              </div>
+            )}
+            
+            {/* Show description even when there's an image, but smaller */}
+            {hasImage && item.description && (
+              <div className="flex-1 overflow-hidden">
+                <p className="text-xs text-medium-contrast line-clamp-2 leading-relaxed">
                   {item.description}
                 </p>
               </div>

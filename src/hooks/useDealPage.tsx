@@ -95,9 +95,10 @@ export const useDealPage = (id?: string) => {
       const newFavorite = {
         id: id,
         title: title,
-        description: deal.text,
+        description: deal.text || '',
         link: extractFirstLink(deal.text || '') || window.location.href,
         timestamp: new Date().toISOString(),
+        createdAt: deal.date || deal.createdAt || new Date().toISOString(),
         category: deal.category,
         imageUrl: deal.imageUrl,
         telegramFileId: deal.telegramFileId
