@@ -103,7 +103,7 @@ const WishlistDealCard = memo(({
       }}>
       <div className="relative glass-effect rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.06)] h-full flex flex-col border-gray-200 dark:border-gray-900 dark:bg-zinc-950">
         {/* Action buttons */}
-        <div className="absolute top-3 right-3 flex items-center gap-1 z-10">
+        <div className="mt-2 absolute top-3 right-3 flex items-center gap-1 z-10">
           {item.id && (
             <button
               onClick={handleViewFullPage}
