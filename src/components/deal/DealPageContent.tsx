@@ -114,7 +114,7 @@ const DealPageContent = ({ deal, id }: DealPageContentProps) => {
             onClick={(e) => handleTrackedLinkClick(extractSecondLink(deal.text || '') || (extractFirstLink(deal.text || '')) || '', id, e.nativeEvent)}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block w-full sm:w-auto text-center px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-apple-darkGray to-black rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-apple-darkGray/20"
+            className="inline-block w-full sm:w-auto text-center px-6 py-3 text-sm font-medium text-white bg-gradient-to-t from-apple-darkGray to-indigo-950 rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-apple-darkGray/20"
           >
             Buy Now
           </a>
