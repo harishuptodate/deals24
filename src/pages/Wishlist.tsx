@@ -185,8 +185,8 @@ const Wishlist = () => {
                 </div>
               )}
               
-              <div className="mt-4 text-sm whitespace-pre-line dark:text-gray-300">
-                {makeLinksClickable(selectedItem.description || "No description available", selectedItem.id)}
+              <div className="mt-4 text-sm text-center whitespace-pre-line dark:text-gray-300">
+                {makeLinksClickable(selectedItem.description || "No description available"  , selectedItem.id)}
               </div>
 
               <DialogFooter className="mt-4 flex flex-col sm:flex-row gap-2 sm:justify-center">
@@ -198,10 +198,9 @@ const Wishlist = () => {
                   className="inline-block"
                 >
                   <Button
-                    className="flex gap-2 items-center active:scale-95 transition-transform duration-150 ease-in-out w-full sm:w-auto"
+                    className="inline-block w-full text-center px-6 py-3 text-sm font-medium text-white bg-gradient-to-b from-apple-darkGray to-indigo-950 rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-apple-darkGray/20 flex items-center justify-center hover:scale-105"
                     variant="default"
                   >
-                    <ExternalLink size={16} />
                     Buy Now
                   </Button>
                 </a> 
