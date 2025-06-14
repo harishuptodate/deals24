@@ -27,19 +27,19 @@ const DealCardActions = ({
         <>
           <button
             onClick={onCategoryEdit}
-            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center"
+            className="p-2 mt-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center"
             title="Change category">
             <Tag className="w-4 h-4 text-purple-500" />
           </button>
           <button
             onClick={onEdit}
-            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center"
+            className="p-2 mt-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center"
             title="Edit deal">
             <PenSquare className="w-4 h-4 text-blue-500" />
           </button>
           <button
             onClick={onDelete}
-            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center"
+            className="p-2 mt-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center"
             title="Delete deal">
             <Trash2 className="w-4 h-4 text-red-500" />
           </button>
@@ -47,13 +47,13 @@ const DealCardActions = ({
       )}
       <button
         onClick={onShare}
-        className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center"
+        className="p-2 mt-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center"
         title="Share deal">
         <Share2 className="w-4 h-4 text-blue-500" />
       </button>
       <button
         onClick={onToggleFavorite}
-        className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center"
+        className="p-2 mt-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center"
         title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}>
         <Heart
           className={`w-4 h-4 transition-colors ${
