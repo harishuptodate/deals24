@@ -10,9 +10,9 @@ interface DealCardActionsProps {
   link: string;
   imageUrl?: string;
   telegramFileId?: string;
-  fullText?: string; // Add this to get the complete deal text
-  createdAt?: string; // Add this to get the creation date
-  category?: string; // Add this to get the category
+  fullText?: string;
+  createdAt?: string;
+  category?: string;
 }
 
 export const useDealCardActions = ({ 
@@ -51,16 +51,15 @@ export const useDealCardActions = ({
         description: "This deal has been removed from your wishlist.",
       });
     } else {
-      // Use fullText if available, otherwise fall back to description
-      const fullDescription = fullText || description;
+      // Use fullText as the primary description source, then description as fallback
+      const dealDescription = fullText || description || title;
       
-      // Debug logging
-      console.log('Saving to wishlist:', {
+      console.log('Saving to wishlist with description:', {
         id,
         title,
-        description,
+        originalDescription: description,
         fullText,
-        fullDescription,
+        finalDescription: dealDescription,
         createdAt,
         category
       });
@@ -68,7 +67,7 @@ export const useDealCardActions = ({
       const newFavorite = {
         id,
         title,
-        description: fullDescription,
+        description: dealDescription,
         link,
         timestamp: new Date().toISOString(),
         createdAt: createdAt || new Date().toISOString(),

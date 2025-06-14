@@ -5,7 +5,6 @@ import { Heart, Share2, Trash2, ExternalLink } from 'lucide-react';
 import CachedTelegramImage from '../images/CachedTelegramImage';
 import { handleTrackedLinkClick } from '../../services/api';
 import { extractFirstLink, extractSecondLink } from '../deal/utils/linkUtils';
-import RemoveDealConfirmDialog from './RemoveDealConfirmDialog';
 
 interface FavoriteItem {
   title: string;
@@ -35,7 +34,6 @@ const WishlistDealCard = memo(({
   onShare,
   formatDate,
 }: WishlistDealCardProps) => {
-  const savedDate = format(new Date(item.timestamp), 'MMM d, h:mm a');
   const createdDate = item.createdAt ? format(new Date(item.createdAt), 'MMM d, yyyy') : null;
 
   const handleLinkClick = (url: string, e: React.MouseEvent) => {
@@ -109,20 +107,20 @@ const WishlistDealCard = memo(({
           {item.id && (
             <button
               onClick={handleViewFullPage}
-              className="p-2 mt-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center"
+              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center"
               title="Visit full page">
               <ExternalLink className="w-4 h-4 text-green-500" />
             </button>
           )}
           <button
             onClick={handleShare}
-            className="p-2 mt-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center"
+            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center"
             title="Share deal">
             <Share2 className="w-4 h-4 text-blue-500" />
           </button>
           <button
             onClick={handleRemove}
-            className="p-2 mt-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center"
+            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center"
             title="Remove from wishlist">
             <Trash2 className="w-4 h-4 text-red-500" />
           </button>
@@ -131,16 +129,12 @@ const WishlistDealCard = memo(({
         {/* Content */}
         <div className="space-y-3 flex-1 flex flex-col min-h-0">
           <div className="space-y-2 flex-shrink-0">
-            <div className="flex flex-col gap-1">
-              <span className="time-badge text-xs">
-                Saved {savedDate}
+            {/* Created date - normal date without prefix */}
+            {createdDate && (
+              <span className="time-badge text-xs opacity-75">
+                {createdDate}
               </span>
-              {createdDate && (
-                <span className="time-badge text-xs opacity-75">
-                  Created {createdDate}
-                </span>
-              )}
-            </div>
+            )}
             <h3 className="text-lg font-semibold text-high-contrast line-clamp-2 leading-tight pr-24">
               {item.title}
             </h3>
@@ -181,6 +175,13 @@ const WishlistDealCard = memo(({
           >
             Buy Now
           </a>
+        </div>
+
+        {/* Wishlisted date at the bottom */}
+        <div className="mt-2 flex-shrink-0">
+          <span className="time-badge text-xs">
+            Wishlisted {format(new Date(item.timestamp), 'MMM d, h:mm a')}
+          </span>
         </div>
       </div>
     </div>
