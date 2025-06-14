@@ -141,24 +141,9 @@ const WishlistDealCard = memo(({
           </div>
 
           <div className="flex-1 min-h-0 flex flex-col">
-            {hasImage ? (
-              <div className="mb-3 flex-shrink-0">
+            {hasImage && (
+              <div className="flex-1 flex items-center justify-center">
                 {renderImage()}
-              </div>
-            ) : (
-              <div className="flex-1 overflow-hidden">
-                <p className="text-sm text-medium-contrast line-clamp-4 leading-relaxed">
-                  {item.description || "No description available"}
-                </p>
-              </div>
-            )}
-            
-            {/* Show description even when there's an image, but smaller */}
-            {hasImage && item.description && (
-              <div className="flex-1 overflow-hidden">
-                <p className="text-xs text-medium-contrast line-clamp-2 leading-relaxed">
-                  {item.description}
-                </p>
               </div>
             )}
           </div>
