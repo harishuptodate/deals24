@@ -37,7 +37,7 @@ const WishlistCard = ({
         <img 
           src={item.imageUrl} 
           alt={item.title} 
-          className="w-full h-full object-cover"
+          className="w-full h-full object-contain"
           onError={(e) => {
             (e.target as HTMLImageElement).style.display = 'none';
           }}

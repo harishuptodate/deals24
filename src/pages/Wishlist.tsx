@@ -87,7 +87,7 @@ const Wishlist = () => {
         <img 
           src={selectedItem.imageUrl} 
           alt={selectedItem.title} 
-          className="w-full h-full object-cover"
+          className="w-full h-full object-contain"
           onError={(e) => {
             (e.target as HTMLImageElement).style.display = 'none';
           }}

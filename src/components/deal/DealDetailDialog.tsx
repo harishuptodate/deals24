@@ -127,7 +127,7 @@ const DealDetailDialog = ({
         <img 
           src={imageUrl} 
           alt={title}
-          className="w-full h-48 object-cover rounded-lg"
+          className="w-full h-48 object-contain rounded-lg"
           onError={(e) => {
             console.error('Failed to load image:', imageUrl);
             e.currentTarget.style.display = 'none';

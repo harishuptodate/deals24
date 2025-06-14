@@ -60,7 +60,7 @@ const DealPageContent = ({ deal, id }: DealPageContentProps) => {
         <img 
           src={deal.imageUrl} 
           alt={deal.text?.split('\n')[0] || 'Product Image'}
-          className="w-full max-w-md mx-auto h-auto object-cover rounded-lg"
+          className="w-full max-w-md mx-auto h-auto object-contain rounded-lg"
           onError={(e) => {
             console.error('Failed to load image:', deal.imageUrl);
             e.currentTarget.style.display = 'none';
