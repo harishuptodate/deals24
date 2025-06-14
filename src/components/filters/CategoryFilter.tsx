@@ -79,7 +79,7 @@ const CategoryFilter = ({
                 current === category.slug ||
                 (current === null && category.slug === null)
                   ? 'bg-apple-darkGray dark:bg-gray-700 text-white'
-                  : 'bg-gray-100 dark:bg-gray-800 text-apple-gray dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                  : 'bg-gray-100 dark:bg-gray-800 text-apple-gray dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 active:scale-95 transition-transform duration-150 ease-in-out'
               }`}>
               {category.name}
               {/* Only show count if category has a slug and count exists */}
@@ -98,7 +98,7 @@ const CategoryFilter = ({
               <button
                 key={subCat}
                 onClick={() => onSubCategorySelect(subCat)}
-                className="bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-apple-gray dark:text-gray-300 text-xs mb-3 px-3 py-1.5 rounded-full transition-colors">
+                className="bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-apple-gray dark:text-gray-300 text-xs mb-3 px-3 py-1.5 rounded-full transition-colors active:scale-95 duration-150 ease-in-out">
                 {subCat}
               </button>
             ),

@@ -166,7 +166,7 @@ const Categories = () => {
 							<a
 								onClick={() => handleSubCategoryClick(tag)}
 								key={tag}
-								className="bg-gray-100 dark:bg-apple-darkGray hover:bg-gray-200 dark:hover:bg-gray-700 px-4 py-2 rounded-full text-sm text-apple-darkGray dark:text-gray-300 transition-colors cursor-pointer">
+								className="bg-gray-100 dark:bg-apple-darkGray hover:bg-gray-200 dark:hover:bg-gray-700 px-4 py-2 rounded-full text-sm text-apple-darkGray dark:text-gray-300 transition-colors cursor-pointer  active:scale-95 duration-150 ease-in-out">
 								{tag}
 							</a>
 						))}

@@ -147,7 +147,7 @@ const Navbar = () => {
 									className="w-96 p-2 sm:w-[var(--radix-popover-trigger-width)] rounded-xl mt-1 dark:bg-apple-darkGray dark:border-gray-700"
 									sideOffset={5}>
 									<div className="space-y-2">
-										<h3 className="text-sm font-medium text-apple-darkGray dark:text-gray-300 px-2">
+										<h3 className="text-sm font-medium text-apple-darkGray dark:text-gray-300 px-2 active:scale-95 transition-transform duration-150 ease-in-out">
 											Popular searches
 										</h3>
 										<div className="flex flex-wrap gap-2 p-1">
@@ -185,7 +185,7 @@ const Navbar = () => {
 								<Button
 									variant="ghost"
 									size="sm"
-									className="text-sm rounded-full dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-800">
+									className="hover:scale-105 active:scale-95 transition-transform duration-200 ease-in-out text-sm rounded-full dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-800">
 									<ShoppingBag className="h-5 w-5 mr-1" />
 									<span>Deals</span>
 								</Button>
@@ -194,7 +194,7 @@ const Navbar = () => {
 								<Button
 									variant="ghost"
 									size="sm"
-									className="text-sm rounded-full dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-800">
+									className="hover:scale-105 active:scale-95 transition-transform duration-200 ease-in-out text-sm rounded-full dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-800">
 									<svg
 										xmlns="http://www.w3.org/2000/svg"
 										viewBox="0 0 24 24"
@@ -216,7 +216,7 @@ const Navbar = () => {
 								<Button
 									variant="ghost"
 									size="sm"
-									className="text-sm rounded-full dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-800">
+									className="hover:scale-105 active:scale-95 transition-transform duration-200 ease-in-out text-sm rounded-full dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-800">
 									<Heart className="h-5 w-5 mr-1" />
 									<span>Wishlist</span>
 								</Button>
@@ -243,13 +243,13 @@ const Navbar = () => {
 						<div className="flex flex-col space-y-2">
 							<Link
 								to="/deals"
-								className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md flex items-center">
+								className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 active:scale-95 transition-transform duration-150 ease-in-out rounded-md flex items-center">
 								<ShoppingBag className="h-5 w-5 mr-2" />
 								Deals
 							</Link>
 							<Link
 								to="/categories"
-								className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md flex items-center">
+								className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 active:scale-95 transition-transform duration-150 ease-in-out rounded-md flex items-center">
 								<svg
 									xmlns="http://www.w3.org/2000/svg"
 									viewBox="0 0 24 24"
@@ -268,7 +268,7 @@ const Navbar = () => {
 							</Link>
 							<Link
 								to="/wishlist"
-								className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md flex items-center">
+								className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 active:scale-95 transition-transform duration-150 ease-in-out rounded-md flex items-center">
 								<Heart className="h-5 w-5 mr-2" />
 								Wishlist
 							</Link>

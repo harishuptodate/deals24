@@ -100,7 +100,7 @@ const WishlistCard = ({
               variant="outline" 
               size="sm"
               onClick={() => onViewFullPage(item)}
-              className="dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800 flex items-center gap-1"
+              className="dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800 flex items-center gap-1 active:scale-95 transition-transform duration-150 ease-in-out"
             >
               <ExternalLink size={14} />
               View Full Page
@@ -110,7 +110,7 @@ const WishlistCard = ({
             variant="outline" 
             size="sm"
             onClick={() => onViewDetails(item)}
-            className="dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+            className="dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800 active:scale-95 transition-transform duration-150 ease-in-out"
           >
             View Details
           </Button>

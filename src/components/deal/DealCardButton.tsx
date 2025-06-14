@@ -35,7 +35,7 @@ const DealCardButton = ({ description, link, id, hasMultipleLinks }: DealCardBut
         target="_blank"
         rel="noopener noreferrer"
         onClick={(e) => handleLinkClick(primaryLink, e)}
-        className="inline-block w-full text-center px-6 py-3 text-sm font-medium text-white bg-gradient-to-b from-apple-darkGray to-indigo-950 rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-apple-darkGray/20 flex items-center justify-center"
+        className="inline-block w-full text-center px-6 py-3 text-sm font-medium text-white bg-gradient-to-b from-apple-darkGray to-indigo-950 rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-apple-darkGray/20 flex items-center justify-center hover:scale-105"
       >
         Buy Now
       </a>

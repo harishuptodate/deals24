@@ -62,7 +62,7 @@ const HeroSection = () => {
 					<Button
 						variant="default"
 						size="lg"
-						className="bg-gradient-to-r from-gray-700 to-black text-white dark:from-gray-700 dark:to-black rounded-full shadow-lg shadow-apple-darkGray/20 hover:shadow-xl hover:shadow-apple-darkGray/30 transition-all duration-300 text-sm md:text-base px-4 py-2 h-auto"
+						className="bg-gradient-to-r from-gray-700 to-black text-white dark:from-gray-700 dark:to-black rounded-full shadow-lg shadow-apple-darkGray/20 hover:shadow-xl hover:shadow-apple-darkGray/30 transition-all duration-300 text-sm md:text-base px-4 py-2 h-auto  active:scale-95 ease-in-out"
 						asChild>
 						<a
 							href="https://t.me/deals24com"
@@ -74,7 +74,7 @@ const HeroSection = () => {
 					<Button
 						variant="outline"
 						size="lg"
-						className="rounded-full glass-effect dark:bg-gray-800/50 hover:bg-white/50 dark:hover:bg-gray-700/60 transition-all duration-300 text-sm md:text-base px-4 py-2 h-auto text-apple-darkGray dark:text-white dark:border-gray-700"
+						className="rounded-full glass-effect dark:bg-gray-800/50 hover:bg-white/50 dark:hover:bg-gray-700/60 transition-all duration-300 text-sm md:text-base px-4 py-2 h-auto text-apple-darkGray dark:text-white dark:border-gray-700  active:scale-95 ease-in-out"
 						asChild>
 						<a href="/categories">Browse Categories</a>
 					</Button>

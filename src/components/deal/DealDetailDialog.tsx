@@ -171,7 +171,7 @@ const DealDetailDialog = ({
           {id && (
             <Button
               onClick={handleViewFullPage}
-              className="flex gap-2 items-center"
+              className="flex gap-2 items-center active:scale-95 transition-transform duration-150 ease-in-out"
               variant="default"
             >
               <ExternalLink size={16} />
@@ -181,7 +181,7 @@ const DealDetailDialog = ({
           <Button
             onClick={handleShare}
             disabled={isSharing}
-            className="flex gap-2 items-center"
+            className="flex gap-2 items-center active:scale-95 transition-transform duration-150 ease-in-out"
             variant="outline"
           >
             <Share2 size={16} />

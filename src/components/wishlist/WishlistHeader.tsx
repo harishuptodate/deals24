@@ -20,7 +20,7 @@ const WishlistHeader = ({ favoriteCount, onClearAll }: WishlistHeaderProps) => {
         <Button 
           variant="outline" 
           onClick={onClearAll}
-          className="flex items-center gap-2 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+          className="flex items-center gap-2 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800 active:scale-95 transition-transform duration-150 ease-in-out"
         >
           <Trash2 size={16} />
           Clear All
