@@ -10,6 +10,9 @@ interface DealCardActionsProps {
   link: string;
   imageUrl?: string;
   telegramFileId?: string;
+  fullText?: string; // Add this to get the complete deal text
+  createdAt?: string; // Add this to get the creation date
+  category?: string; // Add this to get the category
 }
 
 export const useDealCardActions = ({ 
@@ -18,7 +21,10 @@ export const useDealCardActions = ({
   description, 
   link,
   imageUrl,
-  telegramFileId 
+  telegramFileId,
+  fullText,
+  createdAt,
+  category
 }: DealCardActionsProps) => {
   const { toast } = useToast();
   const [isSaved, setIsSaved] = useState(() => {
@@ -45,12 +51,28 @@ export const useDealCardActions = ({
         description: "This deal has been removed from your wishlist.",
       });
     } else {
-      const newFavorite = {
+      // Use fullText if available, otherwise fall back to description
+      const fullDescription = fullText || description;
+      
+      // Debug logging
+      console.log('Saving to wishlist:', {
         id,
         title,
         description,
+        fullText,
+        fullDescription,
+        createdAt,
+        category
+      });
+      
+      const newFavorite = {
+        id,
+        title,
+        description: fullDescription,
         link,
         timestamp: new Date().toISOString(),
+        createdAt: createdAt || new Date().toISOString(),
+        category,
         imageUrl,
         telegramFileId
       };
