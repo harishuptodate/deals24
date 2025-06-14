@@ -3,33 +3,74 @@ import { useState } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { shareContent, copyToClipboard } from '../utils/linkUtils';
 
-export const useDealCardActions = (id?: string, title?: string) => {
-  const { toast } = useToast();
-  
-  // Dialog states
-  const [isOpen, setIsOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isEditPasswordDialogOpen, setIsEditPasswordDialogOpen] = useState(false);
-  const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
-  const [isCategoryPasswordDialogOpen, setIsCategoryPasswordDialogOpen] = useState(false);
-  
-  // Password states
-  const [deletePassword, setDeletePassword] = useState('');
-  const [deleteError, setDeleteError] = useState('');
-  const [editPassword, setEditPassword] = useState('');
-  const [editError, setEditError] = useState('');
-  const [categoryPassword, setCategoryPassword] = useState('');
-  const [categoryError, setCategoryError] = useState('');
+interface DealCardActionsProps {
+  id?: string;
+  title: string;
+  description: string;
+  link: string;
+  imageUrl?: string;
+  telegramFileId?: string;
+}
 
-  const handleShare = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!id) return;
+export const useDealCardActions = ({ 
+  id, 
+  title, 
+  description, 
+  link,
+  imageUrl,
+  telegramFileId 
+}: DealCardActionsProps) => {
+  const { toast } = useToast();
+  const [isSaved, setIsSaved] = useState(() => {
+    const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+    return favorites.some((item: any) => 
+      item.id === id || 
+      (item.title === title)
+    );
+  });
+  const [isSharing, setIsSharing] = useState(false);
+
+  const handleToggleWishlist = () => {
+    const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+
+    if (isSaved) {
+      const updatedFavorites = favorites.filter((item: any) => 
+        item.id !== id && 
+        item.title !== title
+      );
+      localStorage.setItem('favorites', JSON.stringify(updatedFavorites));
+      setIsSaved(false);
+      toast({
+        title: "Removed from wishlist",
+        description: "This deal has been removed from your wishlist.",
+      });
+    } else {
+      const newFavorite = {
+        id,
+        title,
+        description,
+        link,
+        timestamp: new Date().toISOString(),
+        imageUrl,
+        telegramFileId
+      };
+      
+      favorites.push(newFavorite);
+      localStorage.setItem('favorites', JSON.stringify(favorites));
+      setIsSaved(true);
+      toast({
+        title: "Added to wishlist",
+        description: "This deal has been added to your wishlist.",
+      });
+    }
+  };
+
+  const handleShare = async () => {
+    setIsSharing(true);
     
     try {
-      const shareUrl = `${window.location.origin}/deal/${id}`;
-      const shareText = `Check out this deal: ${title?.substring(0, 60)}${title && title.length > 60 ? '...' : ''}`;
+      const shareUrl = id ? `${window.location.origin}/deal/${id}` : window.location.href;
+      const shareText = `Check out this deal: ${title.substring(0, 60)}${title.length > 60 ? '...' : ''}`;
       
       const shareData = {
         title: title || 'Check out this deal!',
@@ -57,41 +98,15 @@ export const useDealCardActions = (id?: string, title?: string) => {
         description: "Something went wrong while trying to share this deal.",
         variant: "destructive",
       });
+    } finally {
+      setIsSharing(false);
     }
   };
 
   return {
-    // Dialog states
-    isOpen,
-    setIsOpen,
-    isDeleteDialogOpen,
-    setIsDeleteDialogOpen,
-    isPasswordDialogOpen,
-    setIsPasswordDialogOpen,
-    isEditDialogOpen,
-    setIsEditDialogOpen,
-    isEditPasswordDialogOpen,
-    setIsEditPasswordDialogOpen,
-    isCategoryDialogOpen,
-    setIsCategoryDialogOpen,
-    isCategoryPasswordDialogOpen,
-    setIsCategoryPasswordDialogOpen,
-    
-    // Password states
-    deletePassword,
-    setDeletePassword,
-    deleteError,
-    setDeleteError,
-    editPassword,
-    setEditPassword,
-    editError,
-    setEditError,
-    categoryPassword,
-    setCategoryPassword,
-    categoryError,
-    setCategoryError,
-    
-    // Actions
+    isSaved,
+    isSharing,
+    handleToggleWishlist,
     handleShare,
   };
 };
