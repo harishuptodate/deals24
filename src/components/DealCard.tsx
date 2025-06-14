@@ -1,5 +1,5 @@
 
-import React, { memo } from 'react';
+import React, { memo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { extractLinks } from './deal/utils/linkUtils';
 import { 
@@ -63,35 +63,36 @@ const DealCard = memo(({
     setLocalCategory,
   } = useDealCardState(title);
 
+  // Dialog states (managed locally)
+  const [isOpen, setIsOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isEditPasswordDialogOpen, setIsEditPasswordDialogOpen] = useState(false);
+  const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
+  const [isCategoryPasswordDialogOpen, setIsCategoryPasswordDialogOpen] = useState(false);
+  
+  // Password states (managed locally)
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteError, setDeleteError] = useState('');
+  const [editPassword, setEditPassword] = useState('');
+  const [editError, setEditError] = useState('');
+  const [categoryPassword, setCategoryPassword] = useState('');
+  const [categoryError, setCategoryError] = useState('');
+
   const {
-    isOpen,
-    setIsOpen,
-    isDeleteDialogOpen,
-    setIsDeleteDialogOpen,
-    isPasswordDialogOpen,
-    setIsPasswordDialogOpen,
-    isEditDialogOpen,
-    setIsEditDialogOpen,
-    isEditPasswordDialogOpen,
-    setIsEditPasswordDialogOpen,
-    isCategoryDialogOpen,
-    setIsCategoryDialogOpen,
-    isCategoryPasswordDialogOpen,
-    setIsCategoryPasswordDialogOpen,
-    deletePassword,
-    setDeletePassword,
-    deleteError,
-    setDeleteError,
-    editPassword,
-    setEditPassword,
-    editError,
-    setEditError,
-    categoryPassword,
-    setCategoryPassword,
-    categoryError,
-    setCategoryError,
+    isSaved,
+    isSharing,
+    handleToggleWishlist,
     handleShare,
-  } = useDealCardActions(id, localTitle);
+  } = useDealCardActions({
+    id,
+    title: localTitle,
+    description: localDescription,
+    link,
+    imageUrl,
+    telegramFileId,
+  });
 
   // Extract links for UI decision making
   const links = extractLinks(description);
@@ -99,25 +100,7 @@ const DealCard = memo(({
 
   const toggleFavorite = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-    let newFavorites;
-
-    if (isFavorite) {
-      newFavorites = favorites.filter((fav: any) => fav.title !== title);
-    } else {
-      newFavorites = [
-        ...favorites,
-        {
-          title,
-          description,
-          link,
-          id,
-          timestamp: new Date().toISOString(),
-        },
-      ];
-    }
-
-    localStorage.setItem('favorites', JSON.stringify(newFavorites));
+    handleToggleWishlist();
     setIsFavorite(!isFavorite);
   };
 
@@ -231,7 +214,7 @@ const DealCard = memo(({
         }}>
         <div className="relative glass-effect rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.06)] h-full flex flex-col border-gray-200 dark:border-gray-900 dark:bg-zinc-950">
           <DealCardActions
-            isFavorite={isFavorite}
+            isFavorite={isSaved}
             onToggleFavorite={toggleFavorite}
             onShare={handleShare}
             onDelete={onDelete ? handleDelete : undefined}
