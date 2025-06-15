@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -7,6 +8,17 @@
     <meta name="description" content="Best deals and offers for you" />
     <meta name="Harish" content="Deals24" />
     <meta property="og:image" content="/og-image.png" />
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="/src/main.tsx" as="script" type="module" />
+    <link rel="preload" href="/src/App.tsx" as="script" type="module" />
+    <link rel="preload" href="/src/pages/Index.tsx" as="script" type="module" />
+    
+    <!-- DNS prefetch for external domains -->
+    <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+    
+    <!-- Module preload for better loading performance -->
+    <link rel="modulepreload" href="/src/main.tsx" />
   </head>
 
   <body>

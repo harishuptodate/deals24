@@ -9,13 +9,40 @@ import { Loader2 } from "lucide-react";
 import EnhancedErrorBoundary from "./components/enhanced/EnhancedErrorBoundary";
 
 // Lazy load components for code splitting
-const Index = lazy(() => import("./pages/Index"));
-const Deals = lazy(() => import("./pages/Deals"));
-const Categories = lazy(() => import("./pages/Categories"));
-const Admin = lazy(() => import("./pages/Admin"));
-const Wishlist = lazy(() => import("./pages/Wishlist"));
-const NotFound = lazy(() => import("./pages/NotFound"));
-const Deal = lazy(() => import("./pages/Deal"));
+const Index = lazy(() => import("./pages/Index").catch(err => {
+  console.error('Failed to load Index page:', err);
+  return { default: () => <div>Error loading page. Please refresh.</div> };
+}));
+
+const Deals = lazy(() => import("./pages/Deals").catch(err => {
+  console.error('Failed to load Deals page:', err);
+  return { default: () => <div>Error loading page. Please refresh.</div> };
+}));
+
+const Categories = lazy(() => import("./pages/Categories").catch(err => {
+  console.error('Failed to load Categories page:', err);
+  return { default: () => <div>Error loading page. Please refresh.</div> };
+}));
+
+const Admin = lazy(() => import("./pages/Admin").catch(err => {
+  console.error('Failed to load Admin page:', err);
+  return { default: () => <div>Error loading page. Please refresh.</div> };
+}));
+
+const Wishlist = lazy(() => import("./pages/Wishlist").catch(err => {
+  console.error('Failed to load Wishlist page:', err);
+  return { default: () => <div>Error loading page. Please refresh.</div> };
+}));
+
+const NotFound = lazy(() => import("./pages/NotFound").catch(err => {
+  console.error('Failed to load NotFound page:', err);
+  return { default: () => <div>Page not found</div> };
+}));
+
+const Deal = lazy(() => import("./pages/Deal").catch(err => {
+  console.error('Failed to load Deal page:', err);
+  return { default: () => <div>Error loading page. Please refresh.</div> };
+}));
 
 // Enhanced loading fallback component
 const LoadingFallback = () => (
@@ -85,6 +112,29 @@ const App = () => {
       console.log("Running in development mode");
       console.log("API Base URL:", import.meta.env.VITE_API_BASE_URL);
     }
+
+    // Add module loading error handler
+    window.addEventListener('error', (event) => {
+      if (event.message.includes('Failed to fetch dynamically imported module')) {
+        console.error('Module loading error detected:', event);
+        // Show user-friendly error message
+        const errorDiv = document.createElement('div');
+        errorDiv.innerHTML = `
+          <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+                      background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                      z-index: 10000; text-align: center; font-family: system-ui;">
+            <h3>Loading Error</h3>
+            <p>There was an issue loading the page. Please refresh to continue.</p>
+            <button onclick="window.location.reload()" 
+                    style="background: #007bff; color: white; border: none; padding: 8px 16px; 
+                           border-radius: 4px; cursor: pointer; margin-top: 10px;">
+              Refresh Page
+            </button>
+          </div>
+        `;
+        document.body.appendChild(errorDiv);
+      }
+    });
 
     // Add shimmer animation keyframes
     const style = document.createElement('style');
