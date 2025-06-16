@@ -134,13 +134,16 @@ const Admin = () => {
 			};
 		});
 
-		deals.forEach((deal) => {
-			const created = deal.createdAt || deal.date;
-			if (!created) return;
-			const dateStr = format(new Date(created), 'yyyy-MM-dd');
-			const match = last7Days.find((d) => d.date === dateStr);
-			if (match) match.count += 1;
-		});
+		// Add safety check for deals array
+		if (deals && Array.isArray(deals)) {
+			deals.forEach((deal) => {
+				const created = deal.createdAt || deal.date;
+				if (!created) return;
+				const dateStr = format(new Date(created), 'yyyy-MM-dd');
+				const match = last7Days.find((d) => d.date === dateStr);
+				if (match) match.count += 1;
+			});
+		}
 
 		return last7Days;
 	};
@@ -795,10 +798,10 @@ const Admin = () => {
 					</Card>
 				</div>
 
-				{/* Updated layout with matching heights */}
+				{/* Updated layout with matching heights - reduced height to trim bottom space */}
 				<div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
 					<div className="lg:col-span-2">
-						<Card className="h-[600px]">
+						<Card className="h-[500px]">
 							<CardHeader>
 								<CardTitle>Performance Metrics</CardTitle>
 								<CardDescription>{getPeriodLabel()} Stats</CardDescription>
@@ -827,7 +830,7 @@ const Admin = () => {
 									</TabsList>
 								</Tabs>
 							</CardHeader>
-							<CardContent className="h-[480px]">
+							<CardContent className="h-[380px]">
 								<PerformanceMetricsChart
 									data={getChartData()}
 									isLoading={isLoading}
@@ -837,7 +840,7 @@ const Admin = () => {
 						</Card>
 					</div>
 
-					<div className="h-[600px]">
+					<div className="h-[500px]">
 						<TopPerformingDealsCarousel
 							topDeals={topDeals}
 							isLoading={isLoadingTop}
