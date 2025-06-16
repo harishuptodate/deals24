@@ -55,13 +55,7 @@ const TopPerformingDealsCarousel = ({
     };
   };
 
-  const handleDealClick = (deal: any, event?: React.MouseEvent) => {
-    // Prevent event propagation to stop the default DealCard click behavior
-    if (event) {
-      event.stopPropagation();
-      event.preventDefault();
-    }
-    
+  const handleDealClick = (deal: any) => {
     setSelectedDeal(deal);
     setIsDialogOpen(true);
   };
@@ -193,20 +187,19 @@ const AutoCarousel = ({
             return (
               <CarouselItem key={deal._id || deal.id || index} className="pl-2 md:pl-4 basis-full">
                 <div className="h-[320px] w-full">
-                  <div 
-                    onClick={(e) => onDealClick(deal, e)} 
-                    className="cursor-pointer h-full"
-                  >
-                    <DealCard
-                      {...formattedDeal}
-                      onDelete={isAuthenticated() ? onDelete : undefined}
-                      onEdit={isAuthenticated() ? onEdit : undefined}
-                      onCategoryUpdate={isAuthenticated() ? onCategoryUpdate : undefined}
-                      isAdmin={isAuthenticated()}
-                      // Disable the default click behavior by not passing onClick
-                      onClick={undefined}
-                    />
-                  </div>
+                  <DealCard
+                    {...formattedDeal}
+                    onDelete={isAuthenticated() ? onDelete : undefined}
+                    onEdit={isAuthenticated() ? onEdit : undefined}
+                    onCategoryUpdate={isAuthenticated() ? onCategoryUpdate : undefined}
+                    isAdmin={isAuthenticated()}
+                    // Override the default click behavior completely
+                    onClick={(e: React.MouseEvent) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onDealClick(deal);
+                    }}
+                  />
                 </div>
               </CarouselItem>
             );
