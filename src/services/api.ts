@@ -92,7 +92,7 @@ export const getTelegramMessages = async (
 			params.search = searchQuery;
 		}
 
-		console.log('Fetching messages with params:', params);
+		// console.log('Fetching messages with params:', params);
 
 		// Make sure we're requesting JSON and not HTML
 		const response = await api.get<TelegramResponse>('/telegram/messages', {
@@ -134,7 +134,7 @@ export const getCategoryCounts = async (): Promise<CategoryCount[]> => {
 					{ category: 'fashion', count: 95 },
 				];
 			}
-			console.log('API Response:', response.data);
+			// console.log('API Response:', response.data);
 			return response.data.data;
 		}
 

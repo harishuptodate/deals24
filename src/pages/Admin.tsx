@@ -545,7 +545,7 @@ const Admin = () => {
 				return 'Period';
 		}
 	};
-	console.log(isAuthenticated());
+	
 	return (
 		<div className="min-h-screen bg-gray-50 dark:bg-[#09090B]">
 			<Navbar />
