@@ -60,6 +60,7 @@ import { handleTrackedLinkClick } from '../services/api';
 import { Input } from '@/components/ui/input';
 import PerformanceMetricsChart from '../components/admin/PerformanceMetricsChart';
 import AvgClicksCard from '@/components/AvgClicksCard';
+import TopPerformingDealsCarousel from '../components/admin/TopPerformingDealsCarousel';
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
 
 interface ClickData {
@@ -159,7 +160,7 @@ const Admin = () => {
 
 	const handleLogin = () => {
 		setShowLoginDialog(true);
-};
+	};
 
 	useEffect(() => {
 		if (isCategoryDialogOpen) {
@@ -229,6 +230,94 @@ const Admin = () => {
 
 		fetchTopDeals();
 	}, [toast]);
+
+	// Enhanced deal deletion handler for carousel
+	const handleCarouselDealDelete = async (id: string) => {
+		try {
+			const success = await deleteProduct(id);
+			if (success) {
+				toast({
+					title: 'Success',
+					description: 'Deal was deleted successfully',
+				});
+				// Remove the deal from the list
+				const updatedDeals = topDeals.filter(deal => deal._id !== id);
+				setTopDeals(updatedDeals);
+			} else {
+				toast({
+					title: 'Error',
+					description: 'Failed to delete deal',
+					variant: 'destructive',
+				});
+			}
+		} catch (error) {
+			toast({
+				title: 'Error',
+				description: 'An error occurred while deleting the deal',
+				variant: 'destructive',
+			});
+		}
+	};
+
+	// Enhanced deal edit handler for carousel
+	const handleCarouselDealEdit = async (id: string, newText: string) => {
+		try {
+			const success = await updateMessageText(id, newText);
+			if (success) {
+				toast({
+					title: 'Success',
+					description: 'Deal was updated successfully',
+				});
+				// Update the deal in the list
+				const updatedDeals = topDeals.map(deal =>
+					deal._id === id ? { ...deal, text: newText } : deal
+				);
+				setTopDeals(updatedDeals);
+			} else {
+				toast({
+					title: 'Error',
+					description: 'Failed to update deal',
+					variant: 'destructive',
+				});
+			}
+		} catch (error) {
+			toast({
+				title: 'Error',
+				description: 'An error occurred while updating the deal',
+				variant: 'destructive',
+			});
+		}
+	};
+
+	// Enhanced category update handler for carousel
+	const handleCarouselCategoryUpdate = async (id: string, category: string) => {
+		try {
+			const success = await updateMessageCategory(id, category);
+			if (success) {
+				toast({
+					title: 'Success',
+					description: 'Category was updated successfully',
+				});
+				// Update the deal in the list
+				const updatedDeals = topDeals.map(deal =>
+					deal._id === id ? { ...deal, category } : deal
+				);
+				setTopDeals(updatedDeals);
+			} else {
+				toast({
+					title: 'Error',
+					description: 'Failed to update category',
+					variant: 'destructive',
+				});
+			}
+		} catch (error) {
+			toast({
+				title: 'Error',
+				description: 'An error occurred while updating the category',
+				variant: 'destructive',
+			});
+		}
+	};
 
 	// Handle period change
 	const handlePeriodChange = (period: 'day' | 'week' | 'month' | 'year') => {
@@ -611,7 +700,6 @@ const Admin = () => {
 										</div>
 									</div>
 
-									{/* 🔥 Trend Line */}
 									<ResponsiveContainer width="100%" height={60}>
 										<LineChart data={dealTrendData}>
 											<XAxis dataKey="name" hide />
@@ -671,7 +759,6 @@ const Admin = () => {
 										</div>
 									</div>
 
-									{/* 📊 Sparkline below the total */}
 									<ResponsiveContainer width="100%" height={60}>
 										<LineChart
 											data={clickStats?.[periodMap[activePeriod]] || []}>
@@ -708,6 +795,7 @@ const Admin = () => {
 					</Card>
 				</div>
 
+				{/* Updated layout with carousel component */}
 				<div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
 					<div className="lg:col-span-2">
 						<Card>
@@ -750,44 +838,13 @@ const Admin = () => {
 					</div>
 
 					<div>
-						<Card className="h-full flex flex-col">
-							<CardHeader>
-								<CardTitle>Top Performing Deals</CardTitle>
-								<CardDescription>
-									Most clicked deals in selected period
-								</CardDescription>
-							</CardHeader>
-							<CardContent className="flex-1 overflow-hidden flex flex-col">
-								{isLoadingTop ? (
-									<div className="flex justify-center items-center h-full flex-1">
-										<Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-									</div>
-								) : !topDeals ? (
-									<div className="text-center py-8 flex-1 flex items-center justify-center">
-										<div>
-											<BarChart3 className="h-12 w-12 mx-auto text-gray-300 mb-2" />
-											<p className="text-gray-500">No click data available</p>
-										</div>
-									</div>
-								) : (
-									<div className="space-y-1 flex-1">
-										{topDeals.map((deal, index) => (
-											<div
-												key={deal._id || deal.id || index}
-												className="p-3 rounded-lg  border-gray-100 hover:bg-gray-50 dark:hover:bg-apple-darkGray cursor-pointer transition-colors"
-												onClick={() => handleOpenDealDetails(deal)}>
-												<h3 className="text-sm font-medium line-clamp-1 mb-1">
-													{deal.text?.split('\n')[0] || 'Deal'}
-												</h3>
-												<div className="flex items-center justify-between text-xs text-gray-500">
-													<span>Clicks: {deal.clicks || 0}</span>
-												</div>
-											</div>
-										))}
-									</div>
-								)}
-							</CardContent>
-						</Card>
+						<TopPerformingDealsCarousel
+							topDeals={topDeals}
+							isLoading={isLoadingTop}
+							onDelete={handleCarouselDealDelete}
+							onEdit={handleCarouselDealEdit}
+							onCategoryUpdate={handleCarouselCategoryUpdate}
+						/>
 					</div>
 				</div>
 			</main>

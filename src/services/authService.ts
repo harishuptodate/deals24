@@ -1,6 +1,6 @@
 
 const isAuthenticated = () => {
-  return localStorage.getItem('adminAuth') === '____________';
+  return localStorage.getItem('adminAuth') === 'authenticated_user_token';
 };
 
 const login = (username: string, password: string): boolean => {
@@ -8,7 +8,7 @@ const login = (username: string, password: string): boolean => {
     username === import.meta.env.VITE_ADMIN_USERNAME && 
     password === import.meta.env.VITE_ADMIN_PASSWORD
   ) {
-    localStorage.setItem('adminAuth', '____________');
+    localStorage.setItem('adminAuth', 'authenticated_user_token');
     return true;
   }
   return false;
