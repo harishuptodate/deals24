@@ -41,15 +41,6 @@ const Wishlist = () => {
   };
 
   const recordClick = (title: string, clickedLink: string, itemId?: string) => {
-    const clickData = JSON.parse(localStorage.getItem('clickData') || '[]');
-    
-    clickData.push({
-      title,
-      link: clickedLink,
-      timestamp: new Date().toISOString()
-    });
-    
-    localStorage.setItem('clickData', JSON.stringify(clickData));
     
     if (itemId) {
       trackMessageClick(itemId).catch(err => 

@@ -267,14 +267,7 @@ export const handleTrackedLinkClick = async (
 	event?: MouseEvent,
 ): Promise<void> => {
 	if (messageId) {
-		const clickData = JSON.parse(localStorage.getItem('clickData') || '[]');
-		clickData.push({
-			messageId,
-			url,
-			timestamp: new Date().toISOString(),
-		});
-		localStorage.setItem('clickData', JSON.stringify(clickData));
-
+		
 		await trackMessageClick(messageId); // ✅ wait before redirect
 	}
 

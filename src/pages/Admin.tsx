@@ -109,8 +109,8 @@ const Admin = () => {
 	const [showLoginDialog, setShowLoginDialog] = useState(false);
 	const [totalDealsCount, setTotalDealsCount] = useState<number>(0);
 
-	console.log("🕒 Frontend Time (Local):", new Date().toString());
-	console.log("🕒 Frontend Time (IST):", new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }));
+	// console.log("🕒 Frontend Time (Local):", new Date().toString());
+	// console.log("🕒 Frontend Time (IST):", new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }));
 
 	const periodMap = {
 		// this is for Total clicks for selected period Card to plot graph
@@ -149,30 +149,17 @@ const Admin = () => {
 	// For this implementation, I'll use a hardcoded password as a fallback
 	const correctPassword = import.meta.env.VITE_DELETE_PASSWORD || 'admin123';
 
-	// useEffect(() => {
-	// 	if (!isAuthenticated()) {
-	// 		setShowLoginDialog(true);
-	// 	}
-	// }, []);
+	const handleLoginSuccess = () => {
+		setShowLoginDialog(false);
+	};
 
-	// const handleLoginSuccess = () => {
-	// 	setShowLoginDialog(false);
-	// };
+	const handleLogout = () => {
+		logout();
+	};
 
-	// const handleLogout = () => {
-	// 	logout();
-	// 	navigate('/');
-	// };
-
-	// if (!isAuthenticated()) {
-	// 	return (
-	// 		<AdminLoginDialog
-	// 			isOpen={showLoginDialog}
-	// 			onClose={() => navigate('/')}
-	// 			onSuccess={handleLoginSuccess}
-	// 		/>
-	// 	);
-	// }
+	const handleLogin = () => {
+		setShowLoginDialog(true);
+};
 
 	useEffect(() => {
 		if (isCategoryDialogOpen) {
@@ -558,16 +545,31 @@ const Admin = () => {
 				return 'Period';
 		}
 	};
-
+	console.log(isAuthenticated());
 	return (
 		<div className="min-h-screen bg-gray-50 dark:bg-[#09090B]">
 			<Navbar />
 			<main className="container mx-auto px-4 py-8">
 				<div className="flex justify-between items-center mb-8">
 					<h1 className="text-3xl font-bold">Analytics</h1>
-					{/* <Button onClick={handleLogout} variant="outline">
+					{isAuthenticated() ? (
+
+						<Button onClick={handleLogout} variant="outline">
 						Logout
-					</Button> */}
+					</Button> ) 
+					: ( 
+						<Button onClick={handleLogin}>
+							Login 
+						</Button> 
+					)}
+
+					{showLoginDialog &&
+						<AdminLoginDialog
+							isOpen={showLoginDialog}
+							onClose={() => setShowLoginDialog(false)}
+							onSuccess={handleLoginSuccess}
+						/>
+					}
 				</div>
 
 				<div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -801,7 +803,7 @@ const Admin = () => {
 
 					{selectedDeal && (
 						<div className="mt-4 space-y-4">
-							<div className="text-sm whitespace-pre-line">
+							<div className="text-sm whitespace-pre-line text-center">
 								{makeLinksClickable(selectedDeal.text)}
 							</div>
 

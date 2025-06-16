@@ -1,15 +1,14 @@
-
 import React from 'react';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { X } from 'lucide-react';
 
 interface RemoveDealConfirmDialogProps {
   isOpen: boolean;
@@ -25,24 +24,43 @@ const RemoveDealConfirmDialog = ({
   dealTitle,
 }: RemoveDealConfirmDialogProps) => {
   return (
-    <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="max-w-[90vw] sm:max-w-md rounded-xl">
-        <AlertDialogHeader>
-          <AlertDialogTitle>Remove from Wishlist?</AlertDialogTitle>
-          <AlertDialogDescription>
-            Are you sure you want to remove "{dealTitle.substring(0, 50)}..." from your wishlist? This action cannot be undone.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={onConfirm}
-            className="bg-red-500 hover:bg-red-600">
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-[90vw] sm:max-w-md rounded-xl">
+
+        {/* Close button top-right */}
+        <DialogClose asChild>
+          <button
+            className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 dark:hover:text-white"
+            aria-label="Close"
+          >
+          </button>
+        </DialogClose>
+
+        <DialogHeader>
+          <DialogTitle>Remove from Wishlist?</DialogTitle>
+          <DialogDescription>
+            Are you sure you want to remove this from your wishlist? This action cannot be undone.
+          </DialogDescription>
+        </DialogHeader>
+
+        <DialogFooter>
+          <DialogClose asChild>
+            <button className="px-4 py-2 rounded-md border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800">
+              Cancel
+            </button>
+          </DialogClose>
+          <button
+            onClick={() => {
+              onConfirm();
+              onOpenChange(false);
+            }}
+            className="px-4 py-2 rounded-md bg-red-500 hover:bg-red-600 text-white"
+          >
             Remove
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+          </button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 

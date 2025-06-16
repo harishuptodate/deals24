@@ -18,6 +18,7 @@ const logout = () => {
   localStorage.removeItem('adminAuth');
   localStorage.removeItem('editPermissionGranted');
   localStorage.removeItem('categoryPermissionGranted');
+  window.location.reload();
 };
 
 const hasEditPermission = (): boolean => {

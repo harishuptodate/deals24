@@ -23,15 +23,6 @@ export const useClickTracking = ({ messageId, onSuccess, onError }: UseClickTrac
     try {
       console.log(`Tracking click for message ID: ${messageId} on URL: ${url}`);
       
-      // Store click in localStorage for backup
-      const clickData = JSON.parse(localStorage.getItem('clickData') || '[]');
-      clickData.push({
-        messageId,
-        url,
-        timestamp: new Date().toISOString()
-      });
-      localStorage.setItem('clickData', JSON.stringify(clickData));
-      
       // Use navigator.sendBeacon for reliable tracking during navigation
       let success = false;
       

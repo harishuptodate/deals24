@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Heart, Share2, Trash2, PenSquare, Tag } from 'lucide-react';
+import { isAuthenticated } from '@/services/authService';
 
 interface DealCardActionsProps {
   isFavorite: boolean;
@@ -23,7 +24,7 @@ const DealCardActions = ({
 }: DealCardActionsProps) => {
   return (
     <div className="absolute top-3 right-3 flex items-center gap-1 z-10">
-      {showAdminActions && onDelete && (
+      {isAuthenticated() && showAdminActions && onDelete && (
         <>
           <button
             onClick={onCategoryEdit}

@@ -56,7 +56,7 @@ const HeroSection = () => {
 					</motion.span>
 				</h1>
 
-				<motion.div
+				{/* <motion.div
 					className="flex flex-wrap items-center justify-center gap-4 mt-4"
 					variants={staggerItem}>
 					<Button
@@ -78,7 +78,7 @@ const HeroSection = () => {
 						asChild>
 						<a href="/categories">Browse Categories</a>
 					</Button>
-				</motion.div>
+				</motion.div> */}
 			</motion.div>
 
 			{/* Decorative gradients */}
