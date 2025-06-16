@@ -187,19 +187,24 @@ const AutoCarousel = ({
             return (
               <CarouselItem key={deal._id || deal.id || index} className="pl-2 md:pl-4 basis-full">
                 <div className="h-[320px] w-full">
-                  <DealCard
-                    {...formattedDeal}
-                    onDelete={isAuthenticated() ? onDelete : undefined}
-                    onEdit={isAuthenticated() ? onEdit : undefined}
-                    onCategoryUpdate={isAuthenticated() ? onCategoryUpdate : undefined}
-                    isAdmin={isAuthenticated()}
-                    // Override the default click behavior completely
-                    onClick={(e: React.MouseEvent) => {
+                  {/* Create a custom wrapper to handle clicks without using DealCard's dialog */}
+                  <div
+                    className="cursor-pointer h-full"
+                    onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
                       onDealClick(deal);
                     }}
-                  />
+                  >
+                    {/* Render DealCard without its onClick behavior */}
+                    <DealCardWrapper
+                      {...formattedDeal}
+                      onDelete={isAuthenticated() ? onDelete : undefined}
+                      onEdit={isAuthenticated() ? onEdit : undefined}
+                      onCategoryUpdate={isAuthenticated() ? onCategoryUpdate : undefined}
+                      isAdmin={isAuthenticated()}
+                    />
+                  </div>
                 </div>
               </CarouselItem>
             );
@@ -227,6 +232,41 @@ const AutoCarousel = ({
         ))}
       </div>
     </Carousel>
+  );
+};
+
+// Custom wrapper that renders DealCard content without the dialog behavior
+const DealCardWrapper = ({
+  title,
+  description,
+  link,
+  id,
+  category,
+  createdAt,
+  imageUrl,
+  telegramFileId,
+  onDelete,
+  onEdit,
+  onCategoryUpdate,
+  isAdmin = false,
+}: any) => {
+  return (
+    <DealCard
+      title={title}
+      description={description}
+      link={link}
+      id={id}
+      category={category}
+      createdAt={createdAt}
+      imageUrl={imageUrl}
+      telegramFileId={telegramFileId}
+      onDelete={onDelete}
+      onEdit={onEdit}
+      onCategoryUpdate={onCategoryUpdate}
+      isAdmin={isAdmin}
+      // Pass a dummy onClick that does nothing to prevent DealCard's dialog
+      onClick={() => {}}
+    />
   );
 };
 
