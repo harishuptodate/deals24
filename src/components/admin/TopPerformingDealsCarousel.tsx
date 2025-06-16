@@ -1,11 +1,13 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { Loader2, BarChart3 } from 'lucide-react';
 import DealCard from '../DealCard';
+import DealDetailDialog from '../deal/DealDetailDialog';
 import { isAuthenticated } from '../../services/authService';
 import { format } from 'date-fns';
+import { useCarousel } from '@/components/ui/carousel';
 
 interface TopPerformingDealsCarouselProps {
   topDeals: any[];
@@ -22,6 +24,9 @@ const TopPerformingDealsCarousel = ({
   onEdit,
   onCategoryUpdate
 }: TopPerformingDealsCarouselProps) => {
+  const [selectedDeal, setSelectedDeal] = useState<any>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
   const formatDealForCard = (deal: any) => {
     // Extract title from the first line of text
     const title = deal.text?.split('\n')[0] || 'Deal';
@@ -48,6 +53,11 @@ const TopPerformingDealsCarousel = ({
         category: deal.category || ''
       }
     };
+  };
+
+  const handleDealClick = (deal: any) => {
+    setSelectedDeal(deal);
+    setIsDialogOpen(true);
   };
 
   if (isLoading) {
@@ -86,50 +96,133 @@ const TopPerformingDealsCarousel = ({
   }
 
   return (
-    <Card className="h-full flex flex-col">
-      <CardHeader>
-        <CardTitle>Top Performing Deals</CardTitle>
-        <CardDescription>Most clicked deals in selected period</CardDescription>
-      </CardHeader>
-      <CardContent className="flex-1 overflow-hidden flex flex-col px-2">
-        <Carousel className="w-full flex-1" opts={{ align: "start", loop: true }}>
-          <div className="relative">
-            <CarouselContent className="-ml-2 md:-ml-4">
-              {topDeals.map((deal, index) => {
-                const formattedDeal = formatDealForCard(deal);
-                return (
-                  <CarouselItem key={deal._id || deal.id || index} className="pl-2 md:pl-4 basis-full">
-                    <div className="h-[420px] w-full">
-                      <DealCard
-                        {...formattedDeal}
-                        onDelete={isAuthenticated() ? onDelete : undefined}
-                        onEdit={isAuthenticated() ? onEdit : undefined}
-                        onCategoryUpdate={isAuthenticated() ? onCategoryUpdate : undefined}
-                        isAdmin={isAuthenticated()}
-                      />
-                    </div>
-                  </CarouselItem>
-                );
-              })}
-            </CarouselContent>
-            
-            {/* Navigation buttons - positioned to not interfere with deal card actions */}
-            <CarouselPrevious className="left-2 bg-white/90 hover:bg-white border-gray-200 shadow-lg" />
-            <CarouselNext className="right-2 bg-white/90 hover:bg-white border-gray-200 shadow-lg" />
-          </div>
-        </Carousel>
+    <>
+      <Card className="h-full flex flex-col">
+        <CardHeader>
+          <CardTitle>Top Performing Deals</CardTitle>
+          <CardDescription>Most clicked deals in selected period</CardDescription>
+        </CardHeader>
+        <CardContent className="flex-1 overflow-hidden flex flex-col px-2">
+          <AutoCarousel 
+            topDeals={topDeals}
+            onDealClick={handleDealClick}
+            onDelete={onDelete}
+            onEdit={onEdit}
+            onCategoryUpdate={onCategoryUpdate}
+            formatDealForCard={formatDealForCard}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Enhanced Deal Details Dialog with extra data */}
+      {selectedDeal && (
+        <DealDetailDialog
+          isOpen={isDialogOpen}
+          onOpenChange={setIsDialogOpen}
+          title={selectedDeal.text?.split('\n')[0] || 'Deal Details'}
+          description={selectedDeal.text || ''}
+          id={selectedDeal._id || selectedDeal.id}
+          imageUrl={selectedDeal.imageUrl}
+          telegramFileId={selectedDeal.telegramFileId}
+          extraData={{
+            createdDate: selectedDeal.date || selectedDeal.createdAt,
+            clicks: selectedDeal.clicks || 0,
+            category: selectedDeal.category || ''
+          }}
+        />
+      )}
+    </>
+  );
+};
+
+// Separate component for auto-sliding carousel
+const AutoCarousel = ({ 
+  topDeals, 
+  onDealClick, 
+  onDelete, 
+  onEdit, 
+  onCategoryUpdate, 
+  formatDealForCard 
+}: any) => {
+  const [api, setApi] = useState<any>();
+  const [current, setCurrent] = useState(0);
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    if (!api) return;
+
+    setCount(api.scrollSnapList().length);
+    setCurrent(api.selectedScrollSnap() + 1);
+
+    api.on("select", () => {
+      setCurrent(api.selectedScrollSnap() + 1);
+    });
+  }, [api]);
+
+  // Auto-slide functionality
+  useEffect(() => {
+    if (!api) return;
+
+    const autoSlide = setInterval(() => {
+      if (api.canScrollNext()) {
+        api.scrollNext();
+      } else {
+        api.scrollTo(0); // Loop back to first slide
+      }
+    }, 4000); // Change slide every 4 seconds
+
+    return () => clearInterval(autoSlide);
+  }, [api]);
+
+  return (
+    <Carousel 
+      className="w-full flex-1" 
+      opts={{ align: "start", loop: true }}
+      setApi={setApi}
+    >
+      <div className="relative">
+        <CarouselContent className="-ml-2 md:-ml-4">
+          {topDeals.map((deal: any, index: number) => {
+            const formattedDeal = formatDealForCard(deal);
+            return (
+              <CarouselItem key={deal._id || deal.id || index} className="pl-2 md:pl-4 basis-full">
+                <div className="h-[380px] w-full">
+                  <div onClick={() => onDealClick(deal)} className="cursor-pointer">
+                    <DealCard
+                      {...formattedDeal}
+                      onDelete={isAuthenticated() ? onDelete : undefined}
+                      onEdit={isAuthenticated() ? onEdit : undefined}
+                      onCategoryUpdate={isAuthenticated() ? onCategoryUpdate : undefined}
+                      isAdmin={isAuthenticated()}
+                    />
+                  </div>
+                </div>
+              </CarouselItem>
+            );
+          })}
+        </CarouselContent>
         
-        {/* Indicator showing current position */}
-        <div className="flex justify-center mt-4 gap-2">
-          {topDeals.map((_, index) => (
-            <div
-              key={index}
-              className="w-2 h-2 rounded-full bg-gray-300 animate-pulse"
-            />
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+        {/* Navigation buttons */}
+        <CarouselPrevious className="left-2 bg-white/90 hover:bg-white border-gray-200 shadow-lg" />
+        <CarouselNext className="right-2 bg-white/90 hover:bg-white border-gray-200 shadow-lg" />
+      </div>
+      
+      {/* Enhanced indicator showing current position */}
+      <div className="flex justify-center mt-4 gap-2">
+        {Array.from({ length: count }, (_, index) => (
+          <button
+            key={index}
+            className={`w-2 h-2 rounded-full transition-all duration-300 ${
+              index + 1 === current 
+                ? 'bg-blue-500 w-6' 
+                : 'bg-gray-300 hover:bg-gray-400'
+            }`}
+            onClick={() => api?.scrollTo(index)}
+            aria-label={`Go to slide ${index + 1}`}
+          />
+        ))}
+      </div>
+    </Carousel>
   );
 };
 

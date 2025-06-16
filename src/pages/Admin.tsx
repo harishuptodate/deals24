@@ -795,10 +795,10 @@ const Admin = () => {
 					</Card>
 				</div>
 
-				{/* Updated layout with carousel component */}
+				{/* Updated layout with matching heights */}
 				<div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
 					<div className="lg:col-span-2">
-						<Card>
+						<Card className="h-[600px]">
 							<CardHeader>
 								<CardTitle>Performance Metrics</CardTitle>
 								<CardDescription>{getPeriodLabel()} Stats</CardDescription>
@@ -827,7 +827,7 @@ const Admin = () => {
 									</TabsList>
 								</Tabs>
 							</CardHeader>
-							<CardContent>
+							<CardContent className="h-[480px]">
 								<PerformanceMetricsChart
 									data={getChartData()}
 									isLoading={isLoading}
@@ -837,7 +837,7 @@ const Admin = () => {
 						</Card>
 					</div>
 
-					<div>
+					<div className="h-[600px]">
 						<TopPerformingDealsCarousel
 							topDeals={topDeals}
 							isLoading={isLoadingTop}

@@ -9,11 +9,12 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { handleTrackedLinkClick } from '../../services/api';
-import { ExternalLink, MoveDiagonal, Share2 } from 'lucide-react';
+import { ExternalLink, MoveDiagonal, Share2, Calendar, MousePointer, Tag } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { createShareData, shareContent, copyToClipboard, truncateLink, extractFirstLink, extractSecondLink } from './utils/linkUtils';
 import { useNavigate } from 'react-router-dom';
 import CachedTelegramImage from '../images/CachedTelegramImage';
+import { format } from 'date-fns';
 
 interface DealDetailDialogProps {
   isOpen: boolean;
@@ -23,6 +24,11 @@ interface DealDetailDialogProps {
   id?: string;
   imageUrl?: string;
   telegramFileId?: string;
+  extraData?: {
+    createdDate?: string;
+    clicks?: number;
+    category?: string;
+  };
 }
 
 const DealDetailDialog = ({
@@ -33,6 +39,7 @@ const DealDetailDialog = ({
   id,
   imageUrl,
   telegramFileId,
+  extraData,
 }: DealDetailDialogProps) => {
   const { toast } = useToast();
   const [isSharing, setIsSharing] = useState(false);
@@ -146,6 +153,15 @@ const DealDetailDialog = ({
     return null;
   };
 
+  const formatCreatedDate = (dateString?: string) => {
+    if (!dateString) return '';
+    try {
+      return format(new Date(dateString), 'MMM d, yyyy h:mm a');
+    } catch (error) {
+      return dateString;
+    }
+  };
+
   const hasImage = imageUrl || telegramFileId;
 
   return (
@@ -165,6 +181,36 @@ const DealDetailDialog = ({
           <div className="text-sm whitespace-pre-line text-center">
             {makeLinksClickable(description)}
           </div>
+
+          {/* Extra data section */}
+          {extraData && (
+            <div className="mt-6 pt-4 border-t border-gray-200">
+              <h4 className="text-sm font-semibold text-gray-700 mb-3">Deal Information</h4>
+              <div className="space-y-2 text-xs text-gray-600">
+                {extraData.createdDate && (
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-gray-500" />
+                    <span className="font-medium">Created:</span>
+                    <span>{formatCreatedDate(extraData.createdDate)}</span>
+                  </div>
+                )}
+                {typeof extraData.clicks === 'number' && (
+                  <div className="flex items-center gap-2">
+                    <MousePointer className="h-4 w-4 text-gray-500" />
+                    <span className="font-medium">Clicks:</span>
+                    <span>{extraData.clicks}</span>
+                  </div>
+                )}
+                {extraData.category && (
+                  <div className="flex items-center gap-2">
+                    <Tag className="h-4 w-4 text-gray-500" />
+                    <span className="font-medium">Category:</span>
+                    <span>{extraData.category}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         <DialogFooter className="mt-4 flex flex-col sm:flex-row gap-2 sm:justify-between">
