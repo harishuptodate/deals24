@@ -7,7 +7,7 @@ import DealCard from '../DealCard';
 import DealDetailDialog from '../deal/DealDetailDialog';
 import { isAuthenticated } from '../../services/authService';
 import { format } from 'date-fns';
-import { useCarousel } from '@/components/ui/carousel';
+
 
 interface TopPerformingDealsCarouselProps {
   topDeals: any[];
