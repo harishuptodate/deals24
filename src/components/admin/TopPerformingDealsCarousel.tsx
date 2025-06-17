@@ -2,12 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
-import { Loader2, BarChart3 } from 'lucide-react';
-import DealCard from '../DealCard';
+import { Loader2, BarChart3, Heart, Share2, Trash2, Edit, Tag, ExternalLink } from 'lucide-react';
 import DealDetailDialog from '../deal/DealDetailDialog';
 import { isAuthenticated } from '../../services/authService';
 import { format } from 'date-fns';
-
+import { extractFirstLink, extractSecondLink, truncateLink } from '../deal/utils/linkUtils';
+import { handleTrackedLinkClick } from '../../services/api';
+import CachedTelegramImage from '../images/CachedTelegramImage';
 
 interface TopPerformingDealsCarouselProps {
   topDeals: any[];
@@ -187,24 +188,14 @@ const AutoCarousel = ({
             return (
               <CarouselItem key={deal._id || deal.id || index} className="pl-2 md:pl-4 basis-full">
                 <div className="h-[320px] w-full">
-                  {/* Create a custom wrapper to handle clicks without using DealCard's dialog */}
-                  <div
-                    className="cursor-pointer h-full"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      onDealClick(deal);
-                    }}
-                  >
-                    {/* Render DealCard without its onClick behavior */}
-                    <DealCardWrapper
-                      {...formattedDeal}
-                      onDelete={isAuthenticated() ? onDelete : undefined}
-                      onEdit={isAuthenticated() ? onEdit : undefined}
-                      onCategoryUpdate={isAuthenticated() ? onCategoryUpdate : undefined}
-                      isAdmin={isAuthenticated()}
-                    />
-                  </div>
+                  <CustomDealCard
+                    deal={deal}
+                    formattedDeal={formattedDeal}
+                    onDealClick={onDealClick}
+                    onDelete={isAuthenticated() ? onDelete : undefined}
+                    onEdit={isAuthenticated() ? onEdit : undefined}
+                    onCategoryUpdate={isAuthenticated() ? onCategoryUpdate : undefined}
+                  />
                 </div>
               </CarouselItem>
             );
@@ -235,38 +226,161 @@ const AutoCarousel = ({
   );
 };
 
-// Custom wrapper that renders DealCard content without the dialog behavior
-const DealCardWrapper = ({
-  title,
-  description,
-  link,
-  id,
-  category,
-  createdAt,
-  imageUrl,
-  telegramFileId,
+// Custom deal card component that mimics DealCard but without its dialog behavior
+const CustomDealCard = ({
+  deal,
+  formattedDeal,
+  onDealClick,
   onDelete,
   onEdit,
   onCategoryUpdate,
-  isAdmin = false,
 }: any) => {
+  const { title, description, imageUrl, telegramFileId, createdAt } = formattedDeal;
+
+  const renderImage = () => {
+    if (imageUrl) {
+      return (
+        <img 
+          src={imageUrl} 
+          alt={title}
+          className="w-full h-32 object-cover rounded-lg mb-3"
+          onError={(e) => {
+            console.error('Failed to load image:', imageUrl);
+            e.currentTarget.style.display = 'none';
+          }}
+        />
+      );
+    } else if (telegramFileId) {
+      return (
+        <CachedTelegramImage
+          telegramFileId={telegramFileId}
+          alt={title}
+          className="w-full h-32 object-cover rounded-lg mb-3"
+        />
+      );
+    }
+    return null;
+  };
+
+  const formatDate = (dateString: string) => {
+    try {
+      return format(new Date(dateString), 'MMM d');
+    } catch (e) {
+      return '';
+    }
+  };
+
+  const links = extractFirstLink(description) ? [extractFirstLink(description)] : [];
+  const hasMultipleLinks = links.length > 1;
+
   return (
-    <DealCard
-      title={title}
-      description={description}
-      link={link}
-      id={id}
-      category={category}
-      createdAt={createdAt}
-      imageUrl={imageUrl}
-      telegramFileId={telegramFileId}
-      onDelete={onDelete}
-      onEdit={onEdit}
-      onCategoryUpdate={onCategoryUpdate}
-      isAdmin={isAdmin}
-      // Pass a dummy onClick that does nothing to prevent DealCard's dialog
-      onClick={() => {}}
-    />
+    <div
+      className="group animate-fade-up hover-scale cursor-pointer h-full"
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onDealClick(deal);
+      }}>
+      <div className="relative glass-effect rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.06)] h-full flex flex-col border-gray-200 dark:border-gray-900 dark:bg-zinc-950">
+        
+        {/* Action buttons */}
+        <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              // Handle favorite action if needed
+            }}
+            className="p-2 rounded-full bg-white/80 hover:bg-white shadow-sm transition-colors"
+          >
+            <Heart className="h-4 w-4 text-gray-600" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              // Handle share action if needed
+            }}
+            className="p-2 rounded-full bg-white/80 hover:bg-white shadow-sm transition-colors"
+          >
+            <Share2 className="h-4 w-4 text-gray-600" />
+          </button>
+          {onDelete && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(formattedDeal.id);
+              }}
+              className="p-2 rounded-full bg-white/80 hover:bg-white shadow-sm transition-colors"
+            >
+              <Trash2 className="h-4 w-4 text-red-500" />
+            </button>
+          )}
+          {onEdit && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(formattedDeal.id, description);
+              }}
+              className="p-2 rounded-full bg-white/80 hover:bg-white shadow-sm transition-colors"
+            >
+              <Edit className="h-4 w-4 text-blue-500" />
+            </button>
+          )}
+          {onCategoryUpdate && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onCategoryUpdate(formattedDeal.id, formattedDeal.category);
+              }}
+              className="p-2 rounded-full bg-white/80 hover:bg-white shadow-sm transition-colors"
+            >
+              <Tag className="h-4 w-4 text-purple-500" />
+            </button>
+          )}
+        </div>
+
+        {/* Image */}
+        {renderImage()}
+
+        {/* Content */}
+        <div className="flex-1 flex flex-col">
+          <h3 className="font-semibold text-lg mb-2 line-clamp-2 text-gray-900 dark:text-gray-100">
+            {title}
+          </h3>
+          
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-3 flex-1">
+            {description.replace(/https?:\/\/[^\s]+/g, '').trim()}
+          </p>
+
+          {createdAt && (
+            <div className="text-xs text-gray-500 mb-3">
+              {formatDate(createdAt)}
+            </div>
+          )}
+
+          {/* Buy Now Button */}
+          {extractFirstLink(description) && (
+            <div className="mt-auto">
+              <a
+                href={extractSecondLink(description) || extractFirstLink(description) || '#'}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleTrackedLinkClick(
+                    extractSecondLink(description) || extractFirstLink(description) || '', 
+                    formattedDeal.id, 
+                    e.nativeEvent
+                  );
+                }}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block w-full text-center px-4 py-3 text-sm font-medium text-white bg-gradient-to-b from-apple-darkGray to-indigo-950 rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-apple-darkGray/20 hover:scale-105"
+              >
+                Buy Now
+              </a>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 };
 
