@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
-import { Loader2, BarChart3, Heart, Share2, Trash2, Edit, Tag, ExternalLink } from 'lucide-react';
+import { Loader2, BarChart3, Heart, Share2, Trash2, Edit, Tag, ExternalLink, Lock, PenSquare } from 'lucide-react';
 import DealDetailDialog from '../deal/DealDetailDialog';
 import { isAuthenticated } from '../../services/authService';
 import { format } from 'date-fns';
@@ -11,7 +11,18 @@ import { handleTrackedLinkClick } from '../../services/api';
 import CachedTelegramImage from '../images/CachedTelegramImage';
 import DealCardActions from '../deal/DealCardActions';
 import { useDealCardActions } from '../deal/hooks/useDealCardActions';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
+import PasswordDialog from '../deal/PasswordDialog';
+import DeleteConfirmDialog from '../deal/DeleteConfirmDialog';
+import EditDealDialog from '../deal/EditDealDialog';
+import CategoryDialog from '../deal/CategoryDialog';
+import { 
+  hasEditPermission, 
+  hasCategoryPermission, 
+  grantEditPermission, 
+  grantCategoryPermission, 
+  verifyActionPassword 
+} from '../../services/authService';
 
 interface TopPerformingDealsCarouselProps {
   topDeals: any[];
@@ -242,6 +253,22 @@ const CustomDealCard = ({
   const { title, description, imageUrl, telegramFileId, createdAt } = formattedDeal;
   const { toast } = useToast();
 
+  // Dialog states for admin actions
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isEditPasswordDialogOpen, setIsEditPasswordDialogOpen] = useState(false);
+  const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
+  const [isCategoryPasswordDialogOpen, setIsCategoryPasswordDialogOpen] = useState(false);
+  
+  // Password states
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteError, setDeleteError] = useState('');
+  const [editPassword, setEditPassword] = useState('');
+  const [editError, setEditError] = useState('');
+  const [categoryPassword, setCategoryPassword] = useState('');
+  const [categoryError, setCategoryError] = useState('');
+
   // Use the deal card actions hook for proper functionality
   const {
     isSaved,
@@ -296,21 +323,92 @@ const CustomDealCard = ({
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (onDelete && formattedDeal.id) {
-      onDelete(formattedDeal.id);
+      setDeletePassword('');
+      setDeleteError('');
+      setIsPasswordDialogOpen(true);
     }
   };
 
   const handleEdit = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (onEdit && formattedDeal.id) {
-      onEdit(formattedDeal.id, description);
+      if (hasEditPermission()) {
+        setIsEditDialogOpen(true);
+      } else {
+        setEditPassword('');
+        setEditError('');
+        setIsEditPasswordDialogOpen(true);
+      }
     }
   };
 
   const handleCategoryEdit = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (onCategoryUpdate && formattedDeal.id) {
-      onCategoryUpdate(formattedDeal.id, formattedDeal.category);
+      if (hasCategoryPermission()) {
+        setIsCategoryDialogOpen(true);
+      } else {
+        setCategoryPassword('');
+        setCategoryError('');
+        setIsCategoryPasswordDialogOpen(true);
+      }
+    }
+  };
+
+  const confirmDelete = () => {
+    if (onDelete && formattedDeal.id) {
+      onDelete(formattedDeal.id);
+      setIsDeleteDialogOpen(false);
+    }
+  };
+
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!verifyActionPassword(deletePassword)) {
+      setDeleteError('Incorrect password. Please try again.');
+      return;
+    }
+    
+    setIsPasswordDialogOpen(false);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleEditPasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!verifyActionPassword(editPassword)) {
+      setEditError('Incorrect password. Please try again.');
+      return;
+    }
+    
+    grantEditPermission();
+    setIsEditPasswordDialogOpen(false);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleCategoryPasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!verifyActionPassword(categoryPassword)) {
+      setCategoryError('Incorrect password. Please try again.');
+      return;
+    }
+    
+    grantCategoryPermission();
+    setIsCategoryPasswordDialogOpen(false);
+    setIsCategoryDialogOpen(true);
+  };
+
+  const handleEditSuccess = (id: string, newText: string) => {
+    if (onEdit) {
+      onEdit(id, newText);
+    }
+  };
+
+  const handleCategorySuccess = (id: string, category: string) => {
+    if (onCategoryUpdate) {
+      onCategoryUpdate(id, category);
     }
   };
 
@@ -329,55 +427,56 @@ const CustomDealCard = ({
 	const hasImage = deal.imageUrl || deal.telegramFileId;
 
   return (
-    <div
-      className="group animate-fade-up hover-scale cursor-pointer h-full"
-      onClick={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        onDealClick(deal);
-      }}>
-      <div className="relative glass-effect rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.06)] h-full flex flex-col border-gray-200 dark:border-gray-900 dark:bg-zinc-950">
+    <>
+      <div
+        className="group animate-fade-up hover-scale cursor-pointer h-full"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onDealClick(deal);
+        }}>
+        <div className="relative glass-effect rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.06)] h-full flex flex-col border-gray-200 dark:border-gray-900 dark:bg-zinc-950">
 				
-        <DealCardActions
-          isFavorite={isSaved}
-          onToggleFavorite={toggleFavorite}
-          onShare={shareHandler}
-          onDelete={onDelete ? handleDelete : undefined}
-          onEdit={onEdit ? handleEdit : undefined}
-          onCategoryEdit={onCategoryUpdate ? handleCategoryEdit : undefined}
-          showAdminActions={!!onDelete}
-        />
+          <DealCardActions
+            isFavorite={isSaved}
+            onToggleFavorite={toggleFavorite}
+            onShare={shareHandler}
+            onDelete={onDelete ? handleDelete : undefined}
+            onEdit={onEdit ? handleEdit : undefined}
+            onCategoryEdit={onCategoryUpdate ? handleCategoryEdit : undefined}
+            showAdminActions={!!onDelete}
+          />
 
-				<div className="space-y-3 flex-1 flex flex-col min-h-0">
-      <div className="space-y-2 flex-shrink-0">
-        {createdAt && (
-          <div className="flex items-center">
-            <span className="time-badge py-1 text-[10px]">
-              {formatDate(createdAt)}
-            </span>
-          </div>
-        )}
-        <h3 className="text-lg font-semibold text-high-contrast line-clamp-2 leading-tight pr-20">
-          {title}
-        </h3>
-      </div>
+				  <div className="space-y-3 flex-1 flex flex-col min-h-0">
+            <div className="space-y-2 flex-shrink-0">
+              {createdAt && (
+                <div className="flex items-center">
+                  <span className="time-badge py-1 text-[10px]">
+                    {formatDate(createdAt)}
+                  </span>
+                </div>
+              )}
+              <h3 className="text-lg font-semibold text-high-contrast line-clamp-2 leading-tight pr-20">
+                {title}
+              </h3>
+            </div>
 
-      <div className="flex-1 min-h-0 flex flex-col">
-        {hasImage ?  (
-          <div className="mb-3 flex-shrink-0">
-            {renderImage()}
+            <div className="flex-1 min-h-0 flex flex-col">
+              {hasImage ?  (
+                <div className="mb-3 flex-shrink-0">
+                  {renderImage()}
+                </div>
+              ) : (
+                <div className="flex-1 overflow-hidden">
+                  <p className="text-sm text-medium-contrast line-clamp-6 leading-relaxed">
+                    {description}
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
-        ) : (
-          <div className="flex-1 overflow-hidden">
-            <p className="text-sm text-medium-contrast line-clamp-6 leading-relaxed">
-              {description}
-            </p>
-          </div>
-        )}
-      </div>
-    </div>
 
-           {/* Buy Now Button */}
+          {/* Buy Now Button */}
           {extractFirstLink(description) && (
             <div className="mt-auto">
               <a
@@ -400,6 +499,69 @@ const CustomDealCard = ({
           )}
         </div>
       </div>
+
+      {/* Admin Action Dialogs */}
+      <PasswordDialog
+        isOpen={isPasswordDialogOpen}
+        onOpenChange={setIsPasswordDialogOpen}
+        onSubmit={handlePasswordSubmit}
+        password={deletePassword}
+        setPassword={setDeletePassword}
+        error={deleteError}
+        setError={setDeleteError}
+        title="Authentication Required"
+        description="Please enter the admin password to proceed with deletion:"
+        icon={<Lock className="h-5 w-5 text-red-500" />}
+      />
+
+      <PasswordDialog
+        isOpen={isEditPasswordDialogOpen}
+        onOpenChange={setIsEditPasswordDialogOpen}
+        onSubmit={handleEditPasswordSubmit}
+        password={editPassword}
+        setPassword={setEditPassword}
+        error={editError}
+        setError={setEditError}
+        title="Authentication Required"
+        description="Please enter the admin password to edit deals:"
+        icon={<PenSquare className="h-5 w-5 text-blue-500" />}
+      />
+
+      <PasswordDialog
+        isOpen={isCategoryPasswordDialogOpen}
+        onOpenChange={setIsCategoryPasswordDialogOpen}
+        onSubmit={handleCategoryPasswordSubmit}
+        password={categoryPassword}
+        setPassword={setCategoryPassword}
+        error={categoryError}
+        setError={setCategoryError}
+        title="Authentication Required"
+        description="Please enter the admin password to change categories:"
+        icon={<Tag className="h-5 w-5 text-purple-500" />}
+      />
+
+      <DeleteConfirmDialog
+        isOpen={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        onConfirm={confirmDelete}
+      />
+
+      <EditDealDialog
+        isOpen={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        id={formattedDeal.id || ''}
+        initialText={description}
+        onSuccess={handleEditSuccess}
+      />
+
+      <CategoryDialog
+        isOpen={isCategoryDialogOpen}
+        onOpenChange={setIsCategoryDialogOpen}
+        id={formattedDeal.id || ''}
+        initialCategory={formattedDeal.category || ''}
+        onSuccess={handleCategorySuccess}
+      />
+    </>
   );
 };
 
