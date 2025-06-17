@@ -9,6 +9,7 @@ import { format } from 'date-fns';
 import { extractFirstLink, extractSecondLink, truncateLink } from '../deal/utils/linkUtils';
 import { handleTrackedLinkClick } from '../../services/api';
 import CachedTelegramImage from '../images/CachedTelegramImage';
+import DealCardActions from '../deal/DealCardActions';
 
 interface TopPerformingDealsCarouselProps {
   topDeals: any[];
@@ -32,6 +33,7 @@ const TopPerformingDealsCarousel = ({
     // Extract title from the first line of text
     const title = deal.text?.split('\n')[0] || 'Deal';
     
+		const hasImage = deal.imageUrl || deal.telegramFileId;
     // Format the created date
     const formattedDate = deal.date || deal.createdAt 
       ? format(new Date(deal.date || deal.createdAt), 'MMM d, yyyy h:mm a')
@@ -54,8 +56,8 @@ const TopPerformingDealsCarousel = ({
         category: deal.category || ''
       }
     };
+		
   };
-
   const handleDealClick = (deal: any) => {
     setSelectedDeal(deal);
     setIsDialogOpen(true);
@@ -243,7 +245,7 @@ const CustomDealCard = ({
         <img 
           src={imageUrl} 
           alt={title}
-          className="w-full h-32 object-cover rounded-lg mb-3"
+          className="w-full h-32 object-contain rounded-lg mb-3"
           onError={(e) => {
             console.error('Failed to load image:', imageUrl);
             e.currentTarget.style.display = 'none';
@@ -255,7 +257,7 @@ const CustomDealCard = ({
         <CachedTelegramImage
           telegramFileId={telegramFileId}
           alt={title}
-          className="w-full h-32 object-cover rounded-lg mb-3"
+          className="w-full h-32 object-contain rounded-lg mb-3"
         />
       );
     }
@@ -264,7 +266,7 @@ const CustomDealCard = ({
 
   const formatDate = (dateString: string) => {
     try {
-      return format(new Date(dateString), 'MMM d');
+      return format(new Date(dateString), 'h:mm a, MMM d, yyyy');
     } catch (e) {
       return '';
     }
@@ -272,6 +274,7 @@ const CustomDealCard = ({
 
   const links = extractFirstLink(description) ? [extractFirstLink(description)] : [];
   const hasMultipleLinks = links.length > 1;
+		const hasImage = deal.imageUrl || deal.telegramFileId;
 
   return (
     <div
@@ -282,8 +285,17 @@ const CustomDealCard = ({
         onDealClick(deal);
       }}>
       <div className="relative glass-effect rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.06)] h-full flex flex-col border-gray-200 dark:border-gray-900 dark:bg-zinc-950">
-        
-        {/* Action buttons */}
+				
+          {/* <DealCardActions
+            isFavorite={isSaved}
+            onToggleFavorite={toggleFavorite}
+            onShare={handleShare}
+            onDelete={onDelete ? handleDelete : undefined}
+            onEdit={onDelete ? handleEdit : undefined}
+            onCategoryEdit={onDelete ? handleOpenCategoryDialog : undefined}
+            showAdminActions={!!onDelete}
+          /> */}
+              {/* Action buttons */}
         <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
           <button
             onClick={(e) => {
@@ -338,26 +350,39 @@ const CustomDealCard = ({
           )}
         </div>
 
-        {/* Image */}
-        {renderImage()}
-
-        {/* Content */}
-        <div className="flex-1 flex flex-col">
-          <h3 className="font-semibold text-lg mb-2 line-clamp-2 text-gray-900 dark:text-gray-100">
-            {title}
-          </h3>
-          
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-3 flex-1">
-            {description.replace(/https?:\/\/[^\s]+/g, '').trim()}
-          </p>
-
-          {createdAt && (
-            <div className="text-xs text-gray-500 mb-3">
+				<div className="space-y-3 flex-1 flex flex-col min-h-0">
+      <div className="space-y-2 flex-shrink-0">
+        {createdAt && (
+          <div className="flex items-center">
+            <span className="time-badge py-1 text-[10px]">
               {formatDate(createdAt)}
-            </div>
-          )}
+            </span>
+          </div>
+        )}
+        <h3 className="text-lg font-semibold text-high-contrast line-clamp-2 leading-tight pr-20">
+          {title}
+        </h3>
+      </div>
 
-          {/* Buy Now Button */}
+      <div className="flex-1 min-h-0 flex flex-col">
+        {hasImage ?  (
+          <div className="mb-3 flex-shrink-0">
+            {renderImage()}
+          </div>
+        ) : (
+          <div className="flex-1 overflow-hidden">
+            <p className="text-sm text-medium-contrast line-clamp-6 leading-relaxed">
+              {description}
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+
+          
+
+          
+           {/* Buy Now Button */}
           {extractFirstLink(description) && (
             <div className="mt-auto">
               <a
@@ -380,7 +405,7 @@ const CustomDealCard = ({
           )}
         </div>
       </div>
-    </div>
+			// </div>
   );
 };
 
