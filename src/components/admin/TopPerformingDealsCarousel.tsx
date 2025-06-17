@@ -10,6 +10,8 @@ import { extractFirstLink, extractSecondLink, truncateLink } from '../deal/utils
 import { handleTrackedLinkClick } from '../../services/api';
 import CachedTelegramImage from '../images/CachedTelegramImage';
 import DealCardActions from '../deal/DealCardActions';
+import { useDealCardActions } from '../deal/hooks/useDealCardActions';
+import { useToast } from '@/components/ui/use-toast';
 
 interface TopPerformingDealsCarouselProps {
   topDeals: any[];
@@ -238,6 +240,25 @@ const CustomDealCard = ({
   onCategoryUpdate,
 }: any) => {
   const { title, description, imageUrl, telegramFileId, createdAt } = formattedDeal;
+  const { toast } = useToast();
+
+  // Use the deal card actions hook for proper functionality
+  const {
+    isSaved,
+    isSharing,
+    handleToggleWishlist,
+    handleShare,
+  } = useDealCardActions({
+    id: formattedDeal.id,
+    title,
+    description,
+    link: extractFirstLink(description) || '',
+    imageUrl,
+    telegramFileId,
+    fullText: description,
+    createdAt,
+    category: formattedDeal.category,
+  });
 
   const renderImage = () => {
     if (imageUrl) {
@@ -272,9 +293,40 @@ const CustomDealCard = ({
     }
   };
 
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onDelete && formattedDeal.id) {
+      onDelete(formattedDeal.id);
+    }
+  };
+
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onEdit && formattedDeal.id) {
+      onEdit(formattedDeal.id, description);
+    }
+  };
+
+  const handleCategoryEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onCategoryUpdate && formattedDeal.id) {
+      onCategoryUpdate(formattedDeal.id, formattedDeal.category);
+    }
+  };
+
+  const toggleFavorite = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    handleToggleWishlist();
+  };
+
+  const shareHandler = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    handleShare();
+  };
+
   const links = extractFirstLink(description) ? [extractFirstLink(description)] : [];
   const hasMultipleLinks = links.length > 1;
-		const hasImage = deal.imageUrl || deal.telegramFileId;
+	const hasImage = deal.imageUrl || deal.telegramFileId;
 
   return (
     <div
@@ -286,69 +338,15 @@ const CustomDealCard = ({
       }}>
       <div className="relative glass-effect rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.06)] h-full flex flex-col border-gray-200 dark:border-gray-900 dark:bg-zinc-950">
 				
-          {/* <DealCardActions
-            isFavorite={isSaved}
-            onToggleFavorite={toggleFavorite}
-            onShare={handleShare}
-            onDelete={onDelete ? handleDelete : undefined}
-            onEdit={onDelete ? handleEdit : undefined}
-            onCategoryEdit={onDelete ? handleOpenCategoryDialog : undefined}
-            showAdminActions={!!onDelete}
-          /> */}
-              {/* Action buttons */}
-        <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              // Handle favorite action if needed
-            }}
-            className="p-2 rounded-full bg-white/80 hover:bg-white shadow-sm transition-colors"
-          >
-            <Heart className="h-4 w-4 text-gray-600" />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              // Handle share action if needed
-            }}
-            className="p-2 rounded-full bg-white/80 hover:bg-white shadow-sm transition-colors"
-          >
-            <Share2 className="h-4 w-4 text-gray-600" />
-          </button>
-          {onDelete && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(formattedDeal.id);
-              }}
-              className="p-2 rounded-full bg-white/80 hover:bg-white shadow-sm transition-colors"
-            >
-              <Trash2 className="h-4 w-4 text-red-500" />
-            </button>
-          )}
-          {onEdit && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit(formattedDeal.id, description);
-              }}
-              className="p-2 rounded-full bg-white/80 hover:bg-white shadow-sm transition-colors"
-            >
-              <Edit className="h-4 w-4 text-blue-500" />
-            </button>
-          )}
-          {onCategoryUpdate && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onCategoryUpdate(formattedDeal.id, formattedDeal.category);
-              }}
-              className="p-2 rounded-full bg-white/80 hover:bg-white shadow-sm transition-colors"
-            >
-              <Tag className="h-4 w-4 text-purple-500" />
-            </button>
-          )}
-        </div>
+        <DealCardActions
+          isFavorite={isSaved}
+          onToggleFavorite={toggleFavorite}
+          onShare={shareHandler}
+          onDelete={onDelete ? handleDelete : undefined}
+          onEdit={onEdit ? handleEdit : undefined}
+          onCategoryEdit={onCategoryUpdate ? handleCategoryEdit : undefined}
+          showAdminActions={!!onDelete}
+        />
 
 				<div className="space-y-3 flex-1 flex flex-col min-h-0">
       <div className="space-y-2 flex-shrink-0">
@@ -379,9 +377,6 @@ const CustomDealCard = ({
       </div>
     </div>
 
-          
-
-          
            {/* Buy Now Button */}
           {extractFirstLink(description) && (
             <div className="mt-auto">
@@ -405,7 +400,6 @@ const CustomDealCard = ({
           )}
         </div>
       </div>
-			// </div>
   );
 };
 
