@@ -35,7 +35,7 @@ interface DealDetailDialogProps {
 	id?: string;
 	imageUrl?: string;
 	telegramFileId?: string;
-	extraData?: {
+	extraData?: {	
 		createdDate?: string;
 		clicks?: number;
 		category?: string;
