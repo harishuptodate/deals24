@@ -152,7 +152,7 @@ const DealDetailDialog = ({
 				<img
 					src={imageUrl}
 					alt={title}
-					className="w-full h-48 object-contain rounded-lg"
+					className="w-full h-32 sm:h-48 object-contain rounded-lg"
 					onError={(e) => {
 						console.error('Failed to load image:', imageUrl);
 						e.currentTarget.style.display = 'none';
@@ -184,7 +184,7 @@ const DealDetailDialog = ({
 
 	return (
 		<Dialog open={isOpen} onOpenChange={onOpenChange}>
-			<DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto max-w-[90vw] w-[90vw] sm:w-auto rounded-xl">
+			<DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto max-w-[75vw] w-[75vw] sm:w-auto rounded-xl text-sm sm:text-base p-4 sm:p-6">
 				<DialogHeader>
 					<DialogTitle className="text-xl">{title}</DialogTitle>
 				</DialogHeader>
@@ -201,7 +201,7 @@ const DealDetailDialog = ({
 					{id && (
 						<Button
 							onClick={handleViewFullPage}
-							className="min-w-[110px] flex-grow flex gap-2 items-center justify-center hover:scale-105 active:scale-95 transition-transform duration-150 ease-in-out"
+							className="min-w-[90px] bg-blue-600 dark:bg-blue-800 hover:bg-blue-700 hover:dark:bg-blue-900 sm:min-w-[110px] text-xs sm:text-sm flex-grow flex justify-center items-center text-center px-3 py-2 font-medium text-white rounded-full transition-all duration-300 hover:shadow-lg hover:scale-105"
 							variant="default">
 							<ExternalLink size={16} />
 							View Deal
@@ -226,7 +226,7 @@ const DealDetailDialog = ({
 							}
 							target="_blank"
 							rel="noopener noreferrer"
-							className="min-w-[110px] flex-grow flex justify-center items-center text-center px-4 py-3 text-sm font-medium text-white bg-gradient-to-b from-apple-darkGray to-indigo-950 rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-apple-darkGray/20 hover:scale-105">
+							className="min-w-[90px] sm:min-w-[110px] text-xs sm:text-sm flex-grow flex justify-center items-center text-center px-3 py-2 font-medium text-white bg-gradient-to-b from-apple-darkGray to-indigo-950 rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-apple-darkGray/20 hover:scale-105">
 							Buy Now
 						</a>
 					)}
@@ -234,8 +234,8 @@ const DealDetailDialog = ({
 					<Button
 						onClick={handleShare}
 						disabled={isSharing}
-						className="min-w-[110px] flex-grow flex gap-2 items-center justify-center hover:scale-105 active:scale-95 transition-transform duration-150 ease-in-out"
-						variant="outline">
+						className="min-w-[90px] bg-orange-500 dark:bg-orange-800 hover:bg-orange-700 hover:dark:bg-orange-900 sm:min-w-[110px] text-xs sm:text-sm flex-grow flex justify-center items-center text-center px-3 py-2 font-medium text-white rounded-full transition-all duration-300 hover:shadow-lg hover:scale-105"
+						variant="default">
 						<Share2 size={16} />
 						{isSharing ? 'Sharing...' : 'Share Deal'}
 					</Button>

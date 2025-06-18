@@ -120,16 +120,16 @@ function detectCategory(text) {
       "alexa", "echo", "google home", "Mattress", "bed", "pillow",
     ],
     "mobile-phones": [
-      "iphone", "android", "smartphone", "mobile phone", "5g phone", 
-      "samsung", "galaxy", "oneplus", "xiaomi", "redmi", "oppo", "vivo", 
+      "iphone", "android", "smartphone", "mobile phone", "5g phone",
+      "galaxy", "oppo", "vivo", 
       "realme", "motorola", "nokia", "google pixel", "pixel", "sony xperia", 
       "huawei", "asus rog phone", "infinix", "tecno", "honor", "iqoo", 
       "poco", "foldable phone", "flip phone", "flagship phone", "budget phone", 
-      "mid-range phone", "flagship killer", "phone", "mobile", "tablet", 
-      "ipad", "smartwatch", "earphones", "airpods"
+      "mid-range phone", "flagship killer", "phone", "mobile", "tablet" 
     ],
     "gadgets-accessories": [
-      "power bank", "tws", "earphones", "earbuds", "headphones", 
+      "power bank", "tws", "earphones", "printer",
+      "ipad", "smartwatch", "earphones", "airpods", "earbuds", "headphones", 
       "bluetooth earphones", "neckband", "chargers", "fast charger", 
       "usb charger", "wireless charger", "cable", "usb cable", 
       "type-c cable", "lightning cable", "hdmi cable", "adapter", 

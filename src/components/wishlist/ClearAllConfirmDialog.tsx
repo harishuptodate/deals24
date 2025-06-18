@@ -26,13 +26,6 @@ const ClearAllConfirmDialog = ({
 	return (
 		<Dialog open={isOpen} onOpenChange={onOpenChange}>
 			<DialogContent className="max-w-[90vw] sm:max-w-md rounded-xl">
-				{/* Close button top-right */}
-				<DialogClose asChild>
-					<button
-						className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 dark:hover:text-white"
-						aria-label="Close"></button>
-				</DialogClose>
-
 				<DialogHeader>
 					<DialogTitle>Clear All Items?</DialogTitle>
 					<DialogDescription>
@@ -42,9 +35,9 @@ const ClearAllConfirmDialog = ({
 					</DialogDescription>
 				</DialogHeader>
 
-				<DialogFooter>
+				<DialogFooter className="flex flex-row flex-nowrap justify-between items-center gap-4">
 					<DialogClose asChild>
-						<button className="px-4 py-2 rounded-md border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800">
+						<button className="px-2 py-1 rounded-md border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800">
 							Cancel
 						</button>
 					</DialogClose>
@@ -53,7 +46,7 @@ const ClearAllConfirmDialog = ({
 							onConfirm();
 							onOpenChange(false);
 						}}
-						className="px-4 py-2 rounded-md bg-red-500 hover:bg-red-600 text-white">
+						className="px-2 py-1 rounded-md bg-red-500 hover:bg-red-600 text-white">
 						Clear All
 					</button>
 				</DialogFooter>
