@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import { handleTrackedLinkClick } from '../../services/api';
 import {
 	ExternalLink,
-	MoveDiagonal,
 	Share2,
 	Calendar,
 	MousePointer,
@@ -18,7 +17,6 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import {
-	createShareData,
 	shareContent,
 	copyToClipboard,
 	truncateLink,
@@ -60,42 +58,33 @@ const DealDetailDialog = ({
 
 	const handleShare = async () => {
 		setIsSharing(true);
-
 		try {
-			// Create share data with actual URL to this deal's page
 			const shareUrl = id
 				? `${window.location.origin}/deal/${id}`
 				: window.location.href;
-			const shareText = `Check out this deal: ${title.substring(0, 60)}${
+			const shareText = `Check out this deal: ${title.slice(0, 60)}${
 				title.length > 60 ? '...' : ''
 			}`;
-
 			const shareData = {
 				title: title || 'Check out this deal!',
 				text: shareText,
 				url: shareUrl,
 			};
-
 			const shared = await shareContent(shareData);
-
 			if (!shared) {
-				// Fallback to copying the URL to clipboard
 				const textToCopy = `${shareText}\n${shareUrl}`;
 				const copied = await copyToClipboard(textToCopy);
-
 				if (copied) {
 					toast({
 						title: 'Copied to clipboard!',
-						description:
-							'Deal link copied. You can now paste and share it with others.',
+						description: 'Deal link copied for sharing.',
 					});
 				}
 			}
 		} catch (error) {
-			console.error('Error during share:', error);
 			toast({
 				title: 'Sharing failed',
-				description: 'Something went wrong while trying to share this deal.',
+				description: 'Something went wrong while trying to share.',
 				variant: 'destructive',
 			});
 		} finally {
@@ -105,45 +94,37 @@ const DealDetailDialog = ({
 
 	const handleViewFullPage = () => {
 		if (id) {
-			onOpenChange(false); // Close the dialog
-			navigate(`/deal/${id}`); // Navigate to the deal page
+			onOpenChange(false);
+			navigate(`/deal/${id}`);
 		}
 	};
 
 	const makeLinksClickable = (text: string) => {
 		if (!text) return '';
-
 		const urlRegex = /(https?:\/\/[^\s]+)/g;
 		const parts = text.split(urlRegex);
-
-		return parts.map((part, index) => {
-			if (part.match(urlRegex)) {
-				return (
-					<a
-						key={`link-${index}-${part.substring(0, 10)}`}
-						href={part}
-						target="_blank"
-						rel="noopener noreferrer"
-						onClick={(e) => {
-							handleTrackedLinkClick(part, id, e.nativeEvent);
-
-							if (e.ctrlKey || e.metaKey || e.button === 1) return;
-
+		return parts.map((part, i) =>
+			part.match(urlRegex) ? (
+				<a
+					key={i}
+					href={part}
+					target="_blank"
+					rel="noopener noreferrer"
+					onClick={(e) => {
+						handleTrackedLinkClick(part, id, e.nativeEvent);
+						if (!e.ctrlKey && !e.metaKey && e.button !== 1) {
 							e.preventDefault();
 							e.stopPropagation();
-
-							setTimeout(() => {
-								window.open(part, '_blank');
-							}, 100);
-						}}
-						className="text-blue-600 hover:underline break-all inline-flex items-center gap-1">
-						{truncateLink(part)}
-						<ExternalLink size={12} />
-					</a>
-				);
-			}
-			return <span key={`text-${index}-${part.substring(0, 10)}`}>{part}</span>;
-		});
+							setTimeout(() => window.open(part, '_blank'), 100);
+						}
+					}}
+					className="text-blue-600 hover:underline break-all inline-flex items-center gap-1">
+					{truncateLink(part)} <ExternalLink size={12} />
+				</a>
+			) : (
+				<span key={i}>{part}</span>
+			),
+		);
 	};
 
 	const renderImage = () => {
@@ -152,19 +133,17 @@ const DealDetailDialog = ({
 				<img
 					src={imageUrl}
 					alt={title}
-					className="w-full h-32 sm:h-48 object-contain rounded-lg"
-					onError={(e) => {
-						console.error('Failed to load image:', imageUrl);
-						e.currentTarget.style.display = 'none';
-					}}
+					className="w-full h-44 sm:h-48 object-contain rounded-lg"
+					onError={(e) => (e.currentTarget.style.display = 'none')}
 				/>
 			);
-		} else if (telegramFileId) {
+		}
+		if (telegramFileId) {
 			return (
 				<CachedTelegramImage
 					telegramFileId={telegramFileId}
 					alt={title}
-					className="w-full h-48 rounded-lg"
+					className="w-full h-44 sm:h-48 rounded-lg"
 				/>
 			);
 		}
@@ -175,7 +154,7 @@ const DealDetailDialog = ({
 		if (!dateString) return '';
 		try {
 			return format(new Date(dateString), 'MMM d, yyyy h:mm a');
-		} catch (error) {
+		} catch {
 			return dateString;
 		}
 	};
@@ -184,12 +163,14 @@ const DealDetailDialog = ({
 
 	return (
 		<Dialog open={isOpen} onOpenChange={onOpenChange}>
-			<DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto max-w-[75vw] w-[75vw] sm:w-auto rounded-xl text-sm sm:text-base p-4 sm:p-6">
+			<DialogContent className="w-[92vw] sm:w-[480px] max-h-[95vh] overflow-y-auto rounded-xl text-[0.93rem] sm:text-sm px-4 sm:px-6">
 				<DialogHeader>
-					<DialogTitle className="text-xl">{title}</DialogTitle>
+					<DialogTitle className="text-base sm:text-lg text-center">
+						{title}
+					</DialogTitle>
 				</DialogHeader>
 
-				<div className="mt-4">
+				<div className="mt-3">
 					{hasImage && <div className="mb-4">{renderImage()}</div>}
 
 					<div className="text-sm whitespace-pre-line text-center">
@@ -197,12 +178,11 @@ const DealDetailDialog = ({
 					</div>
 				</div>
 
-				<DialogFooter className="mt-4 flex flex-row justify-between items-center gap-2 w-full">
+				<DialogFooter className="mt-4 flex flex-row flex-wrap justify-between gap-3">
 					{id && (
 						<Button
 							onClick={handleViewFullPage}
-							className="min-w-[90px] bg-blue-600 dark:bg-blue-800 hover:bg-blue-700 hover:dark:bg-blue-900 sm:min-w-[110px] text-xs sm:text-sm flex-grow flex justify-center items-center text-center px-3 py-2 font-medium text-white rounded-full transition-all duration-300 hover:shadow-lg hover:scale-105"
-							variant="default">
+							className="w-full sm:w-auto flex-1 bg-blue-600 dark:bg-blue-800 hover:bg-blue-700 hover:dark:bg-blue-900 hover:scale-105 transition-all">
 							<ExternalLink size={16} />
 							View Deal
 						</Button>
@@ -226,7 +206,7 @@ const DealDetailDialog = ({
 							}
 							target="_blank"
 							rel="noopener noreferrer"
-							className="min-w-[90px] sm:min-w-[110px] text-xs sm:text-sm flex-grow flex justify-center items-center text-center px-3 py-2 font-medium text-white bg-gradient-to-b from-apple-darkGray to-indigo-950 rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-apple-darkGray/20 hover:scale-105">
+							className="w-full sm:w-auto flex-1 flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-b from-apple-darkGray to-indigo-950 rounded-full hover:scale-105 transition-all">
 							Buy Now
 						</a>
 					)}
@@ -234,17 +214,15 @@ const DealDetailDialog = ({
 					<Button
 						onClick={handleShare}
 						disabled={isSharing}
-						className="min-w-[90px] bg-orange-500 dark:bg-orange-800 hover:bg-orange-700 hover:dark:bg-orange-900 sm:min-w-[110px] text-xs sm:text-sm flex-grow flex justify-center items-center text-center px-3 py-2 font-medium text-white rounded-full transition-all duration-300 hover:shadow-lg hover:scale-105"
-						variant="default">
+						className="w-full sm:w-auto flex-1 bg-orange-500 dark:bg-orange-800 hover:bg-orange-600 hover:dark:bg-orange-900 hover:scale-105 transition-all">
 						<Share2 size={16} />
 						{isSharing ? 'Sharing...' : 'Share Deal'}
 					</Button>
 				</DialogFooter>
 
-				{/* Extra data section */}
 				{extraData && (
-					<div className="mt-6 pt-4 border-t border-gray-200">
-						<h4 className="text-sm font-semibold text-gray-700 mb-3">
+					<div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+						<h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
 							Deal Information
 						</h4>
 						<div className="space-y-2 text-xs text-gray-700 dark:text-gray-300">
