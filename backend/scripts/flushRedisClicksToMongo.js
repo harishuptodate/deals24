@@ -7,7 +7,6 @@ require('dotenv').config();
 
 async function flushClicks() {
   try {
-    await mongoose.connect(process.env.MONGODB_URI);
     const keys = await redis.keys('clicks:msg:*');
 
     for (const key of keys) {
