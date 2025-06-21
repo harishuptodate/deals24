@@ -450,61 +450,62 @@ async function getMessages(options = {}) {
 }
 
 // Helper function for click tracking logic
-async function handleClickTracking(req, res) {
-  const updatedMessage = await incrementClicks(req.params.id);
-
-  if (!updatedMessage) {
-    console.log(
-      `Message with ID ${req.params.id} not found for click tracking`,
-    );
-    return res.status(404).json({ error: 'Message not found' });
-  }
-
-  // Server time
-  const serverNow = new Date();
-
-  // IST time
-  const nowInIST = new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' });
-  const istDate = new Date(nowInIST);
-  // console.log('🕒 IST Time (from server):', istDate.toISOString());
-
-  istDate.setHours(0, 0, 0, 0); // Set to IST midnight
-  // console.log('📅 Using Date (IST Midnight):', istDate.toISOString());
-
-  await ClickStat.findOneAndUpdate(
-    { date: istDate },
-    { $inc: { clicks: 1 } },
-    { upsert: true, new: true }
-  );
-
-  res.json({ success: true, clicks: updatedMessage.clicks });
-}
-
+const redis = require('../services/redis-Service');
 
 /**
- * Increment the click count for a message
- * @param {string} messageId - ID of the message
- * @returns {Promise<Object>} - Updated message
+ * Handle click tracking using Redis (deferred write to MongoDB)
+ */
+async function handleClickTracking(req, res) {
+  const messageId = req.params.id;
+
+  if (!messageId) {
+    return res.status(400).json({ error: 'Message ID is required' });
+  }
+
+  const redisClickKey = `clicks:msg:${messageId}`;
+  const istDate = new Date(
+    new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' })
+  );
+  istDate.setHours(0, 0, 0, 0);
+  const dailyKey = `clicks:daily:${istDate.toISOString().slice(0, 10)}`; // e.g. clicks:daily:2025-06-22
+
+  try {
+    // Increment per-message and daily click count in Redis
+    const updatedClickCount = await redis.incr(redisClickKey);
+    await redis.incr(dailyKey);
+
+    console.log(`🟢 Redis click count updated for message ${messageId} → ${updatedClickCount}`);
+
+    res.json({ success: true, clicks: updatedClickCount });
+  } catch (error) {
+    console.error('Redis click tracking error:', error);
+    res.status(500).json({ error: 'Failed to track click' });
+  }
+}
+
+/**
+ * Legacy fallback (no longer used directly, included for Mongo flush scripts)
+ * In production, click counts will be flushed from Redis to Mongo using a scheduled job.
  */
 async function incrementClicks(messageId) {
   if (!messageId) {
     console.error('Cannot increment clicks: message ID is missing');
     return null;
   }
-  
+
   try {
     const updatedMessage = await TelegramMessage.findByIdAndUpdate(
-      messageId, 
+      messageId,
       { $inc: { clicks: 1 } },
       { new: true }
     );
-    
+
     if (!updatedMessage) {
       console.log(`No message found with ID: ${messageId} for click tracking`);
     } else {
-      console.log(`✅ Successfully Updated clicks for message ID: ${messageId} to ${updatedMessage.clicks}`);
+      console.log(`✅ Mongo updated for ${messageId}: ${updatedMessage.clicks} clicks`);
     }
-    
+
     return updatedMessage;
   } catch (error) {
     console.error(`Error incrementing clicks for message ${messageId}:`, error);
@@ -522,5 +523,6 @@ module.exports = {
   isProfitableProduct,
   replaceLinksAndText,
   detectCategory,
+  incrementClicks, // keep for future use by flush script
   handleClickTracking
 };

@@ -3,6 +3,7 @@ version: '3.8'
 
 services:
   frontend:
+    container_name: frontend
     build:
       context: .
       dockerfile: Dockerfile.dev
@@ -16,9 +17,10 @@ services:
       - VITE_ADMIN_USERNAME=${VITE_ADMIN_USERNAME}
       - VITE_ADMIN_PASSWORD=${VITE_ADMIN_PASSWORD}
     networks:
-      - deals24-dev-network
+      - deals24-dev
 
   backend:
+    container_name: backend
     build:
       context: ./backend
       dockerfile: Dockerfile.dev
@@ -37,23 +39,10 @@ services:
       - JWT_SECRET=${JWT_SECRET:-dev_secret}
       - CORS_ALLOWED_ORIGINS=http://localhost:8080
       - IS_SALE_MODE=${IS_SALE_MODE:-false}
-    depends_on:
-      - redis
     networks:
-      - deals24-dev-network
-
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_dev_data:/data
-    networks:
-      - deals24-dev-network
-
-volumes:
-  redis_dev_data:
+      - deals24-dev
+  
 
 networks:
-  deals24-dev-network:
+  deals24-dev:
     driver: bridge

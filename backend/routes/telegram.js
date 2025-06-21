@@ -3,6 +3,7 @@ const router = express.Router();
 const TelegramMessage = require('../models/TelegramMessage');
 const telegramController = require('../controllers/telegramController');
 const { getMessages, handleClickTracking } = require('../services/telegramService');
+const cache = require('../services/redis-Service');
 
 // Set up cache middleware for stable data with configurable parameters and defaults
 const cacheMiddleware = (maxAge = 60, staleWhileRevalidate = 300) => {
@@ -18,7 +19,10 @@ router.post('/webhook', telegramController.handleTelegramWebhook);
 
 // Fix — Put This Route First in Your Route File:
 // Get category counts - Fresh for 1 minute, stale for 5 minutes
-router.get('/categories/counts', cacheMiddleware(60, 300), async (req, res) => {
+router.get('/categories/counts', 
+  // cacheMiddleware(60, 300),
+  cache(() => 'categories:counts', 60),
+  async (req, res) => {
   try {
     // Aggregate by category to get counts
     const categoryCounts = await TelegramMessage.aggregate([
@@ -72,7 +76,11 @@ router.get('/categories/counts', cacheMiddleware(60, 300), async (req, res) => {
 });
 
 // Get paginated messages with support for category and search
-router.get('/messages', async (req, res) => {
+router.get('/messages', 
+  cache(
+  (req) => `messages:category=${req.query.category || 'all'}&cursor=${req.query.cursor || 0}&limit=${req.query.limit || 10}`,
+  60),
+  async (req, res) => {
   try {
     const cursor = req.query.cursor;
     const limit = parseInt(req.query.limit) || 10;
@@ -250,13 +258,22 @@ router.delete('/messages/:id', async (req, res) => {
 });
 
 // Get analytics for click tracking - Fresh for 1 minute, stale for 10 minutes
-router.get('/analytics/clicks', cacheMiddleware(60, 300), telegramController.getClickAnalytics);
+router.get('/analytics/clicks', 
+  // cacheMiddleware(60, 300),
+  cache(() => 'analytics:clicks', 60),
+  telegramController.getClickAnalytics);
 
 // Get top performing messages - Fresh for 1 minute, stale for 5 minutes
-router.get('/analytics/top-performing', cacheMiddleware(60, 300), telegramController.getTopPerforming);
+router.get('/analytics/top-performing', 
+  // cacheMiddleware(60, 300),
+  cache(() => 'analytics:top-performing', 60),
+  telegramController.getTopPerforming);
 
 // Get all available categories - Fresh for 5 minutes, stale for 5 minutes
-router.get('/categories', cacheMiddleware(300, 300), async (req, res) => {
+router.get('/categories', 
+  // cacheMiddleware(300, 300),
+  cache(() => 'categories:distinct', 300),
+  async (req, res) => {
   try {
     const categories = await TelegramMessage.distinct('category', { 
       category: { $exists: true, $ne: null }

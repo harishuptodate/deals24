@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deals24-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: deals24-backend
+  template:
+    metadata:
+      labels:
+        app: deals24-backend
+    spec:
+      containers:
+        - name: backend
+          image: harishuptodate/deals24-backend:v1
+          ports:
+            - containerPort: 3000
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: "3000"
+            - name: MONGODB_URI
+              valueFrom:
+                secretKeyRef:
+                  name: deals24-secrets
+                  key: MONGODB_URI
+            - name: TELEGRAM_BOT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: deals24-secrets
+                  key: TELEGRAM_BOT_TOKEN
+            - name: TELEGRAM_CHANNEL_ID
+              value: "1234567890"
+            - name: WEBHOOK_URL
+              value: "https://f065-106-222-228-41.ngrok-free.app"
+            - name: REDIS_URL
+              value: "redis://redis:6379"
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: deals24-secrets
+                  key: JWT_SECRET
+            - name: CORS_ALLOWED_ORIGINS
+              value: "http://localhost:30808"
+            - name: IS_SALE_MODE
+              value: "false"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+spec:
+  type: NodePort
+  selector:
+    app: deals24-backend
+  ports:
+    - port: 3000
+      targetPort: 3000
+      nodePort: 30807 # Exposed on localhost:30808
+
