@@ -45,7 +45,6 @@ async function flushClicks() {
       console.log(`Flushed daily count of ${dailyCount}`);
     }
 
-    await mongoose.disconnect();
   } catch (error) {
     console.error('Flush failed:', error);
   }
