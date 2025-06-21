@@ -26,8 +26,11 @@ async function flushClicks() {
       console.log(`Flushed ${count} clicks for ${id}`);
     }
 
-    // Optional: flush global daily click stat
-    const dailyKey = `clicks:daily:${new Date().toISOString().slice(0, 10)}`;
+    const istNow = new Date(
+      new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' })
+    );
+    istNow.setHours(0, 0, 0, 0);
+    const dailyKey = `clicks:daily:${istNow.toISOString().slice(0, 10)}`;
     const dailyCount = parseInt(await redis.get(dailyKey));
 
     if (dailyCount) {
