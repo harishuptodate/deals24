@@ -48,8 +48,6 @@ async function flushClicks() {
     await mongoose.disconnect();
   } catch (error) {
     console.error('Flush failed:', error);
-  } finally {
-    process.exit(0);
   }
 }
 
