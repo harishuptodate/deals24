@@ -5,6 +5,7 @@ const Redis = require('ioredis');
 const redis = new Redis(process.env.REDIS_URL)
 require('dotenv').config();
 
+function startFlushLoop() {
 async function flushClicks() {
   try {
     const keys = await redis.keys('clicks:msg:*');
@@ -50,9 +51,7 @@ async function flushClicks() {
   }
 }
 
-function StartFlusher(){
   flushClicks();
   setInterval(flushClicks, 60000); // Run every minute
 };
-
-module.exports = StartFlusher;
+module.exports = startFlushLoop;
