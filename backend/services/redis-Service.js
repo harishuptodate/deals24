@@ -15,6 +15,7 @@ const cache =
 		try {
 			const cached = await redis.get(key);
 			if (cached) {
+        console.log(`Cache hit for key: ${key}`);
 				return res.json(JSON.parse(cached));
 			}
 

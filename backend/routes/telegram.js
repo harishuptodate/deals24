@@ -78,8 +78,17 @@ router.get('/categories/counts',
 // Get paginated messages with support for category and search
 router.get('/messages', 
   cache(
-  (req) => `messages:category=${req.query.category || 'all'}&cursor=${req.query.cursor || 0}&limit=${req.query.limit || 10}`,
-  60),
+    (req) => {
+      // Skip Redis caching if there's a search query
+      if (req.query.search) return null;
+
+      const category = req.query.category || 'all';
+      const cursor = req.query.cursor || '0';
+      const limit = req.query.limit || '10';
+      return `messages:category=${category}&cursor=${cursor}&limit=${limit}`;
+    },
+    60
+  ),
   async (req, res) => {
   try {
     const cursor = req.query.cursor;
@@ -88,11 +97,11 @@ router.get('/messages',
     const search = req.query.search;
 
     // Only cache if there's no search parameter
-    if (!search) {
-      res.setHeader('Cache-Control', 'max-age=60, stale-while-revalidate=300');
-    } else {
-      res.setHeader('Cache-Control', 'no-cache');
-    }
+    // if (!search) {
+    //   res.setHeader('Cache-Control', 'max-age=60, stale-while-revalidate=300');
+    // } else {
+    //   res.setHeader('Cache-Control', 'no-cache');
+    // }
 
     const messages = await getMessages({
       cursor,
@@ -109,7 +118,11 @@ router.get('/messages',
 });
 
 // Get a single message by ID - Cache for 1 minute, stale for 5 minutes
-router.get('/messages/:id', cacheMiddleware(60, 300), async (req, res) => {
+router.get('/messages/:id', 
+  // cacheMiddleware(60, 300),
+  cache((req) => `message:id:${req.params.id}`, 60),
+  
+  async (req, res) => {
   try {
     const message = await TelegramMessage.findById(req.params.id).lean();
 
@@ -175,7 +188,15 @@ router.put('/messages/:id/category', async (req, res) => {
 });
 
 // Get messages by category - Fresh for 1 minute, stale for 5 minutes
-router.get('/categories/:category', cacheMiddleware(60, 300), async (req, res) => {
+router.get('/categories/:category', 
+  // cacheMiddleware(60, 300),
+  cache((req) => {
+    const category = req.params.category;
+    const cursor = req.query.cursor || '0';
+    const limit = req.query.limit || '10';
+    return `messages:category:${category}&cursor=${cursor}&limit=${limit}`;
+  }, 60),
+  async (req, res) => {
   try {
     const { category } = req.params;
     const cursor = req.query.cursor;
