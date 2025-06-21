@@ -51,5 +51,9 @@ async function flushClicks() {
   }
 }
 
-flushClicks();
-setInterval(flushClicks, 60000); // Run every minute
+function StartFlusher(){
+  flushClicks();
+  setInterval(flushClicks, 60000); // Run every minute
+};
+
+module.exports = StartFlusher;

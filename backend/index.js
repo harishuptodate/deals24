@@ -10,6 +10,7 @@ const indexRouter = require('./routes/index');
 const telegramRouter = require('./routes/telegram');
 const amazonRouter = require('./routes/amazon');
 const statsRouter = require('./routes/stats.routes');
+const StartFlusher = require('./scripts/flushRedisClicksToMongo');
 require('dotenv').config();
 
 const app = express();
@@ -42,6 +43,8 @@ mongoose.connect(process.env.MONGODB_URI)
     // Start the server
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
+      StartFlusher();
+
     });
     
     // Initialize Telegram bot if token exists
