@@ -12,6 +12,8 @@ dist
 dist-ssr
 *.local
 .env
+.env2
+deals24-secrets.yml
 
 # Editor directories and files
 .vscode/*
