@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
-const redis = require('../services/redis-Service');
 const TelegramMessage = require('../models/TelegramMessage');
 const ClickStat = require('../models/clickStat.model');
-
+const Redis = require('ioredis');
+const redis = new Redis(process.env.REDIS_URL)
 require('dotenv').config();
 
 async function flushClicks() {
