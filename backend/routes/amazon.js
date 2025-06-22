@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const amazonController = require('../controllers/amazonController');
-const redis = require('../services/redis-Service');
+const redis = require('../services/redisClient');
 
 // Helper function to set image headers
 const setImageHeaders = (res, fileId, filename) => {

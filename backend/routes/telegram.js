@@ -3,7 +3,7 @@ const router = express.Router();
 const TelegramMessage = require('../models/TelegramMessage');
 const telegramController = require('../controllers/telegramController');
 const { getMessages, handleClickTracking } = require('../services/telegramService');
-const cacheHybrid = require('../services/redis-Service');
+const cacheHybrid = require('../services/redisClient');
 
 // Set up cache middleware for stable data with configurable parameters and defaults
 const cacheMiddleware = (maxAge = 60, staleWhileRevalidate = 300) => {
