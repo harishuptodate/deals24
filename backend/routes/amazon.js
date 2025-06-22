@@ -10,14 +10,11 @@ const setImageHeaders = (res, fileId, filename) => {
 	res.setHeader('Cache-Control', 'public, max-age=31536000, immutable'); // 1 year
 	res.setHeader('ETag', `"${fileId}"`);
 
-		// Use current time in IST
-		function getISTDate() {
-			const nowInIST = new Date().toLocaleString('en-US', {
-				timeZone: 'Asia/Kolkata',
-			});
-			return new Date(nowInIST);
-		}
-		const istDate = getISTDate();
+	// Use current time in IST
+	const nowInIST = new Date().toLocaleString('en-US', {
+		timeZone: 'Asia/Kolkata',
+	});
+	const istDate = new Date(nowInIST);
 	res.setHeader('Last-Modified', istDate.toUTCString());
 
 	res.setHeader('Expires', new Date(Date.now() + 31536000000).toUTCString()); // 1 year
@@ -48,7 +45,12 @@ router.get('/download-image/:fileId', async (req, res) => {
 
 		if (cachedBuffer) {
 			console.log('✅ Serving image from Redis cache');
-			const istDate = getISTDate();
+
+			// Use current time in IST
+			const nowInIST = new Date().toLocaleString('en-US', {
+				timeZone: 'Asia/Kolkata',
+			});
+			const istDate = new Date(nowInIST);
 			// Set strong caching headers
 			res.setHeader('Content-Type', 'image/jpeg');
 			res.setHeader('Content-Disposition', `inline; filename=${fileId}.jpg`);
@@ -79,14 +81,18 @@ router.get('/download-image/:fileId', async (req, res) => {
 
 		// Store in Redis
 		await redis.set(redisKey, imageBuffer, 'EX', 60 * 60 * 24);
-
+			// Use current time in IST
+		const nowInIST = new Date().toLocaleString('en-US', {
+			timeZone: 'Asia/Kolkata',
+		});
+		const istDate = new Date(nowInIST);
 		// Set headers again
 		res.setHeader('Content-Type', 'image/jpeg');
 		res.setHeader('Content-Disposition', `inline; filename=${fileId}.jpg`);
 		res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
 		res.setHeader('ETag', etag);
 		res.setHeader('Expires', new Date(Date.now() + 31536000000).toUTCString());
-		res.setHeader('Last-Modified', new Date().toUTCString());
+		res.setHeader('Last-Modified', istDate.toUTCString());
 
 		return res.send(imageBuffer);
 
