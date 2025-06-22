@@ -52,4 +52,7 @@ const cacheHybrid = (keyGenerator, ttl = 60, maxAge = 60, staleWhileRevalidate =
   };
 };
 
-module.exports = cacheHybrid;
+module.exports = {
+  cacheHybrid,
+  redis
+};
