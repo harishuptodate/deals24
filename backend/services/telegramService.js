@@ -450,8 +450,7 @@ async function getMessages(options = {}) {
 }
 
 // Helper function for click tracking logic
-const Redis = require('ioredis');
-const redis = new Redis(process.env.REDIS_URL)
+const redis = require('../services/redisClient');
 /**
  * Handle click tracking using Redis (deferred write to MongoDB)
  */

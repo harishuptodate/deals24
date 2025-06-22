@@ -1,10 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const amazonController = require('../controllers/amazonController');
-const Redis = require('ioredis');
-
-// Initialize Redis client
-const redis = new Redis(process.env.REDIS_URL);
+const redis = require('../services/redis-Service');
 
 // Helper function to set image headers
 const setImageHeaders = (res, fileId, filename) => {
