@@ -77,7 +77,7 @@ router.get('/categories/counts',
 
 // Get paginated messages with support for category and search
 router.get('/messages', 
-  cache(
+    cacheHybrid(
     (req) => {
       // Skip Redis caching if there's a search query
       if (req.query.search) return null;
@@ -87,7 +87,9 @@ router.get('/messages',
       const limit = req.query.limit || '10';
       return `messages:category=${category}&cursor=${cursor}&limit=${limit}`;
     },
-    60
+    60,  // Redis TTL (1 min)
+    60,  // HTTP max-age
+    300  // HTTP stale-while-revalidate
   ),
   async (req, res) => {
   try {
@@ -120,8 +122,12 @@ router.get('/messages',
 // Get a single message by ID - Cache for 1 minute, stale for 5 minutes
 router.get('/messages/:id', 
   // cacheMiddleware(60, 300),
-  cache((req) => `message:id:${req.params.id}`, 60),
-  
+  cacheHybrid(
+    (req) => `message:id:${req.params.id}`,
+    60,  // Redis TTL
+    60,  // HTTP max-age
+    300  // HTTP stale-while-revalidate
+  ),
   async (req, res) => {
   try {
     const message = await TelegramMessage.findById(req.params.id).lean();
@@ -282,16 +288,16 @@ router.delete('/messages/:id', async (req, res) => {
   }
 });
 
-// Get analytics for click tracking - Fresh for 1 minute, stale for 10 minutes
+// Get analytics for click tracking - Fresh for 1 minute, stale for 5 minutes
 router.get('/analytics/clicks', 
   // cacheMiddleware(60, 300),
-  cacheHybrid(() => 'analytics:clicks', 60, 60, 600),
+  cacheHybrid(() => 'analytics:clicks', 60, 60, 300),
   telegramController.getClickAnalytics);
 
-// Get top performing messages - Fresh for 1 minute, stale for 5 minutes
+// Get top performing messages - Fresh for 1 minute, stale for 10 minutes
 router.get('/analytics/top-performing', 
   // cacheMiddleware(60, 300),
-  cacheHybrid(() => 'analytics:top-performing', 60, 60, 300),
+  cacheHybrid(() => 'analytics:top-performing', 60, 60, 600),
   telegramController.getTopPerforming);
 
 // Get all available categories - Fresh for 5 minutes, stale for 5 minutes
