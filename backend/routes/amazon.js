@@ -10,11 +10,14 @@ const setImageHeaders = (res, fileId, filename) => {
 	res.setHeader('Cache-Control', 'public, max-age=31536000, immutable'); // 1 year
 	res.setHeader('ETag', `"${fileId}"`);
 
-	// Use current time in IST
-	const nowInIST = new Date().toLocaleString('en-US', {
-		timeZone: 'Asia/Kolkata',
-	});
-	const istDate = new Date(nowInIST);
+		// Use current time in IST
+		function getISTDate() {
+			const nowInIST = new Date().toLocaleString('en-US', {
+				timeZone: 'Asia/Kolkata',
+			});
+			return new Date(nowInIST);
+		}
+		const istDate = getISTDate();
 	res.setHeader('Last-Modified', istDate.toUTCString());
 
 	res.setHeader('Expires', new Date(Date.now() + 31536000000).toUTCString()); // 1 year
@@ -26,57 +29,73 @@ router.get('/download-image/:fileId', async (req, res) => {
 	const token = process.env.TELEGRAM_BOT_TOKEN;
 
 	if (!token) {
-		return res.status(500).json({ error: 'Telegram bot token not configured' });
+		return res.status(500).json({ error: 'Bot token not configured' });
 	}
 
 	try {
-		const redisKey = `tg-image:${fileId}`;
-		const base64Data = await redis.get(redisKey);
+		// Set ETag
+		const etag = `"${fileId}"`;
+		res.setHeader('ETag', etag);
 
-		if (base64Data) {
-			console.log('✅ Serving image from Redis cache');
-			const buffer = Buffer.from(base64Data, 'base64');
-			setImageHeaders(res, fileId, `${fileId}.jpg`);
-			return res.send(buffer);
+		// Return 304 if client's ETag matches
+		if (req.headers['if-none-match'] === etag) {
+			return res.status(304).end();
 		}
 
-		// 1. Fetch file info from Telegram API
-		const fileInfoRes = await fetch(
-			`https://api.telegram.org/bot${token}/getFile?file_id=${fileId}`
-		);
-		const fileInfo = await fileInfoRes.json();
+		// Check Redis cache first
+		const redisKey = `tg-image:${fileId}`;
+		const cachedBuffer = await redis.getBuffer(redisKey);
 
-		if (!fileInfo.ok) {
-			console.warn(`File not found: ${fileId}`);
+		if (cachedBuffer) {
+			console.log('✅ Serving image from Redis cache');
+			const istDate = getISTDate();
+			// Set strong caching headers
+			res.setHeader('Content-Type', 'image/jpeg');
+			res.setHeader('Content-Disposition', `inline; filename=${fileId}.jpg`);
+			res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+			res.setHeader('Expires', new Date(Date.now() + 31536000000).toUTCString());
+			res.setHeader('Last-Modified', istDate.toUTCString());
+
+			return res.send(cachedBuffer);
+		}
+
+		// Fetch image from Telegram
+		const fileInfoResponse = await fetch(`https://api.telegram.org/bot${token}/getFile?file_id=${fileId}`);
+		const fileInfoData = await fileInfoResponse.json();
+
+		if (!fileInfoData.ok) {
 			return res.status(404).json({ error: 'File not found' });
 		}
 
-		const filePath = fileInfo.result.file_path;
+		const filePath = fileInfoData.result.file_path;
+		const fileResponse = await fetch(`https://api.telegram.org/file/bot${token}/${filePath}`);
 
-		// 2. Download the actual image file
-		const fileRes = await fetch(
-			`https://api.telegram.org/file/bot${token}/${filePath}`
-		);
-
-		if (!fileRes.ok) {
-			console.warn(`Download failed: ${filePath}`);
-			return res.status(404).json({ error: 'Failed to download image' });
+		if (!fileResponse.ok) {
+			return res.status(404).json({ error: 'Failed to download file' });
 		}
 
-		const arrayBuffer = await fileRes.arrayBuffer();
-		const buffer = Buffer.from(arrayBuffer);
+		const buffer = await fileResponse.arrayBuffer();
+		const imageBuffer = Buffer.from(buffer);
 
-		// 3. Cache image in Redis (as base64) for 1 day
-		await redis.set(redisKey, buffer.toString('base64'), 'EX', 86400);
+		// Store in Redis
+		await redis.set(redisKey, imageBuffer, 'EX', 60 * 60 * 24);
 
-		// 4. Set headers and respond with image
-		setImageHeaders(res, fileId, filePath.split('/').pop());
-		res.send(buffer);
-	} catch (err) {
-		console.error('❌ Image download failed:', err.message);
-		res.status(500).json({ error: 'Image download failed' });
+		// Set headers again
+		res.setHeader('Content-Type', 'image/jpeg');
+		res.setHeader('Content-Disposition', `inline; filename=${fileId}.jpg`);
+		res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+		res.setHeader('ETag', etag);
+		res.setHeader('Expires', new Date(Date.now() + 31536000000).toUTCString());
+		res.setHeader('Last-Modified', new Date().toUTCString());
+
+		return res.send(imageBuffer);
+
+	} catch (error) {
+		console.error('Image download error:', error);
+		return res.status(500).json({ error: 'Image download failed' });
 	}
 });
+
 
 // Other Amazon routes
 router.post('/fetch-product-image', amazonController.fetchProductImage);
