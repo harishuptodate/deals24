@@ -1,110 +1,71 @@
 const express = require('express');
 const router = express.Router();
-const amazonController = require('../controllers/amazonController');
-const {redis} = require('../services/redisClient');
+const {redis} = require('../services/redisClient'); // must export .getBuffer correctly
+const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 
-// Helper function to set image caching headers
+// Set image headers
 const setImageHeaders = (res, fileId, filename) => {
-	res.setHeader('Content-Type', 'image/jpeg');
-	res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
-	res.setHeader('Cache-Control', 'public, max-age=31536000, immutable'); // 1 year
-	res.setHeader('ETag', `"${fileId}"`);
+  res.setHeader('Content-Type', 'image/jpeg');
+  res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
+  res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+  res.setHeader('ETag', `"${fileId}"`);
+  res.setHeader('Expires', new Date(Date.now() + 31536000000).toUTCString());
 
-	// Use current time in IST
-	const nowInIST = new Date().toLocaleString('en-US', {
-		timeZone: 'Asia/Kolkata',
-	});
-	const istDate = new Date(nowInIST);
-	res.setHeader('Last-Modified', istDate.toUTCString());
-
-	res.setHeader('Expires', new Date(Date.now() + 31536000000).toUTCString()); // 1 year
+  const ist = new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' });
+  const istDate = new Date(ist);
+  res.setHeader('Last-Modified', istDate.toUTCString());
 };
 
-// Route to fetch image from Telegram and cache in Redis
 router.get('/download-image/:fileId', async (req, res) => {
-	const { fileId } = req.params;
-	const token = process.env.TELEGRAM_BOT_TOKEN;
+  const { fileId } = req.params;
 
-	if (!token) {
-		return res.status(500).json({ error: 'Bot token not configured' });
-	}
+  if (!TELEGRAM_TOKEN) {
+    return res.status(500).json({ error: 'Bot token not configured' });
+  }
 
-	try {
-		// Set ETag
-		const etag = `"${fileId}"`;
-		res.setHeader('ETag', etag);
+  const redisKey = `tg-image:${fileId}`;
+  const etag = `"${fileId}"`;
 
-		// Return 304 if client's ETag matches
-		if (req.headers['if-none-match'] === etag) {
-			return res.status(304).end();
-		}
+  // Conditional GET support
+  res.setHeader('ETag', etag);
+  if (req.headers['if-none-match'] === etag) {
+    return res.status(304).end(); // Browser can use local cache
+  }
 
-		// Check Redis cache first
-		const redisKey = `tg-image:${fileId}`;
-		const cachedBuffer = await redis.getBuffer(redisKey);
+  try {
+    // Check Redis first
+    const cachedBuffer = await redis.getBuffer(redisKey);
+    if (cachedBuffer) {
+      console.log('✅ Served image from Redis');
+      setImageHeaders(res, fileId, `${fileId}.jpg`);
+      return res.send(cachedBuffer);
+    }
 
-		if (cachedBuffer) {
-			console.log('✅ Serving image from Redis cache');
+    // Get file path from Telegram
+    const fileInfoResp = await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/getFile?file_id=${fileId}`);
+    const fileInfoData = await fileInfoResp.json();
 
-			// Use current time in IST
-			const nowInIST = new Date().toLocaleString('en-US', {
-				timeZone: 'Asia/Kolkata',
-			});
-			const istDate = new Date(nowInIST);
-			// Set strong caching headers
-			res.setHeader('Content-Type', 'image/jpeg');
-			res.setHeader('Content-Disposition', `inline; filename=${fileId}.jpg`);
-			res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-			res.setHeader('Expires', new Date(Date.now() + 31536000000).toUTCString());
-			res.setHeader('Last-Modified', istDate.toUTCString());
+    if (!fileInfoData.ok) {
+      return res.status(404).json({ error: 'File not found' });
+    }
 
-			return res.send(cachedBuffer);
-		}
+    const filePath = fileInfoData.result.file_path;
 
-		// Fetch image from Telegram
-		const fileInfoResponse = await fetch(`https://api.telegram.org/bot${token}/getFile?file_id=${fileId}`);
-		const fileInfoData = await fileInfoResponse.json();
+    // Download actual image
+    const imageResp = await fetch(`https://api.telegram.org/file/bot${TELEGRAM_TOKEN}/${filePath}`);
+    const arrayBuffer = await imageResp.arrayBuffer();
+    const imageBuffer = Buffer.from(arrayBuffer);
 
-		if (!fileInfoData.ok) {
-			return res.status(404).json({ error: 'File not found' });
-		}
+    // Cache to Redis for 1 day
+    await redis.set(redisKey, imageBuffer, 'EX', 60 * 60 * 24); // 24h
 
-		const filePath = fileInfoData.result.file_path;
-		const fileResponse = await fetch(`https://api.telegram.org/file/bot${token}/${filePath}`);
+    setImageHeaders(res, fileId, filePath.split('/').pop());
+    return res.send(imageBuffer);
 
-		if (!fileResponse.ok) {
-			return res.status(404).json({ error: 'Failed to download file' });
-		}
-
-		const buffer = await fileResponse.arrayBuffer();
-		const imageBuffer = Buffer.from(buffer);
-
-		// Store in Redis
-		await redis.set(redisKey, imageBuffer, 'EX', 60 * 60 * 24);
-			// Use current time in IST
-		const nowInIST = new Date().toLocaleString('en-US', {
-			timeZone: 'Asia/Kolkata',
-		});
-		const istDate = new Date(nowInIST);
-		// Set headers again
-		res.setHeader('Content-Type', 'image/jpeg');
-		res.setHeader('Content-Disposition', `inline; filename=${fileId}.jpg`);
-		res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-		res.setHeader('ETag', etag);
-		res.setHeader('Expires', new Date(Date.now() + 31536000000).toUTCString());
-		res.setHeader('Last-Modified', istDate.toUTCString());
-
-		return res.send(imageBuffer);
-
-	} catch (error) {
-		console.error('Image download error:', error);
-		return res.status(500).json({ error: 'Image download failed' });
-	}
+  } catch (error) {
+    console.error('❌ Image download failed:', error);
+    res.status(500).json({ error: 'Image download failed' });
+  }
 });
-
-
-// Other Amazon routes
-router.post('/fetch-product-image', amazonController.fetchProductImage);
-router.get('/products', amazonController.getStoredProducts);
 
 module.exports = router;
