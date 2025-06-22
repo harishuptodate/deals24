@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const TelegramMessage = require('../models/TelegramMessage');
 const ClickStat = require('../models/clickStat.model');
-const redis = require('../services/redisClient');
+const {redis} = require('../services/redisClient');
 require('dotenv').config();
 
 function startFlushLoop(intervalMs = 60000) {
