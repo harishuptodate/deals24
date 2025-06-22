@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const fetch = require('node-fetch'); // or use global fetch in Node 18+
-const redis = require('../services/redisClient');
+const {redis} = require('../services/redisClient');
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 
