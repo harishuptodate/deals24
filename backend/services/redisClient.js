@@ -1,6 +1,11 @@
 const Redis = require('ioredis');
 const redis = new Redis(process.env.REDIS_URL);
 
+// ✅ Add support for binary buffer retrieval
+redis.getBuffer = function (key) {
+  return this.callBuffer('GET', key); // Ensures raw Buffer (not string)
+};
+
 redis.on('connect', () => {
   console.log('Connected to Redis');
 });
