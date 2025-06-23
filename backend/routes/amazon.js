@@ -1,69 +1,85 @@
 const express = require('express');
 const router = express.Router();
-const fetch = require('node-fetch'); // or use global fetch in Node 18+
+const amazonController = require('../controllers/amazonController');
 const {redis} = require('../services/redisClient');
 
-const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+// Helper function to set image caching headers
+const setImageHeaders = (res, fileId, filename) => {
+	res.setHeader('Content-Type', 'image/jpeg');
+	res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
+	res.setHeader('Cache-Control', 'public, max-age=31536000, immutable'); // 1 year
+	res.setHeader('ETag', `"${fileId}"`);
 
-// 🔧 Set HTTP cache headers
-function setImageHeaders(res, fileId, filename) {
-  res.setHeader('Content-Type', 'image/jpeg');
-  res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
-  res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-  res.setHeader('ETag', `"${fileId}"`);
+	// Use current time in IST
+	const nowInIST = new Date().toLocaleString('en-US', {
+		timeZone: 'Asia/Kolkata',
+	});
+	const istDate = new Date(nowInIST);
+	res.setHeader('Last-Modified', istDate.toUTCString());
 
-  const nowIST = new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' });
-  res.setHeader('Last-Modified', new Date(nowIST).toUTCString());
-  res.setHeader('Expires', new Date(Date.now() + 31536000000).toUTCString()); // 1 year
-}
+	res.setHeader('Expires', new Date(Date.now() + 31536000000).toUTCString()); // 1 year
+};
 
-// 🖼 Download proxy endpoint
+// Route to fetch image from Telegram and cache in Redis
 router.get('/download-image/:fileId', async (req, res) => {
-  const { fileId } = req.params;
+	const { fileId } = req.params;
+	const token = process.env.TELEGRAM_BOT_TOKEN;
 
-  if (!TELEGRAM_BOT_TOKEN) {
-    return res.status(500).json({ error: 'Bot token not configured' });
-  }
+	if (!token) {
+		return res.status(500).json({ error: 'Telegram bot token not configured' });
+	}
 
-  const redisKey = `tg-image:${fileId}`;
-  const etag = `"${fileId}"`;
+	try {
+		const redisKey = `tg-image:${fileId}`;
+		const base64Data = await redis.get(redisKey);
 
-  // 💡 Conditional GET support
-  if (req.headers['if-none-match'] === etag) {
-    return res.status(304).end();
-  }
+		if (base64Data) {
+			console.log('✅ Serving image from Redis cache');
+			const buffer = Buffer.from(base64Data, 'base64');
+			setImageHeaders(res, fileId, `${fileId}.jpg`);
+			return res.send(buffer);
+		}
 
-  try {
-    // ✅ Check Redis for cached image (as Buffer)
-    const cachedBuffer = await redis.getBuffer(redisKey);
-    if (cachedBuffer) {
-      console.log('✅ Served image from Redis');
-      setImageHeaders(res, fileId, `${fileId}.jpg`);
-      return res.send(cachedBuffer);
-    }
+		// 1. Fetch file info from Telegram API
+		const fileInfoRes = await fetch(
+			`https://api.telegram.org/bot${token}/getFile?file_id=${fileId}`
+		);
+		const fileInfo = await fileInfoRes.json();
 
-    // 🔄 If not in Redis, fetch from Telegram
-    const fileInfoRes = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getFile?file_id=${fileId}`);
-    const fileInfo = await fileInfoRes.json();
+		if (!fileInfo.ok) {
+			console.warn(`File not found: ${fileId}`);
+			return res.status(404).json({ error: 'File not found' });
+		}
 
-    if (!fileInfo.ok) {
-      return res.status(404).json({ error: 'File not found' });
-    }
+		const filePath = fileInfo.result.file_path;
 
-    const filePath = fileInfo.result.file_path;
-    const imageRes = await fetch(`https://api.telegram.org/file/bot${TELEGRAM_BOT_TOKEN}/${filePath}`);
-    const imageArrayBuffer = await imageRes.arrayBuffer();
-    const imageBuffer = Buffer.from(imageArrayBuffer);
+		// 2. Download the actual image file
+		const fileRes = await fetch(
+			`https://api.telegram.org/file/bot${token}/${filePath}`
+		);
 
-    // 💾 Cache in Redis for 24 hours
-    await redis.set(redisKey, imageBuffer, 'EX', 86400);
+		if (!fileRes.ok) {
+			console.warn(`Download failed: ${filePath}`);
+			return res.status(404).json({ error: 'Failed to download image' });
+		}
 
-    setImageHeaders(res, fileId, filePath.split('/').pop());
-    res.send(imageBuffer);
-  } catch (err) {
-    console.error('❌ Failed to serve image:', err.message);
-    res.status(500).json({ error: 'Image download failed' });
-  }
+		const arrayBuffer = await fileRes.arrayBuffer();
+		const buffer = Buffer.from(arrayBuffer);
+
+		// 3. Cache image in Redis (as base64) for 1 day
+		await redis.set(redisKey, buffer.toString('base64'), 'EX', 86400);
+
+		// 4. Set headers and respond with image
+		setImageHeaders(res, fileId, filePath.split('/').pop());
+		res.send(buffer);
+	} catch (err) {
+		console.error('❌ Image download failed:', err.message);
+		res.status(500).json({ error: 'Image download failed' });
+	}
 });
+
+// Other Amazon routes
+router.post('/fetch-product-image', amazonController.fetchProductImage);
+router.get('/products', amazonController.getStoredProducts);
 
 module.exports = router;
