@@ -76,7 +76,7 @@ export const getTelegramMessages = async (
 	searchQuery?: string | null,
 ): Promise<TelegramResponse> => {
 	try {
-		console.log('Running in development mode');
+		console.log(`Running in ${process.env.NODE_ENV} mode`);
 		console.log('API Base URL:', API_BASE_URL);
 
 		const params: Record<string, string | undefined> = {

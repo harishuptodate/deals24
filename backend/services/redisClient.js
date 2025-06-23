@@ -28,7 +28,7 @@ const cacheHybrid = (keyGenerator, ttl = 60, maxAge = 60, staleWhileRevalidate =
     try {
       const cached = await redis.get(key);
       if (cached) {
-        console.log(`✅ Redis cache hit for ${key}`);
+        // console.log(`✅ Redis cache hit for ${key}`);
 
         // Set browser/client cache headers
         res.setHeader('Cache-Control', `max-age=${maxAge}, stale-while-revalidate=${staleWhileRevalidate}`);
