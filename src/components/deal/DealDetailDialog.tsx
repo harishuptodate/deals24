@@ -182,7 +182,7 @@ const DealDetailDialog = ({
 					{id && (
 						<Button
 							onClick={handleViewFullPage}
-							className="w-full sm:w-auto flex-1 bg-blue-600 dark:bg-blue-800 hover:bg-blue-700 hover:dark:bg-blue-900 hover:scale-105 transition-all">
+							className="w-full sm:w-auto flex-1 dark:text-white bg-blue-600 dark:bg-blue-800 hover:bg-blue-700 hover:dark:bg-blue-900 hover:scale-105 rounded-full transition-all">
 							<ExternalLink size={16} />
 							View Deal
 						</Button>
@@ -214,7 +214,7 @@ const DealDetailDialog = ({
 					<Button
 						onClick={handleShare}
 						disabled={isSharing}
-						className="w-full sm:w-auto flex-1 bg-orange-500 dark:bg-orange-800 hover:bg-orange-600 hover:dark:bg-orange-900 hover:scale-105 transition-all">
+						className="w-full sm:w-auto flex-1 dark:text-white rounded-full bg-orange-500 dark:bg-orange-800 hover:bg-orange-600 hover:dark:bg-orange-900 hover:scale-105 transition-all">
 						<Share2 size={16} />
 						{isSharing ? 'Sharing...' : 'Share Deal'}
 					</Button>
