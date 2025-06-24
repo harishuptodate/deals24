@@ -4,6 +4,7 @@ import { ExternalLink } from 'lucide-react';
 import { extractFirstLink, extractSecondLink, truncateLink } from './utils/linkUtils';
 import { handleTrackedLinkClick } from '../../services/api';
 import CachedTelegramImage from '../images/CachedTelegramImage';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface DealPageContentProps {
   deal: {
@@ -18,6 +19,8 @@ interface DealPageContentProps {
 }
 
 const DealPageContent = ({ deal, id }: DealPageContentProps) => {
+    const isMobile = useIsMobile();
+  
   const makeLinksClickable = (text: string) => {
     if (!text) return '';
 
@@ -57,6 +60,17 @@ const DealPageContent = ({ deal, id }: DealPageContentProps) => {
   const renderImage = () => {
     if (deal.imageUrl) {
       return (
+        isMobile ? (
+          <img
+            src={deal.imageUrl}
+            alt={deal.text?.split('\n')[0] || 'Product Image'}
+            className="w-full max-w-40 mx-auto h-auto object-contain rounded-lg"
+            onError={(e) => {
+              console.error('Failed to load image:', deal.imageUrl);
+              e.currentTarget.style.display = 'none';
+            }}
+          />
+        ) : (
         <img 
           src={deal.imageUrl} 
           alt={deal.text?.split('\n')[0] || 'Product Image'}
@@ -67,15 +81,24 @@ const DealPageContent = ({ deal, id }: DealPageContentProps) => {
             e.currentTarget.style.display = 'none';
           }}
         />
-      );
+      )
+    );
     } else if (deal.telegramFileId) {
       return (
+        isMobile ? (
+          <CachedTelegramImage
+            telegramFileId={deal.telegramFileId}
+            alt={deal.text?.split('\n')[0] || 'Product Image'}
+            className="w-full max-w-xs mx-auto object-contain h-auto rounded-lg"
+          />
+        ) : (
         <CachedTelegramImage
           telegramFileId={deal.telegramFileId}
           alt={deal.text?.split('\n')[0] || 'Product Image'}
-          className="w-full max-w-60 mx-auto object-contain h-auto rounded-lg"
+          className="w-full max-w-md mx-auto object-contain h-auto rounded-lg"
         />
-      );
+      )
+    );
     }
     return null;
   };
@@ -107,10 +130,17 @@ const DealPageContent = ({ deal, id }: DealPageContentProps) => {
           {renderImage()}
         </div>
       )}
-      
-      <div className="whitespace-pre-line text-gray-700 dark:text-gray-300 mt-6 text-center">
+
+      {isMobile ? (
+        <div className="whitespace-pre-line text-gray-700 dark:text-gray-300 mt-6 font-mono text-sm text-center">
         {makeLinksClickable(deal.text || '')}
       </div>
+      ):(
+
+      <div className="whitespace-pre-line text-gray-700 dark:text-gray-300 mt-6 font-mono text-center">
+        {makeLinksClickable(deal.text || '')}
+      </div>
+      )}
 
       {extractFirstLink(deal.text || '') && (
         <div className="mt-8 flex justify-center">

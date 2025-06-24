@@ -25,7 +25,7 @@ const Deal = () => {
   return (
     <div className="min-h-screen bg-white dark:bg-[#09090B]">
       <Navbar />
-      <main className="container mx-auto max-w-5xl px-4 py-6 md:py-12">
+      <main className="container mx-auto max-w-4xl px-4 py-6 md:py-12">
         {isLoading ? (
           <div className="animate-pulse space-y-4">
             <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
