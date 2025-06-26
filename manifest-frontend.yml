@@ -17,7 +17,7 @@ spec:
           image: harishuptodate/deals24-frontend:v4
           env:
           - name: VITE_API_BASE_URL
-            value: "http://localhost:30809/api"
+            value: "http://localhost:30800/api"
           - name: VITE_ADMIN_USERNAME
             value: "harish"
           - name: VITE_ADMIN_PASSWORD

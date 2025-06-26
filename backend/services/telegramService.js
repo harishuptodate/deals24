@@ -179,7 +179,7 @@ function detectCategory(text) {
 function isRecentMessage(messageDate) {
   const messageTimestamp = messageDate * 1000; // Convert Telegram timestamp (seconds) to milliseconds
   const currentTimestamp = Date.now();
-  return currentTimestamp - messageTimestamp <= 5 * 60 * 1000; // 5 minutes threshold
+  return currentTimestamp - messageTimestamp <= 60 * 60 * 1000; // 60 minutes threshold
 }
 
 /**

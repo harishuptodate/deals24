@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: harishuptodate/deals24-backend:v1
+          image: harishuptodate/deals24-backend:v2
           ports:
             - containerPort: 3000
           env:
@@ -37,7 +37,7 @@ spec:
             - name: WEBHOOK_URL
               value: "https://f065-106-222-228-41.ngrok-free.app"
             - name: REDIS_URL
-              value: "redis://redis:6379"
+              value: "rediss://red-d1c1t8qdbo4c73cga020:Qwljhd6FWytX9EG0dSK3vu9bkSEzxHoo@oregon-keyvalue.render.com:6379"
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:
