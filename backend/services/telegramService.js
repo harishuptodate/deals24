@@ -291,7 +291,6 @@ async function saveMessage(message) {
           return false;
         }
       }
-
       if (amazonUrls.length > 0) {
         try {
           // Implement rate limiting before API call
@@ -304,6 +303,16 @@ async function saveMessage(message) {
               imageUrl = result.imageUrl;
             } else {
               console.log('Fetched image URL is invalid or not accessible. Falling back to Telegram image.');
+            if (photo && photo.length > 0) {
+            // Handle Telegram direct images - KEEP THIS LOGIC
+            console.log('Message contains Telegram photo, extracting file ID');
+            const highestQualityPhoto = getHighestQualityPhoto(photo);
+            
+            if (highestQualityPhoto) {
+              telegramFileId = highestQualityPhoto.file_id;
+              console.log('Extracted Telegram file ID:', telegramFileId);
+            }
+          }
             }
           }
           if(!result.success && !result.imageUrl) {
