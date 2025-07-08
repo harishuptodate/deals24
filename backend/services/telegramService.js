@@ -275,7 +275,23 @@ async function saveMessage(message) {
     if (hasAmazonLinks(textContent)) {
       // console.log('Message contains Amazon links, attempting to fetch product image via API');
       const amazonUrls = extractAmazonUrls(textContent);
-      
+      async function isValidImageUrl(url) {
+        try {
+          const res = await fetch(url, {
+            method: 'HEAD',
+            timeout: 5000,
+          });
+
+          const contentType = res.headers.get("Content-Type") || res.headers.get("content-type");
+
+          // Ensure it's an image content type (jpeg, png, webp, etc.)
+          return res.ok && contentType && contentType.startsWith("image/");
+        } catch (err) {
+          console.warn("Error validating image URL:", err.message);
+          return false;
+        }
+      }
+
       if (amazonUrls.length > 0) {
         try {
           // Implement rate limiting before API call
@@ -283,7 +299,12 @@ async function saveMessage(message) {
           
           const result = await fetchProductImage(amazonUrls[amazonUrls.length - 1]);
           if (result.success && result.imageUrl) {
-            imageUrl = result.imageUrl;
+            const isValid = await isValidImageUrl(result.imageUrl);
+            if (isValid) {
+              imageUrl = result.imageUrl;
+            } else {
+              console.log('Fetched image URL is invalid or not accessible. Falling back to Telegram image.');
+            }
           }
           if(!result.success && !result.imageUrl) {
             console.log('Failed to fetch Amazon image via API:', result.error);
