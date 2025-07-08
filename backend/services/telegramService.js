@@ -176,9 +176,10 @@ function detectCategory(text) {
  * @param {number} messageDate - Message date in Unix timestamp
  * @returns {boolean} - Whether the message is recent
  */
+// this function only works in development mode only coz use of polling instead of webhooks
 function isRecentMessage(messageDate) {
-  const messageTimestamp = messageDate * 1000; // Convert Telegram timestamp (seconds) to milliseconds
-  const currentTimestamp = Date.now();
+  const messageTimestamp = messageDate * 1000;  // Convert Telegram timestamp (seconds) to milliseconds
+  const currentTimestamp = new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }); 
   return currentTimestamp - messageTimestamp <= 60 * 60 * 1000; // 60 minutes threshold
 }
 
