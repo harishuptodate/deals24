@@ -92,7 +92,12 @@ function replaceLinksAndText(text) {
       /https:\/\/t.me\/\/telugutechtvdeals\/|https:\/\/t.me\/trtpremiumdeals/g,
       'https://t.me/deals24com'
     )
-    .replace(/TRT Premium Deals/g, 'Deals24');
+    .replace(/TRT Premium Deals/g, 'Deals24')
+    .replace(/Lowest⚡️/g, '')
+    .replace(/Mahaa/g, '')
+    .replace(/Maha Loot 🚀 🚀/g, '')
+    .replace(/Loot 🚀 🚀/g, '')
+    .trim();
 }
 
 /**
