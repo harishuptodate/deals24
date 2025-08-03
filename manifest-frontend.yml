@@ -31,6 +31,7 @@ metadata:
   name: frontend
 spec:
   type: NodePort
+  # type: LoadBalancer  #comment or remove nodeport port 
   selector:
     app: deals24-frontend
   ports:

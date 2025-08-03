@@ -87,18 +87,31 @@ function normalizeMessage(text) {
  * @returns {string} - Text with replaced links and text
  */
 function replaceLinksAndText(text) {
-  return text
-    .replace(
-      /https:\/\/t.me\/\/telugutechtvdeals\/|https:\/\/t.me\/trtpremiumdeals/g,
-      'https://t.me/deals24com'
-    )
-    .replace(/TRT Premium Deals/g, 'Deals24')
-    .replace(/Lowest⚡️/g, '')
-    .replace(/Mahaa/g, '')
-    .replace(/Maha Loot 🚀 🚀/g, '')
-    .replace(/Loot 🚀 🚀/g, '')
-    .trim();
+  let result = text;
+
+  // Handle links
+  const linksToReplace = process.env.LINKS_TO_REPLACE.split(',');
+  const linkReplaceWith = process.env.LINK_REPLACE_WITH;
+
+  for (const link of linksToReplace) {
+    const regex = new RegExp(link, 'g');
+    result = result.replace(regex, linkReplaceWith);
+  }
+
+  // Handle text replacements
+  const textReplacements = process.env.TEXT_REPLACEMENTS.split(',');
+
+  for (const pair of textReplacements) {
+    const [from, to = ''] = pair.split(':');
+    if (from) {
+      const regex = new RegExp(from, 'g');
+      result = result.replace(regex, to);
+    }
+  }
+
+  return result.trim();
 }
+
 
 /**
  * Detect category based on message content
