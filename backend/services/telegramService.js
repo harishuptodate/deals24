@@ -6,6 +6,7 @@ const ClickStat = require('../models/clickStat.model');
 
 // Hashes to store unique content (in-memory)
 let contentHashes = [];
+let imageUrlHashes = [];
 
 // Track last Amazon API call time to implement rate limiting
 let lastAmazonApiCall = 0;
@@ -66,6 +67,14 @@ async function waitForApiRateLimit() {
 function calculateHash(text) {
   const normalizedText = normalizeMessage(text);
   return crypto.createHash('sha256').update(normalizedText).digest('hex');
+}
+/**
+ * Calculate hash of a message's imageURL
+ * @param {string} text - message's imageURL
+ * @returns {string} - Hash of the message's imageURL
+ */
+function hashString(input) {
+  return crypto.createHash('sha256').update(input).digest('hex');
 }
 
 /**
@@ -289,7 +298,8 @@ async function saveMessage(message) {
     // Image handling logic
     let imageUrl = null;
     let telegramFileId = null;
-    
+    let imageHash = null;
+
     // Check if message has Amazon links
     if (hasAmazonLinks(textContent)) {
       // console.log('Message contains Amazon links, attempting to fetch product image via API');
@@ -320,6 +330,16 @@ async function saveMessage(message) {
             const isValid = await isValidImageUrl(result.imageUrl);
             if (isValid) {
               imageUrl = result.imageUrl;
+              imageHash = hashString(imageUrl);
+
+              if (imageUrlHashes.includes(imageHash)) {
+                console.log('⚠️ Skipping message due to duplicate Amazon image URL');
+                return null;
+              }
+
+              imageUrlHashes.push(imageHash);
+              if (imageUrlHashes.length > 10) imageUrlHashes.shift();
+
             } else {
               console.log('Fetched image URL is invalid or not accessible. Falling back to Telegram image.');
             if (photo && photo.length > 0) {
