@@ -36,7 +36,7 @@ async function fetchProductImage(amazonUrl) {
     await delay(1000);
 
     // Use the new API endpoint
-    const apiUrl = `https://v0-amazon-product-website-one.vercel.app/api/fetch-image?url=${encodeURIComponent(amazonUrl)}`;
+    const apiUrl = `https://amznpf.vercel.app/api/fetch-image?url=${encodeURIComponent(amazonUrl)}`;
     console.log('Calling Amazon API:', apiUrl);
 
     const response = await fetchWithRetries(apiUrl, {
