@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -33,6 +32,18 @@ const HeroSection = () => {
 				<span className="relative inline-block text-sm font-medium leading-6 text-white rounded-full p-px shadow-2xl shadow-zinc-900">
 					<span className="absolute inset-0 overflow-hidden rounded-full">
 						<span className="absolute inset-0 rounded-full bg-[radial-gradient(75%_100%_at_50%_0%,rgba(56,189,248,0.6)_0%,rgba(56,189,248,0)_75%)] opacity-100" />
+						{/* Orbiting dot around the badge */}
+						<span className="absolute -inset-px rounded-[inherit] pointer-events-none">
+							<motion.div
+								className="absolute aspect-square bg-gradient-to-r from-transparent via-amber-300 to-amber-500 dark:via-amber-200 dark:to-amber-400"
+								animate={{ offsetDistance: ['0%', '100%'] }}
+								style={{
+									width: 12,
+									offsetPath: `rect(0 auto auto 0 round 16px)`,
+								}}
+								transition={{ repeat: Infinity, duration: 8, ease: 'linear' }}
+							/>
+						</span>
 					</span>
 					<span className="relative z-10 flex items-center space-x-2 rounded-full bg-zinc-950 py-1 px-5 ring-1 ring-white/10">
 						<span>✨ Welcome to Deals24</span>
