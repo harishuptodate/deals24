@@ -463,6 +463,13 @@ const Admin = () => {
 		}
 	};
 
+		// Handle Ctrl+Enter to submit
+		const handleTextareaKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+		if (e.ctrlKey && e.key === 'Enter') {
+			handleSaveEdit(e as any); // Cast to any to satisfy FormEvent
+		}
+		};
+
 	// Save category change
 	const handleSaveCategory = async (e: React.FormEvent) => {
 		e.preventDefault();

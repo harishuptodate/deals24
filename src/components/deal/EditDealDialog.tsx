@@ -40,29 +40,36 @@ const EditDealDialog = ({
     try {
       const success = await updateMessageText(id, editedText);
       if (success) {
-        toast({
-          title: 'Success',
-          description: 'Deal was updated successfully',
-        });
-        onOpenChange(false);
-        onSuccess(id, editedText);
+      toast({
+        title: 'Success',
+        description: 'Deal was updated successfully',
+      });
+      onOpenChange(false);
+      onSuccess(id, editedText);
       } else {
-        toast({
-          title: 'Error',
-          description: 'Failed to update deal',
-          variant: 'destructive',
-        });
+      toast({
+        title: 'Error',
+        description: 'Failed to update deal',
+        variant: 'destructive',
+      });
       }
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'An error occurred while updating the deal',
-        variant: 'destructive',
+      title: 'Error',
+      description: 'An error occurred while updating the deal',
+      variant: 'destructive',
       });
     } finally {
       setIsSubmitting(false);
     }
-  };
+    };
+
+    // Handle Ctrl+Enter to submit
+    const handleTextareaKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.ctrlKey && e.key === 'Enter') {
+      handleSaveEdit(e as any); // Cast to any to satisfy FormEvent
+    }
+    };
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
