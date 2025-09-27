@@ -1020,6 +1020,7 @@ const Admin = () => {
 							<Textarea
 								value={editedText}
 								onChange={(e) => setEditedText(e.target.value)}
+								onKeyDown={handleTextareaKeyDown}
 								placeholder="Deal description"
 								className="min-h-[200px]"
 							/>
