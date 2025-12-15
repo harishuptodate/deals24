@@ -287,13 +287,13 @@ async function saveMessage(message) {
     }
     
     // Process the message (using your core logic)
-    const finalCaption = replaceLinksAndText(textContent);
+    const CleanedText = replaceLinksAndText(textContent);
     
     // Extract link from text
-    const link = extractLinks(textContent);
+    const link = extractLinks(CleanedText);
     
     // Determine category based on message content
-    const category = detectCategory(textContent);
+    const category = detectCategory(CleanedText);
     
     // Image handling logic
     let imageUrl = null;
@@ -301,9 +301,9 @@ async function saveMessage(message) {
     let imageHash = null;
 
     // Check if message has Amazon links
-    if (hasAmazonLinks(textContent)) {
+    if (hasAmazonLinks(CleanedText)) {
       // console.log('Message contains Amazon links, attempting to fetch product image via API');
-      const amazonUrls = extractAmazonUrls(textContent);
+      const amazonUrls = extractAmazonUrls(CleanedText);
       async function isValidImageUrl(url) {
         try {
           const res = await fetch(url, {
@@ -390,7 +390,7 @@ async function saveMessage(message) {
     // Create and save new message
     const newMessage = new TelegramMessage({
       messageId: message_id.toString(),
-      text: finalCaption, // Use the processed text with hashtag
+      text: CleanedText, // Use the processed text with hashtag
       date: new Date(date * 1000), // Convert Unix timestamp to Date
       link,
       imageUrl,

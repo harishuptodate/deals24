@@ -1,3 +1,8 @@
+export const  hasAmazonLinks = (text: string):boolean =>  {
+  if (!text) return false;
+  const amazonRegex = /(https?:\/\/)?(www\.)?(amazon\.[a-z]{2,}|amzn\.to)\/[^\s]*/gi;
+  return amazonRegex.test(text);
+};
 
 export const extractFirstLink = (text: string): string | null => {
   const urlRegex = /(https?:\/\/[^\s]+)/g;

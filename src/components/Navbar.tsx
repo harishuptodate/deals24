@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +7,16 @@ import {
 	PopoverTrigger,
 } from '@/components/ui/popover';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Search, Target, Heart, ShoppingBag, Menu, User, ChartNoAxesColumn, CommandIcon } from 'lucide-react';
+import {
+	Search,
+	Target,
+	Heart,
+	ShoppingBag,
+	Menu,
+	User,
+	ChartNoAxesColumn,
+	CommandIcon,
+} from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import ThemeToggle from '@/components/ThemeToggle';
 
@@ -31,7 +39,12 @@ const Navbar = () => {
 
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
-			if ((e.ctrlKey || e.metaKey) && e.key === 'k' && document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
+			if (
+				(e.ctrlKey || e.metaKey) &&
+				e.key === 'k' &&
+				document.activeElement?.tagName !== 'INPUT' &&
+				document.activeElement?.tagName !== 'TEXTAREA'
+			) {
 				e.preventDefault();
 				setIsSearchPopoverOpen(true);
 				setTimeout(() => {
@@ -39,11 +52,10 @@ const Navbar = () => {
 				}, 0);
 			}
 		};
-	
+
 		window.addEventListener('keydown', handleKeyDown);
 		return () => window.removeEventListener('keydown', handleKeyDown);
 	}, []);
-	
 
 	const handleSearch = (e?: React.FormEvent) => {
 		if (e) e.preventDefault();
@@ -78,8 +90,8 @@ const Navbar = () => {
 
 	return (
 		<header className="sticky top-0 z-50 w-full bg-transparent backdrop-blur-md border-b border-gray-200 dark:border-[#27272A]">
-			<div className="container mx-auto px-4">
-				<div className="flex h-16 items-center justify-between">
+			<div className="container mx-auto px-2 sm:px-4">
+				<div className="flex h-16 items-center gap-4">
 					<div className="flex items-center">
 						<Link to="/" className="flex items-center">
 							{/* <Target className="h-8 w-8 mr-2" /> */}
@@ -96,7 +108,9 @@ const Navbar = () => {
 							/>
 							<Target className="h-8 w-8 mr-2 fallback-icon hidden" />
 
-							<span className="text-xl sm:text-2xl font-bold dark:text-white">Deals24</span>
+							<span className="text-xl sm:text-2xl font-bold dark:text-white">
+								Deals24
+							</span>
 						</Link>
 					</div>
 
@@ -117,7 +131,11 @@ const Navbar = () => {
 										<Input
 											ref={inputRef}
 											type="text"
-											placeholder={isMobile ? "Search deals..." : "Search deals... (Press Ctrl+K)"}
+											placeholder={
+												isMobile
+													? 'Search...'
+													: 'Search deals... (Press Ctrl+K)'
+											}
 											className="w-full placeholder:text-[13px] text-sm sm:pl-10 pr-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-apple-darkGray dark:bg-apple-darkGray dark:border-gray-700 dark:text-white dark:placeholder-gray-400"
 											value={searchQuery}
 											onChange={(e) => setSearchQuery(e.target.value)}
@@ -170,17 +188,17 @@ const Navbar = () => {
 						<div className="flex items-center gap-2">
 							<ThemeToggle />
 							<div className="relative p-[2px] rounded-full bg-gradient-to-r from-pink-300 via-purple-300 to-blue-400 animate-borderMove">
-							<Button
-								variant="link"
-								size="icon"
-								className="size-8 animate-shakeLift"
-								onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-								<Menu className="h-6 w-6 text-black" />
-							</Button>
+								<Button
+									variant="link"
+									size="icon"
+									className="size-8 animate-shakeLift"
+									onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+									<Menu className="h-6 w-6 text-black" />
+								</Button>
 							</div>
 						</div>
 					) : (
-						<div className="flex items-center gap-2">
+						<div className="flex items-center gap-2 ml-auto pr-1">
 							<Link to="/deals">
 								<Button
 									variant="ghost"
@@ -223,17 +241,16 @@ const Navbar = () => {
 							</Link>
 							<ThemeToggle />
 
-								{/* Glow bg */}
-								<div className="relative p-[2px] rounded-full bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500">
+							{/* Glow bg */}
+							<div className="relative p-[2px] rounded-full bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 ml-2">
 								<Link to="/admin">
-									<Button
-										className="rounded-full bg-white dark:bg-black dark:text-white text-black hover:bg-gray-200 dark:hover:bg-gray-800 px-4 py-2 w-full h-full animate-shakeLift">
+									<Button className="rounded-full bg-white dark:bg-black dark:text-white text-black hover:bg-gray-200 dark:hover:bg-gray-800 px-4 py-2 w-full h-full animate-shakeLift">
 										<User className="h-5 w-5 mr-1" />
 										<ChartNoAxesColumn className="h-5 w-5 mr-1" />
 									</Button>
 								</Link>
-								</div>
 							</div>
+						</div>
 					)}
 				</div>
 

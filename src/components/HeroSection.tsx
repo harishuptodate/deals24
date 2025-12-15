@@ -35,7 +35,7 @@ const HeroSection = () => {
 						{/* Orbiting dot around the badge */}
 						<span className="absolute -inset-px rounded-[inherit] pointer-events-none">
 							<motion.div
-								className="absolute aspect-square bg-gradient-to-r from-transparent via-amber-300 to-amber-500 dark:via-amber-200 dark:to-amber-400"
+								className="absolute aspect-square bg-gradient-to-r from-transparent via-amber-500 to-amber-700 dark:via-amber-200 dark:to-amber-400"
 								animate={{ offsetDistance: ['0%', '100%'] }}
 								style={{
 									width: 12,
