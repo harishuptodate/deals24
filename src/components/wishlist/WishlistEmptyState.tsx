@@ -16,8 +16,8 @@ const WishlistEmptyState = () => {
           actionText="Browse Deals"
           onAction={() => window.location.href = '/deals'}
           illustration={
-            <div className="mx-auto h-24 w-24 flex items-center justify-center rounded-full bg-gradient-to-br from-pink-100 to-red-100 dark:from-pink-900/20 dark:to-red-900/20 relative">
-              <Heart className="h-12 w-12 text-pink-500 dark:text-pink-400" />
+            <div className="mx-auto h-24 w-24 flex items-center justify-center rounded-full bg-gradient-to-br from-pink-400 to-red-200 dark:from-pink-600 dark:to-red-900 relative">
+              <Heart className="h-12 w-12 text-pink-500 dark:text-pink-400 animate-shakeLift" />
               <div className="absolute -top-1 -right-1">
                 <Sparkles className="h-6 w-6 text-yellow-500 animate-pulse" />
               </div>
