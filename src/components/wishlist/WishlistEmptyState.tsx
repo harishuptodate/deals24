@@ -17,10 +17,29 @@ const WishlistEmptyState = () => {
           onAction={() => window.location.href = '/deals'}
           illustration={
             <div className="mx-auto h-24 w-24 flex items-center justify-center rounded-full bg-gradient-to-br from-pink-400 to-red-200 dark:from-pink-600 dark:to-red-900 relative">
-              <Heart className="h-12 w-12 text-pink-500 dark:text-pink-400 animate-shakeLift" />
+              <Heart className="h-12 w-12 text-pink-500 dark:text-pink-400 animate-[pulse_2s_ease-in-out_infinite]" style={{ animation: 'heartbeat 1s ease-in-out infinite' }} />
               <div className="absolute -top-1 -right-1">
                 <Sparkles className="h-6 w-6 text-yellow-500 animate-pulse" />
               </div>
+              <style>{`
+                @keyframes heartbeat {
+                  0%, 100% {
+                    transform: scale(1);
+                  }
+                  15% {
+                    transform: scale(1.2);
+                  }
+                  30% {
+                    transform: scale(1);
+                  }
+                  45% {
+                    transform: scale(1.2);
+                  }
+                  70% {
+                    transform: scale(1);
+                  }
+                }
+              `}</style>
             </div>
           }
         >
