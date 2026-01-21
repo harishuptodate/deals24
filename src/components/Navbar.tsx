@@ -108,7 +108,7 @@ const Navbar = () => {
 							/>
 							<Target className="h-8 w-8 mr-2 fallback-icon hidden" />
 
-							<span className="text-xl sm:text-2xl font-bold dark:text-white">
+							<span className="hidden sm:inline text-xl sm:text-2xl font-bold dark:text-white">
 								Deals24
 							</span>
 						</Link>
