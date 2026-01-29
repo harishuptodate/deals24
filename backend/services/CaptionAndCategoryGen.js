@@ -258,7 +258,7 @@ function detectCategory(text) {
  * Normalize message and generate caption using Gemini API
  * Also identifies the category of the product
  * @param {string} messageText - Raw message text to process
- * @returns {Promise<{normalizedMessage: string, caption: string, category: string}>}
+ * @returns {Promise<{normalizedMessage: string, category: string}>}
  */
 async function normalizeMessageAndGenerateCaption(messageText) {
 	if (!messageText || typeof messageText !== 'string') {
@@ -392,7 +392,7 @@ ${messageText}`;
 		const ai = new GoogleGenAI(process.env.GEMINI_API_KEY);
 
 		const response = await ai.models.generateContent({
-			model: "gemini-2.5-flash",
+			model: "gemini-2.5-flash-lite",
 			contents: prompt,
 			generationConfig: {
 				temperature: 0.3,
