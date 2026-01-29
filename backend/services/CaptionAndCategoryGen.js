@@ -272,7 +272,6 @@ async function normalizeMessageAndGenerateCaption(messageText) {
 		);
 		return {
 			normalizedMessage: messageText.trim(),
-			caption: messageText.trim(),
 			category: detectCategory(messageText),
 		};
 	}
@@ -280,11 +279,86 @@ async function normalizeMessageAndGenerateCaption(messageText) {
 	try {
 		const prompt = `You are a product deal message processor. Analyze the following product deal message and perform these tasks:
 
-1. Normalize the message: Remove unnecessary emojis, excessive punctuation, promotional noise, and normalize spacing. Keep important product information, prices, and key details.
+1. Normalize the message: Remove unnecessary emojis, excessive punctuation, promotional noise, and normalize spacing. Keep important product information, prices, and key details. Do not touch or remove the links. Keep the message in the same format as the example. Do not add any other text or formatting. The price should be in the same format as the example.
 
-2. Create a generalized caption: Generate a clean, professional product description caption (max 150 words) that highlights the product name, key features, and deal information. Make it suitable for display.
+Few examples:
+Example 1:
+Message:
+"Looot🚀🚀ZEBRONICS Juke Bar 700 5.1 Dolby Audio @ ₹8,999
 
-3. Identify the category: Based on the product described, classify it into ONE of these exact categories:
+🔗https://fkrt.site/BfxXuEU
+
+❌Regular price @ ₹15,999
+
+💡Flat ₹1,000 off with HDFC CC"
+
+Normalized message:
+
+"ZEBRONICS Juke Bar 700 5.1 Dolby Audio @ ₹8,999
+
+🔗https://fkrt.site/BfxXuEU
+
+❌Regular price @ ₹15,999
+
+💡Flat ₹1,000 off with HDFC CC"
+
+Example 2:
+Message:
+"Flast 10K off🔥Mahaa laptop loot @ 53K
+
+ASUS TUF Gaming A15, AMD Ryzen 7 7435HS Gaming Laptop(NVIDIA RTX 3050-4GB/60W TGP/16GB RAM/512GB
+
+🔗https://www.amazon.in/dp/B0D5DFR78J/ref=cm_sw_r_as_gl_api_gl_i_dl_5N6TRF3366E5QGKNYRXB?linkCode=ml1&linkId=32ba368a4ce329e7c99e34aed8bdfec0&tag=harishch-21"
+
+Normalized message:
+"ASUS TUF Gaming A15, AMD Ryzen 7 7435HS Gaming Laptop(NVIDIA RTX 3050-4GB/60W TGP/16GB RAM/512GB @ 53K
+
+🔗https://www.amazon.in/dp/B0D5DFR78J/ref=cm_sw_r_as_gl_api_gl_i_dl_5N6TRF3366E5QGKNYRXB?linkCode=ml1&linkId=32ba368a4ce329e7c99e34aed8bdfec0&tag=harishch-21"
+
+
+Example 3:
+Message:
+"[Back] FLAT 13K OFF 🤩Mahaa Side by Side Refrigerator Loot🔥
+
+Lowest⚡️Haier 602 L, 3 Star, Expert Inverter, Frost Free Side by Side Refrigerator @ ₹50,240
+
+🔗www.amazon.in
+
+❌ Regular price @ ₹62,990
+
+💡 Apply ₹2000 Off Coupon + Flat ₹9,750 Off With SBI/ICICI Cc"
+
+Normalized message:
+"Haier 602 L, 3 Star, Expert Inverter, Frost Free Side by Side Refrigerator @ ₹50,240
+
+🔗https://www.amazon.in/dp/B0B8ZMLRH4?th=1&linkCode=sl1&linkId=9cfcffe1bb058c61d34512f82b9b77d8&language=en_IN&ref_=as_li_ss_tl&tag=harishch-21
+
+❌ Regular price @ ₹62,990
+
+💡 Apply ₹2000 Off Coupon + Flat ₹9,750 Off With SBI/ICICI CC"
+
+Example 4:
+Message:
+"[‼️Sale Ends Today] 
+
+Mahaa AC Looot🚀🚀40K AC @ 34K 🤩 
+
+Daikin 1.5 Ton 3 Star Inverter Split AC
+
+🔗https://amzn.to/4jRElqG
+
+💡 Flat ₹3,250 Off With HDFC Cc
+
+✅ Daikin Very Premium Brand"
+
+Normalized message:
+"Daikin 1.5 Ton 3 Star Inverter Split AC @ 34K
+
+🔗https://amzn.to/4jRElqG
+
+💡 Flat ₹3,250 Off With HDFC CC"
+
+2. Identify the category: Based on the product described, classify it into ONE of these exact categories:
    - laptops
    - electronics-home
    - mobile-phones
@@ -294,7 +368,7 @@ async function normalizeMessageAndGenerateCaption(messageText) {
 
 Return your response in the following JSON format (no markdown, just valid JSON):
 {
-  "caption": "generalized product caption",
+	"normalizedMessage": "the normalized message",
   "category": "one of the category slugs above"
 }
 
@@ -330,7 +404,6 @@ ${messageText}`;
 		// Ensure all required fields are present
 		return {
 			normalizedMessage: result.normalizedMessage || messageText.trim(),
-			caption: result.caption || messageText.trim(),
 			category: result.category || detectCategory(messageText),
 		};
 	} catch (error) {
@@ -339,7 +412,6 @@ ${messageText}`;
 		// Fallback to basic processing
 		return {
 			normalizedMessage: messageText.trim(),
-			caption: messageText.trim(),
 			category: detectCategory(messageText),
 		};
 	}
