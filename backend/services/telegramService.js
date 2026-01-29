@@ -2,6 +2,7 @@ const TelegramMessage = require('../models/TelegramMessage');
 const { extractLinks } = require('../utils/messageParser');
 const { fetchProductImage } = require('./amazonService');
 const crypto = require('crypto');
+const { detectCategory } = require('../utils/categoryDetector');
 const { GenerateCaptionAndCategory } = require('./CaptionAndCategoryGen');
 // Hashes to store unique content (in-memory)
 let contentHashes = [];
@@ -120,83 +121,6 @@ function replaceLinksAndText(text) {
   return result.trim();
 }
 
-
-/**
- * Detect category based on message content
- * @param {string} text - Message text
- * @returns {string|undefined} - Detected category or undefined
- */
-function detectCategory(text) {
-  const categories = {
-    "laptops": [
-      "laptop", "notebook", "ultrabook", "macbook", "mac", "lenovo", "hp", "dell", "asus", "msi", "razer", "apple macbook", "chromebook", 
-      "gaming laptop", "surface", "surface laptop", "thinkpad", "ideapad", 
-      "legion", "vivobook", "zenbook", "spectre", "pavilion", "omen", 
-      "inspiron", "latitude", "rog", "tuf", "predator", "swift", 
-      "helios", "nitro", "blade", "stealth", "probook"
-    ],
-    "electronics-home": [
-      "washing machine", "tv", "television", "smart tv", "4k", "uhd", "led", 
-      "oled", "qled", "sofa", "refrigerator", "fridge", "air conditioner", "ac", 
-      "microwave", "oven", "toaster", "dishwasher", "water purifier", "home theatre", 
-      "home theater", "soundbar", "speaker", "audio", "geyser", "cooler", 
-      "vacuum cleaner", "vacuum", "iron", "induction cooktop", "blender", 
-      "mixer grinder", "juicer", "coffee maker", "rice cooker", "heater", 
-      "fan", "chimney", "deep freezer", "air fryer", "smart home", 
-      "alexa", "echo", "google home", "Mattress", "bed", "pillow",
-    ],
-    "mobile-phones": [
-      "iphone", "android", "smartphone", "mobile phone", "5g phone",
-      "galaxy", "oppo", "vivo", 
-      "realme", "motorola", "nokia", "google pixel", "pixel", "sony xperia", 
-      "huawei", "asus rog phone", "infinix", "tecno", "honor", "iqoo", 
-      "poco", "foldable phone", "flip phone", "flagship phone", "budget phone", 
-      "mid-range phone", "flagship killer", "phone", "mobile", "tablet" 
-    ],
-    "gadgets-accessories": [
-      "power bank", "tws", "earphones", "printer",
-      "ipad", "smartwatch", "earphones", "airpods", "earbuds", "headphones", 
-      "bluetooth earphones", "neckband", "chargers", "fast charger", 
-      "usb charger", "wireless charger", "cable", "usb cable", 
-      "type-c cable", "lightning cable", "hdmi cable", "adapter", 
-      "moniter", "monitor", "memory card", "sd card", "pendrive", 
-      "usb drive", "hdd", "ssd", "laptop bag", "keyboard", "mouse", 
-      "gaming mouse", "mouse pad", "cooling pad", "phone case", 
-      "screen protector", "smartwatch", "fitness band", "vr headset", 
-      "gaming controller"
-    ],
-    "fashion": [
-      "clothing", "t-shirt", "tshirt", "shirt", "jeans", "trousers", 
-      "pants", "shorts", "skirt", "dress", "jacket", "blazer", "sweater", 
-      "hoodie", "coat", "suit", "ethnic wear", "kurta", "saree", 
-      "lehenga", "salwar", "leggings", "innerwear", "nightwear", 
-      "sportswear", "shoes", "sneakers", "heels", "sandals", 
-      "flip-flops", "boots", "formal shoes", "loafers", "running shoes", 
-      "belts", "wallets", "watches", "watch", "sunglasses", "jewelry", 
-      "rings", "necklace", "bracelet", "earrings", "bangles", 
-      "handbag", "clutch", "backpack", "hat", "cap", "socks", 
-      "underwear", "lingerie"
-    ],
-    "Best-Deals": [
-      "ThisThingShouldNotMatchWithAnything"
-    ]
-  };
-
-  const lowerText = text.toLowerCase();
-
-  for (let category in categories) {
-    for (let keyword of categories[category]) {
-      const regex = new RegExp(`\\b${keyword}\\b`, 'i'); // Ensure proper boundary matching
-      if (regex.test(lowerText)) {
-        console.log(`Matched category: ${category} with keyword: ${keyword}`); // Log the matched category and keyword
-        return category;
-      }
-    }
-  }
-  
-  return 'miscellaneous'; // Return null if no category matches
-}
-
 /**
  * Check if the message is recent (within 5 minutes)
  * @param {number} messageDate - Message date in Unix timestamp
@@ -291,20 +215,68 @@ async function saveMessage(message) {
     // Extract link from text
     const link = extractLinks(CleanedText);
     
-    // Generate normalized message and category using Gemini API (with fallback to original method)
+    // Generate normalized message and category using Gemini API (with retry mechanism and fallback)
     let normalizedText = CleanedText;
     let category = 'miscellaneous';
     
-    try {
-      const result = await GenerateCaptionAndCategory(CleanedText);
-      normalizedText = result.normalizedMessage ?? CleanedText;
-      category = result.category ?? detectCategory(CleanedText);
-      console.log('✅ Successfully generated caption and category using Gemini API');
-    } catch (error) {
-      console.error('Error generating caption/category with Gemini, using fallback:', error.message);
-      // Fallback to original method
-      category = detectCategory(CleanedText);
-      normalizedText = CleanedText;
+    const MAX_RETRIES = 3;
+    const RETRY_DELAYS = [1000, 2000, 4000]; // Exponential backoff delays in ms
+    let lastError = null;
+    
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        const result = await GenerateCaptionAndCategory(CleanedText);
+        
+        // Check if we got valid results
+        if (result.normalizedMessage && result.category) {
+          normalizedText = result.normalizedMessage;
+          category = result.category;
+          if (attempt > 0) {
+            console.log(`✅ Successfully generated caption and category using Gemini API (after ${attempt} retry/retries)`);
+          } else {
+            console.log('✅ Successfully generated caption and category using Gemini API');
+          }
+          break; // Success, exit retry loop
+        } else {
+          // Invalid response, use fallback
+          console.warn('Gemini API returned incomplete data, using fallback');
+          category = detectCategory(CleanedText);
+          normalizedText = CleanedText;
+          break;
+        }
+      } catch (error) {
+        lastError = error;
+        const isRetryableError = 
+          error.status === 503 || 
+          error.statusCode === 503 ||
+          error.code === 'ECONNRESET' ||
+          error.code === 'ETIMEDOUT' ||
+          error.message?.includes('503') ||
+          error.message?.includes('Service Unavailable') ||
+          error.message?.includes('timeout');
+        
+        if (isRetryableError && attempt < MAX_RETRIES) {
+          const delay = RETRY_DELAYS[attempt] || RETRY_DELAYS[RETRY_DELAYS.length - 1];
+          console.warn(
+            `⚠️ Gemini API error (attempt ${attempt + 1}/${MAX_RETRIES + 1}): ${error.message}. Retrying in ${delay}ms...`
+          );
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue; // Retry
+        } else {
+          // Non-retryable error or max retries reached
+          if (attempt >= MAX_RETRIES) {
+            console.error(
+              `❌ Failed to generate caption/category with Gemini API after ${MAX_RETRIES + 1} attempts. Using fallback. Last error: ${error.message}`
+            );
+          } else {
+            console.error(`❌ Non-retryable error from Gemini API: ${error.message}. Using fallback.`);
+          }
+          // Fallback to original method
+          category = detectCategory(CleanedText);
+          normalizedText = CleanedText;
+          break; // Exit retry loop
+        }
+      }
     }
     
     // Image handling logic

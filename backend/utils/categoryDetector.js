@@ -1,116 +1,75 @@
-
 /**
- * Utility function to detect the category of a product based on keywords in the message
- * @param {string} text - The message text to analyze
- * @returns {string|null} - The detected category or null if no category detected
+ * Detect category based on message content
+ * @param {string} text - Message text
+ * @returns {string|undefined} - Detected category or undefined
  */
-exports.detectCategory = (text) => {
-  if (!text) return null;
-  
-  const textLower = text.toLowerCase();
-  
-  // Category detection based on keywords
+export function detectCategory(text) {
   const categories = {
-    'electronics-home': [
-      'tv', 'television', 'smart tv', '4k', 'uhd', 'led', 'oled', 'qled',
-      'speaker', 'soundbar', 'audio', 'headphones', 'earbuds', 'refrigerator', 'fridge',
-      'washing machine', 'dishwasher', 'microwave', 'oven', 'air conditioner', 'ac',
-      'vacuum', 'smart home', 'alexa', 'echo', 'google home', 'home theater'
+    "laptops": [
+      "laptop", "notebook", "ultrabook", "macbook", "mac", "lenovo", "hp", "dell", "asus", "msi", "razer", "apple macbook", "chromebook", 
+      "gaming laptop", "surface", "surface laptop", "thinkpad", "ideapad", 
+      "legion", "vivobook", "zenbook", "spectre", "pavilion", "omen", 
+      "inspiron", "latitude", "rog", "tuf", "predator", "swift", 
+      "helios", "nitro", "blade", "stealth", "probook"
     ],
-    'laptops': [
-      'laptop', 'notebook', 'macbook', 'chromebook', 'gaming laptop', 'ultrabook',
-      'dell', 'hp', 'lenovo', 'asus', 'acer', 'msi', 'surface', 'thinkpad'
+    "electronics-home": [
+      "washing machine", "tv", "television", "smart tv", "4k", "uhd", "led", 
+      "oled", "qled", "sofa", "refrigerator", "fridge", "air conditioner", "ac", 
+      "microwave", "oven", "toaster", "dishwasher", "water purifier", "home theatre", 
+      "home theater", "soundbar", "speaker", "audio", "geyser", "cooler", 
+      "vacuum cleaner", "vacuum", "iron", "induction cooktop", "blender", 
+      "mixer grinder", "juicer", "coffee maker", "rice cooker", "heater", 
+      "fan", "chimney", "deep freezer", "air fryer", "smart home", 
+      "alexa", "echo", "google home", "Mattress", "bed", "pillow",
     ],
-    'mobile-phones': [
-      'phone', 'smartphone', 'iphone', 'samsung', 'galaxy', 'pixel', 'oneplus',
-      'xiaomi', 'redmi', 'oppo', 'vivo', 'realme', 'mobile', 'android',
-      'tablet', 'ipad', 'watch', 'smartwatch', 'earphones', 'airpods'
+    "mobile-phones": [
+      "iphone", "android", "smartphone", "mobile phone", "5g phone",
+      "galaxy", "oppo", "vivo", 
+      "realme", "motorola", "nokia", "google pixel", "pixel", "sony xperia", 
+      "huawei", "asus rog phone", "infinix", "tecno", "honor", "iqoo", 
+      "poco", "foldable phone", "flip phone", "flagship phone", "budget phone", 
+      "mid-range phone", "flagship killer", "phone", "mobile", "tablet" 
     ],
-    'fashion': [
-      'shirt', 't-shirt', 'tshirt', 'jeans', 'pants', 'dress', 'shoes', 'sneakers',
-      'jacket', 'coat', 'sweater', 'hoodie', 'watch', 'sunglasses', 'handbag',
-      'backpack', 'wallet', 'hat', 'cap', 'socks', 'underwear', 'lingerie'
+    "gadgets-accessories": [
+      "power bank", "tws", "earphones", "printer",
+      "ipad", "smartwatch", "earphones", "airpods", "earbuds", "headphones", 
+      "bluetooth earphones", "neckband", "chargers", "fast charger", 
+      "usb charger", "wireless charger", "cable", "usb cable", 
+      "type-c cable", "lightning cable", "hdmi cable", "adapter", 
+      "moniter", "monitor", "memory card", "sd card", "pendrive", 
+      "usb drive", "hdd", "ssd", "laptop bag", "keyboard", "mouse", 
+      "gaming mouse", "mouse pad", "cooling pad", "phone case", 
+      "screen protector", "smartwatch", "fitness band", "vr headset", 
+      "gaming controller"
+    ],
+    "fashion": [
+      "clothing", "t-shirt", "tshirt", "shirt", "jeans", "trousers", 
+      "pants", "shorts", "skirt", "dress", "jacket", "blazer", "sweater", 
+      "hoodie", "coat", "suit", "ethnic wear", "kurta", "saree", 
+      "lehenga", "salwar", "leggings", "innerwear", "nightwear", 
+      "sportswear", "shoes", "sneakers", "heels", "sandals", 
+      "flip-flops", "boots", "formal shoes", "loafers", "running shoes", 
+      "belts", "wallets", "watches", "watch", "sunglasses", "jewelry", 
+      "rings", "necklace", "bracelet", "earrings", "bangles", 
+      "handbag", "clutch", "backpack", "hat", "cap", "socks", 
+      "underwear", "lingerie"
+    ],
+    "Best-Deals": [
+      "ThisThingShouldNotMatchWithAnything"
     ]
   };
-  
-  // Check each category's keywords
-  for (const [category, keywords] of Object.entries(categories)) {
-    for (const keyword of keywords) {
-      // Check if the keyword is present as a whole word
-      if (new RegExp(`\\b${keyword}\\b`, 'i').test(textLower)) {
+
+  const lowerText = text.toLowerCase();
+
+  for (let category in categories) {
+    for (let keyword of categories[category]) {
+      const regex = new RegExp(`\\b${keyword}\\b`, 'i'); // Ensure proper boundary matching
+      if (regex.test(lowerText)) {
+        console.log(`Matched category: ${category} with keyword: ${keyword}`); // Log the matched category and keyword
         return category;
       }
     }
   }
   
-  // Secondary check for product types in the message
-  if (/\b(deal|sale|discount|offer|save|price|buy|shop)\b/i.test(textLower)) {
-    // Default to electronics if it's clearly a deal but category can't be determined
-    return 'electronics-home';
-  }
-  
-  return null;
-};
-
-/**
- * Gets a list of all supported categories
- * @returns {string[]} Array of category slugs
- */
-exports.getAllCategories = () => {
-  return [
-    'electronics-home',
-    'laptops',
-    'mobile-phones',
-    'fashion'
-  ];
-};
-
-/**
- * Gets the display name for a category slug
- * @param {string} slug - The category slug
- * @returns {string} The display name
- */
-exports.getCategoryName = (slug) => {
-  const categoryNames = {
-    'electronics-home': 'Electronics & Home',
-    'laptops': 'Laptops',
-    'mobile-phones': 'Mobile Phones',
-    'fashion': 'Fashion'
-  };
-  
-  return categoryNames[slug] || 'Uncategorized';
-};
-
-/**
- * Check if a subcategory belongs to a parent category
- * @param {string} subcategory - The subcategory to check
- * @param {string} category - The parent category
- * @returns {boolean} True if subcategory belongs to category
- */
-exports.isSubcategoryOf = (subcategory, category) => {
-  if (!subcategory || !category) return false;
-  
-  const subcategoryMap = {
-    'electronics-home': [
-      'smart tv', '4k tv', 'led tv', 'oled tv', 'soundbar', 'speaker',
-      'headphones', 'washing machine', 'refrigerator', 'air conditioner',
-      'vacuum cleaner', 'microwave'
-    ],
-    'laptops': [
-      'gaming laptop', 'ultrabook', 'macbook', 'chromebook', 'notebook'
-    ],
-    'mobile-phones': [
-      'iphone', 'samsung galaxy', 'pixel', 'oneplus', 'xiaomi', 'tablet', 'ipad'
-    ],
-    'fashion': [
-      't-shirt', 'jeans', 'shoes', 'watch', 'jacket', 'dress', 'sneakers'
-    ]
-  };
-  
-  if (!subcategoryMap[category]) return false;
-  
-  const subcategoryLower = subcategory.toLowerCase();
-  return subcategoryMap[category].some(sub => 
-    subcategoryLower.includes(sub.toLowerCase())
-  );
-};
+  return 'miscellaneous'; // Return null if no category matches
+}
