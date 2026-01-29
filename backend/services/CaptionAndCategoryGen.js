@@ -1,4 +1,3 @@
-const axios = require('axios');
 require('dotenv').config();
 const { GoogleGenAI } = require("@google/genai");
 
@@ -260,7 +259,7 @@ function detectCategory(text) {
  * @param {string} messageText - Raw message text to process
  * @returns {Promise<{normalizedMessage: string, category: string}>}
  */
-async function normalizeMessageAndGenerateCaption(messageText) {
+async function GenerateCaptionAndCategory(messageText) {
 	if (!messageText || typeof messageText !== 'string') {
 		throw new Error('Message text is required and must be a string');
 	}
@@ -392,7 +391,7 @@ ${messageText}`;
 		const ai = new GoogleGenAI(process.env.GEMINI_API_KEY);
 
 		const response = await ai.models.generateContent({
-			model: "gemini-2.5-flash-lite",
+			model: "gemini-2.5-flash",
 			contents: prompt,
 			generationConfig: {
 				temperature: 0.3,
@@ -433,5 +432,5 @@ ${messageText}`;
 
 module.exports = {
 	detectCategory,
-	normalizeMessageAndGenerateCaption,
+	GenerateCaptionAndCategory,
 };

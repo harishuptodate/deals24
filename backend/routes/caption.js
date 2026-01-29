@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { testCaptionGeneration } = require('../controllers/captionController');
+const { CaptionGeneration } = require('../controllers/captionController');
 
-// Test endpoint for Gemini API caption generation
-router.post('/test', testCaptionGeneration);
+// Endpoint for Gemini API caption generation
+router.post('/', CaptionGeneration);
 
 module.exports = router;

@@ -2,8 +2,7 @@ const TelegramMessage = require('../models/TelegramMessage');
 const { extractLinks } = require('../utils/messageParser');
 const { fetchProductImage } = require('./amazonService');
 const crypto = require('crypto');
-const ClickStat = require('../models/clickStat.model');
-
+const { GenerateCaptionAndCategory } = require('./CaptionAndCategoryGen');
 // Hashes to store unique content (in-memory)
 let contentHashes = [];
 let imageUrlHashes = [];
@@ -292,8 +291,21 @@ async function saveMessage(message) {
     // Extract link from text
     const link = extractLinks(CleanedText);
     
-    // Determine category based on message content
-    const category = detectCategory(CleanedText);
+    // Generate normalized message and category using Gemini API (with fallback to original method)
+    let normalizedText = CleanedText;
+    let category = 'miscellaneous';
+    
+    try {
+      const result = await GenerateCaptionAndCategory(CleanedText);
+      normalizedText = result.normalizedMessage ?? CleanedText;
+      category = result.category ?? detectCategory(CleanedText);
+      console.log('✅ Successfully generated caption and category using Gemini API');
+    } catch (error) {
+      console.error('Error generating caption/category with Gemini, using fallback:', error.message);
+      // Fallback to original method
+      category = detectCategory(CleanedText);
+      normalizedText = CleanedText;
+    }
     
     // Image handling logic
     let imageUrl = null;
@@ -390,7 +402,7 @@ async function saveMessage(message) {
     // Create and save new message
     const newMessage = new TelegramMessage({
       messageId: message_id.toString(),
-      text: CleanedText, // Use the processed text with hashtag
+      text: normalizedText, // Use the normalized text from Gemini (or fallback to CleanedText)
       date: new Date(date * 1000), // Convert Unix timestamp to Date
       link,
       imageUrl,

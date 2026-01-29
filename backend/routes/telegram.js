@@ -143,16 +143,6 @@ router.get('/messages/:id',
   }
 });
 
-// Track clicks on a message link - No caching
-router.post('/messages/:id/click', async (req, res) => {
-  try {
-    await handleClickTracking(req, res);
-  } catch (error) {
-    console.error('Error tracking click:', error);
-    res.status(500).json({ error: 'Failed to track click' });
-  }
-});
-
 // New endpoint with different naming to avoid ad blockers - No caching
 router.post('/messages/:id/today', async (req, res) => {
   try {
