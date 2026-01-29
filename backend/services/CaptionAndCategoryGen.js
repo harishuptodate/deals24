@@ -379,11 +379,10 @@ Normalized message:
    - fashion
    - miscellaneous
 
-Return your response in the following JSON format (no markdown, just valid JSON):
-{
-	"normalizedMessage": "the normalized message",
-  "category": "one of the category slugs above"
-}
+CRITICAL: Return ONLY valid JSON. Do NOT use markdown code blocks (no triple backticks with json or without). Do NOT add any explanations, text, or formatting before or after the JSON. Start directly with { and end with }. Return pure JSON only.
+
+Example of correct response format:
+{"normalizedMessage": "Product name @ ₹Price", "category": "electronics-home"}
 
 Message to process:
 ${messageText}`;
@@ -402,9 +401,25 @@ ${messageText}`;
 		});
 
 		// Extract the response text from Gemini API
-		const responseText = response.text;
+		let responseText = response.text;
 
-		const result = JSON.parse(responseText);
+		// Parse JSON from response (remove markdown code blocks if present)
+		let jsonText = responseText.trim();
+		
+		// Remove markdown code blocks
+		if (jsonText.startsWith('```json')) {
+			jsonText = jsonText.replace(/```json\n?/g, '').replace(/```\n?/g, '');
+		} else if (jsonText.startsWith('```')) {
+			jsonText = jsonText.replace(/```\n?/g, '');
+		}
+		
+		// Try to extract JSON if there's extra text before/after
+		const jsonMatch = jsonText.match(/\{[\s\S]*\}/);
+		if (jsonMatch) {
+			jsonText = jsonMatch[0];
+		}
+		
+		const result = JSON.parse(jsonText);
 
 		// Validate category
 		if (!AVAILABLE_CATEGORIES.includes(result.category)) {
