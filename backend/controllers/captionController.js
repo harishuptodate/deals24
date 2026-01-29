@@ -24,9 +24,7 @@ async function testCaptionGeneration(req, res) {
 		return res.status(200).json({
 			success: true,
 			data: {
-				originalMessage: message,
 				normalizedMessage: result.normalizedMessage,
-				caption: result.caption,
 				category: result.category,
 			},
 		});
