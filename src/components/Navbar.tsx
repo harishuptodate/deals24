@@ -32,9 +32,7 @@ const Navbar = () => {
 	useEffect(() => {
 		const searchParams = new URLSearchParams(location.search);
 		const queryParam = searchParams.get('search');
-		if (queryParam) {
-			setSearchQuery(queryParam);
-		}
+		setSearchQuery(queryParam || '');
 	}, [location.search]);
 
 	useEffect(() => {
