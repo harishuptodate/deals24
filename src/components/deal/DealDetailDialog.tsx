@@ -164,7 +164,7 @@ const DealDetailDialog = ({
 	return (
 		<Dialog open={isOpen} onOpenChange={onOpenChange}>
 			<DialogContent className="w-[92vw] sm:w-[480px] max-h-[95vh] overflow-y-auto rounded-xl text-[0.93rem] sm:text-sm px-4 sm:px-6">
-				<DialogHeader>
+				<DialogHeader className="hidden sm:block"> {/* title hidden on mobile screen */}
 					<DialogTitle className="text-base sm:text-lg text-center">
 						{title}
 					</DialogTitle>
@@ -173,8 +173,21 @@ const DealDetailDialog = ({
 				<div className="mt-3">
 					{hasImage && <div className="mb-4">{renderImage()}</div>}
 
+					{/* Container div with small text size, preserves line breaks, and centers content */}
 					<div className="text-sm whitespace-pre-line text-center">
-						{makeLinksClickable(description)}
+						{/* First line (title) shown only on mobile screens with bold styling */}
+						<span className="sm:hidden font-bold">{makeLinksClickable(description.split('\n')[0])}</span>
+						{/* First line (title) shown only on desktop screens with normal weight */}
+						<span className="hidden sm:inline">{makeLinksClickable(description.split('\n')[0])}</span>
+						{/* Conditionally render remaining lines if description has more than one line */}
+						{description.split('\n').slice(1).length > 0 && (
+							<>
+								{/* Add a line break between title and body */}
+								{'\n'}
+								{/* Render all lines after the first one with clickable links */}
+								{makeLinksClickable(description.split('\n').slice(1).join('\n'))}
+							</>
+						)}
 					</div>
 				</div>
 
