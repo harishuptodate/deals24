@@ -36,6 +36,14 @@ const EditDealDialog = ({
 	const handleSaveEdit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		if (!id) return;
+		if (editedImageUrl && !editedImageUrl.startsWith('https://m.media-amazon.com/')) {
+			toast({
+				title: 'Error',
+				description: 'Invalid image URL',
+				variant: 'destructive',
+			});
+			return;
+		}
 
 		setIsSubmitting(true);
 
