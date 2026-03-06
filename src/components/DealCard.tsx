@@ -304,6 +304,7 @@ const DealCard = memo(({
         onOpenChange={setIsEditDialogOpen}
         id={id || ''}
         initialText={description}
+        initialImageUrl={imageUrl || null}
         onSuccess={handleEditSuccess}
       />
 

@@ -10,13 +10,15 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { updateMessageText } from '../../services/api';
 import { useToast } from '@/components/ui/use-toast';
+import { Input } from '../ui/input';
 
 interface EditDealDialogProps {
 	isOpen: boolean;
 	onOpenChange: (open: boolean) => void;
 	id: string;
 	initialText: string;
-	onSuccess: (id: string, newText: string) => void;
+	initialImageUrl: string | null;
+	onSuccess: (id: string, newText: string, newImageUrl: string | null) => void;
 }
 
 const EditDealDialog = ({
@@ -25,11 +27,12 @@ const EditDealDialog = ({
 	id,
 	initialText,
 	onSuccess,
+	initialImageUrl,
 }: EditDealDialogProps) => {
 	const { toast } = useToast();
 	const [editedText, setEditedText] = useState(initialText);
 	const [isSubmitting, setIsSubmitting] = useState(false);
-
+	const [editedImageUrl, setEditedImageUrl] = useState(initialImageUrl || null);
 	const handleSaveEdit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		if (!id) return;
@@ -37,14 +40,14 @@ const EditDealDialog = ({
 		setIsSubmitting(true);
 
 		try {
-			const success = await updateMessageText(id, editedText);
+			const success = await updateMessageText(id, editedText, editedImageUrl);
 			if (success) {
 				toast({
 					title: 'Success',
 					description: 'Deal was updated successfully',
 				});
 				onOpenChange(false);
-				onSuccess(id, editedText);
+				onSuccess(id, editedText, editedImageUrl);
 			} else {
 				toast({
 					title: 'Error',
@@ -87,6 +90,16 @@ const EditDealDialog = ({
 							onKeyDown={handleTextareaKeyDown}
 							placeholder="Deal description"
 							className="min-h-[200px]"
+						/>
+					</div>
+
+					<div className="mt-4">
+						<Input
+							value={editedImageUrl}
+							onChange={(e) => setEditedImageUrl(e.target.value)}
+							placeholder="Image URL"
+							className="min-h-[40px]"
+							type="url"
 						/>
 					</div>
 

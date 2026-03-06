@@ -102,7 +102,7 @@ exports.getMessage = async (req, res) => {
 exports.updateMessageText = async (req, res) => {
 	try {
 		const { id } = req.params;
-		const { text } = req.body;
+		const { text, imageUrl } = req.body;
 
 		if (!text || text.trim() === '') {
 			return res.status(400).json({ error: 'Message text cannot be empty' });
@@ -115,6 +115,7 @@ exports.updateMessageText = async (req, res) => {
 		}
 
 		message.text = text;
+		message.imageUrl = imageUrl;
 		await message.save();
 
 		return res.json({ success: true, message });
