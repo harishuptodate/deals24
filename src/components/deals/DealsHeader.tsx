@@ -1,7 +1,8 @@
 
 import { Button } from '@/components/ui/button';
-import { X } from 'lucide-react';
+import { X, ArrowUpDown } from 'lucide-react';
 import DateRangeFilter from '../filters/DateRangeFilter';
+import { useSearchParams } from 'react-router-dom';
 
 interface DealsHeaderProps {
   pageTitle: string;
@@ -19,6 +20,19 @@ const DealsHeader = ({
   totalDealsCount,
   onClearFilter,
 }: DealsHeaderProps) => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const sort = searchParams.get('sort'); // 'oldest' => oldest -> newest
+
+  const toggleSort = () => {
+    const next = new URLSearchParams(searchParams);
+    if (sort === 'oldest') {
+      next.delete('sort');
+    } else {
+      next.set('sort', 'oldest');
+    }
+    setSearchParams(next, { replace: true });
+  };
+
   return (
     <div className="flex flex-col gap-2 sm:flex-row sm:items-center justify-between mb-6 md:mb-8">
       <div>
@@ -35,6 +49,16 @@ const DealsHeader = ({
 
       <div className="flex items-center gap-2 justify-end flex-wrap">
         <DateRangeFilter />
+
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={toggleSort}
+          className="rounded-full h-8 px-3 py-0.5 text-xs dark:border-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">
+          <ArrowUpDown size={14} className="mr-2 opacity-80" />
+          {sort === 'oldest' ? 'Oldest' : 'Newest'}
+        </Button>
 
         {(activeCategory || searchQuery) && (
           <Button

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as UiCalendar } from '@/components/ui/calendar';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Input } from '@/components/ui/input';
 
 const toDateParam = (date: Date) => {
   const year = date.getFullYear();
@@ -61,6 +62,8 @@ const DateRangeFilter = () => {
   const toDate = isToFuture ? null : toDateParsed;
 
   const [futureError, setFutureError] = useState<string | null>(null);
+  const [manualValue, setManualValue] = useState('');
+  const [manualError, setManualError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isFromFuture && !isToFuture) return;
@@ -104,6 +107,8 @@ const DateRangeFilter = () => {
     next.delete('to');
     setSearchParams(next, { replace: true });
     setFutureError(null);
+    setManualError(null);
+    setManualValue('');
     setOpen(false);
   };
 
@@ -139,6 +144,80 @@ const DateRangeFilter = () => {
     if (toDate) return format(toDate, 'MMM d');
     return 'Filter';
   })();
+
+  const formatDdMmYy = (date: Date) => {
+    const dd = String(date.getDate()).padStart(2, '0');
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const yy = String(date.getFullYear() % 100).padStart(2, '0');
+    return `${dd}/${mm}/${yy}`;
+  };
+
+  useEffect(() => {
+    if (!open) return;
+    if (step === 'from') {
+      setManualValue(fromDate ? formatDdMmYy(fromDate) : '');
+    } else {
+      setManualValue(toDate ? formatDdMmYy(toDate) : '');
+    }
+    setManualError(null);
+  }, [open, step, fromDate, toDate]);
+
+  const parseDdMmYy = (value: string): Date | null => {
+    const v = value.trim();
+    const match = /^(\d{1,2})\/(\d{1,2})\/(\d{2})$/.exec(v);
+    if (!match) return null;
+
+    const dd = Number(match[1]);
+    const mm = Number(match[2]);
+    const yy = Number(match[3]);
+
+    const year = 2000 + yy;
+    const monthIndex = mm - 1;
+
+    const d = new Date(year, monthIndex, dd);
+    if (
+      d.getFullYear() !== year ||
+      d.getMonth() !== monthIndex ||
+      d.getDate() !== dd
+    ) {
+      return null;
+    }
+
+    return d;
+  };
+
+  const submitManualDate = () => {
+    const parsed = parseDdMmYy(manualValue);
+    if (!parsed) {
+      setManualError('Invalid date. Use DD/MM/YY.');
+      return;
+    }
+
+    // No future dates (local timezone).
+    if (parsed > today) {
+      setManualError(null);
+      setFutureError('Selected date cannot be in the future.');
+      return;
+    }
+
+    if (step === 'from') {
+      updateFrom(parsed);
+
+      if (isMobile) {
+        setStep('to');
+      } else {
+        setStep('to');
+        setOpen(false);
+        window.requestAnimationFrame(() => setOpen(true));
+      }
+      return;
+    }
+
+    // step === 'to'
+    updateTo(parsed);
+    setOpen(false);
+    setManualError(null);
+  };
 
   return (
     <div className="flex items-center gap-2">
@@ -176,6 +255,31 @@ const DateRangeFilter = () => {
         <PopoverContent
           align="end"
           className="w-auto p-2 rounded-xl dark:bg-apple-darkGray dark:border-gray-700">
+          <div className="px-1 pb-2">
+            <p className="text-xs font-medium text-gray-600 dark:text-gray-300">
+              {step === 'from' ? 'From' : 'To'}
+            </p>
+
+            <div className="mt-2">
+              <Input
+                value={manualValue}
+                onChange={(e) => {
+                  setManualValue(e.target.value);
+                  setManualError(null);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') submitManualDate();
+                }}
+                placeholder="DD/MM/YY"
+                inputMode="numeric"
+                className="h-9 text-xs"
+              />
+              {manualError && (
+                <p className="text-xs text-red-500 mt-1">{manualError}</p>
+              )}
+            </div>
+          </div>
+
           {futureError && (
             <p className="text-xs text-red-500 mb-2 px-1">{futureError}</p>
           )}

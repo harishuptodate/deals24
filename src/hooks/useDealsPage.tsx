@@ -13,6 +13,7 @@ export const useDealsPage = () => {
   const searchQuery = searchParams.get('search');
   const fromParam = searchParams.get('from');
   const toParam = searchParams.get('to');
+  const sortParam = searchParams.get('sort');
   const [activeCategory, setActiveCategory] = useState<string | null>(categoryParam);
 
   useEffect(() => {
@@ -34,6 +35,7 @@ export const useDealsPage = () => {
       searchQuery,
       fromParam,
       toParam,
+      sortParam,
     ],
     queryFn: ({ pageParam }) =>
       getTelegramMessages(
@@ -42,6 +44,7 @@ export const useDealsPage = () => {
         searchQuery || undefined,
         fromParam,
         toParam,
+        sortParam,
       ),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor,

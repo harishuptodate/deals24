@@ -87,7 +87,8 @@ router.get('/messages',
       const limit = req.query.limit || '10';
       const from = req.query.from || '';
       const to = req.query.to || '';
-      return `messages:category=${category}&cursor=${cursor}&limit=${limit}&from=${from}&to=${to}`;
+      const sort = req.query.sort || '';
+      return `messages:category=${category}&cursor=${cursor}&limit=${limit}&from=${from}&to=${to}&sort=${sort}`;
     },
     60,  // Redis TTL (1 min)
     60,  // HTTP max-age
@@ -101,6 +102,7 @@ router.get('/messages',
     const search = req.query.search;
     const from = req.query.from;
     const to = req.query.to;
+    const sort = req.query.sort;
 
     // Only cache if there's no search parameter
     // if (!search) {
@@ -116,6 +118,7 @@ router.get('/messages',
       search,
       from,
       to,
+      sort,
     });
 
     res.json(messages);

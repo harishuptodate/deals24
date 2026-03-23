@@ -12,6 +12,7 @@ export const useDealGrid = () => {
   const searchQuery = searchParams.get('search');
   const fromParam = searchParams.get('from');
   const toParam = searchParams.get('to');
+  const sortParam = searchParams.get('sort');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
   const {
@@ -29,6 +30,7 @@ export const useDealGrid = () => {
       searchQuery,
       fromParam,
       toParam,
+      sortParam,
     ],
     queryFn: ({ pageParam }) =>
       getTelegramMessages(
@@ -37,6 +39,7 @@ export const useDealGrid = () => {
         searchQuery,
         fromParam,
         toParam,
+        sortParam,
       ),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
@@ -54,7 +57,7 @@ export const useDealGrid = () => {
 
   useEffect(() => {
     refetch();
-  }, [activeCategory, searchQuery, fromParam, toParam, refetch]);
+  }, [activeCategory, searchQuery, fromParam, toParam, sortParam, refetch]);
 
   const handleCategoryChange = (category: string | null) => {
     setActiveCategory(category);

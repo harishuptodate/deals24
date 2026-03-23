@@ -406,7 +406,10 @@ async function getMessages(options = {}) {
     search,
     from,
     to,
+    sort,
   } = options;
+
+  const isOldestFirst = sort === 'oldest';
   
   let query = {};
   if (channelId) {
@@ -414,7 +417,7 @@ async function getMessages(options = {}) {
   }
   
   if (cursor) {
-    query._id = { $lt: cursor };
+    query._id = { [isOldestFirst ? '$gt' : '$lt']: cursor };
   }
   
   if (category) {
@@ -534,7 +537,7 @@ async function getMessages(options = {}) {
   const [totalDealsCount, messages] = await Promise.all([
     TelegramMessage.countDocuments(query),
     TelegramMessage.find(query)
-      .sort({ _id: -1 })
+      .sort({ _id: isOldestFirst ? 1 : -1 })
       .limit(parseInt(limit) + 1)
       .lean()
   ]);
