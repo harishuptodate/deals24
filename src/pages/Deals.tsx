@@ -17,6 +17,7 @@ const Deals = () => {
   const {
     searchQuery,
     activeCategory,
+    isDateRangeActive,
     totalDealsCount,
     allMessages,
     isLoading,
@@ -57,6 +58,7 @@ const Deals = () => {
           pageTitle={pageTitle}
           searchQuery={searchQuery}
           activeCategory={activeCategory}
+          isDateRangeActive={isDateRangeActive}
           totalDealsCount={totalDealsCount}
           onClearFilter={clearFilter}
         />

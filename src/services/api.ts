@@ -74,6 +74,8 @@ export const getTelegramMessages = async (
 	cursor?: string,
 	category?: string | null,
 	searchQuery?: string | null,
+	from?: string | null,
+	to?: string | null,
 ): Promise<TelegramResponse> => {
 	try {
 		console.log(`Running in ${process.env.NODE_ENV} mode`);
@@ -90,6 +92,14 @@ export const getTelegramMessages = async (
 
 		if (searchQuery) {
 			params.search = searchQuery;
+		}
+
+		if (from) {
+			params.from = from;
+		}
+
+		if (to) {
+			params.to = to;
 		}
 
 		// console.log('Fetching messages with params:', params);

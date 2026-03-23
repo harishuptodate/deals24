@@ -398,7 +398,15 @@ async function saveMessage(message) {
  * @returns {Promise<Object>} - Paginated messages
  */
 async function getMessages(options = {}) {
-  const { limit = 10, cursor, channelId, category, search } = options;
+  const {
+    limit = 10,
+    cursor,
+    channelId,
+    category,
+    search,
+    from,
+    to,
+  } = options;
   
   let query = {};
   if (channelId) {
@@ -413,6 +421,52 @@ async function getMessages(options = {}) {
     query.category = category;
   }
   
+  // Date range filter (date-only: YYYY-MM-DD) against the Telegram message `date` field.
+  // We interpret bounds in UTC to match the `YYYY-MM-DD` values coming from the frontend.
+  if (from || to) {
+    const parseDateOnlyToUtc = (dateStr, endOfDay) => {
+      const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr);
+      if (!match) return null;
+
+      const year = Number(match[1]);
+      const monthIndex = Number(match[2]) - 1;
+      const day = Number(match[3]);
+
+      const hours = endOfDay ? 23 : 0;
+      const minutes = endOfDay ? 59 : 0;
+      const seconds = endOfDay ? 59 : 0;
+      const ms = endOfDay ? 999 : 0;
+
+      const d = new Date(Date.UTC(year, monthIndex, day, hours, minutes, seconds, ms));
+
+      // Guard against invalid dates like 2026-02-31
+      if (
+        d.getUTCFullYear() !== year ||
+        d.getUTCMonth() !== monthIndex ||
+        d.getUTCDate() !== day
+      ) {
+        return null;
+      }
+
+      return d;
+    };
+
+    const dateQuery = {};
+    if (from) {
+      const start = parseDateOnlyToUtc(from, false);
+      if (start) dateQuery.$gte = start;
+    }
+
+    if (to) {
+      const end = parseDateOnlyToUtc(to, true);
+      if (end) dateQuery.$lte = end;
+    }
+
+    if (Object.keys(dateQuery).length > 0) {
+      query.date = dateQuery;
+    }
+  }
+
   if (search) {
     const rawSearch = search.trim();
   

@@ -11,6 +11,8 @@ export const useDealsPage = () => {
   const navigate = useNavigate();
   const categoryParam = searchParams.get('category');
   const searchQuery = searchParams.get('search');
+  const fromParam = searchParams.get('from');
+  const toParam = searchParams.get('to');
   const [activeCategory, setActiveCategory] = useState<string | null>(categoryParam);
 
   useEffect(() => {
@@ -26,12 +28,20 @@ export const useDealsPage = () => {
     isError,
     refetch,
   } = useInfiniteQuery({
-    queryKey: ['all-telegram-messages', activeCategory, searchQuery],
+    queryKey: [
+      'all-telegram-messages',
+      activeCategory,
+      searchQuery,
+      fromParam,
+      toParam,
+    ],
     queryFn: ({ pageParam }) =>
       getTelegramMessages(
         pageParam as string | undefined,
         activeCategory || undefined,
         searchQuery || undefined,
+        fromParam,
+        toParam,
       ),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
@@ -49,6 +59,7 @@ export const useDealsPage = () => {
 
   const allMessages = data?.pages.flatMap((page) => page.data) ?? [];
   const totalDealsCount = data?.pages?.[0]?.totalDealsCount ?? 0;
+  const isDateRangeActive = !!fromParam || !!toParam;
 
   const clearFilter = () => {
     navigate('/deals');
@@ -149,6 +160,7 @@ export const useDealsPage = () => {
   return {
     searchQuery,
     activeCategory,
+    isDateRangeActive,
     totalDealsCount,
     allMessages,
     isLoading,

@@ -1,7 +1,7 @@
 
-import React from 'react';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
+import DateRangeFilter from '../filters/DateRangeFilter';
 
 interface DealsHeaderProps {
   pageTitle: string;
@@ -9,6 +9,7 @@ interface DealsHeaderProps {
   activeCategory?: string | null;
   totalDealsCount: number;
   onClearFilter: () => void;
+  isDateRangeActive?: boolean;
 }
 
 const DealsHeader = ({
@@ -32,15 +33,19 @@ const DealsHeader = ({
         )}
       </div>
 
-      {(activeCategory || searchQuery) && (
-        <Button
-          variant="outline"
-          className="flex items-center gap-2 rounded-full dark:border-gray-700 dark:text-gray-200"
-          onClick={onClearFilter}>
-          <X size={16} />
-          Clear {searchQuery ? 'Search' : 'Filter'}
-        </Button>
-      )}
+      <div className="flex items-center gap-2 justify-end flex-wrap">
+        <DateRangeFilter />
+
+        {(activeCategory || searchQuery) && (
+          <Button
+            variant="outline"
+            className="flex items-center gap-2 rounded-full dark:border-gray-700 dark:text-gray-200"
+            onClick={onClearFilter}>
+            <X size={16} />
+            Clear {searchQuery ? 'Search' : 'Filter'}
+          </Button>
+        )}
+      </div>
     </div>
   );
 };

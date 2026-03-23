@@ -10,6 +10,8 @@ export const useDealGrid = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const searchQuery = searchParams.get('search');
+  const fromParam = searchParams.get('from');
+  const toParam = searchParams.get('to');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
   const {
@@ -21,12 +23,20 @@ export const useDealGrid = () => {
     isError,
     refetch,
   } = useInfiniteQuery({
-    queryKey: ['telegram-messages', activeCategory, searchQuery],
+    queryKey: [
+      'telegram-messages',
+      activeCategory,
+      searchQuery,
+      fromParam,
+      toParam,
+    ],
     queryFn: ({ pageParam }) =>
       getTelegramMessages(
         pageParam as string | undefined,
         activeCategory,
         searchQuery,
+        fromParam,
+        toParam,
       ),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
@@ -44,7 +54,7 @@ export const useDealGrid = () => {
 
   useEffect(() => {
     refetch();
-  }, [activeCategory, searchQuery, refetch]);
+  }, [activeCategory, searchQuery, fromParam, toParam, refetch]);
 
   const handleCategoryChange = (category: string | null) => {
     setActiveCategory(category);
