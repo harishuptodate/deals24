@@ -285,7 +285,7 @@ export const handleTrackedLinkClick = async (
 export const updateMessageText = async (
 	messageId: string,
 	text: string,
-	imageUrl: string,
+	imageUrl: string | null,
 ): Promise<boolean> => {
 	try {
 		if (!messageId) {

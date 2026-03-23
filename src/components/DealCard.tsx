@@ -31,7 +31,7 @@ interface DealCardProps {
   imageUrl?: string;
   telegramFileId?: string;
   onDelete?: (id: string) => void;
-  onEdit?: (id: string, newText: string) => void;
+  onEdit?: (id: string, newText: string, newImageUrl: string | null) => void;
   onCategoryUpdate?: (id: string, category: string) => void;
   isAdmin?: boolean;
 }
@@ -61,6 +61,8 @@ const DealCard = memo(({
     setLocalDescription,
     localCategory,
     setLocalCategory,
+    localImageUrl,
+    setLocalImageUrl,
   } = useDealCardState(title);
 
   // Dialog states (managed locally)
@@ -90,7 +92,7 @@ const DealCard = memo(({
     title: localTitle,
     description: localDescription || description, // Pass the full description
     link,
-    imageUrl,
+    imageUrl: localImageUrl || imageUrl,
     telegramFileId,
     fullText: localDescription || description, // Also pass as fullText
     createdAt,
@@ -186,12 +188,12 @@ const DealCard = memo(({
     setIsCategoryDialogOpen(true);
   };
 
-  const handleEditSuccess = (id: string, newText: string) => {
+  const handleEditSuccess = (id: string, newText: string, newImageUrl: string | null) => {
     setLocalDescription(newText);
     setLocalTitle(newText.split('\n')[0] || 'New Deal');
-
+    setLocalImageUrl(newImageUrl);
     if (onEdit) {
-      onEdit(id, newText);
+      onEdit(id, newText, newImageUrl);
     }
   };
 

@@ -17,6 +17,7 @@ export const useDealCardState = (title: string) => {
 
   const [localTitle, setLocalTitle] = useState(title);
   const [localDescription, setLocalDescription] = useState('');
+  const [localImageUrl, setLocalImageUrl] = useState<string | null>(null);
   const [localCategory, setLocalCategory] = useState('');
 
   return {
@@ -26,6 +27,8 @@ export const useDealCardState = (title: string) => {
     setLocalTitle,
     localDescription,
     setLocalDescription,
+    localImageUrl,
+    setLocalImageUrl,
     localCategory,
     setLocalCategory,
   };

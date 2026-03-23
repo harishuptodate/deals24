@@ -96,7 +96,7 @@ export const useDealsPage = () => {
     }
   };
 
-  const handleEditProduct = async (id: string, newText: string) => {
+    const handleEditProduct = async (id: string, newText: string, newImageUrl: string | null) => {
     if (!id) {
       toast({
         title: 'Error',
@@ -108,7 +108,7 @@ export const useDealsPage = () => {
 
     try {
       console.log(`Attempting to edit deal with ID: ${id}`);
-      const success = await updateMessageText(id, newText);
+      const success = await updateMessageText(id, newText, newImageUrl);
 
       if (success) {
         toast({
