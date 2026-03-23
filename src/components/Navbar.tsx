@@ -96,7 +96,7 @@ const Navbar = () => {
 							<img
 								src="/favicon.ico"
 								alt="Deals24"
-								className="size-11 mr-2 rounded-full"
+								className="size-10 mr-2 rounded-full"
 								onError={(e) => {
 									e.currentTarget.style.display = 'none';
 									document

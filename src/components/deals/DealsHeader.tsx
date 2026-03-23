@@ -34,43 +34,41 @@ const DealsHeader = ({
   };
 
   return (
-    <div className="flex flex-col gap-2 sm:flex-row sm:items-center justify-between mb-6 md:mb-8">
-      <div>
+    <div className="mb-6 md:mb-8">
+      <div className="flex items-center justify-between gap-2 mb-2">
         <h1 className="text-2xl md:text-3xl font-bold text-gradient dark:text-gradient">
           {pageTitle}
         </h1>
 
-        {(searchQuery || activeCategory) && totalDealsCount > 0 && (
-          <p className="text-sm sm:text-md md:text-lg font-medium text-gray-600 dark:text-gray-300">
-            {totalDealsCount} result{totalDealsCount > 1 ? 's' : ''} found
-          </p>
-        )}
-      </div>
-
-      <div className="flex items-center gap-2 justify-end flex-wrap">
-
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={toggleSort}
-          className="rounded-full h-8 px-3 py-0.5 text-xs dark:border-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">
-          <ArrowUpDown size={14} className="mr-2 opacity-80" />
-          {sort === 'oldest' ? 'Oldest' : 'Newest'}
-        </Button>
-
-        {(activeCategory || searchQuery) && (
+        <div className="flex items-center gap-2 flex-shrink-0">
           <Button
+            type="button"
             variant="outline"
-            className="flex items-center gap-2 rounded-full dark:border-gray-700 dark:text-gray-200"
-            onClick={onClearFilter}>
-            <X size={16} />
-            Clear {searchQuery ? 'Search' : 'Filter'}
+            size="sm"
+            onClick={toggleSort}
+            className="rounded-full h-8 px-3 py-0.5 text-xs dark:border-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">
+            <ArrowUpDown size={14} className="opacity-80" />
+            {sort === 'oldest' ? 'Oldest' : 'Newest'}
           </Button>
-        )}
-        <DateRangeFilter />
 
+          {(activeCategory || searchQuery) && (
+            <Button
+              variant="outline"
+              className="flex items-center gap-2 rounded-full dark:border-gray-700 dark:text-gray-200"
+              onClick={onClearFilter}>
+              <X size={16} />
+              Clear {searchQuery ? 'Search' : 'Filter'}
+            </Button>
+          )}
+          <DateRangeFilter />
+        </div>
       </div>
+
+      {(searchQuery || activeCategory) && totalDealsCount > 0 && (
+        <p className="text-sm sm:text-md md:text-lg font-medium text-gray-600 dark:text-gray-300">
+          {totalDealsCount} result{totalDealsCount > 1 ? 's' : ''} found
+        </p>
+      )}
     </div>
   );
 };
