@@ -96,7 +96,7 @@ const Navbar = () => {
 							<img
 								src="/favicon.ico"
 								alt="Deals24"
-								className="size-8 mr-2 rounded-full"
+								className="size-11 mr-2 rounded-full"
 								onError={(e) => {
 									e.currentTarget.style.display = 'none';
 									document
@@ -106,7 +106,7 @@ const Navbar = () => {
 							/>
 							<Target className="h-8 w-8 mr-2 fallback-icon hidden" />
 
-							<span className="hidden sm:inline text-xl sm:text-2xl font-bold dark:text-white">
+							<span className="hidden sm:inline text-xl sm:text-3xl font-bold dark:text-white">
 								Deals24
 							</span>
 						</Link>
@@ -183,7 +183,15 @@ const Navbar = () => {
 					</div>
 
 					{isMobile ? (
-						<div className="flex items-center gap-2">
+						<div className="flex items-center gap-3">
+							<Link to="/wishlist">
+								<Button
+									variant="ghost"
+									size="icon"
+									className="h-8 w-8 text-sm rounded-full dark:border-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-800">
+									<Heart />
+								</Button>
+							</Link>
 							<ThemeToggle />
 							<div className="relative p-[2px] rounded-full bg-gradient-to-r from-pink-300 via-purple-300 to-blue-400 animate-borderMove">
 								<Button
@@ -191,7 +199,7 @@ const Navbar = () => {
 									size="icon"
 									className="size-8 animate-shakeLift"
 									onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-									<Menu className="h-6 w-6 text-black" />
+									<Menu className="h-5 w-5 text-black" />
 								</Button>
 							</div>
 						</div>

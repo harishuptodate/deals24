@@ -261,8 +261,7 @@ const DateRangeFilter = () => {
               if (!open) setStep(getInitialStep());
             }}
             className="rounded-full h-8 px-3 py-0.5 text-xs dark:border-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">
-            <CalendarIcon size={14} className="mr-2 opacity-80" />
-
+            <CalendarIcon size={14} className="mx-auto opacity-80" />
             <span className="max-w-[180px] truncate">{pillLabel}</span>
 
             {hasAny && (

@@ -48,7 +48,6 @@ const DealsHeader = ({
       </div>
 
       <div className="flex items-center gap-2 justify-end flex-wrap">
-        <DateRangeFilter />
 
         <Button
           type="button"
@@ -69,6 +68,8 @@ const DealsHeader = ({
             Clear {searchQuery ? 'Search' : 'Filter'}
           </Button>
         )}
+        <DateRangeFilter />
+
       </div>
     </div>
   );
