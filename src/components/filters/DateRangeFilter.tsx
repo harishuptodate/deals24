@@ -51,6 +51,14 @@ const DateRangeFilter = () => {
     return d;
   }, []);
 
+  const previousMonth = useMemo(() => {
+    const d = new Date(today);
+    d.setMonth(d.getMonth() - 1);
+    d.setDate(1);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, [today]);
+
   const fromDateParsed = useMemo(() => parseDateParam(fromParam), [fromParam]);
   const toDateParsed = useMemo(() => parseDateParam(toParam), [toParam]);
 
@@ -62,8 +70,10 @@ const DateRangeFilter = () => {
   const toDate = isToFuture ? null : toDateParsed;
 
   const [futureError, setFutureError] = useState<string | null>(null);
-  const [manualValue, setManualValue] = useState('');
-  const [manualError, setManualError] = useState<string | null>(null);
+  const [fromDraft, setFromDraft] = useState('');
+  const [toDraft, setToDraft] = useState('');
+  const [fromDraftError, setFromDraftError] = useState<string | null>(null);
+  const [toDraftError, setToDraftError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isFromFuture && !isToFuture) return;
@@ -107,8 +117,10 @@ const DateRangeFilter = () => {
     next.delete('to');
     setSearchParams(next, { replace: true });
     setFutureError(null);
-    setManualError(null);
-    setManualValue('');
+    setFromDraft('');
+    setToDraft('');
+    setFromDraftError(null);
+    setToDraftError(null);
     setOpen(false);
   };
 
@@ -119,8 +131,12 @@ const DateRangeFilter = () => {
     // Keep invariant: from must be <= to
     if (toDate && date.getTime() > toDate.getTime()) {
       next.delete('to');
+      setToDraft('');
+      setToDraftError(null);
     }
 
+    setFromDraft(formatDdMmYy(date));
+    setFromDraftError(null);
     setSearchParams(next, { replace: true });
     setFutureError(null);
   };
@@ -132,8 +148,12 @@ const DateRangeFilter = () => {
     // Keep invariant: to must be >= from
     if (fromDate && date.getTime() < fromDate.getTime()) {
       next.delete('from');
+      setFromDraft('');
+      setFromDraftError(null);
     }
 
+    setToDraft(formatDdMmYy(date));
+    setToDraftError(null);
     setSearchParams(next, { replace: true });
     setFutureError(null);
   };
@@ -153,14 +173,14 @@ const DateRangeFilter = () => {
   };
 
   useEffect(() => {
-    if (!open) return;
-    if (step === 'from') {
-      setManualValue(fromDate ? formatDdMmYy(fromDate) : '');
-    } else {
-      setManualValue(toDate ? formatDdMmYy(toDate) : '');
-    }
-    setManualError(null);
-  }, [open, step, fromDate, toDate]);
+    setFromDraft(fromDate ? formatDdMmYy(fromDate) : '');
+    setFromDraftError(null);
+  }, [fromDate]);
+
+  useEffect(() => {
+    setToDraft(toDate ? formatDdMmYy(toDate) : '');
+    setToDraftError(null);
+  }, [toDate]);
 
   const parseDdMmYy = (value: string): Date | null => {
     const v = value.trim();
@@ -186,37 +206,47 @@ const DateRangeFilter = () => {
     return d;
   };
 
-  const submitManualDate = () => {
-    const parsed = parseDdMmYy(manualValue);
+  const submitManualFrom = () => {
+    const parsed = parseDdMmYy(fromDraft);
     if (!parsed) {
-      setManualError('Invalid date. Use DD/MM/YY.');
+      setFromDraftError('Invalid date. Use DD/MM/YY.');
       return;
     }
 
     // No future dates (local timezone).
     if (parsed > today) {
-      setManualError(null);
+      setFromDraftError(null);
       setFutureError('Selected date cannot be in the future.');
       return;
     }
 
-    if (step === 'from') {
-      updateFrom(parsed);
+    updateFrom(parsed);
+    setFromDraftError(null);
+    setFutureError(null);
 
-      if (isMobile) {
-        setStep('to');
-      } else {
-        setStep('to');
-        setOpen(false);
-        window.requestAnimationFrame(() => setOpen(true));
-      }
+    // Advance flow so user picks To next.
+    setStep('to');
+  };
+
+  const submitManualTo = () => {
+    const parsed = parseDdMmYy(toDraft);
+    if (!parsed) {
+      setToDraftError('Invalid date. Use DD/MM/YY.');
       return;
     }
 
-    // step === 'to'
+    // No future dates (local timezone).
+    if (parsed > today) {
+      setToDraftError(null);
+      setFutureError('Selected date cannot be in the future.');
+      return;
+    }
+
     updateTo(parsed);
+    setToDraftError(null);
+    setFutureError(null);
+
     setOpen(false);
-    setManualError(null);
   };
 
   return (
@@ -255,38 +285,121 @@ const DateRangeFilter = () => {
         <PopoverContent
           align="end"
           className="w-auto p-2 rounded-xl dark:bg-apple-darkGray dark:border-gray-700">
-          <div className="px-1 pb-2">
-            <p className="text-xs font-medium text-gray-600 dark:text-gray-300">
-              {step === 'from' ? 'From' : 'To'}
-            </p>
+          {!isMobile ? (
+            <div className="px-1 pb-2">
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <p className="text-xs font-medium text-gray-600 dark:text-gray-300">
+                    From
+                  </p>
+                  <div className="mt-2">
+                    <Input
+                      value={fromDraft}
+                      onChange={(e) => {
+                        setFromDraft(e.target.value);
+                        setFromDraftError(null);
+                        setFutureError(null);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') submitManualFrom();
+                      }}
+                      placeholder="DD/MM/YY"
+                      inputMode="numeric"
+                      className="h-9 text-xs"
+                    />
+                    {fromDraftError && (
+                      <p className="text-xs text-red-500 mt-1">
+                        {fromDraftError}
+                      </p>
+                    )}
+                  </div>
+                </div>
 
-            <div className="mt-2">
-              <Input
-                value={manualValue}
-                onChange={(e) => {
-                  setManualValue(e.target.value);
-                  setManualError(null);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') submitManualDate();
-                }}
-                placeholder="DD/MM/YY"
-                inputMode="numeric"
-                className="h-9 text-xs"
-              />
-              {manualError && (
-                <p className="text-xs text-red-500 mt-1">{manualError}</p>
-              )}
+                <div>
+                  <p className="text-xs font-medium text-gray-600 dark:text-gray-300">
+                    To
+                  </p>
+                  <div className="mt-2">
+                    <Input
+                      value={toDraft}
+                      onChange={(e) => {
+                        setToDraft(e.target.value);
+                        setToDraftError(null);
+                        setFutureError(null);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') submitManualTo();
+                      }}
+                      placeholder="DD/MM/YY"
+                      inputMode="numeric"
+                      className="h-9 text-xs"
+                    />
+                    {toDraftError && (
+                      <p className="text-xs text-red-500 mt-1">
+                        {toDraftError}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="px-1 pb-2">
+              <p className="text-xs font-medium text-gray-600 dark:text-gray-300">
+                {step === 'from' ? 'From' : 'To'}
+              </p>
+
+              <div className="mt-2">
+                <Input
+                  value={step === 'from' ? fromDraft : toDraft}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (step === 'from') {
+                      setFromDraft(v);
+                      setFromDraftError(null);
+                    } else {
+                      setToDraft(v);
+                      setToDraftError(null);
+                    }
+                    setFutureError(null);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key !== 'Enter') return;
+                    if (step === 'from') submitManualFrom();
+                    else submitManualTo();
+                  }}
+                  placeholder="DD/MM/YY"
+                  inputMode="numeric"
+                  className="h-9 text-xs"
+                />
+                {step === 'from' ? (
+                  fromDraftError && (
+                    <p className="text-xs text-red-500 mt-1">{fromDraftError}</p>
+                  )
+                ) : (
+                  toDraftError && (
+                    <p className="text-xs text-red-500 mt-1">{toDraftError}</p>
+                  )
+                )}
+              </div>
+            </div>
+          )}
 
           {futureError && (
             <p className="text-xs text-red-500 mb-2 px-1">{futureError}</p>
           )}
 
           <UiCalendar
+            numberOfMonths={isMobile ? 1 : 2}
+            defaultMonth={previousMonth}
+            toDate={today}
+            showOutsideDays={false}
             mode="single"
-            selected={step === 'from' ? fromDate ?? undefined : toDate ?? undefined}
+            selected={
+              step === 'from'
+                ? fromDate ?? undefined
+                : (toDate ?? fromDate ?? undefined)
+            }
             disabled={(date) => {
               // Never allow future dates (local timezone).
               if (date > today) return true;
@@ -300,20 +413,27 @@ const DateRangeFilter = () => {
               // When From exists, To must be >= From.
               return fromDate ? date < fromDate : false;
             }}
+            className={isMobile ? 'p-1' : undefined}
+            classNames={
+              isMobile
+                ? {
+                    months: 'flex flex-col space-y-2 sm:flex-row sm:space-x-4 sm:space-y-0',
+                    month: 'space-y-2',
+                    head_cell:
+                      'text-muted-foreground rounded-md w-7 font-normal text-[0.7rem]',
+                    cell: 'h-7 w-7 text-center text-sm p-0 relative',
+                    day: 'h-7 w-7 p-0 font-normal text-sm',
+                    nav_button: 'h-6 w-6 bg-transparent p-0 opacity-60 hover:opacity-100',
+                  }
+                : undefined
+            }
             onSelect={(date) => {
               if (!date) return;
 
               if (step === 'from') {
                 updateFrom(date);
 
-                if (isMobile) {
-                  setStep('to');
-                } else {
-                  // Desktop UX: close/reopen so it feels like two steps.
-                  setStep('to');
-                  setOpen(false);
-                  window.requestAnimationFrame(() => setOpen(true));
-                }
+                setStep('to');
                 return;
               }
 
