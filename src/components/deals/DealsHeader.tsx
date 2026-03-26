@@ -1,6 +1,6 @@
 
 import { Button } from '@/components/ui/button';
-import { X, ArrowUpDown } from 'lucide-react';
+import { X, ArrowDown } from 'lucide-react';
 import DateRangeFilter from '../filters/DateRangeFilter';
 import { useSearchParams } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -50,16 +50,16 @@ const DealsHeader = ({
             </p>
           )}
         </div>
-
+{/* {large screen style} */}
         <div className="flex items-center justify-end gap-2 flex-shrink-0 md:hidden">
           <Button
             type="button"
             variant="outline"
             size="sm"
             onClick={toggleSort}
-            className="rounded-full h-7 sm:h-8 px-2 sm:px-3 py-0.5 text-[12px] sm:text-xs dark:border-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">
-            <ArrowUpDown size={12} className={cn("sm:size-[14px] opacity-80 transition-transform", !isMobile && "mr-2", sort === 'oldest' && "rotate-180")} />
-            {(sort === 'oldest' ? 'Oldest' : 'Newest')}
+            className="rounded-full -mr-0.5 h-7 sm:h-8 px-2 sm:px-3 py-0.5 text-[12px] sm:text-xs dark:border-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">
+            <ArrowDown size={12} className={cn("sm:size-[14px] opacity-80 transition-transform -mr-1 -ml-1", sort === 'oldest' && "rotate-180")} />
+            {(sort === 'oldest' ? 'Old' : 'New')} 
           </Button>
 
           <DateRangeFilter />
@@ -70,7 +70,7 @@ const DealsHeader = ({
               
               className="rounded-full h-7 sm:h-8 px-2 sm:px-3 py-0.5 text-[12px] sm:text-xs dark:border-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
               onClick={onClearFilter}>
-              <X size={16} />
+              <X size={12} className="-mr-1.5 -ml-1" />
               Clear {searchQuery ? 'Search' : 'Filter'}
             </Button>
           )}
@@ -83,7 +83,7 @@ const DealsHeader = ({
             size="sm"
             onClick={toggleSort}
             className="rounded-full h-8 px-3 py-0.5 text-xs dark:border-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">
-            <ArrowUpDown size={14} className={cn("opacity-80 transition-transform", !isMobile && "mr-2", sort === 'oldest' && "rotate-180")} />
+            <ArrowDown size={14} className={cn("opacity-80 transition-transform", sort === 'oldest' && "rotate-180")} />
             {!isMobile && (sort === 'oldest' ? 'Oldest' : 'Newest')}
           </Button>
 

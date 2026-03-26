@@ -37,7 +37,9 @@ function Calendar({
         cell: "h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
         day: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-9 w-9 p-0 font-normal aria-selected:opacity-100"
+          // Make hover/focus feedback more visible in dark mode.
+          // (The mobile calendar override in `DateRangeFilter` still takes precedence.)
+          "h-9 w-9 p-0 font-normal aria-selected:opacity-100 transition-colors hover:bg-accent/70 hover:text-accent-foreground focus:bg-accent/70 focus:text-accent-foreground focus-visible:bg-accent/70 dark:hover:bg-white/10 dark:hover:text-white dark:focus:bg-white/10 dark:focus:text-white dark:focus-visible:bg-white/10"
         ),
         day_range_end: "day-range-end",
         day_selected:

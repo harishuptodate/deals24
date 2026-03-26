@@ -1,8 +1,6 @@
 
-import React from 'react';
-import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Heart, ArrowUpDown } from 'lucide-react';
+import { ArrowDown } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import DateRangeFilter from '@/components/filters/DateRangeFilter';
 import { useSearchParams } from 'react-router-dom';
@@ -24,7 +22,7 @@ const DealGridHeader = () => {
   };
 
   return (
-    <div className="flex sm:flex-row sm:items-center justify-between mb-4 gap-4">
+    <div className="flex sm:flex-row sm:items-center justify-between mb-4 gap-2">
       <h2 className="text-xl md:text-2xl font-semibold text-gradient dark:text-gradient">
         Latest Deals
       </h2>
@@ -33,11 +31,17 @@ const DealGridHeader = () => {
         <Button
           type="button"
           variant="outline"
-          size={isMobile ? 'icon' : 'sm'}
+          size="sm"
           onClick={toggleSort}
-          className={cn("rounded-full h-7 sm:h-8 px-2 sm:px-3 py-0.5 text-[10px] sm:text-xs dark:border-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800", isMobile && "h-7 sm:h-8 w-7 sm:w-8")}>
-          <ArrowUpDown size={12} className={cn("sm:size-[14px] opacity-80 transition-transform", !isMobile && "mr-2", sort === 'oldest' && "rotate-180")} />
-          {!isMobile && (sort === 'oldest' ? 'Oldest' : 'Newest')}
+          // className="rounded-full h-7 sm:h-8 px-2 sm:px-3 py-0.5 text-[10px] sm:text-xs dark:border-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">
+          // <ArrowDown size={12} className={cn("-mr-1 -ml-1 sm:size-[14px] opacity-80 transition-transform", sort === 'oldest' && "rotate-180")} />
+          // {!isMobile && (sort === 'oldest' ? 'Oldest' : 'Newest')}
+          className="rounded-full h-7 sm:h-8 px-2 sm:px-3 py-0.5 text-[10px] sm:text-xs dark:border-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">
+            <ArrowDown size={14} className={cn("-mr-1 -ml-1 sm:size-[14px] opacity-80 transition-transform", sort === 'oldest' && "rotate-180")} />
+            {!isMobile && (sort === 'oldest' ? 'Oldest' : 'Newest')}
+
+          
+          {isMobile && (sort === 'oldest' ? 'Old' : 'New')}
         </Button>
 
         <DateRangeFilter />
