@@ -35,8 +35,8 @@ const DealGridHeader = () => {
           variant="outline"
           size={isMobile ? 'icon' : 'sm'}
           onClick={toggleSort}
-          className={cn("rounded-full h-8 px-3 py-0.5 text-xs dark:border-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800", isMobile && "h-8 w-8")}>
-          <ArrowUpDown size={14} className={cn("opacity-80 transition-transform", !isMobile && "mr-2", sort === 'oldest' && "rotate-180")} />
+          className={cn("rounded-full h-7 sm:h-8 px-2 sm:px-3 py-0.5 text-[10px] sm:text-xs dark:border-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800", isMobile && "h-7 sm:h-8 w-7 sm:w-8")}>
+          <ArrowUpDown size={12} className={cn("sm:size-[14px] opacity-80 transition-transform", !isMobile && "mr-2", sort === 'oldest' && "rotate-180")} />
           {!isMobile && (sort === 'oldest' ? 'Oldest' : 'Newest')}
         </Button>
 

@@ -89,14 +89,14 @@ const Navbar = () => {
 	return (
 		<header className="sticky top-0 z-50 w-full bg-transparent backdrop-blur-md border-b border-gray-200 dark:border-[#27272A]">
 			<div className="container mx-auto px-2 sm:px-4">
-				<div className="flex h-16 items-center gap-4">
-					<div className="flex items-center">
+				<div className="flex h-14 sm:h-16 items-center gap-2 sm:gap-4">
+					<div className="flex items-center flex-shrink-0">
 						<Link to="/" className="flex items-center">
 							{/* <Target className="h-8 w-8 mr-2" /> */}
 							<img
 								src="/favicon.ico"
 								alt="Deals24"
-								className="size-10 mr-2 rounded-full"
+								className="size-8 sm:size-10 mr-1 sm:mr-2 rounded-full"
 								onError={(e) => {
 									e.currentTarget.style.display = 'none';
 									document
@@ -104,7 +104,7 @@ const Navbar = () => {
 										?.setAttribute('style', 'display: block');
 								}}
 							/>
-							<Target className="h-8 w-8 mr-2 fallback-icon hidden" />
+							<Target className="h-8 w-8 mr-1 sm:mr-2 fallback-icon hidden" />
 
 							<span className="hidden sm:inline text-xl sm:text-3xl font-bold dark:text-white">
 								Deals24
@@ -112,7 +112,7 @@ const Navbar = () => {
 						</Link>
 					</div>
 
-					<div className="flex-1 mx-4 max-w-xl">
+					<div className="flex-1 mx-1 sm:mx-4 max-w-xl">
 						<form onSubmit={handleSearch} className="relative">
 							<Popover
 								open={isSearchPopoverOpen}
@@ -134,7 +134,7 @@ const Navbar = () => {
 													? 'Search...'
 													: 'Search deals... (Press Ctrl+K)'
 											}
-											className="w-full placeholder:text-[13px] text-sm sm:pl-10 pr-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-apple-darkGray dark:bg-apple-darkGray dark:border-gray-700 dark:text-white dark:placeholder-gray-400"
+											className="w-full placeholder:text-[13px] text-sm sm:pl-10 pr-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-apple-darkGray dark:bg-apple-darkGray dark:border-gray-700 dark:text-white dark:placeholder-gray-400 truncate"
 											value={searchQuery}
 											onChange={(e) => setSearchQuery(e.target.value)}
 											onClick={() => setIsSearchPopoverOpen(true)}

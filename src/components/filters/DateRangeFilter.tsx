@@ -8,6 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar as UiCalendar } from '@/components/ui/calendar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 
 const toDateParam = (date: Date) => {
   const year = date.getFullYear();
@@ -260,9 +261,9 @@ const DateRangeFilter = () => {
             onClick={() => {
               if (!open) setStep(getInitialStep());
             }}
-            className="rounded-full h-8 px-3 py-0.5 text-xs dark:border-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">
-            <CalendarIcon size={14} className="mx-auto opacity-80" />
-            <span className="max-w-[180px] truncate">{pillLabel}</span>
+            className="rounded-full h-7 sm:h-8 px-2 sm:px-3 py-0.5 text-[12px] sm:text-xs dark:border-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">
+            <CalendarIcon size={12} className="sm:size-[14px] mx-auto opacity-80" />
+            <span className="max-w-[120px] sm:max-w-[180px] truncate">{pillLabel}</span>
 
             {hasAny && (
               <span
@@ -274,8 +275,8 @@ const DateRangeFilter = () => {
                 role="button"
                 tabIndex={0}
                 aria-label="Clear date range"
-                className="ml-2 inline-flex items-center justify-center h-5 w-5 rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600">
-                <X size={14} />
+                className="inline-flex items-center justify-center h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600">
+                <X size={12} className="sm:size-[14px]" />
               </span>
             )}
           </Button>
