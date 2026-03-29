@@ -43,6 +43,10 @@ const parseDateParam = (value: string | null): Date | null => {
 	return d;
 };
 
+/** Matches both ends of the range so both stay visually selected (single `selected` only covers one day). */
+const DATE_RANGE_BOUND_CLASS =
+	'bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground rounded-md';
+
 const DateRangeFilter = () => {
 	const [searchParams, setSearchParams] = useSearchParams();
 	const fromParam = searchParams.get('from');
@@ -418,6 +422,16 @@ const DateRangeFilter = () => {
 								? (fromDate ?? undefined)
 								: (toDate ?? fromDate ?? undefined)
 						}
+						modifiers={
+							fromDate && toDate
+								? { date_range_bound: [fromDate, toDate] }
+								: undefined
+						}
+						modifiersClassNames={
+							fromDate && toDate
+								? { date_range_bound: DATE_RANGE_BOUND_CLASS }
+								: undefined
+						}
 						disabled={(date) => {
 							// Never allow future dates (local timezone).
 							if (date > today) return true;
@@ -445,7 +459,7 @@ const DateRangeFilter = () => {
 										cell: 'h-7 w-7 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20',
 										day:
 											// Include `ghost` hover/focus visuals so dates highlight on hover (as on desktop).
-											'h-7 w-7 p-0 font-normal text-sm aria-selected:opacity-100 rounded-md hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground transition-colors',
+											'h-7 w-7 p-0 font-normal text-sm aria-selected:opacity-100 rounded-md hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground',
 										day_selected:
 											'bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground rounded-md',
 										nav_button:

@@ -23,7 +23,7 @@ const DealCardActions = ({
   showAdminActions = false,
 }: DealCardActionsProps) => {
   return (
-    <div className="absolute top-3 right-3 flex items-center gap-1 z-10">
+    <div className="absolute top-3 right-3 flex items-center z-10">
       {isAuthenticated() && showAdminActions && onDelete && (
         <>
           <button

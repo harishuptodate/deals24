@@ -322,7 +322,7 @@ async function saveMessage(message) {
               }
 
               imageUrlHashes.push(imageHash);
-              if (imageUrlHashes.length > 10) imageUrlHashes.shift();
+              if (imageUrlHashes.length > 15) imageUrlHashes.shift();
 
             } else {
               console.log('Fetched image URL is invalid or not accessible. Falling back to Telegram image.');

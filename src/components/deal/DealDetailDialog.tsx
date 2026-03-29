@@ -195,7 +195,7 @@ const DealDetailDialog = ({
 					{id && (
 						<Button
 							onClick={handleViewFullPage}
-							className="w-full sm:w-auto flex-1 dark:text-white bg-blue-600 dark:bg-blue-800 hover:bg-blue-700 hover:dark:bg-blue-900 hover:scale-105 rounded-full transition-all">
+							className="w-full sm:w-auto flex-1 dark:text-white bg-blue-600 dark:bg-blue-800 hover:bg-blue-700 hover:dark:bg-blue-900 hover:scale-105 rounded-full transition-all focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0">
 							<ExternalLink size={16} />
 							View Deal
 						</Button>
