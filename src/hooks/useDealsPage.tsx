@@ -13,6 +13,8 @@ export const useDealsPage = () => {
   const searchQuery = searchParams.get('search');
   const fromParam = searchParams.get('from');
   const toParam = searchParams.get('to');
+  const minPriceParam = searchParams.get('minPrice');
+  const maxPriceParam = searchParams.get('maxPrice');
   const sortParam = searchParams.get('sort');
   const [activeCategory, setActiveCategory] = useState<string | null>(categoryParam);
 
@@ -35,6 +37,8 @@ export const useDealsPage = () => {
       searchQuery,
       fromParam,
       toParam,
+      minPriceParam,
+      maxPriceParam,
       sortParam,
     ],
     queryFn: ({ pageParam }) =>
@@ -44,6 +48,8 @@ export const useDealsPage = () => {
         searchQuery || undefined,
         fromParam,
         toParam,
+        minPriceParam,
+        maxPriceParam,
         sortParam,
       ),
     initialPageParam: undefined as string | undefined,

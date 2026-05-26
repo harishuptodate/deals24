@@ -257,7 +257,7 @@ function detectCategory(text) {
  * Normalize message and generate caption using Gemini API
  * Also identifies the category of the product
  * @param {string} messageText - Raw message text to process
- * @returns {Promise<{normalizedMessage: string, category: string}>}
+ * @returns {Promise<{normalizedMessage: string, category: string, price: string}>}
  */
 async function GenerateCaptionAndCategory(messageText) {
 	if (!messageText || typeof messageText !== 'string') {
@@ -272,6 +272,7 @@ async function GenerateCaptionAndCategory(messageText) {
 		return {
 			normalizedMessage: messageText.trim(),
 			category: detectCategory(messageText),
+			price: '',
 		};
 	}
 
@@ -379,10 +380,12 @@ Normalized message:
    - fashion
    - miscellaneous
 
+3. Extract the final offer price: Carefully identify the final deal/offer price of the product from the message and return it as a separate field named "price". Use only the numeric value without ₹, commas, or extra text. For prices like 53K or 34K, convert them to full numeric value like "53000" or "34000". If no price is clearly available, return an empty string.
+
 CRITICAL: Return ONLY valid JSON. Do NOT use markdown code blocks (no triple backticks with json or without). Do NOT add any explanations, text, or formatting before or after the JSON. Start directly with { and end with }. Return pure JSON only.
 
 Example of correct response format:
-{"normalizedMessage": "Product name @ ₹Price", "category": "electronics-home"}
+{"normalizedMessage": "Product name @ ₹Price", "category": "electronics-home", "price": "53000"}
 
 Message to process:
 ${messageText}`;
@@ -433,6 +436,7 @@ ${messageText}`;
 		return {
 			normalizedMessage: result.normalizedMessage || messageText.trim(),
 			category: result.category || detectCategory(messageText),
+			price: typeof result.price === 'string' ? result.price.replace(/[^\d]/g, '') : '',
 		};
 	} catch (error) {
 		console.error('Error calling Gemini API:', error.message);
@@ -441,6 +445,7 @@ ${messageText}`;
 		return {
 			normalizedMessage: messageText.trim(),
 			category: detectCategory(messageText),
+			price: '',
 		};
 	}
 }

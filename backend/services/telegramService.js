@@ -218,6 +218,7 @@ async function saveMessage(message) {
     // Generate normalized message and category using Gemini API (with retry mechanism and fallback)
     let normalizedText = CleanedText;
     let category = 'miscellaneous';
+    let price = null;
     
     const MAX_RETRIES = 3;
     const RETRY_DELAYS = [1000, 2000, 4000]; // Exponential backoff delays in ms
@@ -231,6 +232,7 @@ async function saveMessage(message) {
         if (result.normalizedMessage && result.category) {
           normalizedText = result.normalizedMessage;
           category = result.category;
+          price = result.price || null;
           if (attempt > 0) {
             console.log(`✅ Successfully generated caption and category using Gemini API (after ${attempt} retry/retries)`);
           } else {
@@ -242,6 +244,7 @@ async function saveMessage(message) {
           console.warn('Gemini API returned incomplete data, using fallback');
           category = detectCategory(CleanedText);
           normalizedText = CleanedText;
+          price = null;
           break;
         }
       } catch (error) {
@@ -274,6 +277,7 @@ async function saveMessage(message) {
           // Fallback to original method
           category = detectCategory(CleanedText);
           normalizedText = CleanedText;
+          price = null;
           break; // Exit retry loop
         }
       }
@@ -380,6 +384,7 @@ async function saveMessage(message) {
       imageUrl,
       telegramFileId,
       category,
+      price,
       clicks: 0,
       channelId
     });
@@ -406,24 +411,31 @@ async function getMessages(options = {}) {
     search,
     from,
     to,
+    minPrice,
+    maxPrice,
     sort,
   } = options;
 
+  const numericLimit = parseInt(limit);
+  const isPriceAsc = sort === 'price_asc';
+  const isPriceDesc = sort === 'price_desc';
+  const isPriceSort = isPriceAsc || isPriceDesc;
   const isOldestFirst = sort === 'oldest';
-  
-  let query = {};
+  const objectId = require('mongoose').Types.ObjectId;
+
+  const query = {};
   if (channelId) {
     query.channelId = channelId;
   }
-  
-  if (cursor) {
+
+  if (cursor && !isPriceSort) {
     query._id = { [isOldestFirst ? '$gt' : '$lt']: cursor };
   }
-  
+
   if (category) {
     query.category = category;
   }
-  
+
   // Date range filter (date-only: YYYY-MM-DD) against the Telegram message `date` field.
   // We interpret bounds in UTC to match the `YYYY-MM-DD` values coming from the frontend.
   if (from || to) {
@@ -485,12 +497,12 @@ async function getMessages(options = {}) {
         kgs: 'kg',
         lbs: 'lb',
         tons: 'ton',
-        hz: 'hz', // already singular
+        hz: 'hz',
         gbs: 'gb',
       };
       return stems[lc] || word;
     };
-  
+
     const normalizedWords = words.map(normalizeWord);
   
     // Define which terms are considered "units" and can use relaxed (substring) match
@@ -525,40 +537,132 @@ async function getMessages(options = {}) {
       ...regexQueries,
       {
         text: {
-          $not: { $regex: urlExclusionRegex }
-        }
-      }
+          $not: { $regex: urlExclusionRegex },
+        },
+      },
     ];
   }
-  
-  
-  
-   // 🆕 Fetch count and messages together using Promise.all
-  const [totalDealsCount, messages] = await Promise.all([
-    TelegramMessage.countDocuments(query),
-    TelegramMessage.find(query)
-      .sort({ _id: isOldestFirst ? 1 : -1 })
-      .limit(parseInt(limit) + 1)
-      .lean()
+
+  const parseNumericFilter = (value) => {
+    if (value === undefined || value === null || value === '') return null;
+    if (!/^\d+$/.test(String(value))) return null;
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed) || parsed < 0) return null;
+    return parsed;
+  };
+
+  const minPriceNumber = parseNumericFilter(minPrice);
+  const maxPriceNumber = parseNumericFilter(maxPrice);
+  const hasPriceFilter = minPriceNumber !== null || maxPriceNumber !== null;
+
+  const addNumericPriceStage = {
+    $addFields: {
+      priceNumber: {
+        $convert: {
+          input: '$price',
+          to: 'double',
+          onError: null,
+          onNull: null,
+        },
+      },
+    },
+  };
+
+  const buildPriceRangeMatch = () => {
+    const priceRange = {};
+    if (minPriceNumber !== null) priceRange.$gte = minPriceNumber;
+    if (maxPriceNumber !== null) priceRange.$lte = maxPriceNumber;
+    return Object.keys(priceRange).length > 0 ? { priceNumber: priceRange } : null;
+  };
+
+  const pipelineBase = [{ $match: query }];
+  if (hasPriceFilter || isPriceSort) {
+    pipelineBase.push(addNumericPriceStage);
+  }
+
+  const priceRangeMatch = buildPriceRangeMatch();
+  if (priceRangeMatch) {
+    pipelineBase.push({ $match: priceRangeMatch });
+  }
+
+  if (cursor && isPriceSort) {
+    const [cursorPriceRaw, cursorIdRaw] = String(cursor).split('|');
+    const cursorPrice = Number(cursorPriceRaw);
+    const isValidCursor =
+      Number.isFinite(cursorPrice) &&
+      cursorIdRaw &&
+      objectId.isValid(cursorIdRaw);
+
+    if (isValidCursor) {
+      const cursorId = new objectId(cursorIdRaw);
+      pipelineBase.push({
+        $match: {
+          $or: [
+            { priceNumber: { [isPriceAsc ? '$gt' : '$lt']: cursorPrice } },
+            { priceNumber: cursorPrice, _id: { [isPriceAsc ? '$gt' : '$lt']: cursorId } },
+          ],
+        },
+      });
+    }
+  }
+
+  const sortStage = isPriceSort
+    ? { $sort: { priceNumber: isPriceAsc ? 1 : -1, _id: isPriceAsc ? 1 : -1 } }
+    : { $sort: { _id: isOldestFirst ? 1 : -1 } };
+
+  const projectionStage = {
+    $project: {
+      messageId: 1,
+      text: 1,
+      date: 1,
+      link: 1,
+      imageUrl: 1,
+      telegramFileId: 1,
+      channelId: 1,
+      category: 1,
+      price: 1,
+      clicks: 1,
+      createdAt: 1,
+      priceNumber: 1,
+    },
+  };
+
+  const [totalDealsResult, messages] = await Promise.all([
+    TelegramMessage.aggregate([...pipelineBase, { $count: 'count' }]),
+    TelegramMessage.aggregate([
+      ...pipelineBase,
+      sortStage,
+      { $limit: numericLimit + 1 },
+      projectionStage,
+    ]),
   ]);
-  
-  const hasMore = messages.length > limit;
-  const data = hasMore ? messages.slice(0, limit) : messages;
-  
-  // Add MongoDB _id to id field for frontend compatibility
-  const processedData = data.map(item => ({
+
+  const hasMore = messages.length > numericLimit;
+  const data = hasMore ? messages.slice(0, numericLimit) : messages;
+
+  const processedData = data.map((item) => ({
     ...item,
-    id: item._id.toString(), // Ensure id field exists for frontend
+    id: item._id.toString(),
   }));
-  
+
+  const totalDealsCount = totalDealsResult?.[0]?.count || 0;
+  const nextCursor = (() => {
+    if (!hasMore || data.length === 0) return null;
+    const lastItem = data[data.length - 1];
+    if (isPriceSort) {
+      if (typeof lastItem.priceNumber !== 'number') return null;
+      return `${lastItem.priceNumber}|${lastItem._id}`;
+    }
+    return lastItem._id;
+  })();
+
   return {
     data: processedData,
     hasMore,
-    nextCursor: hasMore && data.length > 0 ? data[data.length - 1]._id : null,
+    nextCursor,
     totalDealsCount,
   };
 }
-
 // Helper function for click tracking logic
 const {redis} = require('../services/redisClient');
 /**
@@ -635,3 +739,4 @@ module.exports = {
   incrementClicks, // keep for future use by flush script
   handleClickTracking
 };
+

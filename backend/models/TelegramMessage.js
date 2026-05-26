@@ -33,6 +33,11 @@ const telegramMessageSchema = new mongoose.Schema({
     default: null,
     required: false
   },
+  price: {
+    type: String,
+    default: null,
+    required: false
+  },
   clicks: {
     type: Number,
     default: 0
@@ -47,6 +52,7 @@ const telegramMessageSchema = new mongoose.Schema({
 telegramMessageSchema.index({ date: -1 });
 telegramMessageSchema.index({ messageId: 1, channelId: 1 }, { unique: true });
 telegramMessageSchema.index({ category: 1 });
+telegramMessageSchema.index({ price: 1 });
 
 const TelegramMessage = mongoose.model('TelegramMessage', telegramMessageSchema);
 

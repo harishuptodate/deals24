@@ -76,6 +76,8 @@ export const getTelegramMessages = async (
 	searchQuery?: string | null,
 	from?: string | null,
 	to?: string | null,
+	minPrice?: string | null,
+	maxPrice?: string | null,
 	sort?: string | null,
 ): Promise<TelegramResponse> => {
 	try {
@@ -101,6 +103,14 @@ export const getTelegramMessages = async (
 
 		if (to) {
 			params.to = to;
+		}
+
+		if (minPrice) {
+			params.minPrice = minPrice;
+		}
+
+		if (maxPrice) {
+			params.maxPrice = maxPrice;
 		}
 
 		if (sort) {

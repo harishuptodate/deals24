@@ -12,6 +12,8 @@ export const useDealGrid = () => {
   const searchQuery = searchParams.get('search');
   const fromParam = searchParams.get('from');
   const toParam = searchParams.get('to');
+  const minPriceParam = searchParams.get('minPrice');
+  const maxPriceParam = searchParams.get('maxPrice');
   const sortParam = searchParams.get('sort');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
@@ -30,6 +32,8 @@ export const useDealGrid = () => {
       searchQuery,
       fromParam,
       toParam,
+      minPriceParam,
+      maxPriceParam,
       sortParam,
     ],
     queryFn: ({ pageParam }) =>
@@ -39,6 +43,8 @@ export const useDealGrid = () => {
         searchQuery,
         fromParam,
         toParam,
+        minPriceParam,
+        maxPriceParam,
         sortParam,
       ),
     initialPageParam: undefined as string | undefined,
@@ -57,7 +63,7 @@ export const useDealGrid = () => {
 
   useEffect(() => {
     refetch();
-  }, [activeCategory, searchQuery, fromParam, toParam, sortParam, refetch]);
+  }, [activeCategory, searchQuery, fromParam, toParam, minPriceParam, maxPriceParam, sortParam, refetch]);
 
   const handleCategoryChange = (category: string | null) => {
     setActiveCategory(category);
