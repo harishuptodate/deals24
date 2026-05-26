@@ -54,7 +54,12 @@ interface TopPerformingDealsCarouselProps {
 	topDeals: any[];
 	isLoading: boolean;
 	onDelete?: (id: string) => void;
-	onEdit?: (id: string, newText: string) => void;
+	onEdit?: (
+		id: string,
+		newText: string,
+		newImageUrl: string | null,
+		newPrice: string | null,
+	) => void;
 	onCategoryUpdate?: (id: string, category: string) => void;
 }
 
@@ -88,6 +93,7 @@ const TopPerformingDealsCarousel = ({
 			createdAt: deal.date || deal.createdAt,
 			clicks: deal.clicks || 0,
 			imageUrl: deal.imageUrl,
+			price: deal.price || null,
 			telegramFileId: deal.telegramFileId,
 			// Add extra metadata for dialog display
 			extraData: {
@@ -285,7 +291,7 @@ const CustomDealCard = ({
 	onEdit,
 	onCategoryUpdate,
 }: any) => {
-	const { title, description, imageUrl, telegramFileId, createdAt } =
+	const { title, description, imageUrl, price, telegramFileId, createdAt } =
 		formattedDeal;
 	const { toast } = useToast();
 
@@ -434,9 +440,14 @@ const CustomDealCard = ({
 		setIsCategoryDialogOpen(true);
 	};
 
-	const handleEditSuccess = (id: string, newText: string) => {
+	const handleEditSuccess = (
+		id: string,
+		newText: string,
+		newImageUrl: string | null,
+		newPrice: string | null,
+	) => {
 		if (onEdit) {
-			onEdit(id, newText);
+			onEdit(id, newText, newImageUrl, newPrice);
 		}
 	};
 
@@ -588,6 +599,8 @@ const CustomDealCard = ({
 				onOpenChange={setIsEditDialogOpen}
 				id={formattedDeal.id || ''}
 				initialText={description}
+				initialImageUrl={imageUrl || null}
+				initialPrice={price || null}
 				onSuccess={handleEditSuccess}
 			/>
 

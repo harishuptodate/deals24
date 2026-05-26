@@ -8,6 +8,7 @@ export interface TelegramMessage {
 	imageUrl?: string;
 	telegramFileId?: string;
 	category?: string;
+	price?: string;
 	clicks?: number;
 	createdAt?: string; // Added for compatibility
 }

@@ -102,7 +102,7 @@ exports.getMessage = async (req, res) => {
 exports.updateMessageText = async (req, res) => {
 	try {
 		const { id } = req.params;
-		const { text, imageUrl } = req.body;
+		const { text, imageUrl, price } = req.body;
 
 		if (!text || text.trim() === '') {
 			return res.status(400).json({ error: 'Message text cannot be empty' });
@@ -116,6 +116,12 @@ exports.updateMessageText = async (req, res) => {
 
 		message.text = text;
 		message.imageUrl = imageUrl;
+		if (typeof price === 'string') {
+			const normalizedPrice = price.replace(/[^\d]/g, '');
+			message.price = normalizedPrice || null;
+		} else if (price === null || price === '') {
+			message.price = null;
+		}
 		await message.save();
 
 		return res.json({ success: true, message });

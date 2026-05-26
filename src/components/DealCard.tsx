@@ -29,9 +29,15 @@ interface DealCardProps {
   category?: string;
   createdAt?: string;
   imageUrl?: string;
+  price?: string;
   telegramFileId?: string;
   onDelete?: (id: string) => void;
-  onEdit?: (id: string, newText: string, newImageUrl: string | null) => void;
+  onEdit?: (
+    id: string,
+    newText: string,
+    newImageUrl: string | null,
+    newPrice: string | null,
+  ) => void;
   onCategoryUpdate?: (id: string, category: string) => void;
   isAdmin?: boolean;
 }
@@ -44,6 +50,7 @@ const DealCard = memo(({
   category,
   createdAt,
   imageUrl,
+  price,
   telegramFileId,
   onDelete,
   onEdit,
@@ -188,12 +195,17 @@ const DealCard = memo(({
     setIsCategoryDialogOpen(true);
   };
 
-  const handleEditSuccess = (id: string, newText: string, newImageUrl: string | null) => {
+  const handleEditSuccess = (
+    id: string,
+    newText: string,
+    newImageUrl: string | null,
+    newPrice: string | null,
+  ) => {
     setLocalDescription(newText);
     setLocalTitle(newText.split('\n')[0] || 'New Deal');
     setLocalImageUrl(newImageUrl);
     if (onEdit) {
-      onEdit(id, newText, newImageUrl);
+      onEdit(id, newText, newImageUrl, newPrice);
     }
   };
 
@@ -307,6 +319,7 @@ const DealCard = memo(({
         id={id || ''}
         initialText={description}
         initialImageUrl={imageUrl || null}
+        initialPrice={price || null}
         onSuccess={handleEditSuccess}
       />
 

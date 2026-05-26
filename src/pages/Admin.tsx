@@ -263,9 +263,19 @@ const Admin = () => {
 	};
 
 	// Enhanced deal edit handler for carousel
-	const handleCarouselDealEdit = async (id: string, newText: string) => {
+	const handleCarouselDealEdit = async (
+		id: string,
+		newText: string,
+		newImageUrl: string | null,
+		newPrice: string | null,
+	) => {
 		try {
-			const success = await updateMessageText(id, newText);
+			const success = await updateMessageText(
+				id,
+				newText,
+				newImageUrl,
+				newPrice,
+			);
 			if (success) {
 				toast({
 					title: 'Success',
@@ -273,7 +283,9 @@ const Admin = () => {
 				});
 				// Update the deal in the list
 				const updatedDeals = topDeals.map(deal =>
-					deal._id === id ? { ...deal, text: newText } : deal
+					deal._id === id
+						? { ...deal, text: newText, imageUrl: newImageUrl, price: newPrice }
+						: deal
 				);
 				setTopDeals(updatedDeals);
 			} else {
@@ -432,7 +444,12 @@ const Admin = () => {
 		setIsSubmittingEdit(true);
 
 		try {
-			const success = await updateMessageText(selectedDeal._id, editedText);
+			const success = await updateMessageText(
+				selectedDeal._id,
+				editedText,
+				selectedDeal.imageUrl || null,
+				selectedDeal.price || null,
+			);
 			if (success) {
 				toast({
 					title: 'Success',

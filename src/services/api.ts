@@ -310,7 +310,8 @@ export const handleTrackedLinkClick = async (
 export const updateMessageText = async (
 	messageId: string,
 	text: string,
-	imageUrl: string | null,
+	imageUrl: string | null = null,
+	price: string | null = null,
 ): Promise<boolean> => {
 	try {
 		if (!messageId) {
@@ -319,7 +320,11 @@ export const updateMessageText = async (
 		}
 
 		console.log(`Updating text for message ID: ${messageId}`);
-		const response = await api.put(`/telegram/messages/${messageId}`, { text, imageUrl });
+		const response = await api.put(`/telegram/messages/${messageId}`, {
+			text,
+			imageUrl,
+			price,
+		});
 		return response.status === 200;
 	} catch (error) {
 		console.error('Failed to update message text:', error);

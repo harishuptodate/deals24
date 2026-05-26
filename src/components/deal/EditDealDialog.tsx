@@ -18,7 +18,13 @@ interface EditDealDialogProps {
 	id: string;
 	initialText: string;
 	initialImageUrl: string | null;
-	onSuccess: (id: string, newText: string, newImageUrl: string | null) => void;
+	initialPrice?: string | null;
+	onSuccess: (
+		id: string,
+		newText: string,
+		newImageUrl: string | null,
+		newPrice: string | null,
+	) => void;
 }
 
 const EditDealDialog = ({
@@ -28,11 +34,13 @@ const EditDealDialog = ({
 	initialText,
 	onSuccess,
 	initialImageUrl,
+	initialPrice = null,
 }: EditDealDialogProps) => {
 	const { toast } = useToast();
 	const [editedText, setEditedText] = useState(initialText);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [editedImageUrl, setEditedImageUrl] = useState(initialImageUrl || null);
+	const [editedPrice, setEditedPrice] = useState(initialPrice || '');
 	const handleSaveEdit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		if (!id) return;
@@ -44,18 +52,31 @@ const EditDealDialog = ({
 			});
 			return;
 		}
+		if (editedPrice && !/^\d+$/.test(editedPrice)) {
+			toast({
+				title: 'Error',
+				description: 'Price must contain only digits',
+				variant: 'destructive',
+			});
+			return;
+		}
 
 		setIsSubmitting(true);
 
 		try {
-			const success = await updateMessageText(id, editedText, editedImageUrl);
+			const success = await updateMessageText(
+				id,
+				editedText,
+				editedImageUrl,
+				editedPrice || null,
+			);
 			if (success) {
 				toast({
 					title: 'Success',
 					description: 'Deal was updated successfully',
 				});
 				onOpenChange(false);
-				onSuccess(id, editedText, editedImageUrl);
+				onSuccess(id, editedText, editedImageUrl, editedPrice || null);
 			} else {
 				toast({
 					title: 'Error',
@@ -108,6 +129,16 @@ const EditDealDialog = ({
 							placeholder="Image URL"
 							className="min-h-[40px]"
 							type="url"
+						/>
+					</div>
+					<div className="mt-4">
+						<Input
+							value={editedPrice}
+							onChange={(e) => setEditedPrice(e.target.value)}
+							placeholder="Price (numbers only)"
+							className="min-h-[40px]"
+							type="text"
+							inputMode="numeric"
 						/>
 					</div>
 
