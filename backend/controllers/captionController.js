@@ -60,6 +60,7 @@ async function CaptionGeneration(req, res) {
 			data: {
 				normalizedMessage: result.normalizedMessage,
 				category: result.category,
+				price: result.price,
 			},
 		});
 	} catch (error) {

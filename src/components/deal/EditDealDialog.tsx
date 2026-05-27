@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
 	Dialog,
 	DialogContent,
@@ -40,7 +40,15 @@ const EditDealDialog = ({
 	const [editedText, setEditedText] = useState(initialText);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [editedImageUrl, setEditedImageUrl] = useState(initialImageUrl || null);
-	const [editedPrice, setEditedPrice] = useState(initialPrice || '');
+	const [editedPrice, setEditedPrice] = useState(initialPrice ?? '');
+
+	useEffect(() => {
+		if (!isOpen) return;
+		setEditedText(initialText);
+		setEditedImageUrl(initialImageUrl || null);
+		setEditedPrice(initialPrice ?? '');
+	}, [isOpen, initialText, initialImageUrl, initialPrice]);
+
 	const handleSaveEdit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		if (!id) return;

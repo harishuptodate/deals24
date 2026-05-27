@@ -1,9 +1,11 @@
 
 import { Button } from '@/components/ui/button';
-import { X } from 'lucide-react';
+import { ArrowDown, X } from 'lucide-react';
 import DateRangeFilter from '../filters/DateRangeFilter';
 import PriceFilter from '../filters/PriceFilter';
 import { useSearchParams } from 'react-router-dom';
+import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface DealsHeaderProps {
   pageTitle: string;
@@ -21,12 +23,23 @@ const DealsHeader = ({
   totalDealsCount,
   onClearFilter,
 }: DealsHeaderProps) => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const isMobile = useIsMobile();
   const minPrice = searchParams.get('minPrice');
   const maxPrice = searchParams.get('maxPrice');
   const sort = searchParams.get('sort');
   const hasPriceFilters = !!minPrice || !!maxPrice;
-  const hasPriceSort = sort === 'price_asc' || sort === 'price_desc';
+  const hasAnySort = !!sort;
+
+  const toggleDateSort = () => {
+    const next = new URLSearchParams(searchParams);
+    if (sort === 'oldest') {
+      next.delete('sort');
+    } else {
+      next.set('sort', 'oldest');
+    }
+    setSearchParams(next, { replace: true });
+  };
 
   return (
     <div className="mb-6 md:mb-8">
@@ -44,10 +57,19 @@ const DealsHeader = ({
         </div>
 
         <div className="flex items-center justify-end gap-2 flex-shrink-0 md:hidden">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={toggleDateSort}
+            className="rounded-full -mr-0.5 h-7 sm:h-8 px-2 sm:px-3 py-0.5 text-[12px] sm:text-xs dark:border-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">
+            <ArrowDown size={12} className={cn("sm:size-[14px] opacity-80 transition-transform -mr-1 -ml-1", sort === 'oldest' && "rotate-180")} />
+            {(sort === 'oldest' ? 'Old' : 'New')}
+          </Button>
           <PriceFilter />
           <DateRangeFilter />
           
-          {(activeCategory || searchQuery || hasPriceFilters || hasPriceSort) && (
+          {(activeCategory || searchQuery || hasPriceFilters || hasAnySort) && (
             <Button
               variant="outline"
               
@@ -60,10 +82,19 @@ const DealsHeader = ({
         </div>
 
         <div className="hidden md:flex items-center gap-2 flex-shrink-0">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={toggleDateSort}
+            className="rounded-full h-8 px-3 py-0.5 text-xs dark:border-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">
+            <ArrowDown size={14} className={cn("opacity-80 transition-transform", sort === 'oldest' && "rotate-180")} />
+            {!isMobile && (sort === 'oldest' ? 'Oldest' : 'Newest')}
+          </Button>
           <DateRangeFilter />
           <PriceFilter />
           
-          {(activeCategory || searchQuery || hasPriceFilters || hasPriceSort) && (
+          {(activeCategory || searchQuery || hasPriceFilters || hasAnySort) && (
             <Button
               variant="outline"
               

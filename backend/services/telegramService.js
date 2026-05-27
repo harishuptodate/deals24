@@ -428,8 +428,8 @@ async function getMessages(options = {}) {
     query.channelId = channelId;
   }
 
-  if (cursor && !isPriceSort) {
-    query._id = { [isOldestFirst ? '$gt' : '$lt']: cursor };
+  if (cursor && !isPriceSort && objectId.isValid(cursor)) {
+    query._id = { [isOldestFirst ? '$gt' : '$lt']: new objectId(cursor) };
   }
 
   if (category) {
@@ -585,6 +585,11 @@ async function getMessages(options = {}) {
     pipelineBase.push({ $match: priceRangeMatch });
   }
 
+  // For explicit price sorting, ignore records without a numeric price so cursoring stays valid.
+  if (isPriceSort) {
+    pipelineBase.push({ $match: { priceNumber: { $ne: null } } });
+  }
+
   if (cursor && isPriceSort) {
     const [cursorPriceRaw, cursorIdRaw] = String(cursor).split('|');
     const cursorPrice = Number(cursorPriceRaw);
@@ -650,8 +655,11 @@ async function getMessages(options = {}) {
     if (!hasMore || data.length === 0) return null;
     const lastItem = data[data.length - 1];
     if (isPriceSort) {
-      if (typeof lastItem.priceNumber !== 'number') return null;
-      return `${lastItem.priceNumber}|${lastItem._id}`;
+      const lastWithPrice = [...data]
+        .reverse()
+        .find((item) => typeof item.priceNumber === 'number');
+      if (!lastWithPrice) return null;
+      return `${lastWithPrice.priceNumber}|${lastWithPrice._id}`;
     }
     return lastItem._id;
   })();

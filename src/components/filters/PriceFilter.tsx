@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { IndianRupee, ArrowDownUp, X } from 'lucide-react';
+import { IndianRupee, X } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -108,20 +108,11 @@ const PriceFilter = () => {
     setOpen(false);
   };
 
-  const togglePriceSort = () => {
+  const setPriceSort = (mode: 'price_asc' | 'price_desc') => {
     const next = new URLSearchParams(searchParams);
-
-    if (sortParam === 'price_asc') {
-      next.set('sort', 'price_desc');
-    } else {
-      next.set('sort', 'price_asc');
-    }
-
+    next.set('sort', mode);
     setSearchParams(next, { replace: true });
   };
-
-  const priceSortLabel =
-    sortParam === 'price_desc' ? 'High-Low' : 'Low-High';
 
   const pillLabel = (() => {
     if (minPrice !== null && maxPrice !== null) {
@@ -134,32 +125,6 @@ const PriceFilter = () => {
 
   return (
     <div className="flex items-center gap-2">
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        onClick={togglePriceSort}
-        className="rounded-full h-7 sm:h-8 px-2 sm:px-3 py-0.5 text-[12px] sm:text-xs dark:border-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">
-        <ArrowDownUp size={12} className="sm:size-[14px] opacity-80" />
-        <span>{priceSortLabel}</span>
-        {isPriceSort && (
-          <span
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              const next = new URLSearchParams(searchParams);
-              next.delete('sort');
-              setSearchParams(next, { replace: true });
-            }}
-            role="button"
-            tabIndex={0}
-            aria-label="Clear price sorting"
-            className="inline-flex items-center justify-center -mr-1 h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600">
-            <X size={12} className="sm:size-[14px]" />
-          </span>
-        )}
-      </Button>
-
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -194,6 +159,45 @@ const PriceFilter = () => {
           }}
           className="w-auto p-2 rounded-xl dark:bg-apple-darkGray dark:border-gray-700">
           <div className="px-1 pb-2">
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <p className="text-xs font-medium text-gray-600 dark:text-gray-300">
+                Sort By Price
+              </p>
+              {isPriceSort && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-2 text-xs"
+                  onClick={() => {
+                    const next = new URLSearchParams(searchParams);
+                    next.delete('sort');
+                    setSearchParams(next, { replace: true });
+                  }}>
+                  Clear
+                </Button>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              <Button
+                type="button"
+                variant={sortParam === 'price_asc' ? 'default' : 'outline'}
+                size="sm"
+                className="h-7 text-xs"
+                onClick={() => setPriceSort('price_asc')}>
+                Low-High
+              </Button>
+              <Button
+                type="button"
+                variant={sortParam === 'price_desc' ? 'default' : 'outline'}
+                size="sm"
+                className="h-7 text-xs"
+                onClick={() => setPriceSort('price_desc')}>
+                High-Low
+              </Button>
+            </div>
+
             <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-2`}>
               <div className="mt-1 flex items-center justify-center gap-2">
                 <p className="text-xs font-medium text-gray-600 dark:text-gray-300 whitespace-nowrap">
