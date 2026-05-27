@@ -1,0 +1,21 @@
+name: Sync to chimmani111/deals24
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo deals24
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Push to repo chimmani111/deals24
+        run: |
+          git remote add repo-chimmani111/deals24 https://x-access-token:${{ secrets.GH_B_TOKEN }}@github.com/chimmani111/deals24.git
+          git push repo-chimmani111/deals24 main:main --force

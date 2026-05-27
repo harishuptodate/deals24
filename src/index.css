@@ -103,6 +103,14 @@
   :focus-visible {
     @apply outline-2 outline-offset-2 outline-blue-500;
   }
+
+  input:focus,
+  input:focus-visible,
+  textarea:focus,
+  textarea:focus-visible {
+    @apply outline-none ring-0 ring-offset-0;
+    box-shadow: none;
+  }
 }
 
 @layer components {

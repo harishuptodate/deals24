@@ -134,7 +134,7 @@ const Navbar = () => {
 													? 'Search...'
 													: 'Search deals... (Press Ctrl+K)'
 											}
-											className="w-full placeholder:text-[13px] text-sm sm:pl-10 pr-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-apple-darkGray dark:bg-apple-darkGray dark:border-gray-700 dark:text-white dark:placeholder-gray-400 truncate"
+											className="w-full placeholder:text-[13px] text-sm sm:pl-10 pr-4 py-2 border rounded-full focus:outline-none dark:bg-apple-darkGray dark:border-gray-700 dark:text-white dark:placeholder-gray-400 truncate"
 											value={searchQuery}
 											onChange={(e) => setSearchQuery(e.target.value)}
 											onClick={() => setIsSearchPopoverOpen(true)}
