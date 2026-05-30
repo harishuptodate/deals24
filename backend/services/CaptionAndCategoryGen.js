@@ -46,6 +46,45 @@ function isQuotaOrRateLimitError(error) {
 	}
 }
 
+function extractRetryDelayMs(error) {
+	if (!error || !error.message) return 0;
+
+	let message = error.message;
+	let retrySeconds = 0;
+
+	// Handle raw text like: "Please retry in 35.612034505s."
+	const retryMatch = message.match(/retry in\s+([\d.]+)s/i);
+	if (retryMatch) {
+		retrySeconds = Math.max(retrySeconds, Math.ceil(Number(retryMatch[1])));
+	}
+
+	// Handle JSON payload detail like: "retryDelay":"35s"
+	try {
+		const parsed = JSON.parse(message);
+		const details = parsed?.error?.details || [];
+		for (const detail of details) {
+			const retryDelay = detail?.retryDelay;
+			if (typeof retryDelay === 'string') {
+				const detailMatch = retryDelay.match(/([\d.]+)s/i);
+				if (detailMatch) {
+					retrySeconds = Math.max(
+						retrySeconds,
+						Math.ceil(Number(detailMatch[1])),
+					);
+				}
+			}
+		}
+	} catch (_parseError) {
+		// No JSON payload; ignore.
+	}
+
+	return retrySeconds > 0 ? retrySeconds * 1000 : 0;
+}
+
+function sleep(ms) {
+	return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 /**
  * Normalize message and generate caption using Gemini API
  * Also identifies the category of the product
@@ -223,9 +262,11 @@ ${messageText}`;
 
 		let response;
 		let lastError;
+		const maxAttempts = geminiApiKeys.length * 3;
 
-		for (let i = 0; i < geminiApiKeys.length; i++) {
-			const apiKey = geminiApiKeys[i];
+		for (let attempt = 0; attempt < maxAttempts; attempt++) {
+			const keyIndex = attempt % geminiApiKeys.length;
+			const apiKey = geminiApiKeys[keyIndex];
 			const ai = new GoogleGenAI({ apiKey });
 
 			try {
@@ -243,12 +284,20 @@ ${messageText}`;
 				break;
 			} catch (error) {
 				lastError = error;
-				const hasAnotherKey = i < geminiApiKeys.length - 1;
+				const hasMoreAttempts = attempt < maxAttempts - 1;
 
-				if (hasAnotherKey && isQuotaOrRateLimitError(error)) {
-					console.warn(
-						'Primary Gemini API key quota/rate limit reached. Retrying with secondary Gemini API key.',
-					);
+				if (hasMoreAttempts && isQuotaOrRateLimitError(error)) {
+					const retryDelayMs = extractRetryDelayMs(error);
+					if (retryDelayMs > 0) {
+						console.warn(
+							`Gemini quota/rate limit hit for key ${keyIndex + 1}. Waiting ${Math.ceil(retryDelayMs / 1000)}s before retry.`,
+						);
+						await sleep(retryDelayMs);
+					} else {
+						console.warn(
+							`Gemini quota/rate limit hit for key ${keyIndex + 1}. Retrying with next available key.`,
+						);
+					}
 					continue;
 				}
 
