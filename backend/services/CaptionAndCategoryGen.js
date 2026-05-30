@@ -1,5 +1,6 @@
 require('dotenv').config();
-const { GoogleGenAI } = require("@google/genai");
+const { GoogleGenAI } = require('@google/genai');
+const { detectCategory } = require('./detectCategory');
 
 const AVAILABLE_CATEGORIES = [
 	'laptops',
@@ -11,246 +12,38 @@ const AVAILABLE_CATEGORIES = [
 	'miscellaneous',
 ];
 
-/**
- * Detect category based on message content
- * @param {string} text - Message text
- * @returns {string|undefined} - Detected category or undefined
- */
-function detectCategory(text) {
-	const categories = {
-		laptops: [
-			'laptop',
-			'notebook',
-			'ultrabook',
-			'macbook',
-			'mac',
-			'lenovo',
-			'hp',
-			'dell',
-			'asus',
-			'msi',
-			'razer',
-			'apple macbook',
-			'chromebook',
-			'gaming laptop',
-			'surface',
-			'surface laptop',
-			'thinkpad',
-			'ideapad',
-			'legion',
-			'vivobook',
-			'zenbook',
-			'spectre',
-			'pavilion',
-			'omen',
-			'inspiron',
-			'latitude',
-			'rog',
-			'tuf',
-			'predator',
-			'swift',
-			'helios',
-			'nitro',
-			'blade',
-			'stealth',
-			'probook',
-		],
-		'electronics-home': [
-			'washing machine',
-			'tv',
-			'television',
-			'smart tv',
-			'4k',
-			'uhd',
-			'led',
-			'oled',
-			'qled',
-			'sofa',
-			'refrigerator',
-			'fridge',
-			'air conditioner',
-			'ac',
-			'microwave',
-			'oven',
-			'toaster',
-			'dishwasher',
-			'water purifier',
-			'home theatre',
-			'home theater',
-			'soundbar',
-			'speaker',
-			'audio',
-			'geyser',
-			'cooler',
-			'vacuum cleaner',
-			'vacuum',
-			'iron',
-			'induction cooktop',
-			'blender',
-			'mixer grinder',
-			'juicer',
-			'coffee maker',
-			'rice cooker',
-			'heater',
-			'fan',
-			'chimney',
-			'deep freezer',
-			'air fryer',
-			'smart home',
-			'alexa',
-			'echo',
-			'google home',
-			'Mattress',
-			'bed',
-			'pillow',
-		],
-		'mobile-phones': [
-			'iphone',
-			'android',
-			'smartphone',
-			'mobile phone',
-			'5g phone',
-			'galaxy',
-			'oppo',
-			'vivo',
-			'realme',
-			'motorola',
-			'nokia',
-			'google pixel',
-			'pixel',
-			'sony xperia',
-			'huawei',
-			'asus rog phone',
-			'infinix',
-			'tecno',
-			'honor',
-			'iqoo',
-			'poco',
-			'foldable phone',
-			'flip phone',
-			'flagship phone',
-			'budget phone',
-			'mid-range phone',
-			'flagship killer',
-			'phone',
-			'mobile',
-			'tablet',
-		],
-		'gadgets-accessories': [
-			'power bank',
-			'tws',
-			'earphones',
-			'printer',
-			'ipad',
-			'smartwatch',
-			'earphones',
-			'airpods',
-			'earbuds',
-			'headphones',
-			'bluetooth earphones',
-			'neckband',
-			'chargers',
-			'fast charger',
-			'usb charger',
-			'wireless charger',
-			'cable',
-			'usb cable',
-			'type-c cable',
-			'lightning cable',
-			'hdmi cable',
-			'adapter',
-			'moniter',
-			'monitor',
-			'memory card',
-			'sd card',
-			'pendrive',
-			'usb drive',
-			'hdd',
-			'ssd',
-			'laptop bag',
-			'keyboard',
-			'mouse',
-			'gaming mouse',
-			'mouse pad',
-			'cooling pad',
-			'phone case',
-			'screen protector',
-			'smartwatch',
-			'fitness band',
-			'vr headset',
-			'gaming controller',
-		],
-		fashion: [
-			'clothing',
-			't-shirt',
-			'tshirt',
-			'shirt',
-			'jeans',
-			'trousers',
-			'pants',
-			'shorts',
-			'skirt',
-			'dress',
-			'jacket',
-			'blazer',
-			'sweater',
-			'hoodie',
-			'coat',
-			'suit',
-			'ethnic wear',
-			'kurta',
-			'saree',
-			'lehenga',
-			'salwar',
-			'leggings',
-			'innerwear',
-			'nightwear',
-			'sportswear',
-			'shoes',
-			'sneakers',
-			'heels',
-			'sandals',
-			'flip-flops',
-			'boots',
-			'formal shoes',
-			'loafers',
-			'running shoes',
-			'belts',
-			'wallets',
-			'watches',
-			'watch',
-			'sunglasses',
-			'jewelry',
-			'rings',
-			'necklace',
-			'bracelet',
-			'earrings',
-			'bangles',
-			'handbag',
-			'clutch',
-			'backpack',
-			'hat',
-			'cap',
-			'socks',
-			'underwear',
-			'lingerie',
-		],
-		'Best-Deals': ['ThisThingShouldNotMatchWithAnything'],
-	};
+function isQuotaOrRateLimitError(error) {
+	if (!error) return false;
 
-	const lowerText = text.toLowerCase();
+	const errorMessage = error.message || '';
 
-	for (let category in categories) {
-		for (let keyword of categories[category]) {
-			const regex = new RegExp(`\\b${keyword}\\b`, 'i'); // Ensure proper boundary matching
-			if (regex.test(lowerText)) {
-				console.log(`Matched category: ${category} with keyword: ${keyword}`); // Log the matched category and keyword
-				return category;
-			}
-		}
+	if (
+		error.status === 'RESOURCE_EXHAUSTED' ||
+		error.code === 429 ||
+		errorMessage.includes('RESOURCE_EXHAUSTED') ||
+		errorMessage.includes('"code":429') ||
+		errorMessage.toLowerCase().includes('quota exceeded') ||
+		errorMessage.toLowerCase().includes('rate limit')
+	) {
+		return true;
 	}
 
-	return 'miscellaneous'; // Return null if no category matches
+	// Some SDK errors wrap API payload in a string; detect quota/rate-limit from that payload too.
+	try {
+		const parsed = JSON.parse(errorMessage);
+		const apiError = parsed && parsed.error ? parsed.error : parsed;
+		const apiMessage = (
+			apiError && apiError.message ? apiError.message : ''
+		).toLowerCase();
+		return (
+			apiError?.status === 'RESOURCE_EXHAUSTED' ||
+			apiError?.code === 429 ||
+			apiMessage.includes('quota exceeded') ||
+			apiMessage.includes('rate limit')
+		);
+	} catch (_parseError) {
+		return false;
+	}
 }
 
 /**
@@ -264,10 +57,15 @@ async function GenerateCaptionAndCategory(messageText) {
 		throw new Error('Message text is required and must be a string');
 	}
 
-	const geminiApiKey = process.env.GEMINI_API_KEY;
-	if (!geminiApiKey) {
+	const primaryGeminiApiKey = process.env.GEMINI_API_KEY;
+	const secondaryGeminiApiKey = process.env.GEMINI_API_KEY_2;
+	const geminiApiKeys = [primaryGeminiApiKey, secondaryGeminiApiKey].filter(
+		Boolean,
+	);
+
+	if (geminiApiKeys.length === 0) {
 		console.warn(
-			'GEMINI_API_KEY not found in environment variables. Falling back to basic processing.',
+			'No Gemini API key found in environment variables. Falling back to basic processing.',
 		);
 		return {
 			normalizedMessage: messageText.trim(),
@@ -382,6 +180,39 @@ Normalized message:
 
 3. Extract the final offer price: Carefully identify the final deal/offer price of the product from the message and return it as a separate field named "price". Use only the numeric value without ₹, commas, or extra text. For prices like 53K or 34K, convert them to full numeric value like "53000" or "34000". If no price is clearly available, return an empty string.
 
+Important Note: Extract the lowest deal price from the message if it has multiple product deals.
+
+
+Example for multiple product deals Message: 
+"Festive Deals Ends Tonight ‼️
+
+Best 32 Inch TV's In 2025  | Deals24 hand Picked ✅
+
+1️⃣ Xiaomi F Series HD Ready Smart LED Fire TV @ ₹8,999
+🔗https://amzn.to/42TZyJY
+
+2️⃣ Samsung HD Smart LED TV @ ₹11,740
+🔗https://amzn.to/3J2EY3v
+
+3️⃣ TCL V5C Series Full HD Smart QLED Google TV @ ₹11,241
+🔗https://amzn.to/4hqHiOd
+
+💡 All The Above Mentioned Prices With HDFC Cc Discounts"
+
+Normalized message:
+"Best 32 Inch TV's In 2025  | Deals24 hand Picked ✅
+
+1️⃣ Xiaomi F Series HD Ready Smart LED Fire TV @ ₹8,999
+🔗https://amzn.to/42TZyJY
+
+2️⃣ Samsung HD Smart LED TV @ ₹11,740
+🔗https://amzn.to/3J2EY3v
+
+3️⃣ TCL V5C Series Full HD Smart QLED Google TV @ ₹11,241
+🔗https://amzn.to/4hqHiOd
+
+💡 All The Above Mentioned Prices With HDFC Cc Discounts"
+
 CRITICAL: Return ONLY valid JSON. Do NOT use markdown code blocks (no triple backticks with json or without). Do NOT add any explanations, text, or formatting before or after the JSON. Start directly with { and end with }. Return pure JSON only.
 
 Example of correct response format:
@@ -390,38 +221,64 @@ Example of correct response format:
 Message to process:
 ${messageText}`;
 
-		const ai = new GoogleGenAI(process.env.GEMINI_API_KEY);
+		let response;
+		let lastError;
 
-		const response = await ai.models.generateContent({
-			model: "gemini-2.5-flash",
-			contents: prompt,
-			generationConfig: {
-				temperature: 0.3,
-				topK: 40,
-				topP: 0.95,
-				maxOutputTokens: 1024,
-			},
-		});
+		for (let i = 0; i < geminiApiKeys.length; i++) {
+			const apiKey = geminiApiKeys[i];
+			const ai = new GoogleGenAI({ apiKey });
+
+			try {
+				response = await ai.models.generateContent({
+					model: 'gemini-3.5-flash',
+					contents: prompt,
+					generationConfig: {
+						temperature: 0.3,
+						topK: 40,
+						topP: 0.95,
+						maxOutputTokens: 1024,
+					},
+				});
+				lastError = null;
+				break;
+			} catch (error) {
+				lastError = error;
+				const hasAnotherKey = i < geminiApiKeys.length - 1;
+
+				if (hasAnotherKey && isQuotaOrRateLimitError(error)) {
+					console.warn(
+						'Primary Gemini API key quota/rate limit reached. Retrying with secondary Gemini API key.',
+					);
+					continue;
+				}
+
+				throw error;
+			}
+		}
+
+		if (!response && lastError) {
+			throw lastError;
+		}
 
 		// Extract the response text from Gemini API
 		let responseText = response.text;
 
 		// Parse JSON from response (remove markdown code blocks if present)
 		let jsonText = responseText.trim();
-		
+
 		// Remove markdown code blocks
 		if (jsonText.startsWith('```json')) {
 			jsonText = jsonText.replace(/```json\n?/g, '').replace(/```\n?/g, '');
 		} else if (jsonText.startsWith('```')) {
 			jsonText = jsonText.replace(/```\n?/g, '');
 		}
-		
+
 		// Try to extract JSON if there's extra text before/after
 		const jsonMatch = jsonText.match(/\{[\s\S]*\}/);
 		if (jsonMatch) {
 			jsonText = jsonMatch[0];
 		}
-		
+
 		const result = JSON.parse(jsonText);
 
 		// Validate category
@@ -436,7 +293,10 @@ ${messageText}`;
 		return {
 			normalizedMessage: result.normalizedMessage || messageText.trim(),
 			category: result.category || detectCategory(messageText),
-			price: typeof result.price === 'string' ? result.price.replace(/[^\d]/g, '') : '',
+			price:
+				typeof result.price === 'string'
+					? result.price.replace(/[^\d]/g, '')
+					: '',
 		};
 	} catch (error) {
 		console.error('Error calling Gemini API:', error.message);
