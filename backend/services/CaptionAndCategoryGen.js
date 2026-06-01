@@ -12,14 +12,6 @@ const AVAILABLE_CATEGORIES = [
 	'miscellaneous',
 ];
 
-function normalizeGeminiModelName(modelName) {
-	if (!modelName || typeof modelName !== 'string') return 'gemini-2.5-flash';
-	return modelName
-		.trim()
-		.replace(/^models\//i, '')
-		.replace(/^publishers\/google\/models\//i, '');
-}
-
 function isQuotaOrRateLimitError(error) {
 	if (!error) return false;
 
@@ -104,7 +96,6 @@ async function GenerateCaptionAndCategory(messageText) {
 		throw new Error('Message text is required and must be a string');
 	}
 
-	const model = normalizeGeminiModelName(process.env.GEMINI_MODEL);
 	const primaryGeminiApiKey = process.env.GEMINI_API_KEY;
 	const secondaryGeminiApiKey = process.env.GEMINI_API_KEY_2;
 	const geminiApiKeys = [primaryGeminiApiKey, secondaryGeminiApiKey].filter(
@@ -281,7 +272,7 @@ ${messageText}`;
 
 			try {
 				response = await ai.models.generateContent({
-					model: model,
+					model: 'gemini-2.5-flash',
 					contents: prompt,
 					generationConfig: {
 						temperature: 0.3,
