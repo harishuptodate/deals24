@@ -12,6 +12,14 @@ const AVAILABLE_CATEGORIES = [
 	'miscellaneous',
 ];
 
+function normalizeGeminiModelName(modelName) {
+	if (!modelName || typeof modelName !== 'string') return 'gemini-2.0-flash';
+	return modelName
+		.trim()
+		.replace(/^models\//i, '')
+		.replace(/^publishers\/google\/models\//i, '');
+}
+
 function isQuotaOrRateLimitError(error) {
 	if (!error) return false;
 
@@ -96,7 +104,7 @@ async function GenerateCaptionAndCategory(messageText) {
 		throw new Error('Message text is required and must be a string');
 	}
 
-	const model = process.env.GEMINI_MODEL;
+	const model = normalizeGeminiModelName(process.env.GEMINI_MODEL);
 	const primaryGeminiApiKey = process.env.GEMINI_API_KEY;
 	const secondaryGeminiApiKey = process.env.GEMINI_API_KEY_2;
 	const geminiApiKeys = [primaryGeminiApiKey, secondaryGeminiApiKey].filter(
@@ -111,6 +119,7 @@ async function GenerateCaptionAndCategory(messageText) {
 			normalizedMessage: messageText.trim(),
 			category: detectCategory(messageText),
 			price: '',
+			usedFallback: true,
 		};
 	}
 
@@ -347,6 +356,7 @@ ${messageText}`;
 				typeof result.price === 'string'
 					? result.price.replace(/[^\d]/g, '')
 					: '',
+			usedFallback: false,
 		};
 	} catch (error) {
 		console.error('Error calling Gemini API:', error.message);
@@ -356,6 +366,7 @@ ${messageText}`;
 			normalizedMessage: messageText.trim(),
 			category: detectCategory(messageText),
 			price: '',
+			usedFallback: true,
 		};
 	}
 }

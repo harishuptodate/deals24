@@ -233,10 +233,14 @@ async function saveMessage(message) {
           normalizedText = result.normalizedMessage;
           category = result.category;
           price = result.price || null;
-          if (attempt > 0) {
-            console.log(`✅ Successfully generated caption and category using Gemini API (after ${attempt} retry/retries)`);
+          if (result.usedFallback) {
+            console.warn('Gemini API failed; fallback caption/category was used.');
           } else {
-            console.log('✅ Successfully generated caption and category using Gemini API');
+            if (attempt > 0) {
+              console.log(`✅ Successfully generated caption and category using Gemini API (after ${attempt} retry/retries)`);
+            } else {
+              console.log('✅ Successfully generated caption and category using Gemini API');
+            }
           }
           break; // Success, exit retry loop
         } else {
