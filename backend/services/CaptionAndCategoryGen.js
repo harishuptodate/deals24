@@ -46,6 +46,40 @@ function isQuotaOrRateLimitError(error) {
 	}
 }
 
+function isTransientServiceError(error) {
+	if (!error) return false;
+
+	const errorMessage = error.message || '';
+	const lowerMessage = errorMessage.toLowerCase();
+
+	if (
+		error.status === 'UNAVAILABLE' ||
+		error.code === 503 ||
+		lowerMessage.includes('"status":"unavailable"') ||
+		lowerMessage.includes('"code":503') ||
+		lowerMessage.includes('high demand') ||
+		lowerMessage.includes('try again later')
+	) {
+		return true;
+	}
+
+	try {
+		const parsed = JSON.parse(errorMessage);
+		const apiError = parsed && parsed.error ? parsed.error : parsed;
+		const apiMessage = (
+			apiError && apiError.message ? apiError.message : ''
+		).toLowerCase();
+		return (
+			apiError?.status === 'UNAVAILABLE' ||
+			apiError?.code === 503 ||
+			apiMessage.includes('high demand') ||
+			apiMessage.includes('try again later')
+		);
+	} catch (_parseError) {
+		return false;
+	}
+}
+
 function extractRetryDelayMs(error) {
 	if (!error || !error.message) return 0;
 
@@ -299,6 +333,20 @@ ${messageText}`;
 							`Gemini quota/rate limit hit for key ${keyIndex + 1}. Retrying with next available key.`,
 						);
 					}
+					continue;
+				}
+				if (hasMoreAttempts && isTransientServiceError(error)) {
+					const retryDelayMs = extractRetryDelayMs(error);
+					const exponentialDelayMs = Math.min(
+						1000 * Math.pow(2, attempt),
+						8000,
+					);
+					const jitterMs = Math.floor(Math.random() * 250);
+					const waitMs = Math.max(retryDelayMs, exponentialDelayMs) + jitterMs;
+					console.warn(
+						`Gemini service temporarily unavailable for key ${keyIndex + 1}. Waiting ${Math.ceil(waitMs / 1000)}s before retry.`,
+					);
+					await sleep(waitMs);
 					continue;
 				}
 
