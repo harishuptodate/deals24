@@ -96,6 +96,7 @@ async function GenerateCaptionAndCategory(messageText) {
 		throw new Error('Message text is required and must be a string');
 	}
 
+	const model = process.env.GEMINI_MODEL;
 	const primaryGeminiApiKey = process.env.GEMINI_API_KEY;
 	const secondaryGeminiApiKey = process.env.GEMINI_API_KEY_2;
 	const geminiApiKeys = [primaryGeminiApiKey, secondaryGeminiApiKey].filter(
@@ -271,7 +272,7 @@ ${messageText}`;
 
 			try {
 				response = await ai.models.generateContent({
-					model: 'gemini-3.5-flash',
+					model: model,
 					contents: prompt,
 					generationConfig: {
 						temperature: 0.3,
