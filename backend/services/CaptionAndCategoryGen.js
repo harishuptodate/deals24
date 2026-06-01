@@ -13,7 +13,7 @@ const AVAILABLE_CATEGORIES = [
 ];
 
 function normalizeGeminiModelName(modelName) {
-	if (!modelName || typeof modelName !== 'string') return 'gemini-2.0-flash';
+	if (!modelName || typeof modelName !== 'string') return 'gemini-2.5-flash';
 	return modelName
 		.trim()
 		.replace(/^models\//i, '')
