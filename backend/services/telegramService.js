@@ -4,6 +4,7 @@ const { fetchProductImage } = require('./amazonService');
 const crypto = require('crypto');
 const { detectCategory } = require('../utils/categoryDetector');
 const { GenerateCaptionAndCategory } = require('./CaptionAndCategoryGen');
+const { extractPrice } = require('../utils/extractPrice');
 // Hashes to store unique content (in-memory)
 let contentHashes = [];
 let imageUrlHashes = [];
@@ -192,6 +193,36 @@ function isProfitableProduct(text) {
   return false;
 }
 
+function normalizeGeminiPrice(price) {
+  if (price === null || price === undefined) {
+    return '';
+  }
+
+  if (typeof price === 'number') {
+    if (!Number.isFinite(price) || price <= 0) {
+      return '';
+    }
+
+    return String(Math.trunc(price));
+  }
+
+  if (typeof price !== 'string') {
+    return '';
+  }
+
+  const normalizedPrice = price.replace(/[^\d]/g, '');
+  if (!normalizedPrice) {
+    return '';
+  }
+
+  const numericPrice = Number(normalizedPrice);
+  if (!Number.isFinite(numericPrice) || numericPrice <= 0) {
+    return '';
+  }
+
+  return String(numericPrice);
+}
+
 /**
  * Save a new message from Telegram (incorporating core logic with image handling)
  * @param {Object} message - Telegram message object
@@ -313,6 +344,12 @@ async function saveMessage(message) {
       }
     }
     
+    price = normalizeGeminiPrice(price);
+    if (!price) {
+      price = extractPrice(CleanedText);
+      console.log(`Gemini price missing. Fallback extracted price: ${price}`);
+    }
+
     // Image handling logic
     let imageUrl = null;
     let telegramFileId = null;
