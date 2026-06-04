@@ -252,7 +252,7 @@ Normalized message:
    - fashion
    - miscellaneous
 
-3. Extract the final offer price: Carefully identify the final deal/offer price of the product from the message and return it as a separate field named "price". Use only the numeric value without ₹, commas, or extra text. For prices like 53K or 34K, convert them to full numeric value like "53000" or "34000". If no price is clearly available, return an empty string.
+3. Extract the final offer price: Carefully identify the final deal/offer price of the product from the message and return it as a separate field named "price". Make sure the price is not the regular price, it should be the deal price often mentioned with @ symbol. You dont have to do the math applying any discounts/coupons/offers for the effective price, just extract the price as it is. Use only the numeric value without ₹, commas, or extra text. For prices like 53K or 34K, convert them to full numeric value like "53000" or "34000". If no price is clearly available, return an empty string.
 
 Important Note: Extract the lowest deal price from the message if it has multiple product deals.
 
@@ -260,7 +260,7 @@ Important Note: Extract the lowest deal price from the message if it has multipl
 Example for multiple product deals Message: 
 "Festive Deals Ends Tonight ‼️
 
-Best 32 Inch TV's In 2025  | Deals24 hand Picked ✅
+Best 32 Inch TV's In 2025  | Telugu Tech TV hand Picked ✅
 
 1️⃣ Xiaomi F Series HD Ready Smart LED Fire TV @ ₹8,999
 🔗https://amzn.to/42TZyJY

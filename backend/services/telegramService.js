@@ -148,6 +148,27 @@ function isLowContext(text) {
   return keywordMatch && meaningfulText.length < 60; // Keywords but no big context
 }
 
+function shouldSkipTwsDeal(text) {
+  const normalizedText = text.toLowerCase();
+  const isTwsDeal = /\btws\b|true wireless|earbuds/.test(normalizedText);
+
+  if (!isTwsDeal) {
+    return false;
+  }
+
+  const blockedBrands = [
+    'ptron',
+    'fire-boltt',
+    'fire boltt',
+    'boat',
+    'mivi',
+    'nu republic',
+    'amazon basics',
+  ];
+
+  return blockedBrands.some((brand) => normalizedText.includes(brand));
+}
+
 /**
  * Check if the product is profitable
  * @param {string} text - Message text
@@ -193,6 +214,11 @@ async function saveMessage(message) {
     const messageHash = calculateHash(textContent);
     if (contentHashes.includes(messageHash)) {
       console.log('Skipping duplicate content');
+      return null;
+    }
+
+    if (shouldSkipTwsDeal(textContent)) {
+      console.log('Skipping TWS deal for blocked brand');
       return null;
     }
     
