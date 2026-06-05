@@ -15,13 +15,24 @@ export function AdminLoginDialog({ isOpen, onClose, onSuccess }: AdminLoginDialo
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  const handleLogin = () => {
-    if (login(username, password)) {
-      onSuccess();
-      window.location.reload(); // Force reload to update the page
-    } else {
-      setError('Invalid credentials');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleLogin = async () => {
+    setIsSubmitting(true);
+    setError('');
+
+    try {
+      const success = await login(username, password);
+      if (success) {
+        onSuccess();
+        window.location.reload(); // Force reload to update the page
+      } else {
+        setError('Invalid credentials');
+      }
+    } catch (_error) {
+      setError('Login failed. Please try again.');
     }
+    setIsSubmitting(false);
   };
 
   const handleKeyPress = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -51,8 +62,8 @@ export function AdminLoginDialog({ isOpen, onClose, onSuccess }: AdminLoginDialo
             onKeyPress={handleKeyPress}
           />
           {error && <p className="text-red-500 text-sm">{error}</p>}
-          <Button onClick={handleLogin} className="w-full">
-            Login
+          <Button onClick={handleLogin} className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? 'Signing in...' : 'Login'}
           </Button>
         </div>
       </DialogContent>

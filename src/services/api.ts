@@ -1,10 +1,11 @@
-import axios from 'axios';
+import axios, { AxiosRequestHeaders } from 'axios';
 import {
 	TelegramResponse,
 	TelegramMessage,
 	CategoryCount,
 	TopPerformingResponse,
 } from '../types/telegram';
+import { getAdminToken } from './authService';
 
 // Get API base URL from environment variables or use a fallback
 const getBaseUrl = () => {
@@ -40,6 +41,11 @@ const api = axios.create({
 // Add request interceptor for production logging
 api.interceptors.request.use(
 	(config) => {
+		const adminToken = getAdminToken();
+		if (adminToken && config.url?.startsWith('/admin')) {
+			config.headers = (config.headers as AxiosRequestHeaders) || ({} as unknown as AxiosRequestHeaders);
+			config.headers.Authorization = `Bearer ${adminToken}`;
+		}
 		console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
 		return config;
 	},
@@ -458,6 +464,62 @@ export const getDealById = async (id: string) => {
     console.error('Error fetching deal by ID:', error);
     throw error;
   }
+};
+
+export interface AdminLogEntry {
+  _id?: string;
+  id?: string;
+  timestamp: string;
+  level: 'debug' | 'info' | 'warn' | 'error';
+  service: string;
+  event?: string | null;
+  message: string;
+  requestId?: string | null;
+  correlationId?: string | null;
+  context?: Record<string, unknown>;
+}
+
+export interface AdminLogsResponse {
+  logs: AdminLogEntry[];
+  hasMore: boolean;
+  nextBefore: string | null;
+}
+
+export const getAdminLogs = async (params: {
+  before?: string | null;
+  levels?: string[];
+  service?: string;
+  event?: string;
+  search?: string;
+  correlationId?: string;
+  limit?: number;
+} = {}): Promise<AdminLogsResponse> => {
+  const response = await api.get('/admin/logs', {
+    params: {
+      before: params.before || undefined,
+      levels: params.levels?.length ? params.levels.join(',') : undefined,
+      service: params.service || undefined,
+      event: params.event || undefined,
+      search: params.search || undefined,
+      correlationId: params.correlationId || undefined,
+      limit: params.limit || 50,
+    },
+  });
+
+  return {
+    logs: response.data.logs || [],
+    hasMore: response.data.hasMore || false,
+    nextBefore: response.data.nextBefore || null,
+  };
+};
+
+export const createAdminLogsStreamUrl = (recent = 25): string | null => {
+  const adminToken = getAdminToken();
+  if (!adminToken) {
+    return null;
+  }
+
+  return `${API_BASE_URL}/admin/logs/stream?recent=${recent}&token=${encodeURIComponent(adminToken)}`;
 };
 
 export default api;

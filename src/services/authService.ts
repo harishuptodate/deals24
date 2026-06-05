@@ -1,24 +1,74 @@
+const ADMIN_AUTH_MARKER = 'adminAuth';
+const ADMIN_TOKEN_KEY = 'adminAuthToken';
+const ADMIN_TOKEN_EXPIRY_KEY = 'adminAuthTokenExpiry';
 
-const isAuthenticated = () => {
-  return localStorage.getItem('adminAuth') === 'authenticated_user_token';
+const getApiBaseUrl = () => {
+  const configuredUrl = import.meta.env.VITE_API_BASE_URL;
+
+  if (!configuredUrl) {
+    return `${window.location.origin}/api`;
+  }
+
+  if (configuredUrl.startsWith('http')) {
+    return configuredUrl;
+  }
+
+  return `${window.location.origin}${configuredUrl}`;
 };
 
-const login = (username: string, password: string): boolean => {
-  if (
-    username === import.meta.env.VITE_ADMIN_USERNAME && 
-    password === import.meta.env.VITE_ADMIN_PASSWORD
-  ) {
-    localStorage.setItem('adminAuth', 'authenticated_user_token');
-    return true;
+const isAuthenticated = () => {
+  const token = localStorage.getItem(ADMIN_TOKEN_KEY);
+  const expiry = Number(localStorage.getItem(ADMIN_TOKEN_EXPIRY_KEY) || '0');
+
+  if (!token || !expiry || expiry < Date.now()) {
+    return false;
   }
-  return false;
+
+  return true;
+};
+
+const login = async (username: string, password: string): Promise<boolean> => {
+  const response = await fetch(`${getApiBaseUrl()}/admin/auth/login`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ username, password }),
+  });
+
+  if (!response.ok) {
+    return false;
+  }
+
+  const payload = await response.json();
+  if (!payload?.success || !payload?.token) {
+    return false;
+  }
+
+  localStorage.setItem(ADMIN_AUTH_MARKER, 'authenticated_user_token');
+  localStorage.setItem(ADMIN_TOKEN_KEY, payload.token);
+  localStorage.setItem(
+    ADMIN_TOKEN_EXPIRY_KEY,
+    String(Date.now() + Number(payload.expiresInMs || 0)),
+  );
+  return true;
 };
 
 const logout = () => {
-  localStorage.removeItem('adminAuth');
+  localStorage.removeItem(ADMIN_AUTH_MARKER);
+  localStorage.removeItem(ADMIN_TOKEN_KEY);
+  localStorage.removeItem(ADMIN_TOKEN_EXPIRY_KEY);
   localStorage.removeItem('editPermissionGranted');
   localStorage.removeItem('categoryPermissionGranted');
   window.location.reload();
+};
+
+const getAdminToken = (): string | null => {
+  if (!isAuthenticated()) {
+    return null;
+  }
+
+  return localStorage.getItem(ADMIN_TOKEN_KEY);
 };
 
 const hasEditPermission = (): boolean => {
@@ -46,6 +96,7 @@ export {
   isAuthenticated, 
   login, 
   logout, 
+  getAdminToken,
   hasEditPermission, 
   hasCategoryPermission, 
   grantEditPermission, 

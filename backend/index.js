@@ -1,23 +1,26 @@
-
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const { Telegraf } = require('telegraf');
-const routes = require('./routes');
-const telegramRoutes = require('./routes/telegram');
+const { installConsoleLogger, runWithLogContext } = require('./services/logger');
+const { attachRequestContext } = require('./middleware/requestContext');
 const { saveMessage } = require('./services/telegramService');
 const indexRouter = require('./routes/index');
 const telegramRouter = require('./routes/telegram');
 const amazonRouter = require('./routes/amazon');
 const statsRouter = require('./routes/stats.routes');
+const adminRouter = require('./routes/admin');
 const startFlushLoop = require('./scripts/flushRedisClicksToMongo');
-require('dotenv').config();
+
+installConsoleLogger();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(express.json());
+app.use(attachRequestContext);
 app.use(cors({
   origin: process.env.CORS_ALLOWED_ORIGINS?.split(',') || '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
@@ -29,6 +32,7 @@ app.use('/api', indexRouter);
 app.use('/api/telegram', telegramRouter);
 app.use('/api/amazon', amazonRouter);
 app.use('/api', statsRouter);  // Make sure the stats routes are registered
+app.use('/api/admin', adminRouter);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -87,34 +91,60 @@ function initTelegramBot() {
       
       // Process messages directly from getUpdates polling
       bot.on('message', (ctx) => {
-        console.log('Received message through polling:', ctx.message);
-        saveMessage(ctx.message)
-          .then(result => {
-            if (result) {
-              console.log('Message saved successfully:', result.id);
-            } else {
-              console.log('Message was not saved (filtered out by criteria)');
-            }
-          })
-          .catch(error => {
-            console.error('Error saving message:', error);
-          });
+        const message = ctx.message;
+        const correlationId = `tg:${message?.chat?.id || 'unknown'}:${message?.message_id || Date.now()}`;
+
+        runWithLogContext({
+          service: 'telegram-ingest',
+          correlationId,
+          context: {
+            source: 'polling-message',
+            telegramMessageId: message?.message_id || null,
+            chatId: message?.chat?.id || null,
+          },
+        }, () => {
+          console.log('Received message through polling:', message);
+          saveMessage(message)
+            .then(result => {
+              if (result) {
+                console.log('Message saved successfully:', result.id);
+              } else {
+                console.log('Message was not saved (filtered out by criteria)');
+              }
+            })
+            .catch(error => {
+              console.error('Error saving message:', error);
+            });
+        });
       });
       
       // Process channel posts
       bot.on('channel_post', (ctx) => {
-        console.log('Received channel post through polling:', ctx.channelPost);
-        saveMessage(ctx.channelPost)
-          .then(result => {
-            if (result) {
-              console.log('Channel post saved successfully:', result.id);
-            } else {
-              console.log('Channel post was not saved (filtered out by criteria)');
-            }
-          })
-          .catch(error => {
-            console.error('Error saving channel post:', error);
-          });
+        const channelPost = ctx.channelPost;
+        const correlationId = `tg:${channelPost?.chat?.id || 'unknown'}:${channelPost?.message_id || Date.now()}`;
+
+        runWithLogContext({
+          service: 'telegram-ingest',
+          correlationId,
+          context: {
+            source: 'polling-channel-post',
+            telegramMessageId: channelPost?.message_id || null,
+            chatId: channelPost?.chat?.id || null,
+          },
+        }, () => {
+          console.log('Received channel post through polling:', channelPost);
+          saveMessage(channelPost)
+            .then(result => {
+              if (result) {
+                console.log('Channel post saved successfully:', result.id);
+              } else {
+                console.log('Channel post was not saved (filtered out by criteria)');
+              }
+            })
+            .catch(error => {
+              console.error('Error saving channel post:', error);
+            });
+        });
       });
     }
     

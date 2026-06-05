@@ -1,28 +1,41 @@
 const TelegramMessage = require('../models/TelegramMessage');
 const { saveMessage } = require('../services/telegramService');
+const { runWithLogContext } = require('../services/logger');
 
 // Handle Telegram webhook updates
 exports.handleTelegramWebhook = async (req, res) => {
 	try {
 		const update = req.body;
 		const message = update.message || update.channel_post;
+		const correlationId = `tg:${message?.chat?.id || 'unknown'}:${message?.message_id || Date.now()}`;
 
-		// Safe logging with optional chaining
-		console.log(
-			'Received webhook update:',
-			JSON.stringify(message?.caption || 'No caption'),
+		await runWithLogContext(
+			{
+				service: 'telegram-ingest',
+				correlationId,
+				context: {
+					source: 'webhook',
+					telegramMessageId: message?.message_id || null,
+					chatId: message?.chat?.id || null,
+				},
+			},
+			async () => {
+				console.log(
+					'Received webhook update:',
+					JSON.stringify(message?.caption || 'No caption'),
+				);
+
+				if (message) {
+					const result = await saveMessage(message);
+
+					if (result) {
+						console.log('Message saved successfully:', result.id);
+					} else {
+						console.log('Message was not saved (filtered out by criteria)');
+					}
+				}
+			},
 		);
-
-		// Process the message if it exists
-		if (message) {
-			const result = await saveMessage(message);
-
-			if (result) {
-				console.log('Message saved successfully:', result.id);
-			} else {
-				console.log('Message was not saved (filtered out by criteria)');
-			}
-		}
 
 		res.status(200).send('OK');
 	} catch (error) {

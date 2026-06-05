@@ -2,6 +2,9 @@ require('dotenv').config();
 const { GoogleGenAI } = require('@google/genai');
 const { detectCategory } = require('./detectCategory');
 const { buildCaptionPrompt } = require('./captionPrompt');
+const { createLogger } = require('./logger');
+
+const logger = createLogger('gemini-caption');
 
 const AVAILABLE_CATEGORIES = [
 	'laptops',
@@ -138,8 +141,10 @@ async function GenerateCaptionAndCategory(messageText) {
 	);
 
 	if (geminiApiKeys.length === 0) {
-		console.warn(
+		logger.warn(
 			'No Gemini API key found in environment variables. Falling back to basic processing.',
+			{},
+			{ event: 'gemini_missing_api_key' },
 		);
 		return {
 			normalizedMessage: messageText.trim(),
@@ -181,13 +186,24 @@ async function GenerateCaptionAndCategory(messageText) {
 				if (hasMoreAttempts && isQuotaOrRateLimitError(error)) {
 					const retryDelayMs = extractRetryDelayMs(error);
 					if (retryDelayMs > 0) {
-						console.warn(
+						logger.warn(
 							`Gemini quota/rate limit hit for key ${keyIndex + 1}. Waiting ${Math.ceil(retryDelayMs / 1000)}s before retry.`,
+							{
+								attempt: attempt + 1,
+								keyIndex: keyIndex + 1,
+								retryDelayMs,
+							},
+							{ event: 'gemini_rate_limit_retry' },
 						);
 						await sleep(retryDelayMs);
 					} else {
-						console.warn(
+						logger.warn(
 							`Gemini quota/rate limit hit for key ${keyIndex + 1}. Retrying with next available key.`,
+							{
+								attempt: attempt + 1,
+								keyIndex: keyIndex + 1,
+							},
+							{ event: 'gemini_rate_limit_retry' },
 						);
 					}
 					continue;
@@ -200,8 +216,14 @@ async function GenerateCaptionAndCategory(messageText) {
 					);
 					const jitterMs = Math.floor(Math.random() * 250);
 					const waitMs = Math.max(retryDelayMs, exponentialDelayMs) + jitterMs;
-					console.warn(
+					logger.warn(
 						`Gemini service temporarily unavailable for key ${keyIndex + 1}. Waiting ${Math.ceil(waitMs / 1000)}s before retry.`,
+						{
+							attempt: attempt + 1,
+							keyIndex: keyIndex + 1,
+							waitMs,
+						},
+						{ event: 'gemini_transient_retry' },
 					);
 					await sleep(waitMs);
 					continue;
@@ -238,8 +260,10 @@ async function GenerateCaptionAndCategory(messageText) {
 
 		// Validate category
 		if (!AVAILABLE_CATEGORIES.includes(result.category)) {
-			console.warn(
+			logger.warn(
 				`Invalid category "${result.category}" returned by Gemini. Using fallback detection.`,
+				{ invalidCategory: result.category },
+				{ event: 'gemini_invalid_category' },
 			);
 			result.category = detectCategory(messageText);
 		}
@@ -255,7 +279,11 @@ async function GenerateCaptionAndCategory(messageText) {
 			usedFallback: false,
 		};
 	} catch (error) {
-		console.error('Error calling Gemini API:', error.message);
+		logger.error(
+			'Error calling Gemini API.',
+			{ error: error.message },
+			{ event: 'gemini_request_failed' },
+		);
 
 		// Fallback to basic processing
 		return {

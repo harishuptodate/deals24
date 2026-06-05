@@ -61,6 +61,7 @@ import { Input } from '@/components/ui/input';
 import PerformanceMetricsChart from '../components/admin/PerformanceMetricsChart';
 import AvgClicksCard from '@/components/AvgClicksCard';
 import TopPerformingDealsCarousel from '../components/admin/TopPerformingDealsCarousel';
+import AdminLogsPanel from '../components/admin/AdminLogsPanel';
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
 
 interface ClickData {
@@ -873,6 +874,10 @@ const Admin = () => {
 							onCategoryUpdate={handleCarouselCategoryUpdate}
 						/>
 					</div>
+				</div>
+
+				<div className="mb-8">
+					<AdminLogsPanel enabled={isAuthenticated()} />
 				</div>
 			</main>
 
