@@ -1,7 +1,7 @@
 require('dotenv').config();
 const { GoogleGenAI } = require('@google/genai');
 const { detectCategory } = require('./detectCategory');
-const { captionPrompt } = require('./captionPrompt');
+const { buildCaptionPrompt } = require('./captionPrompt');
 
 const AVAILABLE_CATEGORIES = [
 	'laptops',
@@ -150,7 +150,7 @@ async function GenerateCaptionAndCategory(messageText) {
 	}
 
 	try {
-		const prompt = captionPrompt;
+		const prompt = buildCaptionPrompt(messageText);
 
 		let response;
 		let lastError;
