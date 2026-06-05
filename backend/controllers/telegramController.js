@@ -16,7 +16,13 @@ exports.handleTelegramWebhook = async (req, res) => {
 		const message = update.message || update.channel_post;
 		const correlationId = `tg:${message?.chat?.id || 'unknown'}:${message?.message_id || Date.now()}`;
 
-		await runWithLogContext(
+		res.status(200).send('OK');
+
+		if (!message) {
+			return;
+		}
+
+		void runWithLogContext(
 			{
 				service: 'telegram-ingest',
 				correlationId,
@@ -41,12 +47,14 @@ exports.handleTelegramWebhook = async (req, res) => {
 					}
 				}
 			},
-		);
-
-		res.status(200).send('OK');
+		).catch((error) => {
+			console.error('Error handling webhook:', error);
+		});
 	} catch (error) {
 		console.error('Error handling webhook:', error);
-		res.status(200).send('OK');
+		if (!res.headersSent) {
+			res.status(200).send('OK');
+		}
 	}
 };
 

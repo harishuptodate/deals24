@@ -84,41 +84,6 @@ function isTransientServiceError(error) {
 	}
 }
 
-function extractRetryDelayMs(error) {
-	if (!error || !error.message) return 0;
-
-	let message = error.message;
-	let retrySeconds = 0;
-
-	// Handle raw text like: "Please retry in 35.612034505s."
-	const retryMatch = message.match(/retry in\s+([\d.]+)s/i);
-	if (retryMatch) {
-		retrySeconds = Math.max(retrySeconds, Math.ceil(Number(retryMatch[1])));
-	}
-
-	// Handle JSON payload detail like: "retryDelay":"35s"
-	try {
-		const parsed = JSON.parse(message);
-		const details = parsed?.error?.details || [];
-		for (const detail of details) {
-			const retryDelay = detail?.retryDelay;
-			if (typeof retryDelay === 'string') {
-				const detailMatch = retryDelay.match(/([\d.]+)s/i);
-				if (detailMatch) {
-					retrySeconds = Math.max(
-						retrySeconds,
-						Math.ceil(Number(detailMatch[1])),
-					);
-				}
-			}
-		}
-	} catch (_parseError) {
-		// No JSON payload; ignore.
-	}
-
-	return retrySeconds > 0 ? retrySeconds * 1000 : 0;
-}
-
 function sleep(ms) {
 	return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -159,10 +124,10 @@ async function GenerateCaptionAndCategory(messageText) {
 
 		let response;
 		let lastError;
-		const maxAttempts = geminiApiKeys.length * 3;
+		const maxAttempts = geminiApiKeys.length;
 
 		for (let attempt = 0; attempt < maxAttempts; attempt++) {
-			const keyIndex = attempt % geminiApiKeys.length;
+			const keyIndex = attempt;
 			const apiKey = geminiApiKeys[keyIndex];
 			const ai = new GoogleGenAI({ apiKey });
 
@@ -184,48 +149,27 @@ async function GenerateCaptionAndCategory(messageText) {
 				const hasMoreAttempts = attempt < maxAttempts - 1;
 
 				if (hasMoreAttempts && isQuotaOrRateLimitError(error)) {
-					const retryDelayMs = extractRetryDelayMs(error);
-					if (retryDelayMs > 0) {
-						logger.warn(
-							`Gemini quota/rate limit hit for key ${keyIndex + 1}. Waiting ${Math.ceil(retryDelayMs / 1000)}s before retry.`,
-							{
-								attempt: attempt + 1,
-								keyIndex: keyIndex + 1,
-								retryDelayMs,
-							},
-							{ event: 'gemini_rate_limit_retry' },
-						);
-						await sleep(retryDelayMs);
-					} else {
-						logger.warn(
-							`Gemini quota/rate limit hit for key ${keyIndex + 1}. Retrying with next available key.`,
-							{
-								attempt: attempt + 1,
-								keyIndex: keyIndex + 1,
-							},
-							{ event: 'gemini_rate_limit_retry' },
-						);
-					}
-					continue;
-				}
-				if (hasMoreAttempts && isTransientServiceError(error)) {
-					const retryDelayMs = extractRetryDelayMs(error);
-					const exponentialDelayMs = Math.min(
-						1000 * Math.pow(2, attempt),
-						8000,
-					);
-					const jitterMs = Math.floor(Math.random() * 250);
-					const waitMs = Math.max(retryDelayMs, exponentialDelayMs) + jitterMs;
 					logger.warn(
-						`Gemini service temporarily unavailable for key ${keyIndex + 1}. Waiting ${Math.ceil(waitMs / 1000)}s before retry.`,
+						`Gemini quota/rate limit hit for key ${keyIndex + 1}. Rotating to next available key.`,
 						{
 							attempt: attempt + 1,
 							keyIndex: keyIndex + 1,
-							waitMs,
+						},
+						{ event: 'gemini_rate_limit_retry' },
+					);
+					continue;
+				}
+				if (hasMoreAttempts && isTransientServiceError(error)) {
+					logger.warn(
+						`Gemini service temporarily unavailable for key ${keyIndex + 1}. Retrying once with the next key.`,
+						{
+							attempt: attempt + 1,
+							keyIndex: keyIndex + 1,
+							waitMs: 500,
 						},
 						{ event: 'gemini_transient_retry' },
 					);
-					await sleep(waitMs);
+					await sleep(500);
 					continue;
 				}
 

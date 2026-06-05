@@ -104,7 +104,7 @@ function extractPrice(text) {
 	const extractedPrices = extractAllDealPrices(text);
 
 	if (extractedPrices.length === 0) {
-		return '';
+		return '0';
 	}
 
 	return String(Math.min(...extractedPrices));

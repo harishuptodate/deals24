@@ -151,7 +151,7 @@ function isLowContext(text) {
 
 function shouldSkipTwsDeal(text) {
   const normalizedText = text.toLowerCase();
-  const isTwsDeal = /\btws\b|true wireless|earbuds/.test(normalizedText);
+  const isTwsDeal = /\btws\b|true wireless|earbuds|ear buds/.test(normalizedText);
 
   if (!isTwsDeal) {
     return false;
@@ -221,6 +221,74 @@ function normalizeGeminiPrice(price) {
   }
 
   return String(numericPrice);
+}
+
+function getTelegramFileIdFromPhoto(photo) {
+  if (!photo || photo.length === 0) {
+    return null;
+  }
+
+  const highestQualityPhoto = getHighestQualityPhoto(photo);
+  return highestQualityPhoto ? highestQualityPhoto.file_id : null;
+}
+
+async function isValidImageUrl(url) {
+  try {
+    const res = await fetch(url, {
+      method: 'HEAD',
+      timeout: 5000,
+    });
+
+    const contentType = res.headers.get('Content-Type') || res.headers.get('content-type');
+    return res.ok && contentType && contentType.startsWith('image/');
+  } catch (err) {
+    console.warn('Error validating image URL:', err.message);
+    return false;
+  }
+}
+
+async function resolveImageData(cleanedText, photo) {
+  let imageUrl = null;
+  let telegramFileId = null;
+
+  if (hasAmazonLinks(cleanedText)) {
+    const amazonUrls = extractAmazonUrls(cleanedText);
+
+    if (amazonUrls.length > 0) {
+      try {
+        await waitForApiRateLimit();
+        const result = await fetchProductImage(amazonUrls[amazonUrls.length - 1]);
+
+        if (result.success && result.imageUrl) {
+          const validImageUrl = await isValidImageUrl(result.imageUrl);
+          if (validImageUrl) {
+            imageUrl = result.imageUrl;
+          } else {
+            console.log('Fetched image URL is invalid or not accessible. Falling back to Telegram image.');
+          }
+        } else {
+          console.log('Failed to fetch Amazon image via API:', result.error);
+          console.log('Falling back to Telegram image');
+        }
+      } catch (error) {
+        console.error('Error fetching Amazon product image via API & using fallback Telegram image function :', error);
+      }
+    }
+  }
+
+  if (!imageUrl && photo && photo.length > 0) {
+    console.log('Message contains Telegram photo, extracting file ID');
+    telegramFileId = getTelegramFileIdFromPhoto(photo);
+
+    if (telegramFileId) {
+      console.log('Extracted Telegram file ID:', telegramFileId);
+    }
+  }
+
+  return {
+    imageUrl,
+    telegramFileId,
+  };
 }
 
 /**
@@ -801,8 +869,130 @@ async function incrementClicks(messageId) {
   }
 }
 
+async function saveMessageOptimized(message) {
+  try {
+    const { message_id, chat, date, text: originalText, caption, photo } = message;
+    const textContent = originalText || caption || '';
+    const channelId = chat.id.toString();
+    const telegramMessageId = message_id.toString();
+
+    if (!isRecentMessage(date)) {
+      console.log('Skipping message older than 5 minutes');
+      return null;
+    }
+
+    const messageHash = calculateHash(textContent);
+    if (contentHashes.includes(messageHash)) {
+      console.log('Skipping duplicate content');
+      return null;
+    }
+
+    if (shouldSkipTwsDeal(textContent)) {
+      console.log('Skipping TWS deal for blocked brand');
+      return null;
+    }
+
+    if (isLowContext(textContent)) {
+      console.log('Skipping low-context message');
+      return null;
+    }
+
+    const isSaleMode = process.env.IS_SALE_MODE === 'true';
+    if (isSaleMode && !isProfitableProduct(textContent)) {
+      console.log('Skipping non-profitable product in sale mode');
+      return null;
+    }
+
+    const existingMessage = await TelegramMessage.findOne({
+      messageId: telegramMessageId,
+      channelId,
+    }).lean();
+
+    if (existingMessage) {
+      console.log('Skipping duplicate Telegram message ID');
+      return null;
+    }
+
+    const cleanedText = replaceLinksAndText(textContent);
+    const link = extractLinks(cleanedText);
+    const imageData = await resolveImageData(cleanedText, photo);
+    const imageHash = imageData.imageUrl ? hashString(imageData.imageUrl) : null;
+
+    if (imageHash && imageUrlHashes.includes(imageHash)) {
+      console.log('⚠️ Skipping message due to duplicate Amazon image URL');
+      return null;
+    }
+
+    contentHashes.push(messageHash);
+    if (contentHashes.length > 50) contentHashes.shift();
+
+    if (imageHash) {
+      imageUrlHashes.push(imageHash);
+      if (imageUrlHashes.length > 15) imageUrlHashes.shift();
+    }
+
+    let normalizedText = cleanedText;
+    let category = 'miscellaneous';
+    let price = null;
+
+    const result = await GenerateCaptionAndCategory(cleanedText);
+    if (result.normalizedMessage && result.category) {
+      normalizedText = result.normalizedMessage;
+      category = result.category;
+      price = result.price || null;
+
+      if (result.usedFallback) {
+        console.warn('Gemini API failed; fallback caption/category was used.');
+      } else {
+        console.log('✅ Successfully generated caption and category using Gemini API');
+      }
+    } else {
+      console.warn('Gemini API returned incomplete data, using fallback');
+      category = detectCategory(cleanedText);
+      normalizedText = cleanedText;
+    }
+
+    price = normalizeGeminiPrice(price);
+    if (!price) {
+      price = extractPrice(cleanedText);
+      console.log(`Gemini price missing. Fallback extracted price: ${price}`);
+    }
+
+    const newMessage = new TelegramMessage({
+      messageId: telegramMessageId,
+      text: normalizedText,
+      date: new Date(date * 1000),
+      link,
+      imageUrl: imageData.imageUrl,
+      telegramFileId: imageData.telegramFileId,
+      category,
+      price,
+      clicks: 0,
+      channelId,
+    });
+
+    console.log('Saving new message with category:', category, 'and image data:', {
+      imageUrl: imageData.imageUrl,
+      telegramFileId: imageData.telegramFileId,
+    });
+
+    try {
+      return await newMessage.save();
+    } catch (error) {
+      contentHashes = contentHashes.filter((hash) => hash !== messageHash);
+      if (imageHash) {
+        imageUrlHashes = imageUrlHashes.filter((hash) => hash !== imageHash);
+      }
+      throw error;
+    }
+  } catch (error) {
+    console.error('Error saving message:', error);
+    throw error;
+  }
+}
+
 module.exports = {
-  saveMessage,
+  saveMessage: saveMessageOptimized,
   getMessages,
   calculateHash,
   normalizeMessage,
