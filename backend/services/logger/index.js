@@ -176,7 +176,7 @@ function createEvent(level, payload) {
 	const timestamp = new Date();
 
 	return {
-		id: randomUUID(),
+		logId: randomUUID(),
 		timestamp,
 		level,
 		service: payload.service || logContext.service || 'app',
@@ -190,6 +190,40 @@ function createEvent(level, payload) {
 		}),
 		expiresAt: new Date(timestamp.getTime() + getRetentionMs(level)),
 	};
+}
+
+function normalizeComparableTimestamp(timestamp) {
+	const parsedTimestamp =
+		timestamp instanceof Date ? timestamp.getTime() : new Date(timestamp).getTime();
+	return Number.isFinite(parsedTimestamp) ? parsedTimestamp : 0;
+}
+
+function shouldSkipAdminLog(event) {
+	const message = (event.message || '').toLowerCase();
+
+	if (event.service === 'amazon-image') {
+		return !['amazon_image_fetch_succeeded', 'amazon_image_fetch_failed'].includes(
+			event.event,
+		);
+	}
+
+	if (
+		event.event === 'gemini_rate_limit_retry' ||
+		event.event === 'gemini_transient_retry'
+	) {
+		return true;
+	}
+
+	if (
+		message.includes('serving image from redis cache') ||
+		message.includes('retrying in') ||
+		message.includes('rate limiting: waiting') ||
+		message.includes('redis cache')
+	) {
+		return true;
+	}
+
+	return false;
 }
 
 async function persistRecentLog(event) {
@@ -224,13 +258,28 @@ async function persistLogHistory(event) {
 
 	try {
 		const AdminLog = require('../../models/AdminLog');
-		await AdminLog.create(event);
+		await AdminLog.create({
+			logId: event.logId,
+			timestamp: event.timestamp,
+			level: event.level,
+			service: event.service,
+			event: event.event,
+			message: event.message,
+			requestId: event.requestId,
+			correlationId: event.correlationId,
+			context: event.context,
+			expiresAt: event.expiresAt,
+		});
 	} catch (error) {
 		originalConsole.error('Failed to persist admin log history:', error.message);
 	}
 }
 
 function publishEvent(event) {
+	if (shouldSkipAdminLog(event)) {
+		return;
+	}
+
 	if (shouldEmitLevel(event.level, STREAM_LEVEL)) {
 		logEmitter.emit('log', event);
 	}
@@ -240,6 +289,11 @@ function publishEvent(event) {
 }
 
 function writeLog(level, payload) {
+	if (payload.mirrorToConsole) {
+		const consoleMethod = level === 'debug' ? 'log' : level;
+		originalConsole[consoleMethod](payload.message, payload.context || {});
+	}
+
 	const event = createEvent(level, payload);
 	publishEvent(event);
 	return event;
@@ -252,6 +306,7 @@ function createLogger(service, baseContext = {}) {
 				service,
 				message,
 				context: { ...baseContext, ...context },
+				mirrorToConsole: true,
 				...meta,
 			});
 		},
@@ -260,6 +315,7 @@ function createLogger(service, baseContext = {}) {
 				service,
 				message,
 				context: { ...baseContext, ...context },
+				mirrorToConsole: true,
 				...meta,
 			});
 		},
@@ -268,6 +324,7 @@ function createLogger(service, baseContext = {}) {
 				service,
 				message,
 				context: { ...baseContext, ...context },
+				mirrorToConsole: true,
 				...meta,
 			});
 		},
@@ -276,6 +333,7 @@ function createLogger(service, baseContext = {}) {
 				service,
 				message,
 				context: { ...baseContext, ...context },
+				mirrorToConsole: true,
 				...meta,
 			});
 		},
@@ -333,6 +391,72 @@ async function fetchRecentLogs(limit = 50) {
 	}
 }
 
+function filterLogEntries(entries, filters = {}) {
+	const searchTerm = String(filters.search || '').trim().toLowerCase();
+	const requestedLevels = Array.isArray(filters.levels) ? filters.levels : [];
+	const requestedService = String(filters.service || '').trim();
+	const requestedEvent = String(filters.event || '').trim();
+	const requestedCorrelationId = String(filters.correlationId || '').trim();
+	const requestedRequestId = String(filters.requestId || '').trim();
+	const beforeTimestamp = filters.before
+		? normalizeComparableTimestamp(filters.before)
+		: null;
+
+	return entries.filter((entry) => {
+		if (requestedLevels.length > 0 && !requestedLevels.includes(entry.level)) {
+			return false;
+		}
+
+		if (requestedService && entry.service !== requestedService) {
+			return false;
+		}
+
+		if (requestedEvent && entry.event !== requestedEvent) {
+			return false;
+		}
+
+		if (requestedCorrelationId && entry.correlationId !== requestedCorrelationId) {
+			return false;
+		}
+
+		if (requestedRequestId && entry.requestId !== requestedRequestId) {
+			return false;
+		}
+
+		if (
+			beforeTimestamp &&
+			normalizeComparableTimestamp(entry.timestamp) >= beforeTimestamp
+		) {
+			return false;
+		}
+
+		if (searchTerm) {
+			const haystack = `${entry.message || ''} ${entry.event || ''} ${entry.service || ''}`.toLowerCase();
+			if (!haystack.includes(searchTerm)) {
+				return false;
+			}
+		}
+
+		return true;
+	});
+}
+
+function dedupeLogs(entries) {
+	const seen = new Set();
+	return entries.filter((entry) => {
+		const key =
+			entry.logId ||
+			entry.id ||
+			entry._id?.toString?.() ||
+			`${entry.timestamp}-${entry.level}-${entry.message}`;
+		if (seen.has(key)) {
+			return false;
+		}
+		seen.add(key);
+		return true;
+	});
+}
+
 async function queryLogs(filters = {}) {
 	const AdminLog = require('../../models/AdminLog');
 	const limit = Math.min(Number(filters.limit) || 50, 200);
@@ -378,9 +502,26 @@ async function queryLogs(filters = {}) {
 		.limit(limit + 1)
 		.lean();
 
-	const hasMore = logs.length > limit;
-	const slicedLogs = hasMore ? logs.slice(0, limit) : logs;
-	const nextBefore = hasMore ? slicedLogs[slicedLogs.length - 1].timestamp : null;
+	if (filters.before) {
+		const hasMore = logs.length > limit;
+		const slicedLogs = hasMore ? logs.slice(0, limit) : logs;
+		const nextBefore = hasMore ? slicedLogs[slicedLogs.length - 1].timestamp : null;
+
+		return {
+			logs: slicedLogs,
+			hasMore,
+			nextBefore,
+		};
+	}
+
+	const recentLogs = await fetchRecentLogs(Math.min(limit * 3, RECENT_LOGS_LIMIT));
+	const filteredRecentLogs = filterLogEntries(recentLogs, filters);
+	const mergedLogs = dedupeLogs([...filteredRecentLogs, ...logs]).sort((left, right) => {
+		return normalizeComparableTimestamp(right.timestamp) - normalizeComparableTimestamp(left.timestamp);
+	});
+	const hasMore = mergedLogs.length > limit || logs.length > limit;
+	const slicedLogs = mergedLogs.slice(0, limit);
+	const nextBefore = slicedLogs.length > 0 ? slicedLogs[slicedLogs.length - 1].timestamp : null;
 
 	return {
 		logs: slicedLogs,

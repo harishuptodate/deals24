@@ -26,6 +26,8 @@ import {
 	Tag,
 	Lock,
 	Package,
+	ScrollText,
+	ArrowRight,
 } from 'lucide-react';
 import {
 	Dialog,
@@ -37,7 +39,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import { subDays, format } from 'date-fns';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { AdminLoginDialog } from '../components/AdminLoginDialog';
 import { 
 	isAuthenticated, 
@@ -61,7 +63,6 @@ import { Input } from '@/components/ui/input';
 import PerformanceMetricsChart from '../components/admin/PerformanceMetricsChart';
 import AvgClicksCard from '@/components/AvgClicksCard';
 import TopPerformingDealsCarousel from '../components/admin/TopPerformingDealsCarousel';
-import AdminLogsPanel from '../components/admin/AdminLogsPanel';
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
 
 interface ClickData {
@@ -877,7 +878,29 @@ const Admin = () => {
 				</div>
 
 				<div className="mb-8">
-					<AdminLogsPanel enabled={isAuthenticated()} />
+					<Card className="overflow-hidden border-stone-200/80 bg-white/95 shadow-[0_18px_55px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-[#111113] dark:shadow-[0_24px_70px_rgba(0,0,0,0.35)]">
+						<CardContent className="relative p-0">
+							<div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(245,158,11,0.12),transparent_26%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.12),transparent_28%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(245,158,11,0.12),transparent_24%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.18),transparent_28%)]" />
+							<div className="relative flex flex-col gap-5 p-6 md:flex-row md:items-center md:justify-between">
+								<div className="max-w-2xl space-y-2">
+									<div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-stone-950 text-white dark:bg-white dark:text-stone-950">
+										<ScrollText className="h-5 w-5" />
+									</div>
+									<h2 className="text-2xl font-semibold tracking-tight">Operational Logs</h2>
+									<p className="text-sm leading-6 text-stone-600 dark:text-stone-400">
+										Open the dedicated logs workspace for live backend flow, recent Redis-backed events,
+										and persisted history without crowding the analytics dashboard.
+									</p>
+								</div>
+								<Link to="/admin/logs">
+									<Button className="h-11 rounded-full bg-stone-950 px-5 text-white hover:bg-stone-800 dark:bg-stone-100 dark:text-stone-950 dark:hover:bg-white">
+										Open Logs Page
+										<ArrowRight className="ml-2 h-4 w-4" />
+									</Button>
+								</Link>
+							</div>
+						</CardContent>
+					</Card>
 				</div>
 			</main>
 

@@ -15,6 +15,13 @@ const startFlushLoop = require('./scripts/flushRedisClicksToMongo');
 
 installConsoleLogger();
 
+function getMessagePreview(text) {
+  return String(text || '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 180);
+}
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -100,14 +107,13 @@ function initTelegramBot() {
           context: {
             source: 'polling-message',
             telegramMessageId: message?.message_id || null,
-            chatId: message?.chat?.id || null,
           },
         }, () => {
           console.log('Received message through polling:', message);
           saveMessage(message)
             .then(result => {
               if (result) {
-                console.log('Message saved successfully:', result.id);
+                console.log('Message saved successfully:', getMessagePreview(result.text));
               } else {
                 console.log('Message was not saved (filtered out by criteria)');
               }
@@ -129,14 +135,13 @@ function initTelegramBot() {
           context: {
             source: 'polling-channel-post',
             telegramMessageId: channelPost?.message_id || null,
-            chatId: channelPost?.chat?.id || null,
           },
         }, () => {
           console.log('Received channel post through polling:', channelPost);
           saveMessage(channelPost)
             .then(result => {
               if (result) {
-                console.log('Channel post saved successfully:', result.id);
+                console.log('Channel post saved successfully:', getMessagePreview(result.text));
               } else {
                 console.log('Channel post was not saved (filtered out by criteria)');
               }

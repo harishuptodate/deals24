@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
+    "lint": "node ../node_modules/eslint/bin/eslint.js . --config eslint.config.js",
     "test": "node --test utils/extractPrice.test.js"
   },
   "dependencies": {

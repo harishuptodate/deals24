@@ -2,6 +2,13 @@ const TelegramMessage = require('../models/TelegramMessage');
 const { saveMessage } = require('../services/telegramService');
 const { runWithLogContext } = require('../services/logger');
 
+function getMessagePreview(text) {
+	return String(text || '')
+		.replace(/\s+/g, ' ')
+		.trim()
+		.slice(0, 180);
+}
+
 // Handle Telegram webhook updates
 exports.handleTelegramWebhook = async (req, res) => {
 	try {
@@ -16,7 +23,6 @@ exports.handleTelegramWebhook = async (req, res) => {
 				context: {
 					source: 'webhook',
 					telegramMessageId: message?.message_id || null,
-					chatId: message?.chat?.id || null,
 				},
 			},
 			async () => {
@@ -29,7 +35,7 @@ exports.handleTelegramWebhook = async (req, res) => {
 					const result = await saveMessage(message);
 
 					if (result) {
-						console.log('Message saved successfully:', result.id);
+						console.log('Message saved successfully:', getMessagePreview(result.text));
 					} else {
 						console.log('Message was not saved (filtered out by criteria)');
 					}

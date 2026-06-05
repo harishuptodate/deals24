@@ -1,6 +1,11 @@
 const mongoose = require('mongoose');
 
 const adminLogSchema = new mongoose.Schema({
+	logId: {
+		type: String,
+		required: true,
+		index: true,
+	},
 	timestamp: {
 		type: Date,
 		default: Date.now,
@@ -50,5 +55,6 @@ const adminLogSchema = new mongoose.Schema({
 });
 
 adminLogSchema.index({ timestamp: -1, _id: -1 });
+adminLogSchema.index({ logId: 1 }, { unique: true });
 
 module.exports = mongoose.models.AdminLog || mongoose.model('AdminLog', adminLogSchema);

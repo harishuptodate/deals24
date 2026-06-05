@@ -11,26 +11,11 @@ async function fetchWithRetries(url, options, retries = 3, delayMs = 2000) {
     try {
       const res = await fetch(url, options);
       if (res.ok) return res;
-      logger.warn(
-        `Fetch failed (try ${i + 1}/${retries}), status: ${res.status}`,
-        { attempt: i + 1, retries, status: res.status },
-        { event: 'amazon_fetch_retryable_failure' },
-      );
     } catch (e) {
-      logger.warn(
-        `Fetch error on attempt ${i + 1}`,
-        { attempt: i + 1, retries, error: e.message },
-        { event: 'amazon_fetch_retryable_failure' },
-      );
     }
     
     // Wait longer between retries for this API
     if (i < retries - 1) {
-      logger.info(
-        `Waiting ${delayMs}ms before retry...`,
-        { attempt: i + 1, delayMs },
-        { event: 'amazon_fetch_retry_wait' },
-      );
       await delay(delayMs);
     }
   }
@@ -39,18 +24,8 @@ async function fetchWithRetries(url, options, retries = 3, delayMs = 2000) {
 
 async function fetchProductImage(amazonUrl) {
   try {
-    logger.info(
-      'Fetching Amazon product image for URL.',
-      { amazonUrl },
-      { event: 'amazon_image_fetch_started' },
-    );
-
     if (!amazonUrl.includes("amazon.") && !amazonUrl.includes("amzn.to")) {
-      logger.warn(
-        'Invalid Amazon URL provided.',
-        { amazonUrl },
-        { event: 'amazon_invalid_url' },
-      );
+      logger.warn('Amazon image fetch failed.', { amazonUrl, error: 'Invalid Amazon URL provided' }, { event: 'amazon_image_fetch_failed' });
       return { error: "Please provide a valid Amazon product URL" };
     }
 
@@ -60,11 +35,6 @@ async function fetchProductImage(amazonUrl) {
 
     // Use the new API endpoint
     const apiUrl = `https://amznpf.vercel.app/api/fetch-image?url=${encodeURIComponent(amazonUrl)}`;
-    logger.info(
-      'Calling Amazon image API.',
-      { apiUrl },
-      { event: 'amazon_image_api_called' },
-    );
 
     const response = await fetchWithRetries(apiUrl, {
       method: 'GET',
@@ -80,8 +50,8 @@ async function fetchProductImage(amazonUrl) {
 
     if (result.success && result.data && result.data.imageUrl) {
       logger.info(
-        'Successfully fetched image URL from API.',
-        { imageUrl: result.data.imageUrl },
+        'Amazon image fetch succeeded.',
+        { amazonUrl, apiUrl, imageUrl: result.data.imageUrl },
         { event: 'amazon_image_fetch_succeeded' },
       );
       
@@ -92,8 +62,8 @@ async function fetchProductImage(amazonUrl) {
       };
     } else {
       logger.warn(
-        'Amazon API returned error or no image URL.',
-        { error: result.error || 'No image URL found' },
+        'Amazon image fetch failed.',
+        { amazonUrl, apiUrl, error: result.error || 'No image URL found' },
         { event: 'amazon_image_fetch_failed' },
       );
       return { error: result.error || "Could not fetch product image from API" };
@@ -101,8 +71,8 @@ async function fetchProductImage(amazonUrl) {
 
   } catch (error) {
     logger.error(
-      'Error fetching Amazon product from API.',
-      { error: error.message },
+      'Amazon image fetch failed.',
+      { amazonUrl, error: error.message },
       { event: 'amazon_image_fetch_failed' },
     );
     return { error: "Failed to fetch product information from API" };

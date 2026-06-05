@@ -469,6 +469,7 @@ export const getDealById = async (id: string) => {
 export interface AdminLogEntry {
   _id?: string;
   id?: string;
+  logId?: string;
   timestamp: string;
   level: 'debug' | 'info' | 'warn' | 'error';
   service: string;

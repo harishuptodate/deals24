@@ -13,6 +13,7 @@ const Index = lazy(() => import("./pages/Index"));
 const Deals = lazy(() => import("./pages/Deals"));
 const Categories = lazy(() => import("./pages/Categories"));
 const Admin = lazy(() => import("./pages/Admin"));
+const AdminLogs = lazy(() => import("./pages/AdminLogs"));
 const Wishlist = lazy(() => import("./pages/Wishlist"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Deal = lazy(() => import("./pages/Deal"));
@@ -114,6 +115,7 @@ const App = () => {
                 <Route path="/deals" element={<Deals />} />
                 <Route path="/categories" element={<Categories />} />
                 <Route path="/admin" element={<Admin />} />
+                <Route path="/admin/logs" element={<AdminLogs />} />
                 <Route path="/wishlist" element={<Wishlist />} />
                 <Route path="/deal/:id" element={<Deal />} />
                 <Route path="*" element={<NotFound />} />

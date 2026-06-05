@@ -224,7 +224,7 @@ const DealCard = memo(({
   return (
     <>
       <div
-        className="group animate-fade-up hover-scale cursor-pointer h-[392px]"
+        className="group animate-fade-up cursor-pointer h-[392px]"
         onClick={(e) => {
           if (e.ctrlKey || e.metaKey || e.button === 1) return;
           setIsOpen(true);
