@@ -24,7 +24,6 @@ router.post('/auth/login', async (req, res) => {
 	return res.json({
 		success: true,
 		token,
-		expiresInMs: Number(process.env.ADMIN_AUTH_TTL_MS || 1000 * 60 * 60 * 12),
 	});
 });
 

@@ -1,6 +1,5 @@
 const ADMIN_AUTH_MARKER = 'adminAuth';
 const ADMIN_TOKEN_KEY = 'adminAuthToken';
-const ADMIN_TOKEN_EXPIRY_KEY = 'adminAuthTokenExpiry';
 
 const getApiBaseUrl = () => {
   const configuredUrl = import.meta.env.VITE_API_BASE_URL;
@@ -18,13 +17,7 @@ const getApiBaseUrl = () => {
 
 const isAuthenticated = () => {
   const token = localStorage.getItem(ADMIN_TOKEN_KEY);
-  const expiry = Number(localStorage.getItem(ADMIN_TOKEN_EXPIRY_KEY) || '0');
-
-  if (!token || !expiry || expiry < Date.now()) {
-    return false;
-  }
-
-  return true;
+  return Boolean(token);
 };
 
 const login = async (username: string, password: string): Promise<boolean> => {
@@ -47,17 +40,14 @@ const login = async (username: string, password: string): Promise<boolean> => {
 
   localStorage.setItem(ADMIN_AUTH_MARKER, 'authenticated_user_token');
   localStorage.setItem(ADMIN_TOKEN_KEY, payload.token);
-  localStorage.setItem(
-    ADMIN_TOKEN_EXPIRY_KEY,
-    String(Date.now() + Number(payload.expiresInMs || 0)),
-  );
+  localStorage.removeItem('adminAuthTokenExpiry');
   return true;
 };
 
 const logout = () => {
   localStorage.removeItem(ADMIN_AUTH_MARKER);
   localStorage.removeItem(ADMIN_TOKEN_KEY);
-  localStorage.removeItem(ADMIN_TOKEN_EXPIRY_KEY);
+  localStorage.removeItem('adminAuthTokenExpiry');
   localStorage.removeItem('editPermissionGranted');
   localStorage.removeItem('categoryPermissionGranted');
   window.location.reload();

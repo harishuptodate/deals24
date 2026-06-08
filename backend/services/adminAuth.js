@@ -1,7 +1,5 @@
 const crypto = require('crypto');
 
-const TOKEN_TTL_MS = Number(process.env.ADMIN_AUTH_TTL_MS || 1000 * 60 * 60 * 12);
-
 function getAdminUsername() {
 	return process.env.ADMIN_USERNAME || process.env.VITE_ADMIN_USERNAME;
 }
@@ -34,7 +32,6 @@ function issueAdminToken(username) {
 		sub: 'admin',
 		username,
 		iat: Date.now(),
-		exp: Date.now() + TOKEN_TTL_MS,
 	};
 
 	const encodedPayload = base64UrlEncode(JSON.stringify(payload));
@@ -91,7 +88,7 @@ function verifyAdminToken(token) {
 
 	try {
 		const payload = JSON.parse(base64UrlDecode(encodedPayload));
-		if (!payload.exp || payload.exp < Date.now()) {
+		if (payload.exp && payload.exp < Date.now()) {
 			return {
 				ok: false,
 				reason: 'Token has expired.',
