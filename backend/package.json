@@ -2,12 +2,14 @@
   "name": "deals24-backend",
   "version": "1.0.0",
   "description": "Backend for Deals24 Telegram message aggregator",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js",
+    "build": "node ../node_modules/typescript/bin/tsc -p tsconfig.json",
+    "start": "npm run build && node dist/index.js",
+    "dev": "npm run build && nodemon dist/index.js",
+    "typecheck": "node ../node_modules/typescript/bin/tsc -p tsconfig.json --noEmit",
     "lint": "node ../node_modules/eslint/bin/eslint.js . --config eslint.config.js",
-    "test": "node --test utils/extractPrice.test.js"
+    "test": "npm run build && node --test dist/utils/extractPrice.test.js dist/services/telegramMessageFilters.test.js"
   },
   "dependencies": {
     "@google/genai": "^1.33.0",
