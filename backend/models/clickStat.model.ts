@@ -14,4 +14,4 @@ const clickStatSchema = new mongoose.Schema({
 
 const ClickStat = mongoose.model('ClickStat', clickStatSchema);
 
-module.exports = ClickStat;
+export default ClickStat;

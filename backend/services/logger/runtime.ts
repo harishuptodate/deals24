@@ -4,11 +4,11 @@ type LogContext = Record<string, unknown>;
 
 const logContextStorage = new AsyncLocalStorage<LogContext>();
 
-function getLogContext(): LogContext {
+export function getLogContext(): LogContext {
 	return logContextStorage.getStore() || {};
 }
 
-function runWithLogContext<T>(context: LogContext, callback: () => T): T {
+export function runWithLogContext<T>(context: LogContext, callback: () => T): T {
 	const currentContext = getLogContext();
 	return logContextStorage.run(
 		{
@@ -19,14 +19,8 @@ function runWithLogContext<T>(context: LogContext, callback: () => T): T {
 	);
 }
 
-function updateLogContext(partialContext: LogContext): LogContext {
+export function updateLogContext(partialContext: LogContext): LogContext {
 	const currentContext = getLogContext();
 	Object.assign(currentContext, partialContext);
 	return currentContext;
 }
-
-module.exports = {
-	getLogContext,
-	runWithLogContext,
-	updateLogContext,
-};

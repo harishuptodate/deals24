@@ -55,4 +55,4 @@ telegramMessageSchema.index({ price: 1 });
 
 const TelegramMessage = mongoose.model('TelegramMessage', telegramMessageSchema);
 
-module.exports = TelegramMessage;
+export default TelegramMessage;

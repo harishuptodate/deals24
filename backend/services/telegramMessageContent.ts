@@ -1,13 +1,10 @@
 import type { GeneratedMessageContent } from './telegramTypes';
+import { detectCategory } from '../utils/categoryDetector';
+import { GenerateCaptionAndCategory } from './CaptionAndCategoryGen';
+import { extractPrice } from '../utils/extractPrice';
+import { normalizeGeminiPrice } from './telegramMessageFilters';
 
-const { detectCategory } = require('../utils/categoryDetector');
-const { GenerateCaptionAndCategory } = require('./CaptionAndCategoryGen');
-const { extractPrice } = require('../utils/extractPrice');
-const { normalizeGeminiPrice } = require('./telegramMessageFilters');
-
-export {};
-
-async function generateMessageContent(cleanedText: string): Promise<GeneratedMessageContent> {
+export async function generateMessageContent(cleanedText: string): Promise<GeneratedMessageContent> {
   let normalizedText = cleanedText;
   let category = 'miscellaneous';
   let price: string | null = null;
@@ -47,7 +44,3 @@ async function generateMessageContent(cleanedText: string): Promise<GeneratedMes
     price: fallbackPrice,
   };
 }
-
-module.exports = {
-  generateMessageContent,
-};

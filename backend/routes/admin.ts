@@ -1,21 +1,39 @@
-const express = require('express');
-const { createLogger, fetchRecentLogs, logEmitter, queryLogs } = require('../services/logger');
-const { issueAdminToken, verifyAdminCredentials } = require('../services/adminAuth');
-const { requireAdminAuth } = require('../middleware/adminAuth');
-export {};
+import express, { type Request, type Response } from 'express';
+import { issueAdminToken, verifyAdminCredentials } from '../services/adminAuth';
+import { createLogger, fetchRecentLogs, logEmitter, queryLogs } from '../services/logger';
+import { requireAdminAuth } from '../middleware/adminAuth';
 
 const router = express.Router();
 const logger = createLogger('admin-api');
 
-router.post('/auth/login', async (req: any, res: any) => {
+type AdminLoginRequest = Request<unknown, unknown, { username?: string; password?: string }>;
+type AdminLogsRequest = Request<
+	unknown,
+	unknown,
+	unknown,
+	{
+		levels?: string;
+		service?: string;
+		event?: string;
+		search?: string;
+		correlationId?: string;
+		requestId?: string;
+		before?: string;
+		limit?: string;
+		recent?: string;
+	}
+>;
+
+router.post('/auth/login', async (req: AdminLoginRequest, res: Response) => {
 	const { username, password } = req.body || {};
 	const verification = verifyAdminCredentials(username, password);
 
 	if (!verification.ok) {
+		const errorReason = 'reason' in verification ? verification.reason : 'Invalid credentials.';
 		logger.warn('Admin login failed', { username }, { event: 'admin_login_failed' });
 		return res.status(401).json({
 			success: false,
-			error: verification.reason,
+			error: errorReason,
 		});
 	}
 
@@ -28,7 +46,7 @@ router.post('/auth/login', async (req: any, res: any) => {
 	});
 });
 
-router.get('/logs', requireAdminAuth, async (req: any, res: any) => {
+router.get('/logs', requireAdminAuth, async (req: AdminLogsRequest, res: Response) => {
 	try {
 		const levels = req.query.levels
 			? String(req.query.levels)
@@ -63,7 +81,7 @@ router.get('/logs', requireAdminAuth, async (req: any, res: any) => {
 	}
 });
 
-router.get('/logs/stream', requireAdminAuth, async (req: any, res: any) => {
+router.get('/logs/stream', requireAdminAuth, async (req: AdminLogsRequest, res: Response) => {
 	res.setHeader('Content-Type', 'text/event-stream');
 	res.setHeader('Cache-Control', 'no-cache, no-transform');
 	res.setHeader('Connection', 'keep-alive');
@@ -75,7 +93,7 @@ router.get('/logs/stream', requireAdminAuth, async (req: any, res: any) => {
 		res.write(`data: ${JSON.stringify(logEntry)}\n\n`);
 	}
 
-	const onLog = (logEntry: any) => {
+	const onLog = (logEntry: unknown) => {
 		res.write(`data: ${JSON.stringify(logEntry)}\n\n`);
 	};
 
@@ -92,4 +110,4 @@ router.get('/logs/stream', requireAdminAuth, async (req: any, res: any) => {
 	});
 });
 
-module.exports = router;
+export default router;

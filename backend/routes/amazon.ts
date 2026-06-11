@@ -1,11 +1,13 @@
-const express = require('express');
+import express, { type Request, type Response } from 'express';
+import * as amazonController from '../controllers/amazonController';
+import { redis } from '../services/redisClient';
+
 const router = express.Router();
-const amazonController = require('../controllers/amazonController');
-const { redis } = require('../services/redisClient');
-export {};
+
+type DownloadImageRequest = Request<{ fileId: string }>;
 
 // Helper: Set HTTP cache headers for long-term browser storage
-const setImageHeaders = (res: any, fileId: string, filename: string) => {
+const setImageHeaders = (res: Response, fileId: string, filename: string) => {
 	res.setHeader('Content-Type', 'image/jpeg');
 	res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
 	res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
@@ -18,7 +20,7 @@ const setImageHeaders = (res: any, fileId: string, filename: string) => {
 };
 
 // Route: Image proxy + hybrid caching
-router.get('/download-image/:fileId', async (req: any, res: any) => {
+router.get('/download-image/:fileId', async (req: DownloadImageRequest, res: Response) => {
 	const { fileId } = req.params;
 	const redisKey = `tg-image:${fileId}`;
 	const etag = `"${fileId}"`;
@@ -67,7 +69,7 @@ router.get('/download-image/:fileId', async (req: any, res: any) => {
 		await redis.set(redisKey, buffer.toString('base64'), 'EX', 86400); // 1 day
 
 		// 📤 Step 4: Set headers & respond
-		setImageHeaders(res, fileId, filePath.split('/').pop());
+		setImageHeaders(res, fileId, filePath.split('/').pop() || `${fileId}.jpg`);
 		res.send(buffer);
 	} catch (err) {
 		console.error('❌ Image proxy error:', err.message);
@@ -79,4 +81,4 @@ router.get('/download-image/:fileId', async (req: any, res: any) => {
 router.post('/fetch-product-image', amazonController.fetchProductImage);
 router.get('/products', amazonController.getStoredProducts);
 
-module.exports = router;
+export default router;

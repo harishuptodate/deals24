@@ -1,20 +1,29 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const mongoose = require('mongoose');
-const { Telegraf } = require('telegraf');
-const { installConsoleLogger, runWithLogContext } = require('./services/logger');
-const { attachRequestContext } = require('./middleware/requestContext');
-const { saveMessage } = require('./services/telegramService');
-const indexRouter = require('./routes/index');
-const telegramRouter = require('./routes/telegram');
-const amazonRouter = require('./routes/amazon');
-const statsRouter = require('./routes/stats.routes');
-const adminRouter = require('./routes/admin');
-const startFlushLoop = require('./scripts/flushRedisClicksToMongo');
-export {};
+import 'dotenv/config';
+import cors from 'cors';
+import express, { type Request, type Response } from 'express';
+import mongoose from 'mongoose';
+import { Telegraf } from 'telegraf';
+import { attachRequestContext } from './middleware/requestContext';
+import adminRouter from './routes/admin';
+import amazonRouter from './routes/amazon';
+import indexRouter from './routes/index';
+import statsRouter from './routes/stats.routes';
+import telegramRouter from './routes/telegram';
+import startFlushLoop from './scripts/flushRedisClicksToMongo';
+import { installConsoleLogger, runWithLogContext } from './services/logger';
+import { saveMessage } from './services/telegramService';
+import type { TelegramInboundMessage } from './services/telegramTypes';
 
 installConsoleLogger();
+
+type TelegramBotContext = {
+  message?: TelegramInboundMessage;
+  channelPost?: TelegramInboundMessage;
+};
+
+type SavedTelegramResult = {
+  text?: string;
+} | null;
 
 function getMessagePreview(text: string) {
   return String(text || '')
@@ -43,7 +52,7 @@ app.use('/api', statsRouter);  // Make sure the stats routes are registered
 app.use('/api/admin', adminRouter);
 
 // Health check endpoint
-app.get('/api/health', (_req: any, res: any) => {
+app.get('/api/health', (_req: Request, res: Response) => {
   res.status(200).json({ status: 'ok', message: 'Server is running' });
 });
 
@@ -84,7 +93,7 @@ function initTelegramBot() {
         .then(() => {
           console.log(`Webhook set to: ${webhookUrl}`);
         })
-        .catch((error: any) => {
+        .catch((error: unknown) => {
           console.error('Failed to set webhook:', error);
         });
     } else {
@@ -93,12 +102,12 @@ function initTelegramBot() {
         .then(() => {
           console.log('Telegram bot started in polling mode');
         })
-        .catch((error: any) => {
+        .catch((error: unknown) => {
           console.error('Failed to start bot in polling mode:', error);
         });
       
       // Process messages directly from getUpdates polling
-      bot.on('message', (ctx: any) => {
+      bot.on('message', (ctx: TelegramBotContext) => {
         const message = ctx.message;
         const correlationId = `tg:${message?.chat?.id || 'unknown'}:${message?.message_id || Date.now()}`;
 
@@ -112,21 +121,21 @@ function initTelegramBot() {
         }, () => {
           console.log('Received message through polling:', message);
           saveMessage(message)
-            .then((result: any) => {
+            .then((result: SavedTelegramResult) => {
               if (result) {
                 console.log('Message saved successfully:', getMessagePreview(result.text));
               } else {
                 console.log('Message was not saved (filtered out by criteria)');
               }
             })
-            .catch((error: any) => {
+            .catch((error: unknown) => {
               console.error('Error saving message:', error);
             });
         });
       });
       
       // Process channel posts
-      bot.on('channel_post', (ctx: any) => {
+      bot.on('channel_post', (ctx: TelegramBotContext) => {
         const channelPost = ctx.channelPost;
         const correlationId = `tg:${channelPost?.chat?.id || 'unknown'}:${channelPost?.message_id || Date.now()}`;
 
@@ -140,14 +149,14 @@ function initTelegramBot() {
         }, () => {
           console.log('Received channel post through polling:', channelPost);
           saveMessage(channelPost)
-            .then((result: any) => {
+            .then((result: SavedTelegramResult) => {
               if (result) {
                 console.log('Channel post saved successfully:', getMessagePreview(result.text));
               } else {
                 console.log('Channel post was not saved (filtered out by criteria)');
               }
             })
-            .catch((error: any) => {
+            .catch((error: unknown) => {
               console.error('Error saving channel post:', error);
             });
         });

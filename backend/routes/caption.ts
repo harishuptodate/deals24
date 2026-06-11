@@ -1,9 +1,9 @@
-const express = require('express');
+import express from 'express';
+import { CaptionGeneration } from '../controllers/captionController';
+
 const router = express.Router();
-const { CaptionGeneration } = require('../controllers/captionController');
-export {};
 
 // Endpoint for Gemini API caption generation
 router.post('/', CaptionGeneration);
 
-module.exports = router;
+export default router;

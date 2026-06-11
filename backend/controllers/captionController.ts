@@ -1,14 +1,14 @@
-const {
-	GenerateCaptionAndCategory,
-} = require('../services/CaptionAndCategoryGen');
-export {};
+import type { Request, Response } from 'express';
+import { GenerateCaptionAndCategory } from '../services/CaptionAndCategoryGen';
+
+type CaptionGenerationRequest = Request<unknown, unknown, { message?: string }>;
 
 /**
  * Endpoint for Gemini API message normalization and caption generation
  * POST /api/caption/
  * Body: { message: "your message text here" }
  */
-async function CaptionGeneration(req: any, res: any) {
+export async function CaptionGeneration(req: CaptionGenerationRequest, res: Response) {
 	try {
 		// Basic Authentication
 		const authHeader = req.headers.authorization;
@@ -74,7 +74,3 @@ async function CaptionGeneration(req: any, res: any) {
 		});
 	}
 }
-
-module.exports = {
-	CaptionGeneration,
-};

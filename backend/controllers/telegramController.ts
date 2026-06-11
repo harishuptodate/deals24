@@ -1,7 +1,32 @@
-const TelegramMessage = require('../models/TelegramMessage');
-const { saveMessage } = require('../services/telegramService');
-const { runWithLogContext } = require('../services/logger');
-export {};
+import type { Request, Response } from 'express';
+import TelegramMessage from '../models/TelegramMessage';
+import { runWithLogContext } from '../services/logger';
+import { saveMessage } from '../services/telegramService';
+import type { TelegramInboundMessage } from '../services/telegramTypes';
+
+type TelegramWebhookRequest = Request<
+	unknown,
+	unknown,
+	{ message?: TelegramInboundMessage; channel_post?: TelegramInboundMessage }
+>;
+
+type TelegramListQuery = {
+	cursor?: string;
+	limit?: string;
+	category?: string;
+	search?: string;
+	period?: 'day' | 'week' | 'month';
+};
+
+type MessageIdParams = { id: string };
+type UpdateMessageBody = {
+	text?: string;
+	imageUrl?: string | null;
+	price?: string | null;
+};
+
+type TelegramListRequest = Request<unknown, unknown, unknown, TelegramListQuery>;
+type UpdateMessageRequest = Request<MessageIdParams, unknown, UpdateMessageBody>;
 
 function getMessagePreview(text: string) {
 	return String(text || '')
@@ -11,7 +36,7 @@ function getMessagePreview(text: string) {
 }
 
 // Handle Telegram webhook updates
-exports.handleTelegramWebhook = async (req: any, res: any) => {
+export const handleTelegramWebhook = async (req: TelegramWebhookRequest, res: Response) => {
 	try {
 		const update = req.body;
 		const message = update.message || update.channel_post;
@@ -48,7 +73,7 @@ exports.handleTelegramWebhook = async (req: any, res: any) => {
 					}
 				}
 			},
-		).catch((error: any) => {
+		).catch((error: unknown) => {
 			console.error('Error handling webhook:', error);
 		});
 	} catch (error) {
@@ -59,75 +84,8 @@ exports.handleTelegramWebhook = async (req: any, res: any) => {
 	}
 };
 
-// Get all messages with pagination
-exports.getMessages = async (req: any, res: any) => {
-	try {
-		const { cursor, limit = 10, category, search } = req.query;
-		const query: any = {};
-
-		// Apply category filter if provided
-		if (category) {
-			query.category = category;
-		}
-
-		// Apply search filter if provided
-		if (search) {
-			query.text = { $regex: search, $options: 'i' };
-		}
-
-		// Apply cursor-based pagination
-		if (cursor) {
-			query._id = { $lt: cursor };
-		}
-
-		// Get one more than the limit to check if there are more results
-		const messages = await TelegramMessage.find(query)
-			.sort({ _id: -1 })
-			.limit(parseInt(limit) + 1);
-
-		// Check if there are more results
-		const hasMore = messages.length > parseInt(limit);
-
-		// Remove the extra message if there are more results
-		if (hasMore) {
-			messages.pop();
-		}
-
-		// Get the next cursor
-		const nextCursor = hasMore ? messages[messages.length - 1]._id : undefined;
-
-		// Return the messages
-		return res.json({
-			data: messages,
-			hasMore,
-			nextCursor,
-		});
-	} catch (error) {
-		console.error('Error getting messages:', error);
-		return res.status(500).json({ error: 'Failed to get messages' });
-	}
-};
-
-// Get a single message by ID
-exports.getMessage = async (req: any, res: any) => {
-	try {
-		const { id } = req.params;
-
-		const message = await TelegramMessage.findById(id);
-
-		if (!message) {
-			return res.status(404).json({ error: 'Message not found' });
-		}
-
-		return res.json(message);
-	} catch (error) {
-		console.error('Error getting message:', error);
-		return res.status(500).json({ error: 'Failed to get message' });
-	}
-};
-
 // Update message text
-exports.updateMessageText = async (req: any, res: any) => {
+export const updateMessageText = async (req: UpdateMessageRequest, res: Response) => {
 	try {
 		const { id } = req.params;
 		const { text, imageUrl, price } = req.body;
@@ -159,41 +117,17 @@ exports.updateMessageText = async (req: any, res: any) => {
 	}
 };
 
-// Track click on a message
-exports.trackClick = async (req: any, res: any) => {
-	try {
-		const { id } = req.params;
-
-		const message = await TelegramMessage.findById(id);
-
-		if (!message) {
-			return res.status(404).json({ error: 'Message not found' });
-		}
-
-		// Current date in YYYY-MM-DD format
-		const today = new Date().toISOString().split('T')[0];
-
-		// Increment total clicks
-		message.clicks = (message.clicks || 0) + 1;
-
-		// Increment today's clicks
-		const currentCount = message.dailyClicks.get(today) || 0;
-		message.dailyClicks.set(today, currentCount + 1);
-
-		await message.save();
-
-		return res.json({ success: true });
-	} catch (error) {
-		console.error('Error tracking click:', error);
-		return res.status(500).json({ error: 'Failed to track click' });
-	}
-};
-
 // Get click analytics
-exports.getClickAnalytics = async (req: any, res: any) => {
+export const getClickAnalytics = async (req: TelegramListRequest, res: Response) => {
 	try {
 		const { period = 'day' } = req.query;
 		const messages = await TelegramMessage.find({ clicks: { $gt: 0 } });
+		type DailyClicksStore = {
+			toJSON: () => Record<string, number>;
+		};
+		type DailyClicksMessage = {
+			dailyClicks?: DailyClicksStore;
+		};
 
 		const today = new Date();
 		const last7Days: string[] = [];
@@ -213,26 +147,28 @@ exports.getClickAnalytics = async (req: any, res: any) => {
 		let totalMonth = 0;
 		let totalYear = 0;
 
-		// Aggregate click data
 		for (const msg of messages) {
-			if (msg.dailyClicks) {
-				for (const [date, count] of Object.entries(msg.dailyClicks.toJSON())) {
-					const numericCount = Number(count) || 0;
-					if (dailyStats[date] !== undefined) {
-						dailyStats[date] += numericCount;
-					}
+			const messageWithDailyClicks = msg as DailyClicksMessage;
+			if (!messageWithDailyClicks.dailyClicks) {
+				continue;
+			}
 
-					const dateObj = new Date(date);
-					if (
-						dateObj.getMonth() === today.getMonth() &&
-						dateObj.getFullYear() === today.getFullYear()
-					) {
-						totalMonth += numericCount;
-					}
+			for (const [date, count] of Object.entries(messageWithDailyClicks.dailyClicks.toJSON())) {
+				const numericCount = Number(count) || 0;
+				if (dailyStats[date] !== undefined) {
+					dailyStats[date] += numericCount;
+				}
 
-					if (dateObj.getFullYear() === today.getFullYear()) {
-						totalYear += numericCount;
-					}
+				const dateObj = new Date(date);
+				if (
+					dateObj.getMonth() === today.getMonth() &&
+					dateObj.getFullYear() === today.getFullYear()
+				) {
+					totalMonth += numericCount;
+				}
+
+				if (dateObj.getFullYear() === today.getFullYear()) {
+					totalYear += numericCount;
 				}
 			}
 		}
@@ -241,29 +177,6 @@ exports.getClickAnalytics = async (req: any, res: any) => {
 			name: date.split('-').slice(1).join('-'), // Format as MM-DD for better display
 			clicks: dailyStats[date] || 0,
 		}));
-
-		// Also create period data for backwards compatibility
-		let dateField: any;
-		let format: any;
-		let groupBy: any;
-
-		// Set date field and format based on period for legacy code
-		switch (period) {
-			case 'week':
-				dateField = { $week: '$createdAt' };
-				format = '%U';
-				groupBy = 'week';
-				break;
-			case 'month':
-				dateField = { $month: '$createdAt' };
-				format = '%m';
-				groupBy = 'month';
-				break;
-			default: // day
-				dateField = { $dayOfMonth: '$createdAt' };
-				format = '%d';
-				groupBy = 'day';
-		}
 
 		// Get total clicks
 		const totalClicks = messages.reduce((acc, m) => acc + m.clicks, 0);
@@ -286,7 +199,7 @@ exports.getClickAnalytics = async (req: any, res: any) => {
 };
 
 // Get top performing messages
-exports.getTopPerforming = async (req: any, res: any) => {
+export const getTopPerforming = async (req: TelegramListRequest, res: Response) => {
 	try {
 		const { limit = 5 } = req.query;
 
@@ -302,43 +215,5 @@ exports.getTopPerforming = async (req: any, res: any) => {
 		return res
 			.status(500)
 			.json({ error: 'Failed to get top performing messages' });
-	}
-};
-
-// Delete a message by ID
-exports.deleteMessage = async (req: any, res: any) => {
-	try {
-		const { id } = req.params;
-
-		console.log(`Attempting to delete message with ID: ${id}`);
-
-		// Verify that id is provided
-		if (!id) {
-			return res
-				.status(400)
-				.json({ success: false, message: 'Message ID is required' });
-		}
-
-		// Find and delete the message
-		const result = await TelegramMessage.findByIdAndDelete(id);
-
-		if (!result) {
-			console.log(`Message with ID ${id} not found`);
-			return res
-				.status(404)
-				.json({ success: false, message: 'Message not found' });
-		}
-
-		console.log(`Successfully deleted message with ID: ${id}`);
-		return res
-			.status(200)
-			.json({ success: true, message: 'Message deleted successfully' });
-	} catch (error) {
-		const errorMessage =
-			error instanceof Error ? error.message : 'Unknown error';
-		console.error('Error deleting message:', error);
-		return res
-			.status(500)
-			.json({ success: false, message: 'Server error', error: errorMessage });
 	}
 };

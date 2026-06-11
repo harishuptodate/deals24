@@ -1,11 +1,72 @@
 import { EventEmitter } from 'node:events';
 import mongoose from 'mongoose';
 import { randomUUID } from 'node:crypto';
-const { getLogContext, runWithLogContext, updateLogContext } = require('./runtime');
-export {};
+import AdminLog from '../../models/AdminLog';
+import { redis } from '../redisClient';
+import { getLogContext, runWithLogContext, updateLogContext } from './runtime';
 
 const logEmitter = new EventEmitter();
 logEmitter.setMaxListeners(0);
+
+type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+type LogContextData = Record<string, unknown>;
+
+type LoggerPayload = {
+	service?: string;
+	event?: string | null;
+	message?: string;
+	requestId?: string | null;
+	correlationId?: string | null;
+	context?: LogContextData;
+	mirrorToConsole?: boolean;
+};
+
+type LogEvent = {
+	logId: string;
+	timestamp: Date;
+	level: LogLevel;
+	service: string;
+	event: string | null;
+	message: string;
+	requestId: string | null;
+	correlationId: string | null;
+	context: unknown;
+	expiresAt: Date;
+};
+
+type LogFilters = {
+	search?: string;
+	levels?: string[];
+	service?: string;
+	event?: string;
+	correlationId?: string;
+	requestId?: string;
+	before?: string | Date;
+	limit?: number | string;
+};
+
+type LogEntryRecord = Record<string, unknown> & {
+	logId?: string;
+	id?: string;
+	_id?: { toString?: () => string };
+	timestamp?: string | Date;
+	level?: string;
+	message?: string;
+	service?: string;
+	event?: string;
+	correlationId?: string;
+	requestId?: string;
+};
+
+type LogQuery = Record<string, unknown> & {
+	level?: { $in: string[] };
+	service?: string;
+	event?: string;
+	correlationId?: string;
+	requestId?: string;
+	timestamp?: { $lt: Date };
+	$or?: Array<Record<string, unknown>>;
+};
 
 const originalConsole = {
 	log: console.log.bind(console),
@@ -41,7 +102,7 @@ const STREAM_LEVEL = process.env.ADMIN_LOG_STREAM_LEVEL || 'info';
 const MESSAGE_MAX_LENGTH = Number(process.env.ADMIN_LOG_MESSAGE_MAX_LENGTH || 2000);
 
 let loggerInstalled = false;
-let redisClient: any = null;
+let redisClient: typeof redis | null = null;
 
 function tryGetRedisClient() {
 	if (redisClient) {
@@ -49,7 +110,6 @@ function tryGetRedisClient() {
 	}
 
 	try {
-		const { redis } = require('../redisClient');
 		redisClient = redis;
 		return redisClient;
 	} catch (_error) {
@@ -74,7 +134,7 @@ function getRetentionMs(level: string) {
 	}
 }
 
-function truncateString(value: any, maxLength = MESSAGE_MAX_LENGTH) {
+function truncateString(value: unknown, maxLength = MESSAGE_MAX_LENGTH) {
 	if (typeof value !== 'string') {
 		return value;
 	}
@@ -84,7 +144,7 @@ function truncateString(value: any, maxLength = MESSAGE_MAX_LENGTH) {
 		: value;
 }
 
-function redactValue(value: any, depth = 0): any {
+function redactValue(value: unknown, depth = 0): unknown {
 	if (value === null || value === undefined) {
 		return value;
 	}
@@ -126,9 +186,9 @@ function redactValue(value: any, depth = 0): any {
 	return truncateString(String(value));
 }
 
-function stringifyArgument(value: any) {
+function stringifyArgument(value: unknown): string {
 	if (typeof value === 'string') {
-		return truncateString(value);
+		return String(truncateString(value));
 	}
 
 	if (value instanceof Error) {
@@ -136,18 +196,18 @@ function stringifyArgument(value: any) {
 	}
 
 	try {
-		return truncateString(JSON.stringify(redactValue(value)));
+		return String(truncateString(JSON.stringify(redactValue(value))));
 	} catch (_error) {
-		return truncateString(String(value));
+		return String(truncateString(String(value)));
 	}
 }
 
-function normalizeArgs(args: any[]) {
+function normalizeArgs(args: unknown[]) {
 	if (!args || args.length === 0) {
 		return { message: '', context: {} };
 	}
 
-	const context: Record<string, unknown> = {};
+	const context: LogContextData = {};
 	const messageParts: string[] = [];
 
 	for (const arg of args) {
@@ -167,12 +227,12 @@ function normalizeArgs(args: any[]) {
 	}
 
 	return {
-		message: truncateString(messageParts.join(' ')),
+		message: String(truncateString(messageParts.join(' '))),
 		context,
 	};
 }
 
-function createEvent(level: string, payload: any) {
+function createEvent(level: LogLevel, payload: LoggerPayload): LogEvent {
 	const logContext = getLogContext();
 	const timestamp = new Date();
 
@@ -180,26 +240,28 @@ function createEvent(level: string, payload: any) {
 		logId: randomUUID(),
 		timestamp,
 		level,
-		service: payload.service || logContext.service || 'app',
+		service: String(payload.service || logContext.service || 'app'),
 		event: payload.event || null,
-		message: truncateString(payload.message || ''),
-		requestId: payload.requestId || logContext.requestId || null,
-		correlationId: payload.correlationId || logContext.correlationId || null,
+		message: String(truncateString(payload.message || '')),
+		requestId: payload.requestId ? String(payload.requestId) : logContext.requestId ? String(logContext.requestId) : null,
+		correlationId: payload.correlationId ? String(payload.correlationId) : logContext.correlationId ? String(logContext.correlationId) : null,
 		context: redactValue({
-			...(logContext.context || {}),
-			...(payload.context || {}),
+			...((logContext.context as Record<string, unknown>) || {}),
+			...((payload.context as Record<string, unknown>) || {}),
 		}),
 		expiresAt: new Date(timestamp.getTime() + getRetentionMs(level)),
 	};
 }
 
-function normalizeComparableTimestamp(timestamp: any) {
+function normalizeComparableTimestamp(timestamp: unknown) {
 	const parsedTimestamp =
-		timestamp instanceof Date ? timestamp.getTime() : new Date(timestamp).getTime();
+		timestamp instanceof Date
+			? timestamp.getTime()
+			: new Date(typeof timestamp === 'string' || typeof timestamp === 'number' ? timestamp : 0).getTime();
 	return Number.isFinite(parsedTimestamp) ? parsedTimestamp : 0;
 }
 
-function shouldSkipAdminLog(event: any) {
+function shouldSkipAdminLog(event: LogEvent) {
 	const message = (event.message || '').toLowerCase();
 
 	if (event.service === 'amazon-image') {
@@ -227,7 +289,7 @@ function shouldSkipAdminLog(event: any) {
 	return false;
 }
 
-async function persistRecentLog(event: any) {
+async function persistRecentLog(event: LogEvent) {
 	const redis = tryGetRedisClient();
 	if (!redis) {
 		return;
@@ -244,11 +306,11 @@ async function persistRecentLog(event: any) {
 		await redis.ltrim(RECENT_LOGS_KEY, 0, RECENT_LOGS_LIMIT - 1);
 		await redis.expire(RECENT_LOGS_KEY, RECENT_LOGS_TTL_SECONDS);
 	} catch (error) {
-		originalConsole.error('Failed to persist recent admin log:', error.message);
+		originalConsole.error('Failed to persist recent admin log:', error instanceof Error ? error.message : error);
 	}
 }
 
-async function persistLogHistory(event: any) {
+async function persistLogHistory(event: LogEvent) {
 	if (!shouldEmitLevel(event.level, PERSIST_LEVEL)) {
 		return;
 	}
@@ -258,7 +320,6 @@ async function persistLogHistory(event: any) {
 	}
 
 	try {
-		const AdminLog = require('../../models/AdminLog');
 		await AdminLog.create({
 			logId: event.logId,
 			timestamp: event.timestamp,
@@ -272,11 +333,11 @@ async function persistLogHistory(event: any) {
 			expiresAt: event.expiresAt,
 		});
 	} catch (error) {
-		originalConsole.error('Failed to persist admin log history:', error.message);
+		originalConsole.error('Failed to persist admin log history:', error instanceof Error ? error.message : error);
 	}
 }
 
-function publishEvent(event: any) {
+function publishEvent(event: LogEvent) {
 	if (shouldSkipAdminLog(event)) {
 		return;
 	}
@@ -289,7 +350,7 @@ function publishEvent(event: any) {
 	void persistLogHistory(event);
 }
 
-function writeLog(level: string, payload: any) {
+function writeLog(level: LogLevel, payload: LoggerPayload) {
 	if (payload.mirrorToConsole) {
 		const consoleMethod = level === 'debug' ? 'log' : level;
 		originalConsole[consoleMethod](payload.message, payload.context || {});
@@ -359,11 +420,11 @@ function installConsoleLogger() {
 		info: 'info',
 		warn: 'warn',
 		error: 'error',
-	})) {
-		console[method as 'log' | 'info' | 'warn' | 'error'] = (...args: any[]) => {
+	} as const)) {
+		console[method as 'log' | 'info' | 'warn' | 'error'] = (...args: unknown[]) => {
 			originalConsole[method](...args);
 			const normalized = normalizeArgs(args);
-			writeLog(level, normalized);
+			writeLog(level as LogLevel, normalized);
 		};
 	}
 }
@@ -387,12 +448,12 @@ async function fetchRecentLogs(limit = 50) {
 			.filter(Boolean)
 			.reverse();
 	} catch (error) {
-		originalConsole.error('Failed to fetch recent admin logs:', error.message);
+		originalConsole.error('Failed to fetch recent admin logs:', error instanceof Error ? error.message : error);
 		return [];
 	}
 }
 
-function filterLogEntries(entries: any[], filters: Record<string, any> = {}) {
+function filterLogEntries(entries: Record<string, unknown>[], filters: LogFilters = {}) {
 	const searchTerm = String(filters.search || '').trim().toLowerCase();
 	const requestedLevels = Array.isArray(filters.levels) ? filters.levels : [];
 	const requestedService = String(filters.service || '').trim();
@@ -404,7 +465,7 @@ function filterLogEntries(entries: any[], filters: Record<string, any> = {}) {
 		: null;
 
 	return entries.filter((entry) => {
-		if (requestedLevels.length > 0 && !requestedLevels.includes(entry.level)) {
+		if (requestedLevels.length > 0 && !requestedLevels.includes(String(entry.level || ''))) {
 			return false;
 		}
 
@@ -442,7 +503,7 @@ function filterLogEntries(entries: any[], filters: Record<string, any> = {}) {
 	});
 }
 
-function dedupeLogs(entries: any[]) {
+function dedupeLogs(entries: LogEntryRecord[]) {
 	const seen = new Set();
 	return entries.filter((entry) => {
 		const key =
@@ -458,10 +519,9 @@ function dedupeLogs(entries: any[]) {
 	});
 }
 
-async function queryLogs(filters: Record<string, any> = {}) {
-	const AdminLog = require('../../models/AdminLog');
+async function queryLogs(filters: LogFilters = {}) {
 	const limit = Math.min(Number(filters.limit) || 50, 200);
-	const query: Record<string, any> = {};
+	const query: LogQuery = {};
 
 	if (filters.levels && filters.levels.length > 0) {
 		query.level = { $in: filters.levels };
@@ -531,7 +591,7 @@ async function queryLogs(filters: Record<string, any> = {}) {
 	};
 }
 
-module.exports = {
+export {
 	createLogger,
 	fetchRecentLogs,
 	getLogContext,

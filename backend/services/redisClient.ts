@@ -1,16 +1,30 @@
-const Redis = require('ioredis');
-const redis = new Redis(process.env.REDIS_URL);
-export {};
+import Redis from 'ioredis';
+export const redis = new Redis(process.env.REDIS_URL);
+
+type CacheRequestLike = {
+  originalUrl?: string;
+  url?: string;
+  query?: Record<string, string | string[] | undefined>;
+  params?: Record<string, string | undefined>;
+};
+
+type CacheResponseLike = {
+  setHeader: (name: string, value: string) => void;
+  json: (data: unknown) => void;
+};
+
+type CacheNext = () => void;
+type CacheKeyGenerator = (req: CacheRequestLike) => string | null | undefined;
 
 // ✅ Add support for binary buffer retrieval
-redis.getBuffer = function (key) {
+redis.getBuffer = function (key: string) {
   return this.callBuffer('GET', key); // Ensures raw Buffer (not string)
 };
 
 redis.on('connect', () => {
   console.log('Connected to Redis');
 });
-redis.on('error', (err: any) => {
+redis.on('error', (err: Error) => {
   console.error('Redis error:', err);
 });
 
@@ -21,10 +35,18 @@ redis.on('error', (err: any) => {
  * @param {number} maxAge - HTTP max-age in seconds
  * @param {number} staleWhileRevalidate - HTTP stale-while-revalidate in seconds
  */
-const cacheHybrid = (keyGenerator: any, ttl = 60, maxAge = 60, staleWhileRevalidate = 300) => {
-  return async (req: any, res: any, next: any) => {
+export const cacheHybrid = (
+  keyGenerator: CacheKeyGenerator,
+  ttl = 60,
+  maxAge = 60,
+  staleWhileRevalidate = 300,
+) => {
+  return async (req: CacheRequestLike, res: CacheResponseLike, next: CacheNext): Promise<void> => {
     const key = keyGenerator(req);
-    if (!key) return next();
+    if (!key) {
+      next();
+      return;
+    }
 
     try {
       const cached = await redis.get(key);
@@ -35,30 +57,28 @@ const cacheHybrid = (keyGenerator: any, ttl = 60, maxAge = 60, staleWhileRevalid
         res.setHeader('Cache-Control', `max-age=${maxAge}, stale-while-revalidate=${staleWhileRevalidate}`);
         res.setHeader('X-Cache', 'HIT');
 
-        return res.json(JSON.parse(cached));
+        res.json(JSON.parse(cached));
+        return;
       }
 
       // Override res.json to cache after sending
       const originalJson = res.json.bind(res);
-      res.json = (data: any) => {
+      res.json = (data: unknown): void => {
         redis.set(key, JSON.stringify(data), 'EX', ttl);
 
         // Also set headers for first-time response
         res.setHeader('Cache-Control', `max-age=${maxAge}, stale-while-revalidate=${staleWhileRevalidate}`);
         res.setHeader('X-Cache', 'MISS');
 
-        return originalJson(data);
+        originalJson(data);
       };
 
       next();
+      return;
     } catch (err) {
       console.error('Redis error:', err);
       next();
+      return;
     }
   };
-};
-
-module.exports = {
-  cacheHybrid,
-  redis
 };

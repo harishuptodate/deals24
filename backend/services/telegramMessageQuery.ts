@@ -1,8 +1,35 @@
 import type { MessageQueryOptions } from './telegramTypes';
+import mongoose from 'mongoose';
 
-const mongoose = require('mongoose');
+type QueryableTelegramMessage = {
+  aggregate: <T>(pipeline: unknown[]) => Promise<T[]>;
+};
 
-export {};
+type TelegramMessageQuery = Record<string, unknown> & {
+  _id?: Record<string, mongoose.Types.ObjectId>;
+  channelId?: string;
+  category?: string;
+  date?: Record<string, Date>;
+  $and?: ReturnType<typeof buildSearchQuery>;
+};
+
+type TelegramMessageAggregateRow = {
+  _id: mongoose.Types.ObjectId;
+  messageId?: string;
+  text?: string;
+  date?: Date;
+  link?: string;
+  imageUrl?: string;
+  telegramFileId?: string;
+  channelId?: string;
+  category?: string;
+  price?: string;
+  clicks?: number;
+  createdAt?: Date;
+  priceNumber?: number | null;
+};
+
+type CountRow = { count: number };
 
 function parseDateOnlyToUtc(dateStr: string, endOfDay: boolean): Date | null {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr);
@@ -80,7 +107,10 @@ function parseNumericFilter(value: unknown): number | null {
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
 }
 
-async function getMessagesFromStore(TelegramMessage: any, options: MessageQueryOptions = {}) {
+export async function getMessagesFromStore(
+  TelegramMessage: QueryableTelegramMessage,
+  options: MessageQueryOptions = {},
+) {
   const {
     limit = 10,
     cursor,
@@ -101,7 +131,7 @@ async function getMessagesFromStore(TelegramMessage: any, options: MessageQueryO
   const isOldestFirst = sort === 'oldest';
   const objectId = mongoose.Types.ObjectId;
 
-  const query: Record<string, any> = {};
+  const query: TelegramMessageQuery = {};
   if (channelId) {
     query.channelId = channelId;
   }
@@ -159,7 +189,7 @@ async function getMessagesFromStore(TelegramMessage: any, options: MessageQueryO
     return Object.keys(priceRange).length > 0 ? { priceNumber: priceRange } : null;
   };
 
-  const pipelineBase: any[] = [{ $match: query }];
+  const pipelineBase: Array<Record<string, unknown>> = [{ $match: query }];
   if (hasPriceFilter || isPriceSort) {
     pipelineBase.push(addNumericPriceStage);
   }
@@ -216,8 +246,8 @@ async function getMessagesFromStore(TelegramMessage: any, options: MessageQueryO
   };
 
   const [totalDealsResult, messages] = await Promise.all([
-    TelegramMessage.aggregate([...pipelineBase, { $count: 'count' }]),
-    TelegramMessage.aggregate([
+    TelegramMessage.aggregate<CountRow>([...pipelineBase, { $count: 'count' }]),
+    TelegramMessage.aggregate<TelegramMessageAggregateRow>([
       ...pipelineBase,
       sortStage,
       { $limit: numericLimit + 1 },
@@ -228,7 +258,7 @@ async function getMessagesFromStore(TelegramMessage: any, options: MessageQueryO
   const hasMore = messages.length > numericLimit;
   const data = hasMore ? messages.slice(0, numericLimit) : messages;
 
-  const processedData = data.map((item: any) => ({
+  const processedData = data.map((item) => ({
     ...item,
     id: item._id.toString(),
   }));
@@ -240,7 +270,7 @@ async function getMessagesFromStore(TelegramMessage: any, options: MessageQueryO
     if (isPriceSort) {
       const lastWithPrice = [...data]
         .reverse()
-        .find((item: any) => typeof item.priceNumber === 'number');
+        .find((item) => typeof item.priceNumber === 'number');
       if (!lastWithPrice) return null;
       return `${lastWithPrice.priceNumber}|${lastWithPrice._id}`;
     }
@@ -254,7 +284,3 @@ async function getMessagesFromStore(TelegramMessage: any, options: MessageQueryO
     totalDealsCount,
   };
 }
-
-module.exports = {
-  getMessagesFromStore,
-};

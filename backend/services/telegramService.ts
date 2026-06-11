@@ -1,13 +1,13 @@
+import type { Request, Response } from 'express';
 import type {
   MessageQueryOptions,
   TelegramInboundMessage,
 } from './telegramTypes';
-
-const TelegramMessage = require('../models/TelegramMessage');
-const { extractLinks } = require('../utils/messageParser');
-const { detectCategory } = require('../utils/categoryDetector');
-const { redis } = require('../services/redisClient');
-const {
+import TelegramMessage from '../models/TelegramMessage';
+import { extractLinks } from '../utils/messageParser';
+import { detectCategory } from '../utils/categoryDetector';
+import { redis } from '../services/redisClient';
+import {
   calculateHash,
   hashString,
   isLowContext,
@@ -17,14 +17,14 @@ const {
   replaceLinksAndText,
   resolveImageData,
   shouldSkipTwsDeal,
-} = require('./telegramMessageFilters');
-const { generateMessageContent } = require('./telegramMessageContent');
-const { getMessagesFromStore } = require('./telegramMessageQuery');
-
-export {};
+} from './telegramMessageFilters';
+import { generateMessageContent } from './telegramMessageContent';
+import { getMessagesFromStore } from './telegramMessageQuery';
 
 let contentHashes: string[] = [];
 let imageUrlHashes: string[] = [];
+
+type ClickTrackingRequest = Request<{ id: string }>;
 
 function rememberHash(hashes: string[], nextHash: string, maxSize: number): string[] {
   hashes.push(nextHash);
@@ -72,7 +72,7 @@ function shouldSkipMessage(textContent: string, messageDate: number): boolean {
   return false;
 }
 
-async function saveMessage(message: TelegramInboundMessage) {
+export async function saveMessage(message: TelegramInboundMessage) {
   try {
     const { message_id, chat, date, text: originalText, caption, photo } = message;
     const textContent = originalText || caption || '';
@@ -141,11 +141,11 @@ async function saveMessage(message: TelegramInboundMessage) {
   }
 }
 
-async function getMessages(options: MessageQueryOptions = {}) {
+export async function getMessages(options: MessageQueryOptions = {}) {
   return getMessagesFromStore(TelegramMessage, options);
 }
 
-async function handleClickTracking(req: any, res: any) {
+export async function handleClickTracking(req: ClickTrackingRequest, res: Response) {
   const messageId = req.params.id;
 
   if (!messageId) {
@@ -171,7 +171,7 @@ async function handleClickTracking(req: any, res: any) {
   }
 }
 
-async function incrementClicks(messageId: string) {
+export async function incrementClicks(messageId: string) {
   if (!messageId) {
     console.error('Cannot increment clicks: message ID is missing');
     return null;
@@ -196,17 +196,3 @@ async function incrementClicks(messageId: string) {
     return null;
   }
 }
-
-module.exports = {
-  saveMessage,
-  getMessages,
-  calculateHash,
-  normalizeMessage,
-  isRecentMessage,
-  isLowContext,
-  isProfitableProduct,
-  replaceLinksAndText,
-  detectCategory,
-  incrementClicks,
-  handleClickTracking,
-};

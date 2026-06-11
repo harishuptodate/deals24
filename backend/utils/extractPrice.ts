@@ -52,7 +52,7 @@ function normalizeExtractedPrice(rawPrice: string): number | null {
  * @param {string} text
  * @returns {number[]}
  */
-function extractAllDealPrices(text: string): number[] {
+export function extractAllDealPrices(text: string): number[] {
 	if (typeof text !== 'string' || !text.trim()) {
 		return [];
 	}
@@ -101,7 +101,7 @@ function extractAllDealPrices(text: string): number[] {
  * @param {string} text
  * @returns {string}
  */
-function extractPrice(text: string): string {
+export function extractPrice(text: string): string {
 	const extractedPrices = extractAllDealPrices(text);
 
 	if (extractedPrices.length === 0) {
@@ -110,8 +110,3 @@ function extractPrice(text: string): string {
 
 	return String(Math.min(...extractedPrices));
 }
-
-module.exports = {
-	extractPrice,
-	extractAllDealPrices,
-};

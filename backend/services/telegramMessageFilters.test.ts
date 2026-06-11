@@ -1,7 +1,7 @@
-const test = require('node:test');
-const assert = require('node:assert/strict');
+import test from 'node:test';
+import assert from 'node:assert/strict';
 
-const {
+import {
   calculateHash,
   extractAmazonUrls,
   getTelegramFileIdFromPhoto,
@@ -13,9 +13,7 @@ const {
   normalizeMessage,
   replaceLinksAndText,
   shouldSkipTwsDeal,
-} = require('./telegramMessageFilters');
-
-export {};
+} from './telegramMessageFilters';
 
 test('detects amazon links and normalizes shortened urls', () => {
   const input = 'Deal link amzn.to/abc and https://amazon.in/dp/test';

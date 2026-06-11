@@ -13,7 +13,7 @@ export {};
  * @param {string} text - Message text
  * @returns {string|undefined} - Detected category or undefined
  */
-function detectCategory(text: string): DealCategory {
+export function detectCategory(text: string): DealCategory {
 	const categories: Record<Exclude<DealCategory, 'miscellaneous'>, string[]> = {
 		laptops: [
 			'laptop',
@@ -249,7 +249,3 @@ function detectCategory(text: string): DealCategory {
 
 	return 'miscellaneous'; // Return null if no category matches
 }
-
-module.exports = {
-	detectCategory,
-};

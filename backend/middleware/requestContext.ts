@@ -1,9 +1,17 @@
 import { randomUUID } from 'node:crypto';
-const { runWithLogContext } = require('../services/logger');
+import type { NextFunction, Request, Response } from 'express';
+import { runWithLogContext } from '../services/logger';
 
-function attachRequestContext(req: any, res: any, next: any) {
-	const requestId = req.headers['x-request-id'] || randomUUID();
-	const correlationId = req.headers['x-correlation-id'] || requestId;
+type RequestContextRequest = Request & {
+	requestId?: string;
+	correlationId?: string;
+};
+
+export function attachRequestContext(req: RequestContextRequest, res: Response, next: NextFunction) {
+	const requestIdHeader = req.headers['x-request-id'];
+	const correlationIdHeader = req.headers['x-correlation-id'];
+	const requestId = typeof requestIdHeader === 'string' ? requestIdHeader : randomUUID();
+	const correlationId = typeof correlationIdHeader === 'string' ? correlationIdHeader : requestId;
 
 	req.requestId = requestId;
 	req.correlationId = correlationId;
@@ -19,10 +27,6 @@ function attachRequestContext(req: any, res: any, next: any) {
 				path: req.originalUrl,
 			},
 		},
-		() => next(),
+		next,
 	);
 }
-
-module.exports = {
-	attachRequestContext,
-};

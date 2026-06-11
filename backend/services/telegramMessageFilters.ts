@@ -1,20 +1,17 @@
 import crypto from 'node:crypto';
 import type { ResolvedImageData, TelegramPhoto } from './telegramTypes';
-
-const { fetchProductImage } = require('./amazonService');
-
-export {};
+import { fetchProductImage } from './amazonService';
 
 let lastAmazonApiCall = 0;
 const MIN_API_DELAY = 2000;
 
-function hasAmazonLinks(text: string): boolean {
+export function hasAmazonLinks(text: string): boolean {
   if (!text) return false;
   const amazonRegex = /(https?:\/\/)?(www\.)?(amazon\.[a-z]{2,}|amzn\.to)\/[^\s]*/gi;
   return amazonRegex.test(text);
 }
 
-function extractAmazonUrls(text: string): string[] {
+export function extractAmazonUrls(text: string): string[] {
   if (!text) return [];
   const amazonRegex = /(https?:\/\/)?(www\.)?(amazon\.[a-z]{2,}|amzn\.to)\/[^\s]*/gi;
   const matches = text.match(amazonRegex) || [];
@@ -44,7 +41,7 @@ async function waitForApiRateLimit(): Promise<void> {
   lastAmazonApiCall = Date.now();
 }
 
-function normalizeMessage(text: string): string {
+export function normalizeMessage(text: string): string {
   return text
     .replace(/https?:\/\/\S+/g, '')
     .trim()
@@ -52,15 +49,15 @@ function normalizeMessage(text: string): string {
     .toLowerCase();
 }
 
-function calculateHash(text: string): string {
+export function calculateHash(text: string): string {
   return crypto.createHash('sha256').update(normalizeMessage(text)).digest('hex');
 }
 
-function hashString(input: string): string {
+export function hashString(input: string): string {
   return crypto.createHash('sha256').update(input).digest('hex');
 }
 
-function replaceLinksAndText(text: string): string {
+export function replaceLinksAndText(text: string): string {
   let result = text;
 
   const linksToReplace = (process.env.LINKS_TO_REPLACE || '')
@@ -89,12 +86,12 @@ function replaceLinksAndText(text: string): string {
   return result.trim();
 }
 
-function isRecentMessage(messageDate: number): boolean {
+export function isRecentMessage(messageDate: number): boolean {
   const messageTimestamp = messageDate * 1000;
   return Date.now() - messageTimestamp <= 5 * 60 * 1000;
 }
 
-function isLowContext(text: string): boolean {
+export function isLowContext(text: string): boolean {
   const meaningfulText = text.replace(/https?:\/\/\S+/g, '').trim();
   if (meaningfulText.length < 30) return true;
 
@@ -106,7 +103,7 @@ function isLowContext(text: string): boolean {
   return keywordMatch && meaningfulText.length < 60;
 }
 
-function shouldSkipTwsDeal(text: string): boolean {
+export function shouldSkipTwsDeal(text: string): boolean {
   const normalizedText = text.toLowerCase();
   const isTwsDeal = /\btws\b|true wireless|earbuds|ear buds/.test(normalizedText);
 
@@ -127,7 +124,7 @@ function shouldSkipTwsDeal(text: string): boolean {
   return blockedBrands.some((brand) => normalizedText.includes(brand));
 }
 
-function isProfitableProduct(text: string): boolean {
+export function isProfitableProduct(text: string): boolean {
   const profitableKeywords = [
     'tv', 'tvs', '4ktvs', '4k', 'laptop', 'washing machine', 'ai',
     'kg', '12 kg', '9 kg', '7 kg', '8 kg', '6.5 kg', '10 kg', '8.5 kg',
@@ -142,7 +139,7 @@ function isProfitableProduct(text: string): boolean {
   });
 }
 
-function normalizeGeminiPrice(price: unknown): string {
+export function normalizeGeminiPrice(price: unknown): string {
   if (price === null || price === undefined) {
     return '';
   }
@@ -172,7 +169,7 @@ function normalizeGeminiPrice(price: unknown): string {
   return String(numericPrice);
 }
 
-function getTelegramFileIdFromPhoto(photo: TelegramPhoto[] | null | undefined): string | null {
+export function getTelegramFileIdFromPhoto(photo: TelegramPhoto[] | null | undefined): string | null {
   if (!photo || photo.length === 0) {
     return null;
   }
@@ -185,8 +182,8 @@ async function isValidImageUrl(url: string): Promise<boolean> {
   try {
     const res = await fetch(url, {
       method: 'HEAD',
-      timeout: 5000 as any,
-    } as any);
+      signal: AbortSignal.timeout(5000),
+    });
 
     const contentType = res.headers.get('Content-Type') || res.headers.get('content-type');
     return res.ok && Boolean(contentType) && contentType.startsWith('image/');
@@ -197,7 +194,7 @@ async function isValidImageUrl(url: string): Promise<boolean> {
   }
 }
 
-async function resolveImageData(
+export async function resolveImageData(
   cleanedText: string,
   photo: TelegramPhoto[] | null | undefined,
 ): Promise<ResolvedImageData> {
@@ -243,19 +240,3 @@ async function resolveImageData(
     telegramFileId,
   };
 }
-
-module.exports = {
-  calculateHash,
-  extractAmazonUrls,
-  getTelegramFileIdFromPhoto,
-  hasAmazonLinks,
-  hashString,
-  isLowContext,
-  isProfitableProduct,
-  isRecentMessage,
-  normalizeGeminiPrice,
-  normalizeMessage,
-  replaceLinksAndText,
-  resolveImageData,
-  shouldSkipTwsDeal,
-};

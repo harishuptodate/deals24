@@ -1,8 +1,13 @@
-const { fetchProductImage, getStoredProducts } = require('../services/amazonService');
-export {};
+import type { Request, Response } from 'express';
+import {
+  fetchProductImage as fetchAmazonProductImage,
+  getStoredProducts as getAmazonStoredProducts,
+} from '../services/amazonService';
+
+type FetchProductImageRequest = Request<unknown, unknown, { url?: string }>;
 
 // Fetch product image from Amazon URL
-exports.fetchProductImage = async (req: any, res: any) => {
+export const fetchProductImage = async (req: FetchProductImageRequest, res: Response) => {
   try {
     const { url } = req.body;
     
@@ -11,7 +16,7 @@ exports.fetchProductImage = async (req: any, res: any) => {
     }
 
     console.log('Amazon controller: Processing URL:', url);
-    const result = await fetchProductImage(url);
+    const result = await fetchAmazonProductImage(url);
     
     if (result.error) {
       console.log('Amazon controller: Error occurred:', result.error);
@@ -27,9 +32,9 @@ exports.fetchProductImage = async (req: any, res: any) => {
 };
 
 // Get stored products
-exports.getStoredProducts = async (_req: any, res: any) => {
+export const getStoredProducts = async (_req: Request, res: Response) => {
   try {
-    const products = await getStoredProducts();
+    const products = await getAmazonStoredProducts();
     return res.json({ products });
   } catch (error) {
     console.error('Error in getStoredProducts controller:', error);

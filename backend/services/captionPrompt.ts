@@ -1,5 +1,4 @@
-export {};
-const buildCaptionPrompt = (messageText: string): string => `You are a product deal message processor. Analyze the following product deal message and understand the intent properly from the below instructions and examples and perform these tasks:
+export const buildCaptionPrompt = (messageText: string): string => `You are a product deal message processor. Analyze the following product deal message and understand the intent properly from the below instructions and examples and perform these tasks:
 
 1. Normalize the message: Remove ALL promotional noise, unnecessary text, and keep ONLY essential product information. Specifically:
 
@@ -144,7 +143,3 @@ Example of correct response format:
 
 Message to process:
 ${messageText}`
-
-module.exports = {
-	buildCaptionPrompt,
-};

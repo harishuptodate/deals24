@@ -1,14 +1,13 @@
-const express = require('express');
+import express, { type Request, type Response } from 'express';
+import ClickStat from '../models/clickStat.model';
+import { getStats } from '../controllers/stats.controller';
+
 const router = express.Router();
-const { getStats } = require('../controllers/stats.controller');
-export {};
 
 router.get('/stats', getStats);
 
-router.post('/stats/record-view', async (_req: any, res: any) => {
+router.post('/stats/record-view', async (_req: Request, res: Response) => {
   try {
-    const ClickStat = require('../models/clickStat.model');
-    
     // Get today's date and set to beginning of day
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -27,4 +26,4 @@ router.post('/stats/record-view', async (_req: any, res: any) => {
   }
 });
 
-module.exports = router;
+export default router;

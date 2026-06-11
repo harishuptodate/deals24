@@ -1,13 +1,25 @@
-const { createLogger } = require('./logger');
-export {};
+import { createLogger } from './logger';
 
 const logger = createLogger('amazon-image');
+
+type FetchJsonOptions = RequestInit & {
+  timeout?: number;
+};
+
+type AmazonImageApiResponse = {
+  success?: boolean;
+  error?: string;
+  data?: {
+    imageUrl?: string;
+    title?: string;
+  };
+};
 
 function delay(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function fetchWithRetries(url: string, options: any, retries = 3, delayMs = 2000) {
+async function fetchWithRetries(url: string, options: FetchJsonOptions, retries = 3, delayMs = 2000) {
   for (let i = 0; i < retries; i++) {
     try {
       const res = await fetch(url, options);
@@ -23,7 +35,7 @@ async function fetchWithRetries(url: string, options: any, retries = 3, delayMs 
   throw new Error(`Failed to fetch after ${retries} retries`);
 }
 
-async function fetchProductImage(amazonUrl: string) {
+export async function fetchProductImage(amazonUrl: string) {
   try {
     if (!amazonUrl.includes("amazon.") && !amazonUrl.includes("amzn.to")) {
       logger.warn('Amazon image fetch failed.', { amazonUrl, error: 'Invalid Amazon URL provided' }, { event: 'amazon_image_fetch_failed' });
@@ -46,7 +58,7 @@ async function fetchProductImage(amazonUrl: string) {
       timeout: 8000, // Allow up to 8 seconds for the API response
     }, 2, 3000); // Retry 2 times with 3 second delays
 
-    const result: any = await response.json();
+    const result: AmazonImageApiResponse = await response.json();
     // console.log('Amazon API response:', result);
 
     if (result.success && result.data && result.data.imageUrl) {
@@ -81,11 +93,6 @@ async function fetchProductImage(amazonUrl: string) {
   }
 }
 
-async function getStoredProducts() {
+export async function getStoredProducts() {
   return [];
 }
-
-module.exports = {
-  fetchProductImage,
-  getStoredProducts
-};

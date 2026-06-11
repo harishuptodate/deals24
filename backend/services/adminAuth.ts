@@ -42,7 +42,7 @@ function signToken(unsignedToken: string): string {
 		.digest('base64url');
 }
 
-function issueAdminToken(username: string): string {
+export function issueAdminToken(username: string): string {
 	const payload: AdminTokenPayload = {
 		sub: 'admin',
 		username,
@@ -54,7 +54,7 @@ function issueAdminToken(username: string): string {
 	return `${encodedPayload}.${signature}`;
 }
 
-function verifyAdminCredentials(
+export function verifyAdminCredentials(
 	username?: string,
 	password?: string,
 ): CredentialsVerificationResult {
@@ -80,7 +80,7 @@ function verifyAdminCredentials(
 	};
 }
 
-function verifyAdminToken(token: unknown): TokenVerificationResult {
+export function verifyAdminToken(token: unknown): TokenVerificationResult {
 	if (!token || typeof token !== 'string') {
 		return {
 			ok: false,
@@ -117,9 +117,3 @@ function verifyAdminToken(token: unknown): TokenVerificationResult {
 		};
 	}
 }
-
-module.exports = {
-	issueAdminToken,
-	verifyAdminCredentials,
-	verifyAdminToken,
-};

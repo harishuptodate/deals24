@@ -57,4 +57,6 @@ const adminLogSchema = new mongoose.Schema({
 adminLogSchema.index({ timestamp: -1, _id: -1 });
 adminLogSchema.index({ logId: 1 }, { unique: true });
 
-module.exports = mongoose.models.AdminLog || mongoose.model('AdminLog', adminLogSchema);
+const AdminLog = mongoose.models.AdminLog || mongoose.model('AdminLog', adminLogSchema);
+
+export default AdminLog;

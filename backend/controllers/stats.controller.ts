@@ -1,7 +1,63 @@
-const ClickStat = require('../models/clickStat.model');
-export {};
+import type { Request, Response } from 'express';
+import ClickStat from '../models/clickStat.model';
 
-const getStats = async (req: any, res: any) => {
+type StatsRequest = Request<unknown, unknown, unknown, { period?: string }>;
+
+type WeeklyAggregateRow = {
+  _id: { week: number; year: number };
+  totalClicks: number;
+  firstDate: Date;
+};
+
+type MonthlyAggregateRow = {
+  _id: { month: number; year: number };
+  totalClicks: number;
+  firstDate: Date;
+};
+
+type YearlyAggregateRow = {
+  _id: { year: number };
+  totalClicks: number;
+  firstDate: Date;
+};
+
+type StatsResponse = {
+  daily: {
+    date: string;
+    clicks: number;
+    name: string;
+  }[];
+  weekly: {
+    date: string;
+    clicks: number;
+    name: string;
+    week: number;
+    year: number;
+  }[];
+  monthly: {
+    date: string;
+    clicks: number;
+    name: string;
+    month: number;
+    year: number;
+  }[];
+  yearly: {
+    date: string;
+    clicks: number;
+    name: string;
+    year: number;
+  }[];
+  totalClicks: number;
+  totalMonthClicks: number;
+  totalYearClicks: number;
+  last7Days: {
+    date: string;
+    clicks: number;
+    name: string;
+  }[];
+};
+
+export const getStats = async (req: StatsRequest, res: Response) => {
   try {
     const { period = 'day' } = req.query;
     void period;
@@ -21,7 +77,7 @@ const getStats = async (req: any, res: any) => {
     const sevenWeeksAgo = new Date(today);
     sevenWeeksAgo.setDate(today.getDate() - 7 * 7); // 7 weeks ago
     
-    const weeklyStats = await ClickStat.aggregate([
+    const weeklyStats = await ClickStat.aggregate<WeeklyAggregateRow>([
       {
         $match: { date: { $gte: sevenWeeksAgo } }
       },
@@ -46,7 +102,7 @@ const getStats = async (req: any, res: any) => {
     const sevenMonthsAgo = new Date(today);
     sevenMonthsAgo.setMonth(today.getMonth() - 6); // 7 months including current
     
-    const monthlyStats = await ClickStat.aggregate([
+    const monthlyStats = await ClickStat.aggregate<MonthlyAggregateRow>([
       {
         $match: { date: { $gte: sevenMonthsAgo } }
       },
@@ -67,7 +123,7 @@ const getStats = async (req: any, res: any) => {
     const threeYearsAgo = new Date(today);
     threeYearsAgo.setFullYear(today.getFullYear() - 2); // 3 years including current
     
-    const yearlyStats = await ClickStat.aggregate([
+    const yearlyStats = await ClickStat.aggregate<YearlyAggregateRow>([
       {
         $match: { date: { $gte: threeYearsAgo } }
       },
@@ -131,18 +187,16 @@ const getStats = async (req: any, res: any) => {
     const totalYearClicks = currentYearData ? currentYearData.totalClicks : 0;
 
     // Return appropriate data based on the requested period
-    let responseData: any = {
+    const responseData: StatsResponse = {
       daily: formattedDailyStats,
       weekly: formattedWeeklyStats,
       monthly: formattedMonthlyStats,
       yearly: formattedYearlyStats,
       totalClicks,
       totalMonthClicks,
-      totalYearClicks
+      totalYearClicks,
+      last7Days: formattedDailyStats,
     };
-
-    // For backward compatibility with the old API
-    responseData.last7Days = formattedDailyStats;
 
     res.json(responseData);
   } catch (error) {
@@ -150,5 +204,3 @@ const getStats = async (req: any, res: any) => {
     res.status(500).json({ error: 'Failed to fetch click statistics' });
   }
 };
-
-module.exports = { getStats };

@@ -1,8 +1,6 @@
-const test = require('node:test');
-const assert = require('node:assert/strict');
-
-const { extractPrice, extractAllDealPrices } = require('./extractPrice');
-export {};
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { extractAllDealPrices, extractPrice } from './extractPrice';
 
 test('extracts @ price without currency symbol', () => {
 	assert.deepEqual(
@@ -100,8 +98,8 @@ test('returns empty results when no supported deal price exists', () => {
 });
 
 test('returns empty results for non-string input', () => {
-	assert.deepEqual(extractAllDealPrices(null as any), []);
-	assert.equal(extractPrice(undefined as any), '');
+	assert.deepEqual(extractAllDealPrices(null as unknown as string), []);
+	assert.equal(extractPrice(undefined as unknown as string), '');
 });
 
 test('does not infer effective prices from discount language', () => {

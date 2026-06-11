@@ -1,11 +1,10 @@
-const mongoose = require('mongoose');
-const TelegramMessage = require('../models/TelegramMessage');
-const ClickStat = require('../models/clickStat.model');
-const {redis} = require('../services/redisClient');
-require('dotenv').config();
-export {};
+import 'dotenv/config';
+import mongoose from 'mongoose';
+import ClickStat from '../models/clickStat.model';
+import TelegramMessage from '../models/TelegramMessage';
+import { redis } from '../services/redisClient';
 
-function startFlushLoop(intervalMs = 60000) {
+export default function startFlushLoop(intervalMs = 60000) {
 	async function flushClicks() {
 		try {
 			const keys = await redis.keys('clicks:msg:*');
@@ -58,5 +57,3 @@ function startFlushLoop(intervalMs = 60000) {
 	flushClicks();
 	setInterval(flushClicks, intervalMs);
 }
-
-module.exports = startFlushLoop;

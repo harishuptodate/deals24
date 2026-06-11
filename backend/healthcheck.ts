@@ -1,5 +1,4 @@
-const http = require('http');
-export {};
+import http, { type IncomingMessage } from 'node:http';
 
 const options = {
   host: 'localhost',
@@ -8,7 +7,7 @@ const options = {
   timeout: 2000,
 };
 
-const request = http.request(options, (res: any) => {
+const request = http.request(options, (res: IncomingMessage) => {
   console.log(`Health check status: ${res.statusCode}`);
   if (res.statusCode === 200) {
     process.exit(0);
@@ -17,7 +16,7 @@ const request = http.request(options, (res: any) => {
   }
 });
 
-request.on('error', (err: any) => {
+request.on('error', (err: Error) => {
   console.log('Health check failed:', err);
   process.exit(1);
 });

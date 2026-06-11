@@ -3,12 +3,19 @@
  * Script to fetch historic messages from a Telegram channel
  * Run with: node fetchHistoricMessages.js
  */
-require('dotenv').config();
-const { Telegram } = require('telegraf');
-const mongoose = require('mongoose');
-const TelegramMessage = require('../models/TelegramMessage');
-const { saveMessage } = require('../services/telegramService');
-export {};
+import 'dotenv/config';
+import mongoose from 'mongoose';
+import { Telegram } from 'telegraf';
+import TelegramMessage from '../models/TelegramMessage';
+import { saveMessage } from '../services/telegramService';
+import type { TelegramInboundMessage } from '../services/telegramTypes';
+
+type TelegramHistoryClient = Telegram & {
+  getChannelHistory?: (
+    chatId: string,
+    options: { limit: number; from_message_id?: number },
+  ) => Promise<TelegramInboundMessage[]>;
+};
 
 // Validate required environment variables
 if (!process.env.TELEGRAM_BOT_TOKEN) {
@@ -35,7 +42,7 @@ mongoose.connect(process.env.MONGODB_URI)
     console.log('Connected to MongoDB');
     fetchMessages();
   })
-  .catch((err: any) => {
+  .catch((err: unknown) => {
     console.error('Failed to connect to MongoDB', err);
     process.exit(1);
   });
@@ -57,15 +64,19 @@ async function fetchMessages() {
     }
     
     // Fetch messages from Telegram
-    const messages = await telegram.getChannelHistory(channelId, {
+    const messages = await (telegram as TelegramHistoryClient).getChannelHistory?.(channelId, {
       limit: 100,
       from_message_id: fromMessageId
     });
+
+    if (!messages) {
+      throw new Error('Telegram getChannelHistory is not available');
+    }
     
     console.log(`Fetched ${messages.length} messages from Telegram`);
     
     // Process and save messages
-    const savePromises = messages.map((msg: any) => saveMessage(msg));
+    const savePromises = messages.map((msg) => saveMessage(msg));
     await Promise.all(savePromises);
     
     console.log('All messages saved successfully');

@@ -1,10 +1,7 @@
-require('dotenv').config();
-const { GoogleGenAI } = require('@google/genai');
-const { detectCategory } = require('./detectCategory');
-const { buildCaptionPrompt } = require('./captionPrompt');
-const { createLogger } = require('./logger');
-
-export {};
+import 'dotenv/config';
+import { detectCategory } from './detectCategory';
+import { buildCaptionPrompt } from './captionPrompt';
+import { createLogger } from './logger';
 
 const logger = createLogger('gemini-caption');
 
@@ -18,7 +15,23 @@ const AVAILABLE_CATEGORIES = [
   'miscellaneous',
 ];
 
-function isQuotaOrRateLimitError(error: any): boolean {
+type GeminiErrorLike = {
+  message?: string;
+  status?: string;
+  code?: number;
+};
+
+type GeminiResponseLike = {
+  text?: string;
+};
+
+type GeminiNormalizedResult = {
+  normalizedMessage?: string;
+  category?: string;
+  price?: string;
+};
+
+function isQuotaOrRateLimitError(error: GeminiErrorLike | null | undefined): boolean {
   if (!error) return false;
 
   const errorMessage = error.message || '';
@@ -48,7 +61,7 @@ function isQuotaOrRateLimitError(error: any): boolean {
   }
 }
 
-function isTransientServiceError(error: any): boolean {
+function isTransientServiceError(error: GeminiErrorLike | null | undefined): boolean {
   if (!error) return false;
 
   const errorMessage = String(error.message || '');
@@ -97,8 +110,9 @@ function buildFallbackResult(messageText: string) {
 }
 
 async function requestGeminiContent(prompt: string, apiKeys: string[]) {
-  let response: any;
-  let lastError: any = null;
+  const { GoogleGenAI } = await import('@google/genai');
+  let response: GeminiResponseLike | undefined;
+  let lastError: unknown = null;
 
   for (let attempt = 0; attempt < apiKeys.length; attempt++) {
     const keyIndex = attempt;
@@ -115,7 +129,7 @@ async function requestGeminiContent(prompt: string, apiKeys: string[]) {
           topP: 0.95,
           maxOutputTokens: 1024,
         },
-      });
+      } as never);
       lastError = null;
       break;
     } catch (error) {
@@ -169,7 +183,7 @@ function parseGeminiJsonResponse(responseText: string) {
   return JSON.parse(jsonText);
 }
 
-function normalizeGeminiResult(messageText: string, result: any) {
+function normalizeGeminiResult(messageText: string, result: GeminiNormalizedResult) {
   const resolvedCategory = AVAILABLE_CATEGORIES.includes(result.category)
     ? result.category
     : detectCategory(messageText);
@@ -190,7 +204,7 @@ function normalizeGeminiResult(messageText: string, result: any) {
   };
 }
 
-async function GenerateCaptionAndCategory(messageText: string) {
+export async function GenerateCaptionAndCategory(messageText: string) {
   if (!messageText || typeof messageText !== 'string') {
     throw new Error('Message text is required and must be a string');
   }
@@ -220,8 +234,3 @@ async function GenerateCaptionAndCategory(messageText: string) {
     return buildFallbackResult(messageText);
   }
 }
-
-module.exports = {
-  detectCategory,
-  GenerateCaptionAndCategory,
-};

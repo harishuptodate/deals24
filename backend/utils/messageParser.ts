@@ -4,7 +4,7 @@ export {};
  * @param {string} text - The message text
  * @returns {string|null} - The first link found or null
  */
-function extractLinks(text: string): string | null {
+export function extractLinks(text: string): string | null {
   if (!text) return null;
   
   // Regular expression to find URLs
@@ -19,7 +19,7 @@ function extractLinks(text: string): string | null {
  * @param {string} text - The message text
  * @returns {Object} - Parsed details
  */
-function parseMessageText(text: string): { title: string; description: string } {
+export function parseMessageText(text: string): { title: string; description: string } {
   if (!text) return { title: '', description: '' };
   
   const lines = text.split('\n').filter(line => line.trim() !== '');
@@ -31,8 +31,3 @@ function parseMessageText(text: string): { title: string; description: string } 
     description
   };
 }
-
-module.exports = {
-  extractLinks,
-  parseMessageText
-};
