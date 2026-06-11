@@ -4,6 +4,8 @@ import {
 	TelegramMessage,
 	CategoryCount,
 	TopPerformingResponse,
+	ClickAnalyticsResponse,
+	ClickStatsResponse,
 } from '../types/telegram';
 import { getAdminToken } from './authService';
 
@@ -401,7 +403,7 @@ export const deleteProduct = async (messageId: string): Promise<boolean> => {
 // Get click analytics data for the admin dashboard
 export const getClickAnalytics = async (
 	period: string = 'day',
-): Promise<any> => {
+): Promise<ClickAnalyticsResponse> => {
 	try {
 		const response = await api.get('/telegram/analytics/clicks', {
 			params: { period },
@@ -421,7 +423,7 @@ export const getClickAnalytics = async (
 };
 
 // Get specific message click stats
-export const getClickStats = async (): Promise<any> => {
+export const getClickStats = async (): Promise<ClickStatsResponse> => {
 	try {
 		const response = await api.get('/stats');
 		return response.data;
@@ -429,14 +431,18 @@ export const getClickStats = async (): Promise<any> => {
 		console.error('Failed to fetch click stats:', error);
 		// Return a more robust default structure
 		return {
+			daily: [],
+			weekly: [],
 			last7Days: Array.from({ length: 7 }, (_, i) => {
 				const date = new Date();
 				date.setDate(date.getDate() - (6 - i));
-				return { date: date.toISOString(), clicks: 0 };
+				return { date: date.toISOString(), name: date.toISOString(), clicks: 0 };
 			}),
 			monthly: [],
 			yearly: [],
 			totalClicks: 0,
+			totalMonthClicks: 0,
+			totalYearClicks: 0,
 		};
 	}
 };
@@ -456,7 +462,7 @@ export const getTopPerformingDeals = async (
 	}
 };
 
-export const getDealById = async (id: string) => {
+export const getDealById = async (id: string): Promise<TelegramMessage> => {
   try {
     const response = await axios.get(`${API_BASE_URL}/telegram/messages/${id}`);
     return response.data;

@@ -14,13 +14,12 @@ import { Loader2 } from 'lucide-react';
 interface ChartData {
   name: string;
   clicks: number;
-  date: string;
-  [key: string]: any;
+  date?: string;
 }
 
 interface CustomTooltipProps {
   active?: boolean;
-  payload?: any[];
+  payload?: Array<{ value?: number | string }>;
   label?: string;
 }
 

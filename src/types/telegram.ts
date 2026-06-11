@@ -34,3 +34,35 @@ export interface TopPerformingResponse {
 	topMessages: TelegramMessage[];
 	totalMessages: number;
 }
+
+export interface ClickDataPoint {
+	name: string;
+	clicks: number;
+	date?: string;
+	week?: number;
+	year?: number;
+	month?: number;
+}
+
+export interface ClickAnalyticsResponse {
+	clicksData: Array<{
+		name: string;
+		clicks: number;
+	}>;
+	totalClicks: number;
+	totalMessages: number;
+	totalMonth: number;
+	totalYear: number;
+	period?: 'day' | 'week' | 'month';
+}
+
+export interface ClickStatsResponse {
+	daily: ClickDataPoint[];
+	weekly: ClickDataPoint[];
+	monthly: ClickDataPoint[];
+	yearly: ClickDataPoint[];
+	totalClicks: number;
+	totalMonthClicks: number;
+	totalYearClicks: number;
+	last7Days: ClickDataPoint[];
+}

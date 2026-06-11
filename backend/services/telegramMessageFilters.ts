@@ -105,7 +105,7 @@ export function isLowContext(text: string): boolean {
 
 export function shouldSkipTwsDeal(text: string): boolean {
   const normalizedText = text.toLowerCase();
-  const isTwsDeal = /\btws\b|true wireless|earbuds|ear buds/.test(normalizedText);
+  const isTwsDeal = /\btws\b|true wireless|earbuds|Duopods|ear buds/.test(normalizedText);
 
   if (!isTwsDeal) {
     return false;

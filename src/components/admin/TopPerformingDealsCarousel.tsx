@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/card';
 import {
 	Carousel,
+	type CarouselApi,
 	CarouselContent,
 	CarouselItem,
 	CarouselNext,
@@ -49,9 +50,28 @@ import {
 	grantCategoryPermission,
 	verifyActionPassword,
 } from '../../services/authService';
+import type { TelegramMessage } from '../../types/telegram';
+
+type FormattedDeal = {
+	title: string;
+	description: string;
+	link: string;
+	id?: string;
+	category: string;
+	createdAt?: string;
+	clicks: number;
+	imageUrl?: string;
+	price: string | null;
+	telegramFileId?: string;
+	extraData: {
+		formattedCreatedDate: string;
+		clicks: number;
+		category: string;
+	};
+};
 
 interface TopPerformingDealsCarouselProps {
-	topDeals: any[];
+	topDeals: TelegramMessage[];
 	isLoading: boolean;
 	onDelete?: (id: string) => void;
 	onEdit?: (
@@ -70,10 +90,10 @@ const TopPerformingDealsCarousel = ({
 	onEdit,
 	onCategoryUpdate,
 }: TopPerformingDealsCarouselProps) => {
-	const [selectedDeal, setSelectedDeal] = useState<any>(null);
+	const [selectedDeal, setSelectedDeal] = useState<TelegramMessage | null>(null);
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-	const formatDealForCard = (deal: any) => {
+	const formatDealForCard = (deal: TelegramMessage): FormattedDeal => {
 		// Extract title from the first line of text
 		const title = deal.text?.split('\n')[0] || 'Deal';
 
@@ -103,7 +123,7 @@ const TopPerformingDealsCarousel = ({
 			},
 		};
 	};
-	const handleDealClick = (deal: any) => {
+	const handleDealClick = (deal: TelegramMessage) => {
 		setSelectedDeal(deal);
 		setIsDialogOpen(true);
 	};
@@ -197,8 +217,20 @@ const AutoCarousel = ({
 	onEdit,
 	onCategoryUpdate,
 	formatDealForCard,
-}: any) => {
-	const [api, setApi] = useState<any>();
+}: {
+	topDeals: TelegramMessage[];
+	onDealClick: (deal: TelegramMessage) => void;
+	onDelete?: (id: string) => void;
+	onEdit?: (
+		id: string,
+		newText: string,
+		newImageUrl: string | null,
+		newPrice: string | null,
+	) => void;
+	onCategoryUpdate?: (id: string, category: string) => void;
+	formatDealForCard: (deal: TelegramMessage) => FormattedDeal;
+}) => {
+	const [api, setApi] = useState<CarouselApi>();
 	const [current, setCurrent] = useState(0);
 	const [count, setCount] = useState(0);
 
@@ -235,7 +267,7 @@ const AutoCarousel = ({
 			setApi={setApi}>
 			<div className="relative">
 				<CarouselContent className="-ml-2 md:-ml-4">
-					{topDeals.map((deal: any, index: number) => {
+					{topDeals.map((deal, index: number) => {
 						const formattedDeal = formatDealForCard(deal);
 						return (
 							<CarouselItem
@@ -290,7 +322,19 @@ const CustomDealCard = ({
 	onDelete,
 	onEdit,
 	onCategoryUpdate,
-}: any) => {
+}: {
+	deal: TelegramMessage;
+	formattedDeal: FormattedDeal;
+	onDealClick: (deal: TelegramMessage) => void;
+	onDelete?: (id: string) => void;
+	onEdit?: (
+		id: string,
+		newText: string,
+		newImageUrl: string | null,
+		newPrice: string | null,
+	) => void;
+	onCategoryUpdate?: (id: string, category: string) => void;
+}) => {
 	const { title, description, imageUrl, price, telegramFileId, createdAt } =
 		formattedDeal;
 	const { toast } = useToast();

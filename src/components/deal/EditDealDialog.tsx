@@ -108,7 +108,7 @@ const EditDealDialog = ({
 		e: React.KeyboardEvent<HTMLTextAreaElement>,
 	) => {
 		if (e.ctrlKey && e.key === 'Enter') {
-			handleSaveEdit(e as any); // Cast to any to satisfy FormEvent
+			e.currentTarget.form?.requestSubmit();
 		}
 	};
 

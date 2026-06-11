@@ -3,6 +3,18 @@ import { useState } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { shareContent, copyToClipboard } from '../utils/linkUtils';
 
+type FavoriteDeal = {
+  id?: string;
+  title: string;
+  description: string;
+  link: string;
+  timestamp: string;
+  createdAt: string;
+  category?: string;
+  imageUrl?: string;
+  telegramFileId?: string;
+};
+
 interface DealCardActionsProps {
   id?: string;
   title: string;
@@ -28,8 +40,8 @@ export const useDealCardActions = ({
 }: DealCardActionsProps) => {
   const { toast } = useToast();
   const [isSaved, setIsSaved] = useState(() => {
-    const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-    return favorites.some((item: any) => 
+    const favorites: FavoriteDeal[] = JSON.parse(localStorage.getItem('favorites') || '[]');
+    return favorites.some((item) => 
       item.id === id || 
       (item.title === title)
     );
@@ -37,10 +49,10 @@ export const useDealCardActions = ({
   const [isSharing, setIsSharing] = useState(false);
 
   const handleToggleWishlist = () => {
-    const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+    const favorites: FavoriteDeal[] = JSON.parse(localStorage.getItem('favorites') || '[]');
 
     if (isSaved) {
-      const updatedFavorites = favorites.filter((item: any) => 
+      const updatedFavorites = favorites.filter((item) => 
         item.id !== id && 
         item.title !== title
       );
@@ -64,7 +76,7 @@ export const useDealCardActions = ({
         category
       });
       
-      const newFavorite = {
+      const newFavorite: FavoriteDeal = {
         id,
         title,
         description: dealDescription,

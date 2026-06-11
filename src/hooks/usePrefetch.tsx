@@ -5,9 +5,9 @@ import { useQueryClient } from '@tanstack/react-query';
 export const usePrefetch = () => {
   const queryClient = useQueryClient();
 
-  const prefetchQuery = useCallback(async (
+  const prefetchQuery = useCallback(async <TData,>(
     queryKey: (string | number)[],
-    queryFn: () => Promise<any>,
+    queryFn: () => Promise<TData>,
     options?: {
       staleTime?: number;
       cacheTime?: number;

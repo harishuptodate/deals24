@@ -1,9 +1,9 @@
 import React from "react"
 
-export function useFetch<T = any>(url: string) {
+export function useFetch<T = unknown>(url: string) {
   const [data, setData] = React.useState<T | undefined>(undefined)
   const [loading, setLoading] = React.useState<boolean>(false)
-  const [error, setError] = React.useState<any>(null)
+  const [error, setError] = React.useState<Error | null>(null)
 
   React.useEffect(() => {
     let isMounted = true
@@ -17,8 +17,8 @@ export function useFetch<T = any>(url: string) {
       .then(json => {
         if (isMounted) setData(json)
       })
-      .catch(err => {
-        if (isMounted) setError(err)
+      .catch((err: unknown) => {
+        if (isMounted) setError(err instanceof Error ? err : new Error(String(err)))
       })
       .finally(() => {
         if (isMounted) setLoading(false)

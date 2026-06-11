@@ -10,6 +10,11 @@ import {
 } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 
+type ClickStatPoint = {
+	name: string;
+	clicks: number;
+};
+
 const AvgClicksCard = ({
 	stats,
 	isLoading,
@@ -17,7 +22,7 @@ const AvgClicksCard = ({
   description,
   color = "#3b82f6"
 }: {
-	stats: any;
+	stats: ClickStatPoint[];
 	isLoading: boolean;
   title : string;
   description: string;

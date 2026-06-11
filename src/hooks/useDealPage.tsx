@@ -6,6 +6,18 @@ import { useToast } from '@/components/ui/use-toast';
 import { getDealById } from '../services/api';
 import { shareContent, copyToClipboard, extractFirstLink } from '../components/deal/utils/linkUtils';
 
+type FavoriteDeal = {
+  id?: string;
+  title: string;
+  description: string;
+  link: string;
+  timestamp: string;
+  createdAt: string;
+  category?: string;
+  imageUrl?: string;
+  telegramFileId?: string;
+};
+
 export const useDealPage = (id?: string) => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -20,8 +32,8 @@ export const useDealPage = (id?: string) => {
 
   useEffect(() => {
     if (deal) {
-      const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-      const isAlreadySaved = favorites.some((item: any) => 
+      const favorites: FavoriteDeal[] = JSON.parse(localStorage.getItem('favorites') || '[]');
+      const isAlreadySaved = favorites.some((item) => 
         item.id === id || 
         (item.title === deal.text?.split('\n')[0])
       );
@@ -77,11 +89,11 @@ export const useDealPage = (id?: string) => {
   const handleToggleWishlist = () => {
     if (!deal) return;
 
-    const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+    const favorites: FavoriteDeal[] = JSON.parse(localStorage.getItem('favorites') || '[]');
     const title = deal.text?.split('\n')[0] || '';
 
     if (isSaved) {
-      const updatedFavorites = favorites.filter((item: any) => 
+      const updatedFavorites = favorites.filter((item) => 
         item.id !== id && 
         item.title !== title
       );
@@ -92,7 +104,7 @@ export const useDealPage = (id?: string) => {
         description: "This deal has been removed from your wishlist.",
       });
     } else {
-      const newFavorite = {
+      const newFavorite: FavoriteDeal = {
         id: id,
         title: title,
         description: deal.text || '',

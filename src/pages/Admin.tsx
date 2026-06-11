@@ -16,6 +16,7 @@ import {
 	getAllCategories,
 	getClickStats,
 } from '../services/api';
+import type { ClickDataPoint, ClickStatsResponse, TelegramMessage } from '../types/telegram';
 import {
 	Loader2,
 	ArrowUp,
@@ -65,31 +66,15 @@ import AvgClicksCard from '@/components/AvgClicksCard';
 import TopPerformingDealsCarousel from '../components/admin/TopPerformingDealsCarousel';
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
 
-interface ClickData {
-	name: string;
-	clicks: number;
-	date: string;
-}
-
-interface StatsData {
-	daily: ClickData[];
-	weekly: ClickData[];
-	monthly: ClickData[];
-	yearly: ClickData[];
-	totalClicks: number;
-	totalMonthClicks: number;
-	totalYearClicks: number;
-}
-
 const Admin = () => {
 	const { toast } = useToast();
-	const [clickStats, setClickStats] = useState<StatsData | null>(null);
+	const [clickStats, setClickStats] = useState<ClickStatsResponse | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const [activePeriod, setActivePeriod] = useState<
 		'day' | 'week' | 'month' | 'year'
 	>('day');
-	const [topDeals, setTopDeals] = useState<any[]>([]);
-	const [selectedDeal, setSelectedDeal] = useState<any>(null);
+	const [topDeals, setTopDeals] = useState<TelegramMessage[]>([]);
+	const [selectedDeal, setSelectedDeal] = useState<TelegramMessage | null>(null);
 	const [isLoadingTop, setIsLoadingTop] = useState(true);
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
 	const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -124,7 +109,7 @@ const Admin = () => {
 	} as const;
 
 	// Create an array of the last 7 days
-	const getLast7DaysTrend = (deals: any[]) => {
+	const getLast7DaysTrend = (deals: TelegramMessage[]) => {
 		// this is for Total deals Card to plot graph
 		const today = new Date();
 		const last7Days = Array.from({ length: 7 }).map((_, i) => {
@@ -360,7 +345,7 @@ const Admin = () => {
 	};
 
 	// Open dialog with deal details
-	const handleOpenDealDetails = (deal: any) => {
+	const handleOpenDealDetails = (deal: TelegramMessage) => {
 		setSelectedDeal(deal);
 		setIsDialogOpen(true);
 	};
@@ -485,7 +470,7 @@ const Admin = () => {
 		// Handle Ctrl+Enter to submit
 		const handleTextareaKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
 		if (e.ctrlKey && e.key === 'Enter') {
-			handleSaveEdit(e as any); // Cast to any to satisfy FormEvent
+			e.currentTarget.form?.requestSubmit();
 		}
 		};
 

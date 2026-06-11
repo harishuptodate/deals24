@@ -1,4 +1,4 @@
-
+import type { AxiosError } from "axios";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -34,9 +34,10 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 1000 * 60 * 5, // 5 minutes
       gcTime: 1000 * 60 * 10, // 10 minutes
-      retry: (failureCount, error: any) => {
+      retry: (failureCount, error: unknown) => {
+        const status = (error as AxiosError | undefined)?.status ?? (error as { status?: number } | undefined)?.status;
         // Don't retry on 4xx errors
-        if (error?.status >= 400 && error?.status < 500) return false;
+        if (status !== undefined && status >= 400 && status < 500) return false;
         return failureCount < 3;
       },
       refetchOnWindowFocus: import.meta.env.PROD,
