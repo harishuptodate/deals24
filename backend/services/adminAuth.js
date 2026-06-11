@@ -88,13 +88,6 @@ function verifyAdminToken(token) {
 
 	try {
 		const payload = JSON.parse(base64UrlDecode(encodedPayload));
-		if (payload.exp && payload.exp < Date.now()) {
-			return {
-				ok: false,
-				reason: 'Token has expired.',
-			};
-		}
-
 		return {
 			ok: true,
 			payload,
