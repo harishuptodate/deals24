@@ -3,16 +3,17 @@ name: Sync to GitHub B
 on:
   push:
     branches:
-      - main
+      - "**"
 
 jobs:
   sync:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Mirror main branch to repo B
+      - name: Mirror pushed branch to repo B
         run: |
-          git clone --depth 1 --branch main https://github.com/${{ github.repository }} repo
+          BRANCH="${GITHUB_REF#refs/heads/}"
+          git clone --depth 1 --branch "$BRANCH" https://github.com/${{ github.repository }} repo
           cd repo
           git remote add repo-b https://x-access-token:${{ secrets.GH_B_TOKEN }}@github.com/chimmani111/deals24.git
-          git push repo-b main:main --force
+          git push repo-b "$BRANCH:$BRANCH" --force
