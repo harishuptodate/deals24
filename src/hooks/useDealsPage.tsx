@@ -1,9 +1,10 @@
 
 import { useState, useEffect } from 'react';
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { InfiniteData, useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
-import { getTelegramMessages, deleteProduct, updateMessageText } from '../services/api';
+import { getTelegramMessages, deleteProduct } from '../services/api';
+import type { TelegramMessage, TelegramResponse } from '../types/telegram';
 
 export const useDealsPage = () => {
   const { toast } = useToast();
@@ -17,6 +18,18 @@ export const useDealsPage = () => {
   const maxPriceParam = searchParams.get('maxPrice');
   const sortParam = searchParams.get('sort');
   const [activeCategory, setActiveCategory] = useState<string | null>(categoryParam);
+  const queryClient = useQueryClient();
+
+  const dealsQueryKey = [
+    'all-telegram-messages',
+    activeCategory,
+    searchQuery,
+    fromParam,
+    toParam,
+    minPriceParam,
+    maxPriceParam,
+    sortParam,
+  ] as const;
 
   useEffect(() => {
     setActiveCategory(categoryParam);
@@ -31,16 +44,7 @@ export const useDealsPage = () => {
     isError,
     refetch,
   } = useInfiniteQuery({
-    queryKey: [
-      'all-telegram-messages',
-      activeCategory,
-      searchQuery,
-      fromParam,
-      toParam,
-      minPriceParam,
-      maxPriceParam,
-      sortParam,
-    ],
+    queryKey: dealsQueryKey,
     queryFn: ({ pageParam }) =>
       getTelegramMessages(
         pageParam as string | undefined,
@@ -78,6 +82,68 @@ export const useDealsPage = () => {
     navigate('/deals');
   };
 
+  const removeDealFromCache = (id: string) => {
+    queryClient.setQueryData<InfiniteData<TelegramResponse>>(dealsQueryKey, (current) => {
+      if (!current) {
+        return current;
+      }
+
+      let removed = false;
+      const pages = current.pages.map((page) => {
+        const nextData = page.data.filter((message) => {
+          const shouldKeep = message.id !== id && message._id !== id;
+          if (!shouldKeep) {
+            removed = true;
+          }
+          return shouldKeep;
+        });
+
+        return nextData.length === page.data.length ? page : { ...page, data: nextData };
+      });
+
+      if (!removed) {
+        return current;
+      }
+
+      const firstPage = pages[0];
+      if (firstPage && typeof firstPage.totalDealsCount === 'number') {
+        pages[0] = {
+          ...firstPage,
+          totalDealsCount: Math.max(0, firstPage.totalDealsCount - 1),
+        };
+      }
+
+      return { ...current, pages };
+    });
+  };
+
+  const updateDealInCache = (
+    id: string,
+    updater: (message: TelegramMessage) => TelegramMessage,
+  ) => {
+    queryClient.setQueryData<InfiniteData<TelegramResponse>>(dealsQueryKey, (current) => {
+      if (!current) {
+        return current;
+      }
+
+      let updated = false;
+      const pages = current.pages.map((page) => {
+        const nextData = page.data.map((message) => {
+          if (message.id !== id && message._id !== id) {
+            return message;
+          }
+
+          updated = true;
+          return updater(message);
+        });
+
+        return updated ? { ...page, data: nextData } : page;
+      });
+
+      return updated ? { ...current, pages } : current;
+    });
+  };
+
   const handleDeleteProduct = async (id: string) => {
     if (!id) {
       toast({
@@ -93,12 +159,12 @@ export const useDealsPage = () => {
       const success = await deleteProduct(id);
 
       if (success) {
+        removeDealFromCache(id);
         toast({
           title: 'Success',
           description: 'Deal has been deleted successfully',
           variant: 'default',
         });
-        refetch();
       } else {
         toast({
           title: 'Error',
@@ -116,7 +182,7 @@ export const useDealsPage = () => {
     }
   };
 
-    const handleEditProduct = async (
+  const handleEditProduct = (
     id: string,
     newText: string,
     newImageUrl: string | null,
@@ -131,32 +197,12 @@ export const useDealsPage = () => {
       return;
     }
 
-    try {
-      console.log(`Attempting to edit deal with ID: ${id}`);
-      const success = await updateMessageText(id, newText, newImageUrl, newPrice);
-
-      if (success) {
-        toast({
-          title: 'Success',
-          description: 'Deal has been updated successfully',
-          variant: 'default',
-        });
-        refetch();
-      } else {
-        toast({
-          title: 'Error',
-          description: 'Failed to update deal',
-          variant: 'destructive',
-        });
-      }
-    } catch (error) {
-      console.error('Error updating deal:', error);
-      toast({
-        title: 'Error',
-        description: 'An error occurred while updating the deal',
-        variant: 'destructive',
-      });
-    }
+    updateDealInCache(id, (message) => ({
+      ...message,
+      text: newText,
+      imageUrl: newImageUrl || undefined,
+      price: newPrice || undefined,
+    }));
   };
 
   const getPageTitle = () => {

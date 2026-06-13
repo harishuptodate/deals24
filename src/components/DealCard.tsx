@@ -106,10 +106,6 @@ const DealCard = memo(({
     category: localCategory || category,
   });
 
-  // Extract links for UI decision making
-  const links = extractLinks(description);
-  const hasMultipleLinks = links.length > 1;
-
   const toggleFavorite = (e: React.MouseEvent) => {
     e.stopPropagation();
     handleToggleWishlist();
@@ -220,6 +216,8 @@ const DealCard = memo(({
   const displayTitle = localTitle || title;
   const displayDescription = localDescription || description;
   const displayCategory = localCategory || category;
+  const displayImageUrl = localImageUrl || imageUrl;
+  const hasMultipleLinks = extractLinks(displayDescription).length > 1;
 
   return (
     <>
@@ -244,12 +242,12 @@ const DealCard = memo(({
             title={displayTitle}
             description={displayDescription}
             createdAt={createdAt}
-            imageUrl={imageUrl}
+            imageUrl={displayImageUrl}
             telegramFileId={telegramFileId}
           />
 
           <DealCardButton
-            description={description}
+            description={displayDescription}
             link={link}
             id={id}
             hasMultipleLinks={hasMultipleLinks}
@@ -264,7 +262,7 @@ const DealCard = memo(({
         title={displayTitle}
         description={displayDescription}
         id={id}
-        imageUrl={imageUrl}
+        imageUrl={displayImageUrl}
         telegramFileId={telegramFileId}
       />
 
@@ -317,8 +315,8 @@ const DealCard = memo(({
         isOpen={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
         id={id || ''}
-        initialText={description}
-        initialImageUrl={imageUrl || null}
+        initialText={displayDescription}
+        initialImageUrl={displayImageUrl || null}
         initialPrice={price || null}
         onSuccess={handleEditSuccess}
       />
@@ -327,7 +325,7 @@ const DealCard = memo(({
         isOpen={isCategoryDialogOpen}
         onOpenChange={setIsCategoryDialogOpen}
         id={id || ''}
-        initialCategory={category || ''}
+        initialCategory={displayCategory || ''}
         onSuccess={handleCategorySuccess}
       />
     </>

@@ -1,9 +1,10 @@
 
 import { useState, useEffect } from 'react';
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { InfiniteData, useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
 import { getTelegramMessages, deleteProduct } from '../services/api';
+import type { TelegramResponse } from '../types/telegram';
 
 export const useDealGrid = () => {
   const { toast } = useToast();
@@ -16,6 +17,18 @@ export const useDealGrid = () => {
   const maxPriceParam = searchParams.get('maxPrice');
   const sortParam = searchParams.get('sort');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+
+  const dealsQueryKey = [
+    'telegram-messages',
+    activeCategory,
+    searchQuery,
+    fromParam,
+    toParam,
+    minPriceParam,
+    maxPriceParam,
+    sortParam,
+  ] as const;
 
   const {
     data,
@@ -26,16 +39,7 @@ export const useDealGrid = () => {
     isError,
     refetch,
   } = useInfiniteQuery({
-    queryKey: [
-      'telegram-messages',
-      activeCategory,
-      searchQuery,
-      fromParam,
-      toParam,
-      minPriceParam,
-      maxPriceParam,
-      sortParam,
-    ],
+    queryKey: dealsQueryKey,
     queryFn: ({ pageParam }) =>
       getTelegramMessages(
         pageParam as string | undefined,
@@ -73,6 +77,29 @@ export const useDealGrid = () => {
     navigate(`/deals?search=${encodeURIComponent(subCategory)}`);
   };
 
+  const removeDealFromCache = (id: string) => {
+    queryClient.setQueryData<InfiniteData<TelegramResponse>>(dealsQueryKey, (current) => {
+      if (!current) {
+        return current;
+      }
+
+      let removed = false;
+      const pages = current.pages.map((page) => {
+        const nextData = page.data.filter((message) => {
+          const shouldKeep = message.id !== id && message._id !== id;
+          if (!shouldKeep) {
+            removed = true;
+          }
+          return shouldKeep;
+        });
+
+        return nextData.length === page.data.length ? page : { ...page, data: nextData };
+      });
+
+      return removed ? { ...current, pages } : current;
+    });
+  };
+
   const handleDeleteProduct = async (id: string) => {
     if (!id) {
       toast({
@@ -88,12 +115,12 @@ export const useDealGrid = () => {
       const success = await deleteProduct(id);
 
       if (success) {
+        removeDealFromCache(id);
         toast({
           title: 'Success',
           description: 'Deal has been deleted successfully',
           variant: 'default',
         });
-        refetch();
       } else {
         toast({
           title: 'Error',
