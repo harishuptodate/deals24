@@ -103,23 +103,54 @@ export function isLowContext(text: string): boolean {
   return keywordMatch && meaningfulText.length < 60;
 }
 
-export function shouldSkipTwsDeal(text: string): boolean {
-  const normalizedText = text.toLowerCase();
-  const isTwsDeal = /\btws\b|true wireless|earbuds|Rockerz|airdopes|Duopods|ear buds/.test(normalizedText);
+const blockedProductKeywords = [
+  'tws',
+  'true wireless',
+  'earbuds',
+  'rockerz',
+  'airdopes',
+  'duopods',
+  'ear buds',
+  'bluetooth headset',
+  'neckband',
+  'earphones',
+  'earbuds',
+  'powerbank',
+  'power bank'
+];
 
-  if (!isTwsDeal) {
-    return false;
+const blockedBrands = [
+  'ptron',
+  'fire-boltt',
+  'fire boltt',
+  'boat',
+  'mivi',
+  'nu republic',
+  'amazon basics',
+  'zebronics',
+  'portronics',
+  'egate'
+];
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function hasKeyword(text: string, keyword: string): boolean {
+  if (/^[a-z0-9]+$/.test(keyword)) {
+    return new RegExp(`\\b${escapeRegExp(keyword)}\\b`).test(text);
   }
 
-  const blockedBrands = [
-    'ptron',
-    'fire-boltt',
-    'fire boltt',
-    'boat',
-    'mivi',
-    'nu republic',
-    'amazon basics',
-  ];
+  return text.includes(keyword);
+}
+
+export function shouldSkipBadProducts(text: string): boolean {
+  const normalizedText = text.toLowerCase();
+  const isBadProduct = blockedProductKeywords.some((keyword) => hasKeyword(normalizedText, keyword));
+
+  if (!isBadProduct) {
+    return false;
+  }
 
   return blockedBrands.some((brand) => normalizedText.includes(brand));
 }

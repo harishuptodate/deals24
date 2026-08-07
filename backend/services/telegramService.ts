@@ -16,7 +16,7 @@ import {
   normalizeMessage,
   replaceLinksAndText,
   resolveImageData,
-  shouldSkipTwsDeal,
+  shouldSkipBadProducts,
 } from './telegramMessageFilters';
 import { generateMessageContent } from './telegramMessageContent';
 import { getMessagesFromStore } from './telegramMessageQuery';
@@ -53,8 +53,8 @@ function shouldSkipMessage(textContent: string, messageDate: number): boolean {
     return true;
   }
 
-  if (shouldSkipTwsDeal(textContent)) {
-    console.log('Skipping TWS deal for blocked brand');
+  if (shouldSkipBadProducts(textContent)) {
+    console.log('Skipping blocked product deal for blocked brand');
     return true;
   }
 
