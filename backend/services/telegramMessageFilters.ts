@@ -129,7 +129,9 @@ const blockedBrands = [
   'amazon basics',
   'zebronics',
   'portronics',
-  'egate'
+  'egate',
+  'nu',
+  'noise'
 ];
 
 function escapeRegExp(value: string): string {
