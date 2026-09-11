@@ -881,7 +881,7 @@ const Admin = () => {
 									</p>
 								</div>
 								<Link to="/admin/logs">
-									<Button className="h-11 rounded-full bg-stone-950 px-5 text-white hover:bg-stone-800 dark:bg-stone-100 dark:text-stone-950 dark:hover:bg-white">
+									<Button className="h-11 rounded-full bg-stone-950 px-5 text-white transition-transform duration-150 ease-out hover:scale-[1.02] hover:bg-stone-800 active:scale-[0.94] dark:bg-stone-100 dark:text-stone-950 dark:hover:bg-white">
 										Open Logs Page
 										<ArrowRight className="ml-2 h-4 w-4" />
 									</Button>
