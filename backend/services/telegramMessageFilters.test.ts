@@ -12,8 +12,13 @@ import {
   normalizeGeminiPrice,
   normalizeMessage,
   replaceLinksAndText,
-  shouldSkipTwsDeal,
+  shouldSkipBadProducts,
 } from './telegramMessageFilters';
+
+const blacklist = {
+  brands: ['boat', 'noise'],
+  products: ['tws', 'power bank'],
+};
 
 test('detects amazon links and normalizes shortened urls', () => {
   const input = 'Deal link amzn.to/abc and https://amazon.in/dp/test';
@@ -59,8 +64,9 @@ test('classifies low-context and profitable messages', () => {
 });
 
 test('skips blocked tws deals but not unrelated messages', () => {
-  assert.equal(shouldSkipTwsDeal('Boat TWS earbuds deal'), true);
-  assert.equal(shouldSkipTwsDeal('Samsung phone launch offer'), false);
+  assert.equal(shouldSkipBadProducts('Boat TWS earbuds deal', blacklist), true);
+  assert.equal(shouldSkipBadProducts('Boat phone launch offer', blacklist), false);
+  assert.equal(shouldSkipBadProducts('Samsung TWS launch offer', blacklist), false);
 });
 
 test('normalizes Gemini price inputs safely', () => {

@@ -65,6 +65,7 @@ import PerformanceMetricsChart from '../components/admin/PerformanceMetricsChart
 import AvgClicksCard from '@/components/AvgClicksCard';
 import TopPerformingDealsCarousel from '../components/admin/TopPerformingDealsCarousel';
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
+import BlacklistManager from '../components/admin/BlacklistManager';
 
 const Admin = () => {
 	const { toast } = useToast();
@@ -861,6 +862,8 @@ const Admin = () => {
 						/>
 					</div>
 				</div>
+
+				{isAuthenticated() && <BlacklistManager />}
 
 				<div className="mb-8">
 					<Card className="overflow-hidden border-stone-200/80 bg-white/95 shadow-[0_18px_55px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-[#111113] dark:shadow-[0_24px_70px_rgba(0,0,0,0.35)]">

@@ -529,4 +529,32 @@ export const createAdminLogsStreamUrl = (recent = 25): string | null => {
   return `${API_BASE_URL}/admin/logs/stream?recent=${recent}&token=${encodeURIComponent(adminToken)}`;
 };
 
+export type BlacklistEntryType = 'brand' | 'product';
+
+export interface BlacklistEntry {
+  _id: string;
+  type: BlacklistEntryType;
+  value: string;
+  normalizedValue: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const getBlacklistEntries = async (): Promise<BlacklistEntry[]> => {
+  const response = await api.get('/admin/blacklist');
+  return response.data.entries || [];
+};
+
+export const addBlacklistEntry = async (
+  type: BlacklistEntryType,
+  value: string,
+): Promise<BlacklistEntry> => {
+  const response = await api.post('/admin/blacklist', { type, value });
+  return response.data.entry;
+};
+
+export const removeBlacklistEntry = async (id: string): Promise<void> => {
+  await api.delete(`/admin/blacklist/${id}`);
+};
+
 export default api;

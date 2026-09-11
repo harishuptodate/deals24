@@ -20,6 +20,7 @@ import {
 } from './telegramMessageFilters';
 import { generateMessageContent } from './telegramMessageContent';
 import { getMessagesFromStore } from './telegramMessageQuery';
+import { getDealBlacklist } from './blacklistService';
 
 let contentHashes: string[] = [];
 let imageUrlHashes: string[] = [];
@@ -41,7 +42,7 @@ function rollbackHash(hashes: string[], value: string | null): string[] {
   return hashes.filter((hash) => hash !== value);
 }
 
-function shouldSkipMessage(textContent: string, messageDate: number): boolean {
+async function shouldSkipMessage(textContent: string, messageDate: number): Promise<boolean> {
   if (!isRecentMessage(messageDate)) {
     console.log('Skipping message older than 5 minutes');
     return true;
@@ -53,7 +54,8 @@ function shouldSkipMessage(textContent: string, messageDate: number): boolean {
     return true;
   }
 
-  if (shouldSkipBadProducts(textContent)) {
+  const blacklist = await getDealBlacklist();
+  if (shouldSkipBadProducts(textContent, blacklist)) {
     console.log('Skipping blocked product deal for blocked brand');
     return true;
   }
@@ -79,7 +81,7 @@ export async function saveMessage(message: TelegramInboundMessage) {
     const channelId = String(chat.id);
     const telegramMessageId = String(message_id);
 
-    if (shouldSkipMessage(textContent, date)) {
+    if (await shouldSkipMessage(textContent, date)) {
       return null;
     }
 

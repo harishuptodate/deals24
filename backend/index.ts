@@ -13,6 +13,7 @@ import startFlushLoop from './scripts/flushRedisClicksToMongo';
 import { installConsoleLogger, runWithLogContext } from './services/logger';
 import { saveMessage } from './services/telegramService';
 import type { TelegramInboundMessage } from './services/telegramTypes';
+import { seedLegacyBlacklist } from './services/blacklistService';
 
 installConsoleLogger();
 
@@ -58,8 +59,9 @@ app.get('/api/health', (_req: Request, res: Response) => {
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI)
-  .then(() => {
+  .then(async () => {
     console.log('Connected to MongoDB');
+    await seedLegacyBlacklist();
     
     // Start the server
     app.listen(PORT, () => {

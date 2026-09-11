@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import type { ResolvedImageData, TelegramPhoto } from './telegramTypes';
 import { fetchProductImage } from './amazonService';
+import type { DealBlacklist } from './blacklistService';
 
 let lastAmazonApiCall = 0;
 const MIN_API_DELAY = 2000;
@@ -103,37 +104,6 @@ export function isLowContext(text: string): boolean {
   return keywordMatch && meaningfulText.length < 60;
 }
 
-const blockedProductKeywords = [
-  'tws',
-  'true wireless',
-  'earbuds',
-  'rockerz',
-  'airdopes',
-  'duopods',
-  'ear buds',
-  'bluetooth headset',
-  'neckband',
-  'earphones',
-  'earbuds',
-  'powerbank',
-  'power bank'
-];
-
-const blockedBrands = [
-  'ptron',
-  'fire-boltt',
-  'fire boltt',
-  'boat',
-  'mivi',
-  'nu republic',
-  'amazon basics',
-  'zebronics',
-  'portronics',
-  'egate',
-  'nu',
-  'noise'
-];
-
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
@@ -146,15 +116,15 @@ function hasKeyword(text: string, keyword: string): boolean {
   return text.includes(keyword);
 }
 
-export function shouldSkipBadProducts(text: string): boolean {
+export function shouldSkipBadProducts(text: string, blacklist: DealBlacklist): boolean {
   const normalizedText = text.toLowerCase();
-  const isBadProduct = blockedProductKeywords.some((keyword) => hasKeyword(normalizedText, keyword));
+  const isBadProduct = blacklist.products.some((keyword) => hasKeyword(normalizedText, keyword));
 
   if (!isBadProduct) {
     return false;
   }
 
-  return blockedBrands.some((brand) => normalizedText.includes(brand));
+  return blacklist.brands.some((brand) => normalizedText.includes(brand));
 }
 
 export function isProfitableProduct(text: string): boolean {
