@@ -540,9 +540,30 @@ export interface BlacklistEntry {
   updatedAt: string;
 }
 
-export const getBlacklistEntries = async (): Promise<BlacklistEntry[]> => {
+export type BlacklistRuleAction = 'allow' | 'block';
+
+export interface BlacklistRule {
+  _id: string;
+  brand: string;
+  product: string;
+  normalizedBrand: string;
+  normalizedProduct: string;
+  action: BlacklistRuleAction;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BlacklistPolicy {
+  entries: BlacklistEntry[];
+  rules: BlacklistRule[];
+}
+
+export const getBlacklistPolicy = async (): Promise<BlacklistPolicy> => {
   const response = await api.get('/admin/blacklist');
-  return response.data.entries || [];
+  return {
+    entries: response.data.entries || [],
+    rules: response.data.rules || [],
+  };
 };
 
 export const addBlacklistEntry = async (
@@ -555,6 +576,19 @@ export const addBlacklistEntry = async (
 
 export const removeBlacklistEntry = async (id: string): Promise<void> => {
   await api.delete(`/admin/blacklist/${id}`);
+};
+
+export const saveBlacklistRule = async (
+  brand: string,
+  product: string,
+  action: BlacklistRuleAction,
+): Promise<BlacklistRule> => {
+  const response = await api.post('/admin/blacklist/rules', { brand, product, action });
+  return response.data.rule;
+};
+
+export const removeBlacklistRule = async (id: string): Promise<void> => {
+  await api.delete(`/admin/blacklist/rules/${id}`);
 };
 
 export default api;

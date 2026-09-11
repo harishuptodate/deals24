@@ -1,9 +1,17 @@
 import BlacklistBootstrap from '../models/BlacklistBootstrap';
 import BlacklistEntry, { type BlacklistEntryType } from '../models/BlacklistEntry';
+import BlacklistRule, { type BlacklistRuleAction } from '../models/BlacklistRule';
+
+export type BrandProductRule = {
+  brand: string;
+  product: string;
+  action: BlacklistRuleAction;
+};
 
 export type DealBlacklist = {
   brands: string[];
   products: string[];
+  rules?: BrandProductRule[];
 };
 
 const CACHE_TTL_MS = 30_000;
@@ -57,9 +65,13 @@ export async function getDealBlacklist(): Promise<DealBlacklist> {
     return cachedBlacklist;
   }
 
-  const entries = await BlacklistEntry.find({}, { type: 1, normalizedValue: 1 })
-    .sort({ type: 1, normalizedValue: 1 })
-    .lean();
+  const [entries, rules] = await Promise.all([
+    BlacklistEntry.find({}, { type: 1, normalizedValue: 1 })
+      .sort({ type: 1, normalizedValue: 1 })
+      .lean(),
+    BlacklistRule.find({}, { normalizedBrand: 1, normalizedProduct: 1, action: 1 })
+      .lean(),
+  ]);
 
   cachedBlacklist = {
     brands: entries
@@ -68,6 +80,11 @@ export async function getDealBlacklist(): Promise<DealBlacklist> {
     products: entries
       .filter((entry) => entry.type === 'product')
       .map((entry) => entry.normalizedValue),
+    rules: rules.map((rule) => ({
+      brand: rule.normalizedBrand,
+      product: rule.normalizedProduct,
+      action: rule.action,
+    })),
   };
   cacheExpiresAt = Date.now() + CACHE_TTL_MS;
   return cachedBlacklist;
@@ -76,6 +93,12 @@ export async function getDealBlacklist(): Promise<DealBlacklist> {
 export async function listBlacklistEntries() {
   return BlacklistEntry.find()
     .sort({ type: 1, normalizedValue: 1 })
+    .lean();
+}
+
+export async function listBlacklistRules() {
+  return BlacklistRule.find()
+    .sort({ normalizedBrand: 1, normalizedProduct: 1 })
     .lean();
 }
 
@@ -92,6 +115,38 @@ export async function removeBlacklistEntry(id: string) {
     invalidateBlacklistCache();
   }
   return entry;
+}
+
+export async function upsertBlacklistRule(
+  brand: string,
+  product: string,
+  action: BlacklistRuleAction,
+) {
+  const normalizedBrand = normalizeBlacklistValue(brand);
+  const normalizedProduct = normalizeBlacklistValue(product);
+  const rule = await BlacklistRule.findOneAndUpdate(
+    { normalizedBrand, normalizedProduct },
+    {
+      $set: {
+        brand: brand.trim(),
+        product: product.trim(),
+        normalizedBrand,
+        normalizedProduct,
+        action,
+      },
+    },
+    { upsert: true, new: true, setDefaultsOnInsert: true },
+  ).lean();
+  invalidateBlacklistCache();
+  return rule;
+}
+
+export async function removeBlacklistRule(id: string) {
+  const rule = await BlacklistRule.findByIdAndDelete(id).lean();
+  if (rule) {
+    invalidateBlacklistCache();
+  }
+  return rule;
 }
 
 export async function seedLegacyBlacklist(): Promise<void> {

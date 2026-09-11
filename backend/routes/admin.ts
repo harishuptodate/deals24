@@ -4,11 +4,15 @@ import { issueAdminToken, verifyAdminCredentials } from '../services/adminAuth';
 import { createLogger, fetchRecentLogs, logEmitter, queryLogs } from '../services/logger';
 import { requireAdminAuth } from '../middleware/adminAuth';
 import type { BlacklistEntryType } from '../models/BlacklistEntry';
+import type { BlacklistRuleAction } from '../models/BlacklistRule';
 import {
 	addBlacklistEntry,
 	listBlacklistEntries,
+	listBlacklistRules,
 	normalizeBlacklistValue,
 	removeBlacklistEntry,
+	removeBlacklistRule,
+	upsertBlacklistRule,
 } from '../services/blacklistService';
 
 const router = express.Router();
@@ -33,14 +37,76 @@ type AdminLogsRequest = Request<
 >;
 
 type BlacklistRequest = Request<unknown, unknown, { type?: string; value?: string }>;
+type BlacklistRuleRequest = Request<
+	unknown,
+	unknown,
+	{ brand?: string; product?: string; action?: string }
+>;
 
 router.get('/blacklist', requireAdminAuth, async (_req: Request, res: Response) => {
 	try {
-		const entries = await listBlacklistEntries();
-		return res.json({ success: true, entries });
+		const [entries, rules] = await Promise.all([
+			listBlacklistEntries(),
+			listBlacklistRules(),
+		]);
+		return res.json({ success: true, entries, rules });
 	} catch (error) {
 		logger.error('Failed to list blacklist entries', { error }, { event: 'blacklist_list_failed' });
 		return res.status(500).json({ success: false, error: 'Failed to load blacklist.' });
+	}
+});
+
+router.post('/blacklist/rules', requireAdminAuth, async (req: BlacklistRuleRequest, res: Response) => {
+	const { brand, product, action } = req.body || {};
+	const normalizedBrand = typeof brand === 'string' ? normalizeBlacklistValue(brand) : '';
+	const normalizedProduct = typeof product === 'string' ? normalizeBlacklistValue(product) : '';
+
+	if (
+		(action !== 'allow' && action !== 'block')
+		|| !normalizedBrand
+		|| !normalizedProduct
+		|| normalizedBrand.length > 100
+		|| normalizedProduct.length > 100
+	) {
+		return res.status(400).json({
+			success: false,
+			error: 'Brand and product must be 1-100 characters, and action must be allow or block.',
+		});
+	}
+
+	try {
+		const rule = await upsertBlacklistRule(
+			brand as string,
+			product as string,
+			action as BlacklistRuleAction,
+		);
+		logger.info(
+			'Brand-product rule saved',
+			{ brand: normalizedBrand, product: normalizedProduct, action },
+			{ event: 'blacklist_rule_saved' },
+		);
+		return res.json({ success: true, rule });
+	} catch (error) {
+		logger.error('Failed to save blacklist rule', { error }, { event: 'blacklist_rule_save_failed' });
+		return res.status(500).json({ success: false, error: 'Failed to save brand-product rule.' });
+	}
+});
+
+router.delete('/blacklist/rules/:id', requireAdminAuth, async (req: Request<{ id: string }>, res: Response) => {
+	if (!mongoose.isValidObjectId(req.params.id)) {
+		return res.status(400).json({ success: false, error: 'Invalid rule ID.' });
+	}
+
+	try {
+		const rule = await removeBlacklistRule(req.params.id);
+		if (!rule) {
+			return res.status(404).json({ success: false, error: 'Rule not found.' });
+		}
+		logger.info('Brand-product rule removed', { id: req.params.id }, { event: 'blacklist_rule_removed' });
+		return res.json({ success: true });
+	} catch (error) {
+		logger.error('Failed to remove blacklist rule', { error }, { event: 'blacklist_rule_remove_failed' });
+		return res.status(500).json({ success: false, error: 'Failed to remove brand-product rule.' });
 	}
 });
 

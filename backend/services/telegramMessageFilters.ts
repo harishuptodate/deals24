@@ -118,6 +118,19 @@ function hasKeyword(text: string, keyword: string): boolean {
 
 export function shouldSkipBadProducts(text: string, blacklist: DealBlacklist): boolean {
   const normalizedText = text.toLowerCase();
+  const matchingRules = (blacklist.rules || []).filter((rule) => (
+    normalizedText.includes(rule.brand)
+    && hasKeyword(normalizedText, rule.product)
+  ));
+
+  if (matchingRules.some((rule) => rule.action === 'allow')) {
+    return false;
+  }
+
+  if (matchingRules.some((rule) => rule.action === 'block')) {
+    return true;
+  }
+
   const isBadProduct = blacklist.products.some((keyword) => hasKeyword(normalizedText, keyword));
 
   if (!isBadProduct) {

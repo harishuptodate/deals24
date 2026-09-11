@@ -18,12 +18,27 @@ import {
 const blacklist = {
   brands: ['boat', 'noise'],
   products: ['tws', 'power bank'],
+  rules: [],
 };
 
 test('detects amazon links and normalizes shortened urls', () => {
   const input = 'Deal link amzn.to/abc and https://amazon.in/dp/test';
   assert.equal(hasAmazonLinks(input), true);
   assert.deepEqual(extractAmazonUrls(input), ['https://amzn.to/abc', 'https://amazon.in/dp/test']);
+});
+
+test('allows and blocks exact brand-product overrides before the default rule', () => {
+  const policy = {
+    ...blacklist,
+    rules: [
+      { brand: 'boat', product: 'tws', action: 'allow' as const },
+      { brand: 'samsung', product: 'tws', action: 'block' as const },
+    ],
+  };
+
+  assert.equal(shouldSkipBadProducts('Boat TWS earbuds deal', policy), false);
+  assert.equal(shouldSkipBadProducts('Samsung TWS earbuds deal', policy), true);
+  assert.equal(shouldSkipBadProducts('Noise TWS earbuds deal', policy), true);
 });
 
 test('normalizes message content for duplicate detection', () => {
