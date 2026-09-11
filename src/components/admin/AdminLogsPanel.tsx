@@ -514,7 +514,7 @@ export default function AdminLogsPanel({ enabled, onLogin }: AdminLogsPanelProps
 				</div>
 			</section>
 
-			<Card className="overflow-hidden border-stone-200/90 bg-white shadow-sm dark:border-white/10 dark:bg-[#111113]">
+			<Card className="overflow-hidden border-stone-200/90 bg-white shadow-sm !transform-none !transition-none dark:border-white/10 dark:bg-[#111113]">
 				<div className="border-b border-stone-200/80 p-4 dark:border-white/10 sm:p-5">
 					<div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
 						<div>

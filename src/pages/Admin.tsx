@@ -866,7 +866,7 @@ const Admin = () => {
 				{isAuthenticated() && <BlacklistManager />}
 
 				<div className="mb-8">
-					<Card className="overflow-hidden border-stone-200/80 bg-white/95 shadow-[0_18px_55px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-[#111113] dark:shadow-[0_24px_70px_rgba(0,0,0,0.35)]">
+					<Card className="overflow-hidden border-stone-200/80 bg-white/95 shadow-[0_18px_55px_rgba(15,23,42,0.06)] !transform-none !transition-none dark:border-white/10 dark:bg-[#111113] dark:shadow-[0_24px_70px_rgba(0,0,0,0.35)]">
 						<CardContent className="relative p-0">
 							<div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(245,158,11,0.12),transparent_26%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.12),transparent_28%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(245,158,11,0.12),transparent_24%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.18),transparent_28%)]" />
 							<div className="relative flex flex-col gap-5 p-6 md:flex-row md:items-center md:justify-between">
