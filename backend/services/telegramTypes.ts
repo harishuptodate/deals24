@@ -15,6 +15,7 @@ export type TelegramInboundMessage = {
 export type ResolvedImageData = {
   imageUrl: string | null;
   telegramFileId: string | null;
+  amazonUrl: string | null;
 };
 
 export type GeneratedMessageContent = {

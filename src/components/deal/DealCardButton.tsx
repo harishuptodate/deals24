@@ -24,9 +24,10 @@ const DealCardButton = ({ description, link, id, hasMultipleLinks }: DealCardBut
     }, 100);
   };
 
-  const primaryLink = hasMultipleLinks 
-    ? extractSecondLink(description) || '#'
-    : link || extractFirstLink(description) || '#';
+  const fallbackLink = hasMultipleLinks
+    ? extractSecondLink(description)
+    : extractFirstLink(description);
+  const primaryLink = link || fallbackLink || '#';
 
   return (
     <div className="mt-auto pt-3 flex-shrink-0">

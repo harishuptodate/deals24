@@ -1,6 +1,4 @@
 
-version: '3.8'
-
 services:
   frontend:
     container_name: frontend
@@ -40,6 +38,8 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS}
       - IS_SALE_MODE=${IS_SALE_MODE:-false}
+      - AMAZON_AFFILIATE_TAG=${AMAZON_AFFILIATE_TAG:-harishch-21}
+      - AMAZON_IMAGE_FALLBACK_API_URL=${AMAZON_IMAGE_FALLBACK_API_URL:-https://amznpf.vercel.app/api/fetch-image}
     volumes:
       - ./backend/logs:/app/logs
     networks:

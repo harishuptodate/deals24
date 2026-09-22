@@ -108,7 +108,7 @@ export const useDealPage = (id?: string) => {
         id: id,
         title: title,
         description: deal.text || '',
-        link: extractFirstLink(deal.text || '') || window.location.href,
+        link: deal.link || extractFirstLink(deal.text || '') || window.location.href,
         timestamp: new Date().toISOString(),
         createdAt: deal.date || deal.createdAt || new Date().toISOString(),
         category: deal.category,

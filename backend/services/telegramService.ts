@@ -21,6 +21,7 @@ import {
 import { generateMessageContent } from './telegramMessageContent';
 import { getMessagesFromStore } from './telegramMessageQuery';
 import { getDealBlacklist } from './blacklistService';
+import { replaceLastAmazonUrl } from './amazon/amazonLink';
 
 let contentHashes: string[] = [];
 let imageUrlHashes: string[] = [];
@@ -97,8 +98,11 @@ export async function saveMessage(message: TelegramInboundMessage) {
     }
 
     const cleanedText = replaceLinksAndText(textContent);
-    const link = extractLinks(cleanedText);
     const imageData = await resolveImageData(cleanedText, photo);
+    const canonicalText = imageData.amazonUrl
+      ? replaceLastAmazonUrl(cleanedText, imageData.amazonUrl)
+      : cleanedText;
+    const link = imageData.amazonUrl || extractLinks(canonicalText);
     const imageHash = imageData.imageUrl ? hashString(imageData.imageUrl) : null;
 
     if (imageHash && imageUrlHashes.includes(imageHash)) {
@@ -111,7 +115,7 @@ export async function saveMessage(message: TelegramInboundMessage) {
       imageUrlHashes = rememberHash(imageUrlHashes, imageHash, 15);
     }
 
-    const processedContent = await generateMessageContent(cleanedText);
+    const processedContent = await generateMessageContent(canonicalText);
     const newMessage = new TelegramMessage({
       messageId: telegramMessageId,
       text: processedContent.normalizedText,

@@ -33,6 +33,7 @@ interface DealDetailDialogProps {
 	onOpenChange: (open: boolean) => void;
 	title: string;
 	description: string;
+	link?: string;
 	id?: string;
 	imageUrl?: string;
 	telegramFileId?: string;
@@ -48,6 +49,7 @@ const DealDetailDialog = ({
 	onOpenChange,
 	title,
 	description,
+	link,
 	id,
 	imageUrl,
 	telegramFileId,
@@ -56,6 +58,7 @@ const DealDetailDialog = ({
 	const { toast } = useToast();
 	const [isSharing, setIsSharing] = useState(false);
 	const navigate = useNavigate();
+	const buyNowLink = link || extractSecondLink(description) || extractFirstLink(description);
 
 	const handleShare = async () => {
 		setIsSharing(true);
@@ -196,19 +199,13 @@ const DealDetailDialog = ({
 									Close
 								</Button>
 							</DialogClose>
-					{extractFirstLink(description || '') && (
+					{buyNowLink && (
 						<div className="flex w-full gap-3 sm:contents">
 							<a
-								href={
-									extractSecondLink(description || '') ||
-									extractFirstLink(description || '') ||
-									'#'
-								}
+								href={buyNowLink}
 								onClick={(e) =>
 									handleTrackedLinkClick(
-										extractSecondLink(description || '') ||
-											extractFirstLink(description || '') ||
-											'',
+										buyNowLink,
 										id,
 										e.nativeEvent,
 									)

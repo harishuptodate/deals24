@@ -9,6 +9,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 interface DealPageContentProps {
   deal: {
     text: string;
+    link?: string;
     category?: string;
     date?: string;
     createdAt?: string;
@@ -104,6 +105,7 @@ const DealPageContent = ({ deal, id }: DealPageContentProps) => {
   };
 
   const hasImage = deal.imageUrl || deal.telegramFileId;
+  const buyNowLink = deal.link || extractSecondLink(deal.text || '') || extractFirstLink(deal.text || '');
 
   return (
     // <div className="glass-effect rounded-2xl p-6 md:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-200 dark:border-gray-900 dark:bg-zinc-950">
@@ -142,11 +144,11 @@ const DealPageContent = ({ deal, id }: DealPageContentProps) => {
       </div>
       )}
 
-      {extractFirstLink(deal.text || '') && (
+      {buyNowLink && (
         <div className="mt-8 flex justify-center">
           <a
-            href={extractSecondLink(deal.text || '') || extractFirstLink(deal.text || '') || '#'}
-            onClick={(e) => handleTrackedLinkClick(extractSecondLink(deal.text || '') || (extractFirstLink(deal.text || '')) || '', id, e.nativeEvent)}
+            href={buyNowLink}
+            onClick={(e) => handleTrackedLinkClick(buyNowLink, id, e.nativeEvent)}
             target="_blank"
             rel="noopener noreferrer"
           //   className="inline-block w-full sm:w-auto text-center px-6 py-3 text-sm font-medium text-white bg-gradient-to-b from-apple-darkGray to-indigo-950 rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-apple-darkGray/20 hover:scale-105"

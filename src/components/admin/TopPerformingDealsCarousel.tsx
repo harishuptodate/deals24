@@ -107,7 +107,7 @@ const TopPerformingDealsCarousel = ({
 		return {
 			title,
 			description: deal.text || '',
-			link: '', // Will be extracted from description by DealCard
+			link: deal.link || extractSecondLink(deal.text || '') || extractFirstLink(deal.text || '') || '',
 			id: deal._id || deal.id,
 			category: deal.category || '',
 			createdAt: deal.date || deal.createdAt,
@@ -195,6 +195,7 @@ const TopPerformingDealsCarousel = ({
 					onOpenChange={setIsDialogOpen}
 					title={selectedDeal.text?.split('\n')[0] || 'Deal Details'}
 					description={selectedDeal.text || ''}
+					link={selectedDeal.link}
 					id={selectedDeal._id || selectedDeal.id}
 					imageUrl={selectedDeal.imageUrl}
 					telegramFileId={selectedDeal.telegramFileId}
@@ -335,9 +336,10 @@ const CustomDealCard = ({
 	) => void;
 	onCategoryUpdate?: (id: string, category: string) => void;
 }) => {
-	const { title, description, imageUrl, price, telegramFileId, createdAt } =
+	const { title, description, link, imageUrl, price, telegramFileId, createdAt } =
 		formattedDeal;
 	const { toast } = useToast();
+	const buyNowLink = link || extractSecondLink(description) || extractFirstLink(description);
 
 	// Dialog states for admin actions
 	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -363,7 +365,7 @@ const CustomDealCard = ({
 			id: formattedDeal.id,
 			title,
 			description,
-			link: extractFirstLink(description) || '',
+			link,
 			imageUrl,
 			telegramFileId,
 			fullText: description,
@@ -541,20 +543,14 @@ const CustomDealCard = ({
 					</div>
 
 					{/* Buy Now Button */}
-					{extractFirstLink(description) && (
+					{buyNowLink && (
 						<div className="mt-auto flex justify-center">
 							<a
-								href={
-									extractSecondLink(description) ||
-									extractFirstLink(description) ||
-									'#'
-								}
+								href={buyNowLink}
 								onClick={(e) => {
 									e.stopPropagation();
 									handleTrackedLinkClick(
-										extractSecondLink(description) ||
-											extractFirstLink(description) ||
-											'',
+										buyNowLink,
 										formattedDeal.id,
 										e.nativeEvent,
 									);

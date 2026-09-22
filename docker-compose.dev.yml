@@ -1,6 +1,4 @@
 
-version: '3.8'
-
 services:
   frontend:
     container_name: frontend
@@ -26,6 +24,9 @@ services:
       dockerfile: Dockerfile.dev
     ports:
       - "3000:3000"
+    depends_on:
+      redis:
+        condition: service_healthy
     volumes:
       - ./backend:/app
       - /app/node_modules
@@ -39,10 +40,29 @@ services:
       - JWT_SECRET=${JWT_SECRET:-dev_secret}
       - CORS_ALLOWED_ORIGINS=http://localhost:8080
       - IS_SALE_MODE=${IS_SALE_MODE:-false}
+      - AMAZON_AFFILIATE_TAG=${AMAZON_AFFILIATE_TAG:-harishch-21}
+      - AMAZON_IMAGE_FALLBACK_API_URL=${AMAZON_IMAGE_FALLBACK_API_URL:-https://amznpf.vercel.app/api/fetch-image}
     networks:
       - deals24-dev
-  
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - deals24-dev
 
 networks:
   deals24-dev:
     driver: bridge
+
+volumes:
+  redis-data:

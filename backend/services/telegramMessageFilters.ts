@@ -3,8 +3,8 @@ import type { ResolvedImageData, TelegramPhoto } from './telegramTypes';
 import { fetchProductImage } from './amazonService';
 import type { DealBlacklist } from './blacklistService';
 
-let lastAmazonApiCall = 0;
-const MIN_API_DELAY = 2000;
+let lastAmazonFetchAt = 0;
+const MIN_AMAZON_FETCH_DELAY = 2000;
 
 export function hasAmazonLinks(text: string): boolean {
   if (!text) return false;
@@ -29,17 +29,17 @@ function getHighestQualityPhoto(photos: TelegramPhoto[] | null | undefined): Tel
   }, null);
 }
 
-async function waitForApiRateLimit(): Promise<void> {
+async function waitForAmazonRateLimit(): Promise<void> {
   const now = Date.now();
-  const timeSinceLastCall = now - lastAmazonApiCall;
+  const timeSinceLastCall = now - lastAmazonFetchAt;
 
-  if (timeSinceLastCall < MIN_API_DELAY) {
-    const waitTime = MIN_API_DELAY - timeSinceLastCall;
-    console.log(`Rate limiting: waiting ${waitTime}ms before Amazon API call`);
+  if (timeSinceLastCall < MIN_AMAZON_FETCH_DELAY) {
+    const waitTime = MIN_AMAZON_FETCH_DELAY - timeSinceLastCall;
+    console.log(`Rate limiting: waiting ${waitTime}ms before Amazon fetch`);
     await new Promise((resolve) => setTimeout(resolve, waitTime));
   }
 
-  lastAmazonApiCall = Date.now();
+  lastAmazonFetchAt = Date.now();
 }
 
 export function normalizeMessage(text: string): string {
@@ -89,7 +89,7 @@ export function replaceLinksAndText(text: string): string {
 
 export function isRecentMessage(messageDate: number): boolean {
   const messageTimestamp = messageDate * 1000;
-  return Date.now() - messageTimestamp <= 5 * 60 * 1000;
+  return Date.now() - messageTimestamp <= 50 * 60 * 1000;
 }
 
 export function isLowContext(text: string): boolean {
@@ -216,14 +216,16 @@ export async function resolveImageData(
 ): Promise<ResolvedImageData> {
   let imageUrl: string | null = null;
   let telegramFileId: string | null = null;
+  let amazonUrl: string | null = null;
 
   if (hasAmazonLinks(cleanedText)) {
     const amazonUrls = extractAmazonUrls(cleanedText);
 
     if (amazonUrls.length > 0) {
       try {
-        await waitForApiRateLimit();
+        await waitForAmazonRateLimit();
         const result = await fetchProductImage(amazonUrls[amazonUrls.length - 1]);
+        amazonUrl = result.amazonUrl || null;
 
         if (result.success && result.imageUrl) {
           const validImageUrl = await isValidImageUrl(result.imageUrl);
@@ -233,11 +235,11 @@ export async function resolveImageData(
             console.log('Fetched image URL is invalid or not accessible. Falling back to Telegram image.');
           }
         } else {
-          console.log('Failed to fetch Amazon image via API:', result.error);
+          console.log('Failed to fetch Amazon image:', result.error);
           console.log('Falling back to Telegram image');
         }
       } catch (error) {
-        console.error('Error fetching Amazon product image via API & using fallback Telegram image function :', error);
+        console.error('Error fetching Amazon product image; using Telegram image fallback:', error);
       }
     }
   }
@@ -254,5 +256,6 @@ export async function resolveImageData(
   return {
     imageUrl,
     telegramFileId,
+    amazonUrl,
   };
 }

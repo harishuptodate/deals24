@@ -262,6 +262,7 @@ const DealCard = memo(({
         onOpenChange={setIsOpen}
         title={displayTitle}
         description={displayDescription}
+        link={link}
         id={id}
         imageUrl={displayImageUrl}
         telegramFileId={telegramFileId}

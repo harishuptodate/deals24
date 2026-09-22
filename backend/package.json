@@ -6,10 +6,10 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
-    "dev": "npm run build && nodemon dist/index.js",
+    "dev": "tsx watch index.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "node ../node_modules/eslint/bin/eslint.js . --config eslint.config.js",
-    "test": "npm run build && node --test dist/utils/extractPrice.test.js dist/services/telegramMessageFilters.test.js"
+    "test": "npm run build && node --test --test-force-exit dist/utils/extractPrice.test.js dist/services/telegramMessageFilters.test.js dist/services/amazon/amazonLink.test.js dist/services/amazon/amazonFallback.test.js"
   },
   "dependencies": {
     "@google/genai": "^1.33.0",
@@ -26,7 +26,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.13.10",
-    "nodemon": "^3.0.1",
+    "tsx": "^4.23.15",
     "typescript": "^5.6.3"
   }
 }

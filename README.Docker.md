@@ -36,8 +36,8 @@ docker-compose -f docker-compose.dev.yml down
 This will start:
 - Frontend on http://localhost:8080
 - Backend on http://localhost:3000
-- MongoDB on localhost:27017
-- Redis on localhost:6379
+
+The backend development container runs Node.js 20 and `tsx watch index.ts`. MongoDB uses the connection configured in `.env`, while the development Compose stack starts Redis on port 6379.
 
 ## Production Deployment
 

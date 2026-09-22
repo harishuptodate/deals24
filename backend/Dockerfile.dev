@@ -1,6 +1,6 @@
 
 # Development Dockerfile for Backend
-FROM node:18-alpine
+FROM node:20-alpine
 
 WORKDIR /app
 
@@ -8,14 +8,11 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 
-# Install nodemon globally for development
-RUN npm install -g nodemon
-
 # Copy source code
 COPY . .
 
 # Expose port
 EXPOSE 3000
 
-# Start development server with nodemon
+# Start the TypeScript development server with tsx
 CMD ["npm", "run", "dev"]
