@@ -89,7 +89,7 @@ export function replaceLinksAndText(text: string): string {
 
 export function isRecentMessage(messageDate: number): boolean {
   const messageTimestamp = messageDate * 1000;
-  return Date.now() - messageTimestamp <= 50 * 60 * 1000;
+  return Date.now() - messageTimestamp <= 5 * 60 * 1000;
 }
 
 export function isLowContext(text: string): boolean {
