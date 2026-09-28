@@ -21,10 +21,10 @@ const CategoryFilter = ({
     { name: 'Best Deals', slug: 'Best-Deals' },
     { name: 'Electronics & Home', slug: 'electronics-home' },
     { name: 'Laptops & PCs', slug: 'laptops' },
-    { name: 'Mobile Phones', slug: 'mobile-phones' },
-    { name: 'Gadgets & Accessories', slug: 'gadgets-accessories' },
-    { name: 'Fashion', slug: 'fashion' },
+    { name: 'Gadgets & Tech', slug: 'gadgets-accessories' },
     { name: 'Lifestyle & Accessories', slug: 'lifestyle' },
+    { name: 'Mobile Phones', slug: 'mobile-phones' },
+    { name: 'Fashion', slug: 'fashion' },
     { name: 'Miscellaneous', slug: 'miscellaneous' },
   ];
 

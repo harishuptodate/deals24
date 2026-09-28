@@ -95,11 +95,11 @@ Normalized message:
 
 2. Identify the category: Based on the product described, classify it into ONE of these exact categories:
    - laptops: laptops, notebooks, ultrabooks and Chromebooks
-   - electronics-home: televisions, appliances, furniture and home electronics
+   - electronics-home: televisions, appliances, furniture, kitchenware and home products
    - mobile-phones: smartphones and mobile phones
-   - gadgets-accessories: tablets, smartwatches, computer accessories and phone accessories
+   - gadgets-accessories: tablets, audio, cameras, routers, smartwatches, computer accessories and phone accessories
    - fashion: clothing only, including shirts, trousers, dresses and ethnic wear
-   - lifestyle: non-smart watches, footwear, luggage, bags, perfumes, jewelry and personal accessories
+   - lifestyle: non-smart watches, footwear, luggage, beauty, personal care, sports, fitness and personal accessories
    - miscellaneous: products that do not fit another category
 
 Use lifestyle, not fashion, for shoes, sneakers, boots, classic watches, trolley bags and perfumes. Use gadgets-accessories for smartwatches, phone cases and laptop bags.

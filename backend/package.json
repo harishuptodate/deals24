@@ -9,6 +9,8 @@
     "dev": "tsx watch index.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "node ../node_modules/eslint/bin/eslint.js . --config eslint.config.js",
+    "migrate:fashion-lifestyle": "tsx scripts/migrateFashionToLifestyle.ts",
+    "migrate:categories": "tsx scripts/migrateDealCategories.ts",
     "test": "npm run build && node --test --test-force-exit dist/utils/extractPrice.test.js dist/services/detectCategory.test.js dist/services/telegramMessageFilters.test.js dist/services/amazon/amazonLink.test.js dist/services/amazon/amazonFallback.test.js"
   },
   "dependencies": {

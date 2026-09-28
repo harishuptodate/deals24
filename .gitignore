@@ -14,6 +14,7 @@ dist-ssr
 .env
 .env2
 deals24-secrets.yml
+backend/backups/
 
 # Editor directories and files
 .vscode/*

@@ -46,7 +46,7 @@ const Categories = () => {
 			count: getCount('electronics-home'),
 			icon: <Tv className="w-12 h-12 mb-4 text-gray-700 dark:text-gray-300" />,
 			description:
-				'Find the latest deals on TVs, appliances, audio systems and more',
+				'TVs, appliances, furniture, kitchenware and home products',
 			slug: 'electronics-home',
 		},
 		{
@@ -92,7 +92,7 @@ const Categories = () => {
 			icon: (
 				<Watch className="w-12 h-12 mb-4 text-gray-700 dark:text-gray-300" />
 			),
-			description: 'Footwear, watches, luggage, bags, perfumes and jewelry',
+			description: 'Footwear, watches, beauty, personal care, sports and fitness',
 			slug: 'lifestyle',
 		},
 		{

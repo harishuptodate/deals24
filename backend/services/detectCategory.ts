@@ -10,6 +10,13 @@ export const DEAL_CATEGORIES = [
 ] as const;
 
 export type DealCategory = (typeof DEAL_CATEGORIES)[number];
+export type CategoryConfidence = 'high' | 'medium' | 'low';
+
+export type CategoryDetection = {
+	category: DealCategory;
+	confidence: CategoryConfidence;
+	matchedBy: string | null;
+};
 
 type DetectableCategory = Exclude<DealCategory, 'Best-Deals' | 'miscellaneous'>;
 
@@ -24,6 +31,54 @@ const CATEGORY_RULES: readonly CategoryRule[] = [
 	{
 		category: 'gadgets-accessories',
 		keywords: [
+			'wireless ergonomic mouse',
+			'gaming keyboard',
+			'ssd upgrade kit',
+			'power adapter for iphone',
+			'wireless mouse',
+			'wireless keyboard',
+			'laptop powerbank',
+			'laptop power bank',
+			'laptop bags',
+			'vacuum cleaner for car',
+			'car cartridge vacuum cleaner',
+			'gimbal for smartphone',
+			'carplay adapter',
+			'gimbal',
+			'keyboard and mouse combo',
+			'keyboard & mouse combo',
+			'keyboard mouse combo',
+			'smartphone gimbal',
+			'phone gimbal',
+			'gimbal stabilizer',
+			'car vacuum cleaner',
+			'laptop cooling stand',
+			'laptop charger',
+			'laptop stand',
+			'cmf by nothing watch',
+			'usb-c to hdmi adapter',
+			'hdmi adapter',
+			'mobile charger',
+			'phone holder',
+			'fire tv stick',
+			'liquid cooler',
+			'cpu cooler',
+			'redmi watch',
+			'oneplus watch',
+			'cmf watch',
+			'amazfit watch',
+			'ac adapter',
+			'oneplus nord buds',
+			'redmi buds',
+			'realme buds',
+			'cmf buds',
+			'galaxy tab',
+			'redmi pad',
+			'oneplus pad',
+			'xiaomi pad',
+			'realme pad',
+			'android tablet',
+			'tablet computer',
 			'phone screen protector',
 			'wireless charger',
 			'lightning cable',
@@ -53,6 +108,32 @@ const CATEGORY_RULES: readonly CategoryRule[] = [
 			'galaxy watch',
 			'galaxy buds',
 			'oneplus buds',
+			'boat airdopes',
+			'airdopes',
+			'ear buds',
+			'wireless headset',
+			'wired headset',
+			'headset',
+			'headsets',
+			'sound bar',
+			'soundbar',
+			'bluetooth speaker',
+			'boombox',
+			'microphone',
+			'wireless mic',
+			'wifi router',
+			'wi-fi router',
+			'mesh router',
+			'router',
+			'security camera',
+			'action camera',
+			'dash camera',
+			'webcam',
+			'extension board',
+			'power strip',
+			'usb hub',
+			'gaming cabinet',
+			'airtag',
 			'vr headset',
 			'cooling pad',
 			'power bank',
@@ -76,16 +157,68 @@ const CATEGORY_RULES: readonly CategoryRule[] = [
 			'pen drive',
 			'keyboard',
 			'mouse',
-			'tablet',
 			'ipad',
 			'hdd',
 			'ssd',
 			'tws',
+			'gamepad',
+			'gamepad controller',
+			'ps5 controller',
+		],
+	},
+	{
+		// These phrases take priority over laptop/model words that can appear in
+		// furniture names, such as "computer laptop study table".
+		category: 'electronics-home',
+		keywords: [
+			'computer study table',
+			'computer table',
+			'laptop table',
+			'study tables',
+			'study table',
+			'gaming chairs',
+			'gaming chair',
+			'office chairs',
+			'office chair',
+			'standing desks',
+			'standing desk',
+			'vanity desks',
+			'vanity desk',
+			'coffee tables',
+			'coffee table',
+			'boss chairs',
+			'boss chair',
+			'lunch boxes',
+			'lunch box',
 		],
 	},
 	{
 		category: 'lifestyle',
 		keywords: [
+			'personal care',
+			'beauty products',
+			'grooming kit',
+			'face wash',
+			'facewash',
+			'body wash',
+			'bodywash',
+			'shower gel',
+			'hair dryer',
+			'hair straightener',
+			'skin care',
+			'skincare',
+			'home gym',
+			'gym set',
+			'walking pad',
+			'exercise bike',
+			'fitness bike',
+			'spin bike',
+			'mountain bike',
+			'kids cycle',
+			'speed cycle',
+			'yoga mat',
+			'pull up bar',
+			'cricket bat',
 			'automatic watch',
 			'mechanical watch',
 			'chronograph watch',
@@ -115,8 +248,14 @@ const CATEGORY_RULES: readonly CategoryRule[] = [
 			'suitcases',
 			'luggage',
 			'backpack',
+			'backpacks',
+			'rucksack',
+			'rucksacks',
 			'handbag',
+			'handbags',
 			'clutch',
+			'helmet',
+			'helmets',
 			'wallet',
 			'wallets',
 			'perfume',
@@ -125,7 +264,34 @@ const CATEGORY_RULES: readonly CategoryRule[] = [
 			'fragrances',
 			'cologne',
 			'deodorant',
+			'deodorants',
 			'attar',
+			'footwear',
+			'flip flop',
+			'flip flops',
+			'slides',
+			'trolleys',
+			'trimmer',
+			'trimmers',
+			'shampoo',
+			'conditioner',
+			'shaver',
+			'razor',
+			'makeup',
+			'lipstick',
+			'serum',
+			'moisturizer',
+			'moisturiser',
+			'sunscreen',
+			'toothbrush',
+			'massager',
+			'dumbbell',
+			'dumbbells',
+			'barbell',
+			'kettlebell',
+			'treadmill',
+			'bicycle',
+			'badminton',
 			'sneakers',
 			'sneaker',
 			'shoes',
@@ -173,10 +339,8 @@ const CATEGORY_RULES: readonly CategoryRule[] = [
 			'spectre',
 			'pavilion',
 			'predator',
-			'helios',
 			'legion',
 			'laptop',
-			'notebook',
 			'omen',
 			'nitro',
 			'razer blade',
@@ -188,6 +352,7 @@ const CATEGORY_RULES: readonly CategoryRule[] = [
 	{
 		category: 'mobile-phones',
 		keywords: [
+			'oneplus nord',
 			'asus rog phone',
 			'foldable phone',
 			'flagship phone',
@@ -222,6 +387,30 @@ const CATEGORY_RULES: readonly CategoryRule[] = [
 		keywords: [
 			'induction cooktop',
 			'washing machine',
+			'pressure cooker',
+			'gas stove',
+			'electric kettle',
+			'cookware',
+			'dinner sets',
+			'dinner set',
+			'water bottle',
+			'storage box',
+			'storage container',
+			'spin mop',
+			'wardrobe',
+			'recliner',
+			'recliners',
+			'plastic chairs',
+			'plastic chair',
+			'ergonomic chair',
+			'bean bag',
+			'home decor',
+			'wall shelves',
+			'wall shelf',
+			'casserole',
+			'flask',
+			'water jug',
+			'kitchen chopper',
 			'air conditioner',
 			'inverter ac',
 			'split ac',
@@ -243,12 +432,11 @@ const CATEGORY_RULES: readonly CategoryRule[] = [
 			'microwave',
 			'dishwasher',
 			'smart tv',
-			'soundbar',
 			'television',
 			'fridge',
-			'speaker',
 			'geyser',
 			'cooler',
+			'air cooler',
 			'blender',
 			'juicer',
 			'toaster',
@@ -284,8 +472,11 @@ const CATEGORY_RULES: readonly CategoryRule[] = [
 			'formal wear',
 			'casual wear',
 			't-shirt',
+			't-shirts',
 			't shirt',
+			't shirts',
 			'tshirt',
+			'tshirts',
 			'innerwear',
 			'nightwear',
 			'sportswear',
@@ -295,22 +486,39 @@ const CATEGORY_RULES: readonly CategoryRule[] = [
 			'trousers',
 			'leggings',
 			'sweater',
+			'sweaters',
 			'shirt',
+			'shirts',
 			'jeans',
-			'pants',
+			'track pants',
+			'trackpants',
+			'cargo pants',
+			'formal pants',
+			'casual pants',
+			'joggers',
 			'shorts',
 			'skirt',
 			'dress',
 			'jacket',
+			'jackets',
 			'blazer',
+			'blazers',
 			'hoodie',
+			'hoodies',
 			'coat',
 			'suit',
 			'kurta',
+			'kurtas',
 			'saree',
 			'lehenga',
 			'salwar',
 			'socks',
+			'vest',
+			'vests',
+			'briefs',
+			'trunks',
+			'polo shirt',
+			'polo shirts',
 		],
 	},
 ];
@@ -327,11 +535,189 @@ const normalize = (value: string): string =>
 const escapeRegex = (value: string): string =>
 	value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
+const PROMOTIONAL_ONLY_PATTERNS = [
+	/\b(?:open|opening)\b.{0,60}\b(?:bank|savings|zero balance)\s+account\b/u,
+	/\b(?:open|opening)\b.{0,60}\bzero balance\s+acc\.?\b/u,
+	/\bzero balance\s+(?:bank\s+)?account\b/u,
+	/\blifetime free\b.{0,40}\bcredit card\b/u,
+	/\bapply\s+(?:now\s+)?for\b.{0,40}\bcredit card\b/u,
+	/\bget\s+(?:a|an|your)\b.{0,40}\bcredit card\b/u,
+	/\b(?:free|complimentary)\b.{0,30}\bmembership\b/u,
+	/\b(?:get|claim)\b.{0,30}\bmembership\b.{0,10}\bfree\b/u,
+] as const;
+
+const SPECIFIC_OVERRIDE_KEYWORDS = new Set([
+	'wireless ergonomic mouse',
+	'gaming keyboard',
+	'ssd upgrade kit',
+	'power adapter for iphone',
+	'wireless mouse',
+	'wireless keyboard',
+	'laptop powerbank',
+	'laptop power bank',
+	'laptop bags',
+	'vacuum cleaner for car',
+	'car cartridge vacuum cleaner',
+	'gimbal for smartphone',
+	'carplay adapter',
+	'gimbal',
+	'keyboard and mouse combo',
+	'keyboard & mouse combo',
+	'keyboard mouse combo',
+	'smartphone gimbal',
+	'phone gimbal',
+	'gimbal stabilizer',
+	'car vacuum cleaner',
+	'laptop cooling stand',
+	'laptop charger',
+	'laptop stand',
+	'cmf by nothing watch',
+	'usb-c to hdmi adapter',
+	'hdmi adapter',
+	'mobile charger',
+	'phone holder',
+	'fire tv stick',
+	'liquid cooler',
+	'cpu cooler',
+	'redmi watch',
+	'oneplus watch',
+	'cmf watch',
+	'amazfit watch',
+	'ac adapter',
+	'phone screen protector',
+	'laptop cooling pad',
+	'laptop sleeve',
+	'laptop bag',
+	'phone case',
+	'phone cover',
+	'phone stand',
+	'mobile case',
+	'mobile cover',
+	'mobile stand',
+	'smart watch',
+	'smart-watch',
+	'apple watch',
+	'galaxy watch',
+	'oneplus nord buds',
+	'oneplus buds',
+	'redmi buds',
+	'realme buds',
+	'cmf buds',
+	'galaxy buds',
+	'galaxy tab',
+	'redmi pad',
+	'oneplus pad',
+	'xiaomi pad',
+	'realme pad',
+	'galaxy book',
+	'computer study table',
+	'computer table',
+	'laptop table',
+	'study tables',
+	'study table',
+	'gaming chairs',
+	'gaming chair',
+	'office chairs',
+	'office chair',
+	'standing desks',
+	'standing desk',
+	'vanity desks',
+	'vanity desk',
+	'coffee tables',
+	'coffee table',
+	'boss chairs',
+	'boss chair',
+	'lunch boxes',
+	'lunch box',
+]);
+
+const WEAK_RULE_KEYS = new Set([
+	'gadgets-accessories:charger',
+	'gadgets-accessories:chargers',
+	'gadgets-accessories:cable',
+	'gadgets-accessories:adapter',
+	'gadgets-accessories:memory card',
+	'gadgets-accessories:sd card',
+	'gadgets-accessories:pendrive',
+	'gadgets-accessories:pen drive',
+	'gadgets-accessories:usb drive',
+	'gadgets-accessories:keyboard',
+	'gadgets-accessories:mouse',
+	'gadgets-accessories:hdd',
+	'gadgets-accessories:ssd',
+	'mobile-phones:oneplus',
+	'mobile-phones:redmi',
+	'mobile-phones:galaxy',
+	'mobile-phones:realme',
+	'mobile-phones:motorola',
+	'mobile-phones:infinix',
+	'mobile-phones:tecno',
+	'mobile-phones:iqoo',
+	'mobile-phones:poco',
+	'mobile-phones:oppo',
+	'mobile-phones:vivo',
+	'mobile-phones:nokia',
+	'mobile-phones:phone',
+	'mobile-phones:mobile',
+	'laptops:thinkpad',
+	'laptops:ideapad',
+	'laptops:vivobook',
+	'laptops:zenbook',
+	'laptops:probook',
+	'laptops:inspiron',
+	'laptops:latitude',
+	'laptops:spectre',
+	'laptops:pavilion',
+	'laptops:predator',
+	'laptops:legion',
+	'laptops:omen',
+	'laptops:nitro',
+	'laptops:razer blade',
+	'laptops:rog',
+	'laptops:tuf',
+	'electronics-home:qled',
+	'electronics-home:oled',
+	'electronics-home:alexa',
+	'electronics-home:ac',
+	'electronics-home:cooler',
+]);
+
+const STANDALONE_PRODUCT_RULE_KEYS = new Set([
+	'gadgets-accessories:charger',
+	'gadgets-accessories:chargers',
+	'gadgets-accessories:cable',
+	'gadgets-accessories:adapter',
+	'gadgets-accessories:memory card',
+	'gadgets-accessories:sd card',
+	'gadgets-accessories:pendrive',
+	'gadgets-accessories:pen drive',
+	'gadgets-accessories:usb drive',
+	'gadgets-accessories:keyboard',
+	'gadgets-accessories:mouse',
+	'gadgets-accessories:hdd',
+	'gadgets-accessories:ssd',
+	'electronics-home:ac',
+]);
+
+const getRuleScore = (category: DetectableCategory, keyword: string): number => {
+	if (SPECIFIC_OVERRIDE_KEYWORDS.has(keyword)) return 100;
+	if (WEAK_RULE_KEYS.has(`${category}:${keyword}`)) return 20;
+	return 60;
+};
+
+export const isSupportingCategoryDetection = (
+	detection: CategoryDetection,
+): boolean =>
+	detection.matchedBy !== null &&
+	WEAK_RULE_KEYS.has(`${detection.category}:${detection.matchedBy}`);
+
 const COMPILED_RULES = CATEGORY_RULES.flatMap(({ category, keywords }) =>
 	[...keywords]
 		.sort((left, right) => right.length - left.length)
 		.map((keyword) => ({
 			category,
+			keyword: normalize(keyword),
+			baseScore: getRuleScore(category, normalize(keyword)),
 			pattern: new RegExp(
 				`(?:^|[^\\p{L}\\p{N}])${escapeRegex(normalize(keyword))}(?=$|[^\\p{L}\\p{N}])`,
 				'u',
@@ -339,9 +725,76 @@ const COMPILED_RULES = CATEGORY_RULES.flatMap(({ category, keywords }) =>
 		})),
 );
 
-/** Detect a product category from deal text. */
-export function detectCategory(text: string): DealCategory {
+/** Detect a category with confidence and the strongest matching product phrase. */
+export function detectCategoryDecision(text: string): CategoryDetection {
 	const normalizedText = normalize(text);
-	const match = COMPILED_RULES.find(({ pattern }) => pattern.test(normalizedText));
-	return match?.category ?? 'miscellaneous';
+	if (PROMOTIONAL_ONLY_PATTERNS.some((pattern) => pattern.test(normalizedText))) {
+		return {
+			category: 'miscellaneous',
+			confidence: 'high',
+			matchedBy: 'promotional-only',
+		};
+	}
+
+	const categoryMatches = new Map<
+		DetectableCategory,
+		{ score: number; index: number; keyword: string }
+	>();
+
+	for (const rule of COMPILED_RULES) {
+		const match = rule.pattern.exec(normalizedText);
+		if (!match) continue;
+
+		const prefix = normalizedText.slice(Math.max(0, match.index - 40), match.index);
+		const isSecondaryProduct =
+			/\b(?:with|including|includes|bundled|bundle|free|comes with)\b[^.\n]{0,30}$/u.test(
+				prefix,
+			);
+		let score = isSecondaryProduct ? Math.min(rule.baseScore, 30) : rule.baseScore;
+
+		if (
+			rule.category === 'mobile-phones' &&
+			rule.baseScore === 20 &&
+			/\b(?:4g|5g)\b/u.test(normalizedText)
+		) {
+			score = 60;
+		}
+
+		const existing = categoryMatches.get(rule.category);
+		if (!existing || score > existing.score || (score === existing.score && match.index < existing.index)) {
+			categoryMatches.set(rule.category, {
+				score,
+				index: match.index,
+				keyword: rule.keyword,
+			});
+		}
+	}
+
+	const rankedMatches = [...categoryMatches.entries()].sort(
+		([, left], [, right]) => right.score - left.score || left.index - right.index,
+	);
+	const winner = rankedMatches[0];
+	if (!winner) {
+		return { category: 'miscellaneous', confidence: 'low', matchedBy: null };
+	}
+
+	const runnerUp = rankedMatches[1];
+	const [category, match] = winner;
+	const scoreGap = runnerUp ? match.score - runnerUp[1].score : match.score;
+	const isStandaloneProduct =
+		!runnerUp && STANDALONE_PRODUCT_RULE_KEYS.has(`${category}:${match.keyword}`);
+	const confidence: CategoryConfidence =
+		match.score >= 90 ||
+		isStandaloneProduct ||
+		(match.score >= 50 && scoreGap >= 20)
+			? 'high'
+			: 'medium';
+
+	return { category, confidence, matchedBy: match.keyword };
+}
+
+/** Return only high-confidence automatic classifications. */
+export function detectCategory(text: string): DealCategory {
+	const detection = detectCategoryDecision(text);
+	return detection.confidence === 'high' ? detection.category : 'miscellaneous';
 }
