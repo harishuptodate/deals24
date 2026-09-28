@@ -863,8 +863,6 @@ const Admin = () => {
 					</div>
 				</div>
 
-				{isAuthenticated() && <BlacklistManager />}
-
 				<div className="mb-8">
 					<Card className="overflow-hidden border-stone-200/80 bg-white/95 shadow-[0_18px_55px_rgba(15,23,42,0.06)] !transform-none !transition-none dark:border-white/10 dark:bg-[#111113] dark:shadow-[0_24px_70px_rgba(0,0,0,0.35)]">
 						<CardContent className="relative p-0">
@@ -874,10 +872,10 @@ const Admin = () => {
 									<div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-stone-950 text-white dark:bg-white dark:text-stone-950">
 										<ScrollText className="h-5 w-5" />
 									</div>
-									<h2 className="text-2xl font-semibold tracking-tight">Operational Logs</h2>
+									<h2 className="text-2xl font-semibold tracking-tight">Operational Logs and Blacklist</h2>
 									<p className="text-sm leading-6 text-stone-600 dark:text-stone-400">
 										Open the dedicated logs workspace for live backend flow, recent Redis-backed events,
-										and persisted history without crowding the analytics dashboard.
+										and persisted history without crowding the analytics dashboard. Also open the blacklist page to manage the blacklist.
 									</p>
 								</div>
 								<Link to="/admin/logs">
@@ -886,10 +884,17 @@ const Admin = () => {
 										<ArrowRight className="ml-2 h-4 w-4" />
 									</Button>
 								</Link>
+								<br />
+								<Link to="/admin/blacklist">
+									<Button className="h-11 rounded-full bg-stone-950 px-5 text-white transition-transform duration-150 ease-out hover:scale-[1.02] hover:bg-stone-800 active:scale-[0.94] dark:bg-stone-100 dark:text-stone-950 dark:hover:bg-white">
+										Open Blacklist Page
+										<ArrowRight className="ml-2 h-4 w-4" />
+									</Button>
+								</Link>
 							</div>
 						</CardContent>
 					</Card>
-				</div>
+				</div>	
 			</main>
 
 			{/* Deal Details Dialog */}

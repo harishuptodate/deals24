@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { lazy, Suspense, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import EnhancedErrorBoundary from "./components/enhanced/EnhancedErrorBoundary";
+import BlacklistManager from "./components/admin/BlacklistManager";
 
 // Lazy load components for code splitting
 const Index = lazy(() => import("./pages/Index"));
@@ -117,6 +118,7 @@ const App = () => {
                 <Route path="/categories" element={<Categories />} />
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/admin/logs" element={<AdminLogs />} />
+                <Route path="/admin/blacklist" element={<BlacklistManager />} />
                 <Route path="/wishlist" element={<Wishlist />} />
                 <Route path="/deal/:id" element={<Deal />} />
                 <Route path="*" element={<NotFound />} />
