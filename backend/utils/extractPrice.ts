@@ -1,5 +1,3 @@
-export {};
-
 type DealPricePattern = {
 	pattern: RegExp;
 	supportsThousandsSuffix?: boolean;
@@ -16,7 +14,8 @@ const DEAL_PRICE_PATTERNS: DealPricePattern[] = [
 	},
 	{ pattern: /\bfor\s*₹?\s*([\d,]+)(?![\d,]|[ \t]*[kK]\b)/gi },
 	{
-		pattern: /deal\s*price\s*:?\s*₹?\s*([\d,]+)(?![\d,]|[ \t]*[kK]\b)/gi,
+		pattern:
+			/\bdeal(?:\s+price)?[^\p{L}\p{N}\r\n]*₹?\s*([\d,]+)(?![\d,]|[ \t]*[kK]\b)/giu,
 	},
 ];
 
@@ -64,6 +63,7 @@ function normalizeExtractedPrice(
  * - "at ₹87,740"
  * - "for ₹61,190"
  * - "Deal Price : ₹274"
+ * - "Deal ➡️ 75"
  *
  * The function:
  * - scans the text with the supported patterns

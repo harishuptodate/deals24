@@ -149,3 +149,14 @@ test('expands K prices after an at-sign or the word at', () => {
 	assert.deepEqual(extractAllDealPrices('Samsung TV at 25K'), [25000]);
 	assert.equal(extractPrice('Samsung TV for 25K'), '');
 });
+
+test('extracts an arrow-formatted deal price and ignores the regular price', () => {
+	const input = `KINGSWAY® Car Door Edge Protection Guard Compatible
+
+🔥 Deal ➡️ 75
+
+❌Regular 240`;
+
+	assert.deepEqual(extractAllDealPrices(input), [75]);
+	assert.equal(extractPrice(input), '75');
+});
