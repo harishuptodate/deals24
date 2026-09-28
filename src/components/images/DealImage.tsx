@@ -6,6 +6,7 @@ import {
   Package,
   Shirt,
   Smartphone,
+  Watch,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import CachedTelegramImage from './CachedTelegramImage';
@@ -39,6 +40,8 @@ const getCategoryIcon = (category?: string) => {
       return Headphones;
     case 'fashion':
       return Shirt;
+    case 'lifestyle':
+      return Watch;
     default:
       return Package;
   }

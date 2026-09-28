@@ -115,3 +115,37 @@ test('extracts supported prices even when other numbers exist nearby', () => {
 	assert.deepEqual(extractAllDealPrices(input), [54990, 4999]);
 	assert.equal(extractPrice(input), '4999');
 });
+
+test('extracts LG AC deal price without applying coupon or card discounts', (t) => {
+	const input = `LG 1.5 Ton 3 Star, Smart Inverter Split AC (100% Copper Condenser, AI Convertible 6-in-1, Faster Cooling & Energy Saving, Diet Mode+, HD Filter with
+
+💰Deal @ 30940🔥. ❌Reg @ 35k
+
+✅ apply 300 off coupon
+✅4250 off with HDFC cc emi`;
+	const extractedPrices = extractAllDealPrices(input);
+	const selectedPrice = extractPrice(input);
+
+	t.diagnostic(
+		`LG AC result: candidates=${JSON.stringify(extractedPrices)}, selected=${selectedPrice}`,
+	);
+	assert.deepEqual(extractedPrices, [30940]);
+	assert.equal(selectedPrice, '30940');
+});
+
+test('expands compact K deal prices', (t) => {
+	const input = 'Samsung 2026 model 43” 4K TV @ 25K';
+	const extractedPrices = extractAllDealPrices(input);
+	const selectedPrice = extractPrice(input);
+
+	t.diagnostic(
+		`Samsung TV result: candidates=${JSON.stringify(extractedPrices)}, selected=${selectedPrice}`,
+	);
+	assert.deepEqual(extractedPrices, [25000]);
+	assert.equal(selectedPrice, '25000');
+});
+
+test('expands K prices after an at-sign or the word at', () => {
+	assert.deepEqual(extractAllDealPrices('Samsung TV at 25K'), [25000]);
+	assert.equal(extractPrice('Samsung TV for 25K'), '');
+});

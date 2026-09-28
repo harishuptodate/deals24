@@ -5,7 +5,6 @@ import type {
 } from './telegramTypes';
 import TelegramMessage from '../models/TelegramMessage';
 import { extractLinks } from '../utils/messageParser';
-import { detectCategory } from '../utils/categoryDetector';
 import { redis } from '../services/redisClient';
 import {
   calculateHash,

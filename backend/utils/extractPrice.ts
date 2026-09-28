@@ -1,10 +1,29 @@
 export {};
-const DEAL_PRICE_PATTERNS: RegExp[] = [
-	/@\s*₹?\s*([\d,]+)/gi,
-	/\bat\s*₹?\s*([\d,]+)/gi,
-	/\bfor\s*₹?\s*([\d,]+)/gi,
-	/deal\s*price\s*:?\s*₹?\s*([\d,]+)/gi,
+
+type DealPricePattern = {
+	pattern: RegExp;
+	supportsThousandsSuffix?: boolean;
+};
+
+const DEAL_PRICE_PATTERNS: DealPricePattern[] = [
+	{
+		pattern: /@\s*₹?\s*([\d,]+)([ \t]*[kK]\b)?(?![\d,]|[ \t]*[kK]\b)/g,
+		supportsThousandsSuffix: true,
+	},
+	{
+		pattern: /\bat\s*₹?\s*([\d,]+)([ \t]*[kK]\b)?(?![\d,]|[ \t]*[kK]\b)/gi,
+		supportsThousandsSuffix: true,
+	},
+	{ pattern: /\bfor\s*₹?\s*([\d,]+)(?![\d,]|[ \t]*[kK]\b)/gi },
+	{
+		pattern: /deal\s*price\s*:?\s*₹?\s*([\d,]+)(?![\d,]|[ \t]*[kK]\b)/gi,
+	},
 ];
+
+const hasRegularPriceContext = (text: string, matchIndex: number): boolean => {
+	const prefix = text.slice(Math.max(0, matchIndex - 40), matchIndex);
+	return /\b(?:mrp|reg(?:ular)?(?:\s+price)?)\s*[:\-]?\s*$/i.test(prefix);
+};
 
 /**
  * Normalize a captured price string into a valid number.
@@ -15,7 +34,10 @@ const DEAL_PRICE_PATTERNS: RegExp[] = [
  * @param {string} rawPrice
  * @returns {number|null}
  */
-function normalizeExtractedPrice(rawPrice: string): number | null {
+function normalizeExtractedPrice(
+	rawPrice: string,
+	isThousands: boolean,
+): number | null {
 	if (typeof rawPrice !== 'string') {
 		return null;
 	}
@@ -30,7 +52,7 @@ function normalizeExtractedPrice(rawPrice: string): number | null {
 		return null;
 	}
 
-	return numericPrice;
+	return isThousands ? numericPrice * 1000 : numericPrice;
 }
 
 /**
@@ -59,15 +81,20 @@ export function extractAllDealPrices(text: string): number[] {
 
 	const matchedPrices: Array<{ index: number; price: number | null }> = [];
 
-	for (const pattern of DEAL_PRICE_PATTERNS) {
+	for (const { pattern, supportsThousandsSuffix } of DEAL_PRICE_PATTERNS) {
 		pattern.lastIndex = 0;
 
 		let match = pattern.exec(text);
 		while (match) {
-			matchedPrices.push({
-				index: match.index,
-				price: normalizeExtractedPrice(match[1]),
-			});
+			if (!hasRegularPriceContext(text, match.index)) {
+				matchedPrices.push({
+					index: match.index,
+					price: normalizeExtractedPrice(
+						match[1],
+						Boolean(supportsThousandsSuffix && match[2]),
+					),
+				});
+			}
 			match = pattern.exec(text);
 		}
 	}

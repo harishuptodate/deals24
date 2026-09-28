@@ -1,19 +1,11 @@
 import 'dotenv/config';
-import { detectCategory } from './detectCategory';
+import { DEAL_CATEGORIES, detectCategory } from './detectCategory';
 import { buildCaptionPrompt } from './captionPrompt';
 import { createLogger } from './logger';
 
 const logger = createLogger('gemini-caption');
 
-const AVAILABLE_CATEGORIES = [
-  'laptops',
-  'electronics-home',
-  'mobile-phones',
-  'gadgets-accessories',
-  'fashion',
-  'Best-Deals',
-  'miscellaneous',
-];
+const AVAILABLE_CATEGORIES: readonly string[] = DEAL_CATEGORIES;
 
 type GeminiErrorLike = {
   message?: string;

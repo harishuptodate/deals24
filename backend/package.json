@@ -9,7 +9,7 @@
     "dev": "tsx watch index.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "node ../node_modules/eslint/bin/eslint.js . --config eslint.config.js",
-    "test": "npm run build && node --test --test-force-exit dist/utils/extractPrice.test.js dist/services/telegramMessageFilters.test.js dist/services/amazon/amazonLink.test.js dist/services/amazon/amazonFallback.test.js"
+    "test": "npm run build && node --test --test-force-exit dist/utils/extractPrice.test.js dist/services/detectCategory.test.js dist/services/telegramMessageFilters.test.js dist/services/amazon/amazonLink.test.js dist/services/amazon/amazonFallback.test.js"
   },
   "dependencies": {
     "@google/genai": "^1.33.0",

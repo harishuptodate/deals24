@@ -24,6 +24,7 @@ const CategoryFilter = ({
     { name: 'Mobile Phones', slug: 'mobile-phones' },
     { name: 'Gadgets & Accessories', slug: 'gadgets-accessories' },
     { name: 'Fashion', slug: 'fashion' },
+    { name: 'Lifestyle & Accessories', slug: 'lifestyle' },
     { name: 'Miscellaneous', slug: 'miscellaneous' },
   ];
 
@@ -44,7 +45,8 @@ const CategoryFilter = ({
       'Power Bank',
       'Smartwatch',
     ],
-    fashion: ['Shoes', 'T-Shirt', 'Watch', 'Backpack'],
+    fashion: ['T-Shirt', 'Shirt', 'Jeans', 'Ethnic Wear'],
+    lifestyle: ['Shoes', 'Watch', 'Trolley Bag', 'Perfume'],
     miscellaneous: ['Books', 'Stationery', 'Toys', 'Sports', 'Home Decor'],
   };
 

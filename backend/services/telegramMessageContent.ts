@@ -1,5 +1,5 @@
 import type { GeneratedMessageContent } from './telegramTypes';
-import { detectCategory } from '../utils/categoryDetector';
+import { detectCategory } from './detectCategory';
 import { GenerateCaptionAndCategory } from './CaptionAndCategoryGen';
 import { extractPrice } from '../utils/extractPrice';
 import { normalizeGeminiPrice } from './telegramMessageFilters';

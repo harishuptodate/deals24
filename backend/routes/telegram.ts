@@ -66,6 +66,7 @@ router.get('/categories/counts',
         { category: 'mobile-phones', count: 120 },
         { category: 'gadgets-accessories', count: 175 },
         { category: 'fashion', count: 95 },
+        { category: 'lifestyle', count: 0 },
       ]);
     }
 
@@ -83,6 +84,7 @@ router.get('/categories/counts',
       { category: 'mobile-phones', count: 120 },
       { category: 'gadgets-accessories', count: 175 },
       { category: 'fashion', count: 95 },
+      { category: 'lifestyle', count: 0 },
     ]);
   }
 });

@@ -165,6 +165,7 @@ export const getCategoryCounts = async (): Promise<CategoryCount[]> => {
 					{ category: 'mobile-phones', count: 120 },
 					{ category: 'gadgets-accessories', count: 175 },
 					{ category: 'fashion', count: 95 },
+					{ category: 'lifestyle', count: 0 },
 				];
 			}
 			// console.log('API Response:', response.data);
@@ -181,6 +182,7 @@ export const getCategoryCounts = async (): Promise<CategoryCount[]> => {
 						{ category: 'mobile-phones', count: 120 },
 						{ category: 'gadgets-accessories', count: 175 },
 						{ category: 'fashion', count: 95 },
+						{ category: 'lifestyle', count: 0 },
 				  ];
 		}
 
@@ -191,6 +193,7 @@ export const getCategoryCounts = async (): Promise<CategoryCount[]> => {
 			{ category: 'mobile-phones', count: 120 },
 			{ category: 'gadgets-accessories', count: 175 },
 			{ category: 'fashion', count: 95 },
+			{ category: 'lifestyle', count: 0 },
 		];
 	} catch (error) {
 		console.error('Failed to fetch category counts:', error);
@@ -200,6 +203,7 @@ export const getCategoryCounts = async (): Promise<CategoryCount[]> => {
 			{ category: 'mobile-phones', count: 120 },
 			{ category: 'gadgets-accessories', count: 175 },
 			{ category: 'fashion', count: 95 },
+			{ category: 'lifestyle', count: 0 },
 		];
 	}
 };

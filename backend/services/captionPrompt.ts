@@ -94,12 +94,15 @@ Normalized message:
 💡 Flat ₹3,250 Off With HDFC CC"
 
 2. Identify the category: Based on the product described, classify it into ONE of these exact categories:
-   - laptops
-   - electronics-home
-   - mobile-phones
-   - gadgets-accessories
-   - fashion
-   - miscellaneous
+   - laptops: laptops, notebooks, ultrabooks and Chromebooks
+   - electronics-home: televisions, appliances, furniture and home electronics
+   - mobile-phones: smartphones and mobile phones
+   - gadgets-accessories: tablets, smartwatches, computer accessories and phone accessories
+   - fashion: clothing only, including shirts, trousers, dresses and ethnic wear
+   - lifestyle: non-smart watches, footwear, luggage, bags, perfumes, jewelry and personal accessories
+   - miscellaneous: products that do not fit another category
+
+Use lifestyle, not fashion, for shoes, sneakers, boots, classic watches, trolley bags and perfumes. Use gadgets-accessories for smartwatches, phone cases and laptop bags.
 
 3. Extract the final offer price: Carefully identify the final deal/offer price of the product from the message and return it as a separate field named "price". Make sure the price is not the regular price, it should be the deal price often mentioned with @ symbol. You dont have to do the math applying any discounts/coupons/offers for the effective price, just extract the price as it is. Use only the numeric value without ₹, commas, or extra text. For prices like 53K or 34K, convert them to full numeric value like "53000" or "34000". If no price is clearly available, return an empty string.
 
