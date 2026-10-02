@@ -73,6 +73,27 @@ test('replaces configured links and text fragments', () => {
   process.env.TEXT_REPLACEMENTS = previousTextReplacements;
 });
 
+test('matches text replacements across casing, separators, invisible characters, and stretched letters', () => {
+  const previousTextReplacements = process.env.TEXT_REPLACEMENTS;
+  process.env.TEXT_REPLACEMENTS = 'Mahaaa Looot!:,TRT Premium Deals:Deals24,Sale:Offer';
+
+  assert.equal(
+    replaceLinksAndText('mahaaa---looooooot? TV | trt---premium deals | S\u200Bale'),
+    'TV | Deals24 | Offer',
+  );
+
+  process.env.TEXT_REPLACEMENTS = previousTextReplacements;
+});
+
+test('does not replace a configured word inside an unrelated longer word', () => {
+  const previousTextReplacements = process.env.TEXT_REPLACEMENTS;
+  process.env.TEXT_REPLACEMENTS = 'Loot:';
+
+  assert.equal(replaceLinksAndText('Loot now, but keep Looting'), 'now, but keep Looting');
+
+  process.env.TEXT_REPLACEMENTS = previousTextReplacements;
+});
+
 test('classifies low-context and profitable messages', () => {
   assert.equal(isLowContext('loot link fast buy now'), true);
   assert.equal(isProfitableProduct('Best laptop deal with ryzen processor'), true);
@@ -82,6 +103,29 @@ test('skips blocked tws deals but not unrelated messages', () => {
   assert.equal(shouldSkipBadProducts('Boat TWS earbuds deal', blacklist), true);
   assert.equal(shouldSkipBadProducts('Boat phone launch offer', blacklist), false);
   assert.equal(shouldSkipBadProducts('Samsung TWS launch offer', blacklist), false);
+  assert.equal(shouldSkipBadProducts('Boating TWS launch offer', blacklist), false);
+});
+
+test('finds bounded misspellings and incomplete blacklist words without broad partial matching', () => {
+  const fuzzyBlacklist = {
+    brands: ['zebronics'],
+    products: ['earbuds'],
+    rules: [],
+  };
+
+  assert.equal(shouldSkipBadProducts('Zebroni earbud deal', fuzzyBlacklist), true);
+  assert.equal(shouldSkipBadProducts('Zebra earbud deal', fuzzyBlacklist), false);
+});
+
+test('requires exact words before an allow rule overrides fuzzy blacklist detection', () => {
+  const policy = {
+    brands: ['zebronics'],
+    products: ['earbuds'],
+    rules: [{ brand: 'zebronics', product: 'earbuds', action: 'allow' as const }],
+  };
+
+  assert.equal(shouldSkipBadProducts('Zebronics earbuds deal', policy), false);
+  assert.equal(shouldSkipBadProducts('Zebroni earbud deal', policy), true);
 });
 
 test('normalizes Gemini price inputs safely', () => {
