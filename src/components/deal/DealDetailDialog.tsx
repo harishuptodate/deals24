@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
 	Dialog,
 	DialogClose,
@@ -10,12 +10,18 @@ import {
 import { Button } from '@/components/ui/button';
 import { handleTrackedLinkClick } from '../../services/api';
 import {
+	ChevronDown,
 	ExternalLink,
 	Share2,
-	Calendar,
-	MousePointer,
-	Tag,
+	ShoppingCart,
+	X,
 } from 'lucide-react';
+import {
+	Collapsible,
+	CollapsibleContent,
+	CollapsibleTrigger,
+} from '@/components/ui/collapsible';
+import { cn } from '@/lib/utils';
 import { useToast } from '@/components/ui/use-toast';
 import {
 	shareContent,
@@ -26,7 +32,6 @@ import {
 } from './utils/linkUtils';
 import { useNavigate } from 'react-router-dom';
 import DealImage from '../images/DealImage';
-import { format } from 'date-fns';
 import PriceHistoryChart from './PriceHistoryChart';
 
 interface DealDetailDialogProps {
@@ -37,14 +42,8 @@ interface DealDetailDialogProps {
 	link?: string;
 	id?: string;
 	category?: string;
-	price?: string;
 	imageUrl?: string;
 	telegramFileId?: string;
-	extraData?: {	
-		createdDate?: string;
-		clicks?: number;
-		category?: string;
-	};
 }
 
 const DealDetailDialog = ({
@@ -55,15 +54,20 @@ const DealDetailDialog = ({
 	link,
 	id,
 	category,
-	price,
 	imageUrl,
 	telegramFileId,
-	extraData,
 }: DealDetailDialogProps) => {
 	const { toast } = useToast();
 	const [isSharing, setIsSharing] = useState(false);
+	const [areDetailsOpen, setAreDetailsOpen] = useState(false);
 	const navigate = useNavigate();
 	const buyNowLink = link || extractSecondLink(description) || extractFirstLink(description);
+	const [descriptionHeadline = '', ...descriptionLines] = description.split('\n');
+	const remainingDescription = descriptionLines.join('\n').trim();
+
+	useEffect(() => {
+		if (!isOpen) setAreDetailsOpen(false);
+	}, [isOpen]);
 
 	const handleShare = async () => {
 		setIsSharing(true);
@@ -120,11 +124,10 @@ const DealDetailDialog = ({
 					target="_blank"
 					rel="noopener noreferrer"
 					onClick={(e) => {
-						handleTrackedLinkClick(part, id, e.nativeEvent);
+						void handleTrackedLinkClick(part, id, e.nativeEvent);
 						if (!e.ctrlKey && !e.metaKey && e.button !== 1) {
 							e.preventDefault();
 							e.stopPropagation();
-							setTimeout(() => window.open(part, '_blank'), 100);
 						}
 					}}
 					className="text-blue-600 hover:underline break-all inline-flex items-center gap-1">
@@ -140,82 +143,74 @@ const DealDetailDialog = ({
 		return (
 			<DealImage
 				title={title}
-				category={category || extraData?.category}
+				category={category}
 				imageUrl={imageUrl}
 				telegramFileId={telegramFileId}
-				className="w-full h-44 sm:h-48 object-contain rounded-lg"
+				className="h-32 w-full rounded-lg object-contain sm:h-40"
 			/>
 		);
 	};
 
-	const formatCreatedDate = (dateString?: string) => {
-		if (!dateString) return '';
-		try {
-			return format(new Date(dateString), 'MMM d, yyyy h:mm a');
-		} catch {
-			return dateString;
-		}
-	};
-
 	return (
 		<Dialog open={isOpen} onOpenChange={onOpenChange}>
-			<DialogContent className="flex max-h-[calc(100dvh-0.75rem)] w-[calc(100vw-0.75rem)] max-w-3xl flex-col gap-0 overflow-hidden rounded-2xl border-slate-200 p-0 text-sm sm:max-h-[92vh] dark:border-slate-800">
-				<DialogHeader className="shrink-0 border-b border-slate-200 px-4 py-3 pr-12 text-left sm:px-6 sm:py-4 dark:border-slate-800">
-					<DialogTitle className="line-clamp-2 text-base leading-6 sm:text-lg">
+			<DialogContent className="flex max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-[480px] flex-col gap-0 overflow-hidden rounded-xl p-0 text-[0.93rem] sm:max-h-[92dvh] sm:max-w-[640px] sm:text-sm lg:max-w-[760px]">
+				<DialogHeader className="hidden shrink-0 px-6 pb-3 pt-5 pr-12 sm:block">
+					<DialogTitle className="text-base sm:text-lg text-center">
 						{title}
 					</DialogTitle>
 				</DialogHeader>
 
-				<div className="min-h-0 flex-1 overflow-y-auto px-3 py-3 sm:px-6 sm:py-5">
-					<div className="mx-auto mb-4 max-w-xl">{renderImage()}</div>
+				<div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-3 pt-3 sm:px-6">
+					<div className="mb-4">{renderImage()}</div>
 
-					<div className="whitespace-pre-line rounded-2xl bg-slate-50 px-3.5 py-3 text-[13px] leading-6 text-slate-700 sm:px-5 sm:py-4 sm:text-sm dark:bg-slate-900 dark:text-slate-300">
-						<span className="font-semibold text-slate-950 dark:text-white">{makeLinksClickable(description.split('\n')[0])}</span>
-						{description.split('\n').slice(1).length > 0 && (
-							<>
-								{'\n'}
-								{makeLinksClickable(description.split('\n').slice(1).join('\n'))}
-							</>
-						)}
-					</div>
-
-					<div className="mt-4">
-						<PriceHistoryChart dealId={id} enabled={isOpen} currentPrice={price} />
-					</div>
-
-				{extraData && (
-					<div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-						<h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-							Deal Information
-						</h4>
-						<div className="space-y-2 text-xs text-gray-700 dark:text-gray-300">
-							{extraData.createdDate && (
-								<div className="flex items-center gap-2">
-									<Calendar className="h-4 w-4 text-gray-500" />
-									<span className="font-medium">Created:</span>
-									<span>{formatCreatedDate(extraData.createdDate)}</span>
-								</div>
-							)}
-							{typeof extraData.clicks === 'number' && (
-								<div className="flex items-center gap-2">
-									<MousePointer className="h-4 w-4 text-gray-500" />
-									<span className="font-medium">Clicks:</span>
-									<span>{extraData.clicks}</span>
-								</div>
-							)}
-							{extraData.category && (
-								<div className="flex items-center gap-2">
-									<Tag className="h-4 w-4 text-gray-500" />
-									<span className="font-medium">Category:</span>
-									<span>{extraData.category}</span>
-								</div>
+					<Collapsible
+						open={areDetailsOpen}
+						onOpenChange={setAreDetailsOpen}
+						className="overflow-hidden rounded-xl border border-border/70 bg-background shadow-sm">
+						<div className="flex items-start gap-2 px-3.5 py-2.5 sm:px-4 sm:py-3">
+							<p className="min-w-0 flex-1 text-left text-sm font-semibold leading-5 text-foreground">
+								{makeLinksClickable(descriptionHeadline)}
+							</p>
+							{remainingDescription && (
+								<CollapsibleTrigger asChild>
+									<button
+										type="button"
+										aria-label={areDetailsOpen ? 'Hide deal details' : 'Show deal details'}
+										className="-mr-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+										<ChevronDown
+											className={cn(
+												'h-4 w-4 transition-transform duration-200',
+												areDetailsOpen && 'rotate-180',
+											)}
+										/>
+									</button>
+								</CollapsibleTrigger>
 							)}
 						</div>
+
+						{remainingDescription && (
+							<CollapsibleContent className="data-[state=closed]:animate-out data-[state=open]:animate-in data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0">
+								<div className="whitespace-pre-line border-t border-border/60 bg-muted/15 px-3.5 py-3 text-left text-[13px] leading-6 text-muted-foreground sm:px-4 sm:text-sm">
+									{makeLinksClickable(remainingDescription)}
+								</div>
+							</CollapsibleContent>
+						)}
+					</Collapsible>
+
+					<div className="mt-4 min-w-0 w-full overflow-hidden">
+						<PriceHistoryChart dealId={id} enabled={isOpen} />
 					</div>
-				)}
 				</div>
 
-				<DialogFooter className="grid shrink-0 grid-cols-2 gap-2 border-t border-slate-200 bg-white p-3 sm:grid-cols-4 sm:gap-3 sm:px-6 sm:py-4 dark:border-slate-800 dark:bg-slate-950">
+				<DialogFooter className="grid shrink-0 grid-cols-2 gap-1.5 border-t border-border bg-background/95 p-2 backdrop-blur-sm sm:grid-cols-4 sm:gap-2 sm:space-x-0 sm:p-3">
+					{id && (
+						<Button
+							onClick={handleViewFullPage}
+							className="order-1 h-9 w-full max-w-36 justify-self-center rounded-full bg-blue-600 px-2 text-[11px] text-white transition-all hover:scale-[1.02] hover:bg-blue-700 focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 sm:h-10 sm:max-w-none sm:text-sm dark:bg-blue-800 dark:text-white dark:hover:bg-blue-900">
+							<ExternalLink className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+							View Deal
+						</Button>
+					)}
 					{buyNowLink && (
 						<a
 							href={buyNowLink}
@@ -226,33 +221,23 @@ const DealDetailDialog = ({
 							}}
 							target="_blank"
 							rel="noopener noreferrer"
-							className="col-span-2 flex h-12 items-center justify-center rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-slate-800 sm:col-span-1 dark:bg-emerald-600 dark:hover:bg-emerald-500">
-							Buy now
-							<ExternalLink className="ml-2 h-4 w-4" />
+							className="order-3 flex h-9 w-full max-w-36 items-center justify-center gap-1.5 justify-self-center rounded-full bg-gradient-to-b from-apple-darkGray to-indigo-950 px-2 text-[11px] font-medium text-white transition-all hover:scale-[1.02] sm:order-2 sm:h-10 sm:max-w-none sm:text-sm">
+							<ShoppingCart className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+							Buy Now
 						</a>
 					)}
-					{id && (
-						<Button
-							variant="outline"
-							onClick={handleViewFullPage}
-							className="h-11 rounded-xl px-3 text-xs font-semibold sm:h-12 sm:text-sm">
-							<ExternalLink className="mr-1.5 h-4 w-4" />
-							View deal
-						</Button>
-					)}
 					<Button
-						variant="outline"
 						onClick={handleShare}
 						disabled={isSharing}
-						className="h-11 rounded-xl px-3 text-xs font-semibold sm:h-12 sm:text-sm">
-						<Share2 className="mr-1.5 h-4 w-4" />
-						{isSharing ? 'Sharing...' : 'Share deal'}
+						className="order-4 h-9 w-full max-w-36 justify-self-center rounded-full bg-orange-500 px-2 text-[11px] text-white transition-all hover:scale-[1.02] hover:bg-orange-600 sm:order-3 sm:h-10 sm:max-w-none sm:text-sm dark:bg-orange-800 dark:text-white dark:hover:bg-orange-900">
+						<Share2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+						{isSharing ? 'Sharing...' : 'Share Deal'}
 					</Button>
 					<DialogClose asChild>
 						<Button
 							type="button"
-							variant="ghost"
-							className="col-span-2 h-11 rounded-xl text-xs font-semibold text-slate-600 sm:col-span-1 sm:h-12 sm:text-sm dark:text-slate-300">
+							className="order-2 h-9 w-full max-w-36 justify-self-center rounded-full bg-red-600 px-2 text-[11px] text-white transition-all hover:scale-[1.02] hover:bg-red-700 focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 sm:order-4 sm:h-10 sm:max-w-none sm:text-sm dark:bg-red-800 dark:text-white dark:hover:bg-red-900">
+							<X className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
 							Close
 						</Button>
 					</DialogClose>

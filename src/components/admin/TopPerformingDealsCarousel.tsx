@@ -198,14 +198,8 @@ const TopPerformingDealsCarousel = ({
 					link={selectedDeal.link}
 					id={selectedDeal._id || selectedDeal.id}
 					category={selectedDeal.category}
-					price={selectedDeal.price}
 					imageUrl={selectedDeal.imageUrl}
 					telegramFileId={selectedDeal.telegramFileId}
-					extraData={{
-						createdDate: selectedDeal.date || selectedDeal.createdAt,
-						clicks: selectedDeal.clicks || 0,
-						category: selectedDeal.category || '',
-					}}
 				/>
 			)}
 		</>

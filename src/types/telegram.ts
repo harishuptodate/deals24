@@ -11,10 +11,6 @@ export interface TelegramMessage {
 	price?: string;
 	clicks?: number;
 	createdAt?: string; // Added for compatibility
-	previousPrice?: string;
-	lowestObservedPrice?: number;
-	highestObservedPrice?: number;
-	observationCount?: number;
 }
 
 export interface PriceHistoryPoint {

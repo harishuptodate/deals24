@@ -42,7 +42,7 @@ services:
       - IS_SALE_MODE=${IS_SALE_MODE:-false}
       - AMAZON_AFFILIATE_TAG=${AMAZON_AFFILIATE_TAG:-harishch-21}
       - AMAZON_IMAGE_FALLBACK_API_URL=${AMAZON_IMAGE_FALLBACK_API_URL:-https://amznpf.vercel.app/api/fetch-image}
-      - WEBHOOK_URL=https://95db-106-222-230-209.ngrok-free.app/api/telegram/webhook
+      - WEBHOOK_URL=${WEBHOOK_URL}
     networks:
       - deals24-dev
 

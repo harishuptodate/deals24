@@ -265,7 +265,6 @@ const DealCard = memo(({
         link={link}
         id={id}
 		category={displayCategory}
-		price={price}
         imageUrl={displayImageUrl}
         telegramFileId={telegramFileId}
       />
