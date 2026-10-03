@@ -1,15 +1,18 @@
-import type { GeneratedMessageContent } from './telegramTypes';
+import type { GeneratedMessageContent, ProductMatchCandidate } from './telegramTypes';
 import { detectCategory } from './detectCategory';
 import { GenerateCaptionAndCategory } from './CaptionAndCategoryGen';
 import { extractPrice } from '../utils/extractPrice';
 import { normalizeGeminiPrice } from './telegramMessageFilters';
 
-export async function generateMessageContent(cleanedText: string): Promise<GeneratedMessageContent> {
+export async function generateMessageContent(
+  cleanedText: string,
+  candidates: ProductMatchCandidate[] = [],
+): Promise<GeneratedMessageContent> {
   let normalizedText = cleanedText;
   let category = 'miscellaneous';
   let price: string | null = null;
 
-  const result = await GenerateCaptionAndCategory(cleanedText);
+  const result = await GenerateCaptionAndCategory(cleanedText, candidates);
   if (result.normalizedMessage && result.category) {
     normalizedText = result.normalizedMessage;
     category = result.category;
@@ -32,6 +35,9 @@ export async function generateMessageContent(cleanedText: string): Promise<Gener
       normalizedText,
       category,
       price: normalizedPrice,
+      identity: result.identity,
+      match: result.match,
+      usedFallback: result.usedFallback,
     };
   }
 
@@ -42,5 +48,8 @@ export async function generateMessageContent(cleanedText: string): Promise<Gener
     normalizedText,
     category,
     price: fallbackPrice,
+    identity: result.identity,
+    match: result.match,
+    usedFallback: result.usedFallback,
   };
 }

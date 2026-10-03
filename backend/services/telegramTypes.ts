@@ -22,6 +22,31 @@ export type GeneratedMessageContent = {
   normalizedText: string;
   category: string;
   price: string;
+  identity?: ProductIdentity;
+  match?: ProductMatch;
+  usedFallback?: boolean;
+};
+
+export type ProductIdentity = {
+  canonicalName: string;
+  brand: string;
+  model: string;
+  productType: string;
+  variant: string[];
+};
+
+export type ProductMatch = {
+  candidateId: string | null;
+  sameProduct: boolean;
+  confidence: number;
+  reason: string;
+};
+
+export type ProductMatchCandidate = {
+  id: string;
+  text: string;
+  category?: string;
+  identity?: Partial<ProductIdentity>;
 };
 
 export type MessageQueryOptions = {

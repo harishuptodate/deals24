@@ -2,6 +2,7 @@ import 'dotenv/config';
 import { DEAL_CATEGORIES, detectCategory } from './detectCategory';
 import { buildCaptionPrompt } from './captionPrompt';
 import { createLogger } from './logger';
+import type { ProductIdentity, ProductMatch, ProductMatchCandidate } from './telegramTypes';
 
 const logger = createLogger('gemini-caption');
 
@@ -15,12 +16,51 @@ type GeminiErrorLike = {
 
 type GeminiResponseLike = {
   text?: string;
+  candidates?: Array<{
+    finishReason?: string;
+  }>;
 };
 
 type GeminiNormalizedResult = {
   normalizedMessage?: string;
   category?: string;
-  price?: string;
+  price?: string | number;
+  identity?: Partial<ProductIdentity>;
+  match?: Partial<ProductMatch>;
+};
+
+const RESPONSE_JSON_SCHEMA = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['normalizedMessage', 'category', 'price', 'identity', 'match'],
+  properties: {
+    normalizedMessage: { type: 'string' },
+    category: { type: 'string', enum: [...DEAL_CATEGORIES] },
+    price: { anyOf: [{ type: 'string' }, { type: 'number' }] },
+    identity: {
+      type: 'object',
+      additionalProperties: false,
+      required: ['canonicalName', 'brand', 'model', 'productType', 'variant'],
+      properties: {
+        canonicalName: { type: 'string' },
+        brand: { type: 'string' },
+        model: { type: 'string' },
+        productType: { type: 'string' },
+        variant: { type: 'array', items: { type: 'string' }, maxItems: 8 },
+      },
+    },
+    match: {
+      type: 'object',
+      additionalProperties: false,
+      required: ['candidateId', 'sameProduct', 'confidence', 'reason'],
+      properties: {
+        candidateId: { type: ['string', 'null'] },
+        sameProduct: { type: 'boolean' },
+        confidence: { type: 'number', minimum: 0, maximum: 1 },
+        reason: { type: 'string' },
+      },
+    },
+  },
 };
 
 function isQuotaOrRateLimitError(error: GeminiErrorLike | null | undefined): boolean {
@@ -97,6 +137,8 @@ function buildFallbackResult(messageText: string) {
     normalizedMessage: messageText.trim(),
     category: detectCategory(messageText),
     price: '',
+    identity: undefined,
+    match: undefined,
     usedFallback: true,
   };
 }
@@ -115,13 +157,18 @@ async function requestGeminiContent(prompt: string, apiKeys: string[]) {
       response = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: prompt,
-        generationConfig: {
-          temperature: 0.3,
+        config: {
+          temperature: 0.1,
           topK: 40,
           topP: 0.95,
-          maxOutputTokens: 1024,
+          maxOutputTokens: 4096,
+          thinkingConfig: {
+            thinkingBudget: 0,
+          },
+          responseMimeType: 'application/json',
+          responseJsonSchema: RESPONSE_JSON_SCHEMA,
         },
-      } as never);
+      });
       lastError = null;
       break;
     } catch (error) {
@@ -161,6 +208,10 @@ async function requestGeminiContent(prompt: string, apiKeys: string[]) {
 function parseGeminiJsonResponse(responseText: string) {
   let jsonText = responseText.trim();
 
+  if (!jsonText) {
+    throw new Error('Gemini returned an empty response');
+  }
+
   if (jsonText.startsWith('```json')) {
     jsonText = jsonText.replace(/```json\n?/g, '').replace(/```\n?/g, '');
   } else if (jsonText.startsWith('```')) {
@@ -191,12 +242,30 @@ function normalizeGeminiResult(messageText: string, result: GeminiNormalizedResu
   return {
     normalizedMessage: result.normalizedMessage || messageText.trim(),
     category: resolvedCategory || detectCategory(messageText),
-    price: typeof result.price === 'string' ? result.price.replace(/[^\d]/g, '') : '',
+    price: String(result.price ?? '').replace(/[^\d]/g, ''),
+    identity: result.identity ? {
+      canonicalName: String(result.identity.canonicalName || '').trim(),
+      brand: String(result.identity.brand || '').trim(),
+      model: String(result.identity.model || '').trim(),
+      productType: String(result.identity.productType || '').trim(),
+      variant: Array.isArray(result.identity.variant)
+        ? result.identity.variant.map((value) => String(value).trim()).filter(Boolean).slice(0, 8)
+        : [],
+    } : undefined,
+    match: result.match ? {
+      candidateId: typeof result.match.candidateId === 'string' ? result.match.candidateId : null,
+      sameProduct: result.match.sameProduct === true,
+      confidence: Math.max(0, Math.min(1, Number(result.match.confidence) || 0)),
+      reason: String(result.match.reason || '').trim(),
+    } : undefined,
     usedFallback: false,
   };
 }
 
-export async function GenerateCaptionAndCategory(messageText: string) {
+export async function GenerateCaptionAndCategory(
+  messageText: string,
+  candidates: ProductMatchCandidate[] = [],
+) {
   if (!messageText || typeof messageText !== 'string') {
     throw new Error('Message text is required and must be a string');
   }
@@ -212,10 +281,16 @@ export async function GenerateCaptionAndCategory(messageText: string) {
   }
 
   try {
-    const prompt = buildCaptionPrompt(messageText);
+    const prompt = buildCaptionPrompt(messageText, candidates);
     const response = await requestGeminiContent(prompt, geminiApiKeys);
-    const result = parseGeminiJsonResponse(response.text);
-    return normalizeGeminiResult(messageText, result);
+    try {
+      const result = parseGeminiJsonResponse(response?.text || '');
+      return normalizeGeminiResult(messageText, result);
+    } catch (error) {
+      const parseMessage = error instanceof Error ? error.message : String(error);
+      const finishReason = response?.candidates?.[0]?.finishReason || 'unknown';
+      throw new Error(`Invalid Gemini JSON (${finishReason}): ${parseMessage}`);
+    }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logger.error(

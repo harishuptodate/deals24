@@ -3,6 +3,11 @@ const DEFAULT_AFFILIATE_TAG = 'harishch-21';
 const ASIN_PATH_PATTERN = /\/(?:dp|gp\/product|gp\/aw\/d)\/([a-z0-9]{10})(?:[/?#]|$)/i;
 const AMAZON_LINK_PATTERN = /(https?:\/\/)?(www\.)?(amazon\.(?:in|com)|amzn\.to)\/[^\s]*/gi;
 
+export function extractAmazonAsin(value: string | null | undefined): string | null {
+  if (!value) return null;
+  return value.match(ASIN_PATH_PATTERN)?.[1]?.toUpperCase() || null;
+}
+
 function extractUrl(value: string): URL {
   const match = value.trim().match(/https?:\/\/[^\s]+/i);
 

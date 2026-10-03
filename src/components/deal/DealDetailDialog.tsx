@@ -27,6 +27,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import DealImage from '../images/DealImage';
 import { format } from 'date-fns';
+import PriceHistoryChart from './PriceHistoryChart';
 
 interface DealDetailDialogProps {
 	isOpen: boolean;
@@ -35,6 +36,8 @@ interface DealDetailDialogProps {
 	description: string;
 	link?: string;
 	id?: string;
+	category?: string;
+	price?: string;
 	imageUrl?: string;
 	telegramFileId?: string;
 	extraData?: {	
@@ -51,6 +54,8 @@ const DealDetailDialog = ({
 	description,
 	link,
 	id,
+	category,
+	price,
 	imageUrl,
 	telegramFileId,
 	extraData,
@@ -135,7 +140,7 @@ const DealDetailDialog = ({
 		return (
 			<DealImage
 				title={title}
-				category={extraData?.category}
+				category={category || extraData?.category}
 				imageUrl={imageUrl}
 				telegramFileId={telegramFileId}
 				className="w-full h-44 sm:h-48 object-contain rounded-lg"
@@ -154,78 +159,29 @@ const DealDetailDialog = ({
 
 	return (
 		<Dialog open={isOpen} onOpenChange={onOpenChange}>
-			<DialogContent className="w-[92vw] sm:w-[480px] max-h-[95vh] overflow-y-auto rounded-xl text-[0.93rem] sm:text-sm px-4 sm:px-6">
-				<DialogHeader className="hidden sm:block"> {/* title hidden on mobile screen */}
-					<DialogTitle className="text-base sm:text-lg text-center">
+			<DialogContent className="flex max-h-[calc(100dvh-0.75rem)] w-[calc(100vw-0.75rem)] max-w-3xl flex-col gap-0 overflow-hidden rounded-2xl border-slate-200 p-0 text-sm sm:max-h-[92vh] dark:border-slate-800">
+				<DialogHeader className="shrink-0 border-b border-slate-200 px-4 py-3 pr-12 text-left sm:px-6 sm:py-4 dark:border-slate-800">
+					<DialogTitle className="line-clamp-2 text-base leading-6 sm:text-lg">
 						{title}
 					</DialogTitle>
 				</DialogHeader>
 
-				<div className="mt-3">
-					<div className="mb-4">{renderImage()}</div>
+				<div className="min-h-0 flex-1 overflow-y-auto px-3 py-3 sm:px-6 sm:py-5">
+					<div className="mx-auto mb-4 max-w-xl">{renderImage()}</div>
 
-					{/* Container div with small text size, preserves line breaks, and centers content */}
-					<div className="text-sm whitespace-pre-line text-center">
-						{/* First line (title) shown only on mobile screens with bold styling */}
-						<span className="sm:hidden font-bold">{makeLinksClickable(description.split('\n')[0])}</span>
-						{/* First line (title) shown only on desktop screens with normal weight */}
-						<span className="hidden sm:inline">{makeLinksClickable(description.split('\n')[0])}</span>
-						{/* Conditionally render remaining lines if description has more than one line */}
+					<div className="whitespace-pre-line rounded-2xl bg-slate-50 px-3.5 py-3 text-[13px] leading-6 text-slate-700 sm:px-5 sm:py-4 sm:text-sm dark:bg-slate-900 dark:text-slate-300">
+						<span className="font-semibold text-slate-950 dark:text-white">{makeLinksClickable(description.split('\n')[0])}</span>
 						{description.split('\n').slice(1).length > 0 && (
 							<>
-								{/* Add a line break between title and body */}
 								{'\n'}
-								{/* Render all lines after the first one with clickable links */}
 								{makeLinksClickable(description.split('\n').slice(1).join('\n'))}
 							</>
 						)}
 					</div>
-				</div>
 
-				<DialogFooter className="mt-4 flex flex-row flex-wrap justify-between gap-3">
-					{id && (
-						<Button
-							onClick={handleViewFullPage}
-							className="w-full sm:w-auto flex-1 dark:text-white bg-blue-600 dark:bg-blue-800 hover:bg-blue-700 hover:dark:bg-blue-900 hover:scale-105 rounded-full transition-all focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0">
-							<ExternalLink size={16} />
-							View Deal
-						</Button>
-					)}
-							<DialogClose asChild>
-								<Button
-									type="button"
-									className="flex-1 sm:hidden dark:text-white bg-red-600 dark:bg-red-800 hover:bg-red-700 hover:dark:bg-red-900 hover:scale-105 rounded-full transition-all focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
-								>
-									Close
-								</Button>
-							</DialogClose>
-					{buyNowLink && (
-						<div className="flex w-full gap-3 sm:contents">
-							<a
-								href={buyNowLink}
-								onClick={(e) =>
-									handleTrackedLinkClick(
-										buyNowLink,
-										id,
-										e.nativeEvent,
-									)
-								}
-								target="_blank"
-								rel="noopener noreferrer"
-								className="flex-1 sm:w-auto sm:flex-1 flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-b from-apple-darkGray to-indigo-950 rounded-full hover:scale-105 transition-all">
-								Buy Now
-							</a>
-						</div>
-					)}
-
-					<Button
-						onClick={handleShare}
-						disabled={isSharing}
-						className="w-full sm:w-auto flex-1 dark:text-white rounded-full bg-orange-500 dark:bg-orange-800 hover:bg-orange-600 hover:dark:bg-orange-900 hover:scale-105 transition-all">
-						<Share2 size={16} />
-						{isSharing ? 'Sharing...' : 'Share Deal'}
-					</Button>
-				</DialogFooter>
+					<div className="mt-4">
+						<PriceHistoryChart dealId={id} enabled={isOpen} currentPrice={price} />
+					</div>
 
 				{extraData && (
 					<div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
@@ -257,17 +213,50 @@ const DealDetailDialog = ({
 						</div>
 					</div>
 				)}
+				</div>
 
-				<div className="hidden justify-center pt-2 sm:flex">
+				<DialogFooter className="grid shrink-0 grid-cols-2 gap-2 border-t border-slate-200 bg-white p-3 sm:grid-cols-4 sm:gap-3 sm:px-6 sm:py-4 dark:border-slate-800 dark:bg-slate-950">
+					{buyNowLink && (
+						<a
+							href={buyNowLink}
+							onClick={(event) => {
+								event.preventDefault();
+								event.stopPropagation();
+								void handleTrackedLinkClick(buyNowLink, id, event.nativeEvent);
+							}}
+							target="_blank"
+							rel="noopener noreferrer"
+							className="col-span-2 flex h-12 items-center justify-center rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-slate-800 sm:col-span-1 dark:bg-emerald-600 dark:hover:bg-emerald-500">
+							Buy now
+							<ExternalLink className="ml-2 h-4 w-4" />
+						</a>
+					)}
+					{id && (
+						<Button
+							variant="outline"
+							onClick={handleViewFullPage}
+							className="h-11 rounded-xl px-3 text-xs font-semibold sm:h-12 sm:text-sm">
+							<ExternalLink className="mr-1.5 h-4 w-4" />
+							View deal
+						</Button>
+					)}
+					<Button
+						variant="outline"
+						onClick={handleShare}
+						disabled={isSharing}
+						className="h-11 rounded-xl px-3 text-xs font-semibold sm:h-12 sm:text-sm">
+						<Share2 className="mr-1.5 h-4 w-4" />
+						{isSharing ? 'Sharing...' : 'Share deal'}
+					</Button>
 					<DialogClose asChild>
 						<Button
 							type="button"
-							className="w-full sm:w-auto flex-1 dark:text-white bg-red-600 dark:bg-red-800 hover:bg-red-700 hover:dark:bg-red-900 hover:scale-105 rounded-full transition-all focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
-						>
+							variant="ghost"
+							className="col-span-2 h-11 rounded-xl text-xs font-semibold text-slate-600 sm:col-span-1 sm:h-12 sm:text-sm dark:text-slate-300">
 							Close
 						</Button>
 					</DialogClose>
-				</div>
+				</DialogFooter>
 			</DialogContent>
 		</Dialog>
 	);

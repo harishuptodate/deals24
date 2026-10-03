@@ -6,6 +6,7 @@ import {
 	TopPerformingResponse,
 	ClickAnalyticsResponse,
 	ClickStatsResponse,
+	DealPriceHistory,
 } from '../types/telegram';
 import { getAdminToken } from './authService';
 
@@ -568,6 +569,13 @@ export const getBlacklistPolicy = async (): Promise<BlacklistPolicy> => {
     entries: response.data.entries || [],
     rules: response.data.rules || [],
   };
+};
+
+export const getDealPriceHistory = async (id: string): Promise<DealPriceHistory> => {
+	const response = await api.get<DealPriceHistory>(
+		`/telegram/messages/${id}/price-history`,
+	);
+	return response.data;
 };
 
 export const addBlacklistEntry = async (

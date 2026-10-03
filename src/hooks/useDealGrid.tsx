@@ -54,6 +54,8 @@ export const useDealGrid = () => {
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     retry: 2,
+		refetchInterval: 30_000,
+		refetchIntervalInBackground: false,
     meta: {
       onError: () => {
         toast({

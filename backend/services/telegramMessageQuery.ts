@@ -7,6 +7,7 @@ type QueryableTelegramMessage = {
 
 type TelegramMessageQuery = Record<string, unknown> & {
   _id?: Record<string, mongoose.Types.ObjectId>;
+  $or?: Record<string, unknown>[];
   channelId?: string;
   category?: string;
   date?: Record<string, Date>;
@@ -136,8 +137,22 @@ export async function getMessagesFromStore(
     query.channelId = channelId;
   }
 
-  if (cursor && !isPriceSort && objectId.isValid(cursor)) {
-    query._id = { [isOldestFirst ? '$gt' : '$lt']: new objectId(cursor) };
+  if (cursor && !isPriceSort) {
+    const [cursorDateRaw, cursorIdRaw] = String(cursor).split('|');
+    const cursorDate = new Date(Number(cursorDateRaw));
+    if (
+      cursorIdRaw &&
+      objectId.isValid(cursorIdRaw) &&
+      !Number.isNaN(cursorDate.getTime())
+    ) {
+      const comparison = isOldestFirst ? '$gt' : '$lt';
+      query.$or = [
+        { date: { [comparison]: cursorDate } },
+        { date: cursorDate, _id: { [comparison]: new objectId(cursorIdRaw) } },
+      ];
+    } else if (objectId.isValid(cursor)) {
+      query._id = { [isOldestFirst ? '$gt' : '$lt']: new objectId(cursor) };
+    }
   }
 
   if (category) {
@@ -226,7 +241,7 @@ export async function getMessagesFromStore(
 
   const sortStage = isPriceSort
     ? { $sort: { priceNumber: isPriceAsc ? 1 : -1, _id: isPriceAsc ? 1 : -1 } }
-    : { $sort: { _id: isOldestFirst ? 1 : -1 } };
+    : { $sort: { date: isOldestFirst ? 1 : -1, _id: isOldestFirst ? 1 : -1 } };
 
   const projectionStage = {
     $project: {
@@ -274,7 +289,7 @@ export async function getMessagesFromStore(
       if (!lastWithPrice) return null;
       return `${lastWithPrice.priceNumber}|${lastWithPrice._id}`;
     }
-    return lastItem._id;
+    return `${new Date(lastItem.date || 0).getTime()}|${lastItem._id}`;
   })();
 
   return {

@@ -5,6 +5,8 @@ import type { DealBlacklist } from './blacklistService';
 
 let lastAmazonFetchAt = 0;
 const MIN_AMAZON_FETCH_DELAY = 2000;
+const ALLOWED_EMOJIS = new Set(['✅', '🔗', '❌', '💡', '➡️', '🔥', '📌']);
+const EMOJI_REGEX = /(?:\p{Regional_Indicator}{2}|[#*0-9]\uFE0F?\u20E3|(?:\p{Extended_Pictographic}(?:\uFE0F|\uFE0E)?(?:\p{Emoji_Modifier})?)(?:\u200D\p{Extended_Pictographic}(?:\uFE0F|\uFE0E)?(?:\p{Emoji_Modifier})?)*)/gu;
 
 export function hasAmazonLinks(text: string): boolean {
   if (!text) return false;
@@ -52,10 +54,6 @@ export function normalizeMessage(text: string): string {
 
 export function calculateHash(text: string): string {
   return crypto.createHash('sha256').update(normalizeMessage(text)).digest('hex');
-}
-
-export function hashString(input: string): string {
-  return crypto.createHash('sha256').update(input).digest('hex');
 }
 
 type NormalizedMatchText = {
@@ -179,6 +177,16 @@ function replaceNormalizedMatches(text: string, from: string, to: string): strin
   return text;
 }
 
+export function removeDisallowedEmojis(text: string): string {
+  return text.replace(EMOJI_REGEX, (emoji) => (
+    ALLOWED_EMOJIS.has(emoji) ? emoji : ''
+  ));
+}
+
+export function removeLeadingFlatDiscount(text: string): string {
+  return text.replace(/^\s*Flat\s+(?:₹\s*)?\d[\d,]*(?:\.\d+)?\s*[kK]?\s+Off\b\s*/i, '');
+}
+
 export function replaceLinksAndText(text: string): string {
   let result = text;
 
@@ -221,7 +229,7 @@ export function replaceLinksAndText(text: string): string {
     }
   }
 
-  return result.trim();
+  return removeDisallowedEmojis(removeLeadingFlatDiscount(result)).trim();
 }
 
 export function isRecentMessage(messageDate: number): boolean {

@@ -3,6 +3,7 @@ import test from 'node:test';
 import {
   cleanAmazonImageUrl,
   cleanAmazonProductUrl,
+  extractAmazonAsin,
   replaceLastAmazonUrl,
 } from './amazonLink';
 
@@ -20,6 +21,14 @@ test('accepts an Amazon.com ASIN link and canonicalizes it to Amazon India', () 
     cleanAmazonProductUrl('https://www.amazon.com/gp/product/b08n5wrwnw/ref=something', 'harishch-21'),
     'https://www.amazon.in/dp/B08N5WRWNW?tag=harishch-21',
   );
+});
+
+test('extracts a stable ASIN from canonical product links', () => {
+  assert.equal(
+    extractAmazonAsin('https://www.amazon.in/dp/B08N5WRWNW?tag=harishch-21'),
+    'B08N5WRWNW',
+  );
+  assert.equal(extractAmazonAsin('https://example.com/product/123'), null);
 });
 
 test('rejects lookalike hosts and links without an ASIN', () => {

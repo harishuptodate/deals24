@@ -11,6 +11,26 @@ export interface TelegramMessage {
 	price?: string;
 	clicks?: number;
 	createdAt?: string; // Added for compatibility
+	previousPrice?: string;
+	lowestObservedPrice?: number;
+	highestObservedPrice?: number;
+	observationCount?: number;
+}
+
+export interface PriceHistoryPoint {
+	id: string;
+	observedAt: string;
+	price: number;
+	link?: string;
+}
+
+export interface DealPriceHistory {
+	points: PriceHistoryPoint[];
+	currentPrice: number | null;
+	previousPrice: number | null;
+	lowestPrice: number | null;
+	highestPrice: number | null;
+	changePercent: number | null;
 }
 
 export interface ApiResponse {

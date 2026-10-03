@@ -1,5 +1,6 @@
 import express, { type Request, type Response } from 'express';
 import TelegramMessage from '../models/TelegramMessage';
+import DealPriceObservation from '../models/DealPriceObservation';
 import * as telegramController from '../controllers/telegramController';
 import { cacheHybrid } from '../services/redisClient';
 import { getMessages, handleClickTracking } from '../services/telegramService';
@@ -107,8 +108,8 @@ router.get('/messages',
       return `messages:category=${category}&cursor=${cursor}&limit=${limit}&from=${from}&to=${to}&minPrice=${minPrice}&maxPrice=${maxPrice}&sort=${sort}`;
     },
     60,  // Redis TTL (1 min)
-    60,  // HTTP max-age
-    300  // HTTP stale-while-revalidate
+    0,   // Always revalidate; ingestion explicitly clears the Redis cache.
+    0
   ),
   async (req: TelegramListRequest, res: Response) => {
   try {
@@ -145,6 +146,69 @@ router.get('/messages',
   } catch (error) {
     console.error('Error fetching messages:', error);
     res.status(500).json({ error: 'Failed to fetch messages' });
+  }
+});
+
+router.get('/messages/:id/price-history', async (req: MessageRequest, res: Response) => {
+  try {
+    const deal = await TelegramMessage.findById(req.params.id)
+      .select({
+        price: 1,
+        date: 1,
+        createdAt: 1,
+        link: 1,
+      })
+      .lean();
+
+    if (!deal) {
+      return res.status(404).json({ error: 'Message not found' });
+    }
+
+    const observations = await DealPriceObservation.find({
+      productId: deal._id,
+      price: { $ne: null },
+    })
+      .sort({ observedAt: 1 })
+      .select({ observedAt: 1, price: 1, link: 1 })
+      .lean();
+
+    const points = observations.map((observation) => ({
+      id: String(observation._id),
+      observedAt: observation.observedAt.toISOString(),
+      price: observation.price,
+      link: observation.link || undefined,
+    }));
+
+    if (points.length === 0 && deal.price && Number(deal.price) > 0) {
+      points.push({
+        id: `legacy-${deal._id}`,
+        observedAt: new Date(deal.date || deal.createdAt).toISOString(),
+        price: Number(deal.price),
+        link: deal.link || undefined,
+      });
+    }
+
+    const prices = points.map((point) => point.price);
+    const storedCurrentPrice = Number(deal.price) || null;
+    const currentPrice = prices.at(-1) ?? storedCurrentPrice;
+    const previousPrice = prices.at(-2) ?? null;
+    const changePercent =
+      currentPrice && previousPrice
+        ? Number((((currentPrice - previousPrice) / previousPrice) * 100).toFixed(1))
+        : null;
+
+    res.setHeader('Cache-Control', 'no-store');
+    return res.json({
+      points,
+      currentPrice,
+      previousPrice,
+      lowestPrice: prices.length > 0 ? Math.min(...prices) : currentPrice,
+      highestPrice: prices.length > 0 ? Math.max(...prices) : currentPrice,
+      changePercent,
+    });
+  } catch (error) {
+    console.error('Error fetching price history:', error);
+    return res.status(500).json({ error: 'Failed to fetch price history' });
   }
 });
 
@@ -293,6 +357,8 @@ router.delete('/messages/:id', async (req: MessageRequest, res: Response) => {
         .status(404)
         .json({ success: false, message: 'Message not found' });
     }
+
+    await DealPriceObservation.deleteMany({ productId: result._id });
 
     console.log(`Successfully deleted message with ID: ${id}`);
     return res

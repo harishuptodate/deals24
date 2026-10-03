@@ -1,4 +1,9 @@
-export const buildCaptionPrompt = (messageText: string): string => `You are a product deal message processor. Analyze the following product deal message and understand the intent properly from the below instructions and examples and perform these tasks:
+import type { ProductMatchCandidate } from './telegramTypes';
+
+export const buildCaptionPrompt = (
+	messageText: string,
+	candidates: ProductMatchCandidate[] = [],
+): string => `You are a product deal message processor. Analyze the following product deal message and understand the intent properly from the below instructions and examples and perform these tasks:
 
 1. Normalize the message: Remove ALL promotional noise, unnecessary text, and keep ONLY essential product information. Specifically:
 
@@ -139,10 +144,24 @@ Normalized message:
 
 💡 All The Above Mentioned Prices With HDFC Cc Discounts"
 
+4. Extract a stable product identity:
+- canonicalName: concise brand + product/model + important variant.
+- brand: manufacturer or fashion brand, otherwise empty string.
+- model: exact model name/number when present, otherwise empty string.
+- productType: phone, laptop, television, shirt, etc.
+- variant: only identity-changing attributes such as storage, RAM, size, capacity, colour, pack size or model year.
+
+5. Compare against the candidate products below. Select a candidate only when it is the exact same sellable product and variant. Similar products, accessories, different storage/capacity/size/model/year, and product-family matches are NOT the same product. If evidence is insufficient, return no match. candidateId must be copied exactly from the supplied list or be null.
+
+Candidate products:
+${candidates.length > 0 ? JSON.stringify(candidates) : '[]'}
+
 CRITICAL: Return ONLY valid JSON. Do NOT use markdown code blocks (no triple backticks with json or without). Do NOT add any explanations, text, or formatting before or after the JSON. Start directly with { and end with }. Return pure JSON only.
 
 Example of correct response format:
 {"normalizedMessage": "Product name @ ₹Price", "category": "electronics-home", "price": "53000"}
+
+The response must also include the identity and match objects described above; the response schema is authoritative.
 
 Message to process:
 ${messageText}`

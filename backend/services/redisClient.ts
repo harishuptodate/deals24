@@ -82,3 +82,36 @@ export const cacheHybrid = (
     }
   };
 };
+
+export async function invalidateDealCaches(messageId?: string): Promise<void> {
+  try {
+    const keys = new Set<string>([
+      'categories:counts',
+      'categories:distinct',
+      'analytics:top-performing',
+    ]);
+
+    if (messageId) {
+      keys.add(`message:id:${messageId}`);
+    }
+
+    let cursor = '0';
+    do {
+      const [nextCursor, matchedKeys] = await redis.scan(
+        cursor,
+        'MATCH',
+        'messages:*',
+        'COUNT',
+        100,
+      );
+      cursor = nextCursor;
+      matchedKeys.forEach((key) => keys.add(key));
+    } while (cursor !== '0');
+
+    if (keys.size > 0) {
+      await redis.del(...keys);
+    }
+  } catch (error) {
+    console.warn('Could not invalidate deal caches:', error);
+  }
+}

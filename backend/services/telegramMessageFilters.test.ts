@@ -11,6 +11,8 @@ import {
   isRecentMessage,
   normalizeGeminiPrice,
   normalizeMessage,
+  removeDisallowedEmojis,
+  removeLeadingFlatDiscount,
   replaceLinksAndText,
   shouldSkipBadProducts,
 } from './telegramMessageFilters';
@@ -92,6 +94,48 @@ test('does not replace a configured word inside an unrelated longer word', () =>
   assert.equal(replaceLinksAndText('Loot now, but keep Looting'), 'now, but keep Looting');
 
   process.env.TEXT_REPLACEMENTS = previousTextReplacements;
+});
+
+test('applies overlapping text replacements from longest to shortest', () => {
+  const previousTextReplacements = process.env.TEXT_REPLACEMENTS;
+  process.env.TEXT_REPLACEMENTS = 'Mahaa:,Mahaaa Looot🚀🚀👌:,Looot🚀🚀:,Looot🔥:';
+
+  assert.equal(
+    replaceLinksAndText('Mahaaa Looot🚀🚀👌 TV Looot🚀🚀 deal Looot🔥 now'),
+    'TV  deal  now',
+  );
+
+  process.env.TEXT_REPLACEMENTS = previousTextReplacements;
+});
+
+test('removes every emoji except the configured allowlist', () => {
+  assert.equal(
+    removeDisallowedEmojis('✅ 🔗 ❌ 💡 ➡️ 🔥 🤩 🚀 👌 ⚡️ 💥 1️⃣ 🇮🇳 👨‍👩‍👧'),
+    '✅ 🔗 ❌ 💡 ➡️ 🔥        ',
+  );
+});
+
+test('removes a flat discount only when it starts the message', () => {
+  const message = [
+    'Flat 14K Off',
+    '',
+    'Sony 43 inches BRAVIA TV @ ₹30,815',
+    '',
+    '❌ Regular price @ ₹43,990 | 💡 Flat ₹7,675 Off Via Flipkart AXIS Cc',
+  ].join('\n');
+
+  assert.equal(
+    removeLeadingFlatDiscount(message),
+    [
+      'Sony 43 inches BRAVIA TV @ ₹30,815',
+      '',
+      '❌ Regular price @ ₹43,990 | 💡 Flat ₹7,675 Off Via Flipkart AXIS Cc',
+    ].join('\n'),
+  );
+  assert.equal(
+    removeLeadingFlatDiscount('Sony TV with Flat 10k Off'),
+    'Sony TV with Flat 10k Off',
+  );
 });
 
 test('classifies low-context and profitable messages', () => {
