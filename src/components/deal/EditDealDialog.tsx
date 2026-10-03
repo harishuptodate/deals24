@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { updateMessageText } from '../../services/api';
 import { useToast } from '@/components/ui/use-toast';
 import { Input } from '../ui/input';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface EditDealDialogProps {
 	isOpen: boolean;
@@ -37,16 +38,27 @@ const EditDealDialog = ({
 	initialPrice = null,
 }: EditDealDialogProps) => {
 	const { toast } = useToast();
+	const queryClient = useQueryClient();
 	const [editedText, setEditedText] = useState(initialText);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [editedImageUrl, setEditedImageUrl] = useState(initialImageUrl || null);
 	const [editedPrice, setEditedPrice] = useState(initialPrice ?? '');
+	const [recordPriceHistory, setRecordPriceHistory] = useState(false);
+	const [priceObservedAt, setPriceObservedAt] = useState('');
+
+	const currentLocalDateTime = () => {
+		const now = new Date();
+		now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+		return now.toISOString().slice(0, 16);
+	};
 
 	useEffect(() => {
 		if (!isOpen) return;
 		setEditedText(initialText);
 		setEditedImageUrl(initialImageUrl || null);
 		setEditedPrice(initialPrice ?? '');
+		setRecordPriceHistory(false);
+		setPriceObservedAt(currentLocalDateTime());
 	}, [isOpen, initialText, initialImageUrl, initialPrice]);
 
 	const handleSaveEdit = async (e: React.FormEvent) => {
@@ -77,8 +89,12 @@ const EditDealDialog = ({
 				editedText,
 				editedImageUrl,
 				editedPrice || null,
+				recordPriceHistory ? new Date(priceObservedAt).toISOString() : null,
 			);
 			if (success) {
+				if (recordPriceHistory) {
+					void queryClient.invalidateQueries({ queryKey: ['deal-price-history', id] });
+				}
 				toast({
 					title: 'Success',
 					description: 'Deal was updated successfully',
@@ -142,13 +158,42 @@ const EditDealDialog = ({
 					<div className="mt-4">
 						<Input
 							value={editedPrice}
-							onChange={(e) => setEditedPrice(e.target.value)}
+							onChange={(e) => {
+								setEditedPrice(e.target.value);
+								setRecordPriceHistory(e.target.value !== (initialPrice ?? ''));
+							}}
 							placeholder="Price (numbers only)"
 							className="min-h-[40px]"
 							type="text"
 							inputMode="numeric"
 						/>
 					</div>
+
+					<label className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
+						<input
+							type="checkbox"
+							checked={recordPriceHistory}
+							onChange={(event) => setRecordPriceHistory(event.target.checked)}
+							disabled={!editedPrice}
+							className="h-4 w-4 rounded border-input"
+						/>
+						Add this price to price history
+					</label>
+
+					{recordPriceHistory && (
+						<div className="mt-3">
+							<label htmlFor="price-observed-at" className="mb-1.5 block text-sm font-medium">
+								Price date and time
+							</label>
+							<Input
+								id="price-observed-at"
+								type="datetime-local"
+								value={priceObservedAt}
+								onChange={(event) => setPriceObservedAt(event.target.value)}
+								required
+							/>
+						</div>
+					)}
 
 					<DialogFooter className="mt-4">
 						<Button

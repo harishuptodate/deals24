@@ -29,6 +29,7 @@ import {
 	Package,
 	ScrollText,
 	ArrowRight,
+	Send,
 } from 'lucide-react';
 import {
 	Dialog,
@@ -872,25 +873,28 @@ const Admin = () => {
 									<div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-stone-950 text-white dark:bg-white dark:text-stone-950">
 										<ScrollText className="h-5 w-5" />
 									</div>
-									<h2 className="text-2xl font-semibold tracking-tight">Operational Logs and Blacklist</h2>
+									<h2 className="text-2xl font-semibold tracking-tight">Admin tools</h2>
 									<p className="text-sm leading-6 text-stone-600 dark:text-stone-400">
-										Open the dedicated logs workspace for live backend flow, recent Redis-backed events,
-										and persisted history without crowding the analytics dashboard. Also open the blacklist page to manage the blacklist.
+										Monitor backend activity, manage deal filters, or submit a raw deal message through the normal ingestion flow.
 									</p>
 								</div>
-								<Link to="/admin/logs">
-									<Button className="h-11 rounded-full bg-stone-950 px-5 text-white transition-transform duration-150 ease-out hover:scale-[1.02] hover:bg-stone-800 active:scale-[0.94] dark:bg-stone-100 dark:text-stone-950 dark:hover:bg-white">
-										Open Logs Page
-										<ArrowRight className="ml-2 h-4 w-4" />
-									</Button>
-								</Link>
-								<br />
-								<Link to="/admin/blacklist">
-									<Button className="h-11 rounded-full bg-stone-950 px-5 text-white transition-transform duration-150 ease-out hover:scale-[1.02] hover:bg-stone-800 active:scale-[0.94] dark:bg-stone-100 dark:text-stone-950 dark:hover:bg-white">
-										Open Blacklist Page
-										<ArrowRight className="ml-2 h-4 w-4" />
-									</Button>
-								</Link>
+								<div className="flex flex-wrap gap-3 md:max-w-sm md:justify-end">
+									<Link to="/admin/logs">
+										<Button className="h-10 rounded-full bg-stone-950 px-4 text-white transition-transform duration-150 ease-out hover:scale-[1.02] hover:bg-stone-800 active:scale-[0.94] dark:bg-stone-100 dark:text-stone-950 dark:hover:bg-white">
+											Logs <ArrowRight className="ml-2 h-4 w-4" />
+										</Button>
+									</Link>
+									<Link to="/admin/blacklist">
+										<Button className="h-10 rounded-full bg-stone-950 px-4 text-white transition-transform duration-150 ease-out hover:scale-[1.02] hover:bg-stone-800 active:scale-[0.94] dark:bg-stone-100 dark:text-stone-950 dark:hover:bg-white">
+											Blacklist <ArrowRight className="ml-2 h-4 w-4" />
+										</Button>
+									</Link>
+									<Link to="/admin/post-deal">
+										<Button className="h-10 rounded-full bg-stone-950 px-4 text-white transition-transform duration-150 ease-out hover:scale-[1.02] hover:bg-stone-800 active:scale-[0.94] dark:bg-stone-100 dark:text-stone-950 dark:hover:bg-white">
+											Post Deal <Send className="ml-2 h-4 w-4" />
+										</Button>
+									</Link>
+								</div>
 							</div>
 						</CardContent>
 					</Card>

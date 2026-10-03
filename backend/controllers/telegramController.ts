@@ -1,7 +1,10 @@
 import type { Request, Response } from 'express';
+import { randomUUID } from 'node:crypto';
 import TelegramMessage from '../models/TelegramMessage';
+import DealPriceObservation from '../models/DealPriceObservation';
 import { runWithLogContext } from '../services/logger';
 import { saveMessage } from '../services/telegramService';
+import { invalidateDealCaches } from '../services/redisClient';
 import type { TelegramInboundMessage } from '../services/telegramTypes';
 
 type TelegramWebhookRequest = Request<
@@ -23,6 +26,7 @@ type UpdateMessageBody = {
 	text?: string;
 	imageUrl?: string | null;
 	price?: string | null;
+	priceObservedAt?: string | null;
 };
 
 type TelegramListRequest = Request<unknown, unknown, unknown, TelegramListQuery>;
@@ -88,7 +92,7 @@ export const handleTelegramWebhook = async (req: TelegramWebhookRequest, res: Re
 export const updateMessageText = async (req: UpdateMessageRequest, res: Response) => {
 	try {
 		const { id } = req.params;
-		const { text, imageUrl, price } = req.body;
+		const { text, imageUrl, price, priceObservedAt } = req.body;
 
 		if (!text || text.trim() === '') {
 			return res.status(400).json({ error: 'Message text cannot be empty' });
@@ -100,15 +104,50 @@ export const updateMessageText = async (req: UpdateMessageRequest, res: Response
 			return res.status(404).json({ error: 'Message not found' });
 		}
 
+		const normalizedPrice = typeof price === 'string'
+			? price.replace(/[^\d]/g, '')
+			: '';
+		let observedAt: Date | null = null;
+		if (priceObservedAt) {
+			observedAt = new Date(priceObservedAt);
+			if (Number(normalizedPrice) <= 0 || Number.isNaN(observedAt.getTime())) {
+				return res.status(400).json({
+					error: 'A valid price and observation date are required for price history',
+				});
+			}
+		}
+
 		message.text = text;
 		message.imageUrl = imageUrl;
 		if (typeof price === 'string') {
-			const normalizedPrice = price.replace(/[^\d]/g, '');
 			message.price = normalizedPrice || null;
 		} else if (price === null || price === '') {
 			message.price = null;
 		}
-		await message.save();
+		let manualSourceKey: string | null = null;
+		if (observedAt) {
+			manualSourceKey = `manual:${message._id}:${randomUUID()}`;
+			await DealPriceObservation.create({
+				productId: message._id,
+				sourceKey: manualSourceKey,
+				observedAt,
+				price: Number(normalizedPrice),
+				link: message.link || null,
+				matchMethod: 'manual',
+				matchConfidence: 1,
+			});
+		}
+
+		try {
+			await message.save();
+		} catch (error) {
+			if (manualSourceKey) {
+				await DealPriceObservation.deleteOne({ sourceKey: manualSourceKey });
+			}
+			throw error;
+		}
+
+		await invalidateDealCaches(String(message._id));
 
 		return res.json({ success: true, message });
 	} catch (error) {

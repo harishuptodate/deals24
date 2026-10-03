@@ -15,6 +15,7 @@ const Deals = lazy(() => import("./pages/Deals"));
 const Categories = lazy(() => import("./pages/Categories"));
 const Admin = lazy(() => import("./pages/Admin"));
 const AdminLogs = lazy(() => import("./pages/AdminLogs"));
+const AdminPostDeal = lazy(() => import("./pages/AdminPostDeal"));
 const Wishlist = lazy(() => import("./pages/Wishlist"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Deal = lazy(() => import("./pages/Deal"));
@@ -118,6 +119,7 @@ const App = () => {
                 <Route path="/categories" element={<Categories />} />
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/admin/logs" element={<AdminLogs />} />
+                <Route path="/admin/post-deal" element={<AdminPostDeal />} />
                 <Route path="/admin/blacklist" element={<BlacklistManager />} />
                 <Route path="/wishlist" element={<Wishlist />} />
                 <Route path="/deal/:id" element={<Deal />} />

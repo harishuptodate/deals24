@@ -325,6 +325,7 @@ export const updateMessageText = async (
 	text: string,
 	imageUrl: string | null = null,
 	price: string | null = null,
+	priceObservedAt: string | null = null,
 ): Promise<boolean> => {
 	try {
 		if (!messageId) {
@@ -337,12 +338,18 @@ export const updateMessageText = async (
 			text,
 			imageUrl,
 			price,
+			priceObservedAt,
 		});
 		return response.status === 200;
 	} catch (error) {
 		console.error('Failed to update message text:', error);
 		return false;
 	}
+};
+
+export const postAdminDeal = async (message: string): Promise<TelegramMessage> => {
+	const response = await api.post('/admin/deals', { message });
+	return response.data.deal;
 };
 
 // Update message category

@@ -1,4 +1,5 @@
 import express, { type Request, type Response } from 'express';
+import { randomUUID } from 'node:crypto';
 import mongoose from 'mongoose';
 import { issueAdminToken, verifyAdminCredentials } from '../services/adminAuth';
 import { createLogger, fetchRecentLogs, logEmitter, queryLogs } from '../services/logger';
@@ -14,6 +15,7 @@ import {
 	removeBlacklistRule,
 	upsertBlacklistRule,
 } from '../services/blacklistService';
+import { saveMessage } from '../services/telegramService';
 
 const router = express.Router();
 const logger = createLogger('admin-api');
@@ -42,6 +44,43 @@ type BlacklistRuleRequest = Request<
 	unknown,
 	{ brand?: string; product?: string; action?: string }
 >;
+type PostDealRequest = Request<unknown, unknown, { message?: string }>;
+
+router.post('/deals', requireAdminAuth, async (req: PostDealRequest, res: Response) => {
+	const messageText = typeof req.body?.message === 'string' ? req.body.message.trim() : '';
+	if (!messageText || messageText.length > 10_000) {
+		return res.status(400).json({
+			success: false,
+			error: 'Deal message must be between 1 and 10,000 characters.',
+		});
+	}
+
+	try {
+		const deal = await saveMessage({
+			message_id: `admin-${randomUUID()}`,
+			chat: { id: 'admin-frontend' },
+			date: Math.floor(Date.now() / 1000),
+			text: messageText,
+		});
+
+		if (!deal) {
+			return res.status(422).json({
+				success: false,
+				error: 'The message was rejected by the deal ingestion filters.',
+			});
+		}
+
+		logger.info(
+			'Admin deal message processed',
+			{ dealId: String(deal._id) },
+			{ event: 'admin_deal_posted' },
+		);
+		return res.status(201).json({ success: true, deal });
+	} catch (error) {
+		logger.error('Failed to process admin deal message', { error }, { event: 'admin_deal_post_failed' });
+		return res.status(500).json({ success: false, error: 'Failed to process deal message.' });
+	}
+});
 
 router.get('/blacklist', requireAdminAuth, async (_req: Request, res: Response) => {
 	try {

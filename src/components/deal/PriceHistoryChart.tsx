@@ -35,6 +35,14 @@ const formatPrice = (price: number | null | undefined) =>
       }).format(price)
     : 'N/A';
 
+const formatCompactPrice = (price: number | null | undefined) =>
+  typeof price === 'number'
+    ? `₹${new Intl.NumberFormat('en-IN', {
+        notation: 'compact',
+        maximumFractionDigits: 1,
+      }).format(price)}`
+    : '';
+
 const PriceTooltip = ({ active, payload }: PriceTooltipProps) => {
   if (active && payload && payload.length) {
     return (
@@ -65,7 +73,7 @@ const PriceLabel = ({
     fill="#3b82f6"
     fontSize={10}
     fontWeight={600}>
-    {formatPrice(value)}
+    {formatCompactPrice(value)}
   </text>
 );
 
@@ -130,11 +138,11 @@ const PriceHistoryChart = ({ dealId, enabled }: PriceHistoryChartProps) => {
       <h3 className="mb-1 px-1 text-sm font-semibold text-gray-700 dark:text-gray-300">
         Price History
       </h3>
-      <div className="h-[220px] sm:h-[260px] lg:h-[300px]">
+      <div className="h-[220px] sm:h-[230px]">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
             data={points}
-			margin={{ top: 20, right: 8, left: -14, bottom: 16 }}
+			margin={{ top: 24, right: 12, left: 4, bottom: 16 }}
           >
             <CartesianGrid
               strokeDasharray="3 3"
@@ -151,10 +159,11 @@ const PriceHistoryChart = ({ dealId, enabled }: PriceHistoryChartProps) => {
               stroke="rgba(160, 160, 160, 0.2)"
             />
 			<YAxis
-			  width={58}
+			  width={48}
               allowDecimals={false}
-              tick={{ fontSize: 12, fill: 'rgba(160, 160, 160, 0.8)' }}
-              tickMargin={10}
+              tickFormatter={(value) => formatCompactPrice(Number(value))}
+              tick={{ fontSize: 10, fill: 'rgba(160, 160, 160, 0.8)' }}
+              tickMargin={6}
               stroke="rgba(160, 160, 160, 0.2)"
             />
             <Tooltip content={<PriceTooltip />} />
