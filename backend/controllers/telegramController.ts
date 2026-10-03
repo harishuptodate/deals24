@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import TelegramMessage from '../models/TelegramMessage';
 import DealPriceObservation from '../models/DealPriceObservation';
 import { runWithLogContext } from '../services/logger';
-import { saveMessage } from '../services/telegramService';
+import { getMessages, saveMessage, trackMessageClick } from '../services/telegramService';
 import { invalidateDealCaches } from '../services/redisClient';
 import type { TelegramInboundMessage } from '../services/telegramTypes';
 
@@ -18,10 +18,18 @@ type TelegramListQuery = {
 	limit?: string;
 	category?: string;
 	search?: string;
+	from?: string;
+	to?: string;
+	minPrice?: string;
+	maxPrice?: string;
+	sort?: string;
+	query?: string;
 	period?: 'day' | 'week' | 'month';
 };
 
 type MessageIdParams = { id: string };
+type CategoryParams = { category: string };
+type UpdateCategoryBody = { category?: string };
 type UpdateMessageBody = {
 	text?: string;
 	imageUrl?: string | null;
@@ -31,6 +39,18 @@ type UpdateMessageBody = {
 
 type TelegramListRequest = Request<unknown, unknown, unknown, TelegramListQuery>;
 type UpdateMessageRequest = Request<MessageIdParams, unknown, UpdateMessageBody>;
+type MessageRequest = Request<MessageIdParams>;
+type CategoryRequest = Request<CategoryParams, unknown, unknown, TelegramListQuery>;
+type UpdateCategoryRequest = Request<MessageIdParams, unknown, UpdateCategoryBody>;
+
+const DEFAULT_CATEGORY_COUNTS = [
+	{ category: 'electronics-home', count: 245 },
+	{ category: 'laptops', count: 85 },
+	{ category: 'mobile-phones', count: 120 },
+	{ category: 'gadgets-accessories', count: 175 },
+	{ category: 'fashion', count: 95 },
+	{ category: 'lifestyle', count: 0 },
+];
 
 function getMessagePreview(text: string) {
 	return String(text || '')
@@ -254,5 +274,140 @@ export const getTopPerforming = async (req: TelegramListRequest, res: Response) 
 		return res
 			.status(500)
 			.json({ error: 'Failed to get top performing messages' });
+	}
+};
+
+export const getCategoryCounts = async (_req: Request, res: Response) => {
+	try {
+		const categoryCounts = await TelegramMessage.aggregate([
+			{ $match: { category: { $exists: true, $ne: null } } },
+			{ $group: { _id: '$category', count: { $sum: 1 } } },
+			{ $project: { _id: 0, category: '$_id', count: 1 } },
+		]);
+		return categoryCounts?.length
+			? res.json({ data: categoryCounts })
+			: res.json(DEFAULT_CATEGORY_COUNTS);
+	} catch (error) {
+		console.error('Error fetching category counts:', error);
+		return res.json(DEFAULT_CATEGORY_COUNTS);
+	}
+};
+
+export const listMessages = async (req: TelegramListRequest, res: Response) => {
+	try {
+		const messages = await getMessages({
+			cursor: req.query.cursor,
+			limit: parseInt(req.query.limit) || 10,
+			category: req.query.category,
+			search: req.query.search,
+			from: req.query.from,
+			to: req.query.to,
+			minPrice: req.query.minPrice,
+			maxPrice: req.query.maxPrice,
+			sort: req.query.sort,
+		});
+		return res.json(messages);
+	} catch (error) {
+		console.error('Error fetching messages:', error);
+		return res.status(500).json({ error: 'Failed to fetch messages' });
+	}
+};
+
+export const getMessage = async (req: MessageRequest, res: Response) => {
+	try {
+		const message = await TelegramMessage.findById(req.params.id).lean();
+		if (!message) return res.status(404).json({ error: 'Message not found' });
+		return res.json(message);
+	} catch (error) {
+		console.error('Error fetching message:', error);
+		return res.status(500).json({ error: 'Failed to fetch message' });
+	}
+};
+
+export const trackMessageEngagement = async (req: MessageRequest, res: Response) => {
+	if (!req.params.id) return res.status(400).json({ error: 'Message ID is required' });
+	try {
+		const clicks = await trackMessageClick(req.params.id);
+		return res.json({ success: true, clicks });
+	} catch (error) {
+		console.error('Error tracking engagement:', error);
+		return res.status(500).json({ error: 'Failed to track engagement' });
+	}
+};
+
+export const updateMessageCategory = async (req: UpdateCategoryRequest, res: Response) => {
+	try {
+		const { category } = req.body;
+		if (!category) return res.status(400).json({ error: 'Category is required' });
+
+		const message = await TelegramMessage.findByIdAndUpdate(
+			req.params.id,
+			{ category },
+			{ new: true },
+		);
+		if (!message) return res.status(404).json({ error: 'Message not found' });
+		return res.json({ success: true, message });
+	} catch (error) {
+		console.error('Error updating message category:', error);
+		return res.status(500).json({ error: 'Failed to update message category' });
+	}
+};
+
+export const listCategoryMessages = async (req: CategoryRequest, res: Response) => {
+	try {
+		const messages = await getMessages({
+			cursor: req.query.cursor,
+			limit: parseInt(req.query.limit) || 10,
+			category: req.params.category,
+		});
+		return res.json(messages);
+	} catch (error) {
+		console.error(`Error fetching messages for category ${req.params.category}:`, error);
+		return res.status(500).json({ error: 'Failed to fetch category messages' });
+	}
+};
+
+export const searchMessages = async (req: TelegramListRequest, res: Response) => {
+	try {
+		if (!req.query.query) return res.status(400).json({ error: 'Search query is required' });
+		const messages = await getMessages({
+			cursor: req.query.cursor,
+			limit: parseInt(req.query.limit) || 10,
+			search: req.query.query,
+		});
+		return res.json(messages);
+	} catch (error) {
+		console.error('Error searching messages:', error);
+		return res.status(500).json({ error: 'Failed to search messages' });
+	}
+};
+
+export const deleteMessage = async (req: MessageRequest, res: Response) => {
+	try {
+		const result = await TelegramMessage.findByIdAndDelete(req.params.id);
+		if (!result) {
+			return res.status(404).json({ success: false, message: 'Message not found' });
+		}
+		await DealPriceObservation.deleteMany({ productId: result._id });
+		return res.json({ success: true, message: 'Message deleted successfully' });
+	} catch (error) {
+		console.error('Error deleting message:', error);
+		return res.status(500).json({
+			success: false,
+			message: 'Server error',
+			error: error instanceof Error ? error.message : String(error),
+		});
+	}
+};
+
+export const listCategories = async (_req: Request, res: Response) => {
+	try {
+		const categories = await TelegramMessage.distinct('category', {
+			category: { $exists: true, $ne: null },
+		});
+		return res.json(categories.filter(Boolean));
+	} catch (error) {
+		console.error('Error fetching categories:', error);
+		return res.status(500).json({ error: 'Failed to fetch categories' });
 	}
 };

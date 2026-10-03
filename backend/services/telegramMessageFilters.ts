@@ -62,7 +62,7 @@ type NormalizedMatchText = {
   ends: number[];
 };
 
-const INVISIBLE_CHARACTER_REGEX = /[\u200B-\u200D\uFE0E\uFE0F\uFEFF]/u;
+const INVISIBLE_CHARACTER_REGEX = /[\u200B-\u200D\uFEFF]|\uFE0E|\uFE0F/u;
 const LETTER_OR_NUMBER_REGEX = /[\p{L}\p{N}]/u;
 
 function normalizeForMatch(input: string): NormalizedMatchText {

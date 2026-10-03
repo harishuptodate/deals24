@@ -1,4 +1,3 @@
-import type { Request, Response } from 'express';
 import type {
   MessageQueryOptions,
   ProductMatchCandidate,
@@ -38,8 +37,6 @@ import {
 } from './productMatching';
 
 const AI_MATCH_THRESHOLD = 0.92;
-
-type ClickTrackingRequest = Request<{ id: string }>;
 
 async function shouldSkipMessage(textContent: string, messageDate: number): Promise<boolean> {
   if (!isRecentMessage(messageDate)) {
@@ -354,31 +351,27 @@ export async function saveMessage(message: TelegramInboundMessage) {
       telegramFileId: imageData.telegramFileId,
     });
 
+    const savedMessage = await newMessage.save();
     try {
-      const savedMessage = await newMessage.save();
-      try {
-        const observationCreated = await recordObservation({
-          productId: savedMessage._id,
-          sourceKey,
-          observedAt,
-          price: numericPrice,
-          link: link || null,
-          matchMethod,
-          matchConfidence,
-        });
-        if (!observationCreated) {
-          await TelegramMessage.deleteOne({ _id: savedMessage._id });
-          return null;
-        }
-      } catch (error) {
+      const observationCreated = await recordObservation({
+        productId: savedMessage._id,
+        sourceKey,
+        observedAt,
+        price: numericPrice,
+        link: link || null,
+        matchMethod,
+        matchConfidence,
+      });
+      if (!observationCreated) {
         await TelegramMessage.deleteOne({ _id: savedMessage._id });
-        throw error;
+        return null;
       }
-      await invalidateDealCaches(String(savedMessage._id));
-      return savedMessage;
     } catch (error) {
+      await TelegramMessage.deleteOne({ _id: savedMessage._id });
       throw error;
     }
+    await invalidateDealCaches(String(savedMessage._id));
+    return savedMessage;
   } catch (error) {
     console.error('Error saving message:', error);
     throw error;
@@ -389,13 +382,7 @@ export async function getMessages(options: MessageQueryOptions = {}) {
   return getMessagesFromStore(TelegramMessage, options);
 }
 
-export async function handleClickTracking(req: ClickTrackingRequest, res: Response) {
-  const messageId = req.params.id;
-
-  if (!messageId) {
-    return res.status(400).json({ error: 'Message ID is required' });
-  }
-
+export async function trackMessageClick(messageId: string): Promise<number> {
   const redisClickKey = `clicks:msg:${messageId}`;
   const istDate = new Date(
     new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }),
@@ -403,16 +390,10 @@ export async function handleClickTracking(req: ClickTrackingRequest, res: Respon
   istDate.setHours(0, 0, 0, 0);
   const dailyKey = `clicks:daily:${istDate.toISOString().slice(0, 10)}`;
 
-  try {
-    const updatedClickCount = await redis.incr(redisClickKey);
-    await redis.incr(dailyKey);
-
-    console.log(`Redis click count updated for message ${messageId} -> ${updatedClickCount}`);
-    res.json({ success: true, clicks: updatedClickCount });
-  } catch (error) {
-    console.error('Redis click tracking error:', error);
-    res.status(500).json({ error: 'Failed to track click' });
-  }
+  const updatedClickCount = await redis.incr(redisClickKey);
+  await redis.incr(dailyKey);
+  console.log(`Redis click count updated for message ${messageId} -> ${updatedClickCount}`);
+  return updatedClickCount;
 }
 
 export async function incrementClicks(messageId: string) {

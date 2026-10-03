@@ -12,6 +12,8 @@ import { updateMessageText } from '../../services/api';
 import { useToast } from '@/components/ui/use-toast';
 import { Input } from '../ui/input';
 import { useQueryClient } from '@tanstack/react-query';
+import PriceDateTimeFields from './PriceDateTimeFields';
+import PriceHistoryEditor from './PriceHistoryEditor';
 
 interface EditDealDialogProps {
 	isOpen: boolean;
@@ -44,13 +46,7 @@ const EditDealDialog = ({
 	const [editedImageUrl, setEditedImageUrl] = useState(initialImageUrl || null);
 	const [editedPrice, setEditedPrice] = useState(initialPrice ?? '');
 	const [recordPriceHistory, setRecordPriceHistory] = useState(false);
-	const [priceObservedAt, setPriceObservedAt] = useState('');
-
-	const currentLocalDateTime = () => {
-		const now = new Date();
-		now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-		return now.toISOString().slice(0, 16);
-	};
+	const [priceObservedAt, setPriceObservedAt] = useState(new Date());
 
 	useEffect(() => {
 		if (!isOpen) return;
@@ -58,7 +54,7 @@ const EditDealDialog = ({
 		setEditedImageUrl(initialImageUrl || null);
 		setEditedPrice(initialPrice ?? '');
 		setRecordPriceHistory(false);
-		setPriceObservedAt(currentLocalDateTime());
+		setPriceObservedAt(new Date());
 	}, [isOpen, initialText, initialImageUrl, initialPrice]);
 
 	const handleSaveEdit = async (e: React.FormEvent) => {
@@ -89,7 +85,7 @@ const EditDealDialog = ({
 				editedText,
 				editedImageUrl,
 				editedPrice || null,
-				recordPriceHistory ? new Date(priceObservedAt).toISOString() : null,
+				recordPriceHistory ? priceObservedAt.toISOString() : null,
 			);
 			if (success) {
 				if (recordPriceHistory) {
@@ -181,19 +177,19 @@ const EditDealDialog = ({
 					</label>
 
 					{recordPriceHistory && (
-						<div className="mt-3">
-							<label htmlFor="price-observed-at" className="mb-1.5 block text-sm font-medium">
+						<div className="mt-3 rounded-lg border border-border bg-muted/20 p-3">
+							<p className="mb-2 text-sm font-medium">
 								Price date and time
-							</label>
-							<Input
-								id="price-observed-at"
-								type="datetime-local"
-								value={priceObservedAt}
-								onChange={(event) => setPriceObservedAt(event.target.value)}
-								required
-							/>
+							</p>
+							<PriceDateTimeFields value={priceObservedAt} onChange={setPriceObservedAt} />
 						</div>
 					)}
+
+					<PriceHistoryEditor
+						dealId={id}
+						enabled={isOpen}
+						onCurrentPriceChange={(price) => setEditedPrice(price ? String(price) : '')}
+					/>
 
 					<DialogFooter className="mt-4">
 						<Button

@@ -40,26 +40,17 @@ const CategoryDialog = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (isOpen) {
-      fetchCategories();
-    }
-  }, [isOpen]);
-
-  const fetchCategories = async () => {
+    if (!isOpen) return;
     setIsLoadingCategories(true);
-    try {
-      const categories = await getAllCategories();
-      setAvailableCategories(categories);
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to load categories',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoadingCategories(false);
-    }
-  };
+    getAllCategories()
+      .then(setAvailableCategories)
+      .catch(() => toast({
+          title: 'Error',
+          description: 'Failed to load categories',
+          variant: 'destructive',
+        }))
+      .finally(() => setIsLoadingCategories(false));
+  }, [isOpen, toast]);
 
   const handleSaveCategory = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -21,7 +21,7 @@ const DEAL_PRICE_PATTERNS: DealPricePattern[] = [
 
 const hasRegularPriceContext = (text: string, matchIndex: number): boolean => {
 	const prefix = text.slice(Math.max(0, matchIndex - 40), matchIndex);
-	return /\b(?:mrp|reg(?:ular)?(?:\s+price)?)\s*[:\-]?\s*$/i.test(prefix);
+	return /\b(?:mrp|reg(?:ular)?(?:\s+price)?)\s*[:-]?\s*$/i.test(prefix);
 };
 
 /**

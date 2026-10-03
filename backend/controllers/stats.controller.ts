@@ -204,3 +204,19 @@ export const getStats = async (req: StatsRequest, res: Response) => {
     res.status(500).json({ error: 'Failed to fetch click statistics' });
   }
 };
+
+export const recordView = async (_req: Request, res: Response) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const result = await ClickStat.findOneAndUpdate(
+      { date: today },
+      { $inc: { clicks: 1 } },
+      { upsert: true, new: true },
+    );
+    return res.json({ success: true, data: result });
+  } catch (error) {
+    console.error('Error recording view:', error);
+    return res.status(500).json({ error: 'Failed to record view' });
+  }
+};

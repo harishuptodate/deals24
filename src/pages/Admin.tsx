@@ -155,26 +155,17 @@ const Admin = () => {
 	};
 
 	useEffect(() => {
-		if (isCategoryDialogOpen) {
-			fetchCategories();
-		}
-	}, [isCategoryDialogOpen]);
-
-	const fetchCategories = async () => {
+		if (!isCategoryDialogOpen) return;
 		setIsLoadingCategories(true);
-		try {
-			const categories = await getAllCategories();
-			setAvailableCategories(categories);
-		} catch (error) {
-			toast({
+		getAllCategories()
+			.then(setAvailableCategories)
+			.catch(() => toast({
 				title: 'Error',
 				description: 'Failed to load categories',
 				variant: 'destructive',
-			});
-		} finally {
-			setIsLoadingCategories(false);
-		}
-	};
+			}))
+			.finally(() => setIsLoadingCategories(false));
+	}, [isCategoryDialogOpen, toast]);
 
 	// Fetch statistics data
 	useEffect(() => {
