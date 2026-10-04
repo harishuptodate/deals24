@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { Button } from '@/components/ui/button';
@@ -7,10 +7,13 @@ import { BigFooter } from '@/components/BigFooter';
 import DealPageHeader from '../components/deal/DealPageHeader';
 import DealPageContent from '../components/deal/DealPageContent';
 import { useDealPage } from '../hooks/useDealPage';
+import DealAlertDialog from '@/components/wishlist/DealAlertDialog';
+import { createDealAlert } from '@/services/api/alertsApi';
 
 const Deal = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [isAlertDialogOpen, setIsAlertDialogOpen] = useState(false);
   const {
     deal,
     isLoading,
@@ -51,6 +54,7 @@ const Deal = () => {
                 isSharing={isSharing}
                 onToggleWishlist={handleToggleWishlist}
                 onShare={handleShare}
+                onCreateAlert={() => setIsAlertDialogOpen(true)}
               />
             </div>
             <DealPageContent deal={deal} id={id} />
@@ -64,6 +68,12 @@ const Deal = () => {
       <div className="mt-8">
         <BigFooter />
       </div>
+      <DealAlertDialog
+        deal={deal && id ? { id, title: deal.text?.split('\n')[0] || 'Deal' } : null}
+        open={isAlertDialogOpen}
+        onOpenChange={setIsAlertDialogOpen}
+        onCreate={createDealAlert}
+      />
     </div>
   );
 };

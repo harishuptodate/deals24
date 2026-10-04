@@ -40,6 +40,11 @@ services:
       - IS_SALE_MODE=${IS_SALE_MODE:-false}
       - AMAZON_AFFILIATE_TAG=${AMAZON_AFFILIATE_TAG:-harishch-21}
       - AMAZON_IMAGE_FALLBACK_API_URL=${AMAZON_IMAGE_FALLBACK_API_URL:-https://amznpf.vercel.app/api/fetch-image}
+      - BREVO_API_KEY=${BREVO_API_KEY}
+      - BREVO_SENDER_EMAIL=${BREVO_SENDER_EMAIL}
+      - BREVO_SENDER_NAME=${BREVO_SENDER_NAME:-Deals24}
+      - PUBLIC_APP_URL=${PUBLIC_APP_URL:-https://deals24.vercel.app}
+      - PUBLIC_API_URL=${PUBLIC_API_URL}
     volumes:
       - ./backend/logs:/app/logs
     networks:

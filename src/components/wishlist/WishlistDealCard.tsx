@@ -1,7 +1,7 @@
 
 import React, { memo } from 'react';
 import { format } from 'date-fns';
-import { Heart, Share2, Trash2, ExternalLink } from 'lucide-react';
+import { Bell, Share2, Trash2, ExternalLink } from 'lucide-react';
 import DealImage from '../images/DealImage';
 import { handleTrackedLinkClick } from '../../services/api';
 import { extractFirstLink, extractSecondLink } from '../deal/utils/linkUtils';
@@ -24,6 +24,8 @@ interface WishlistDealCardProps {
   onViewDetails: (item: FavoriteItem) => void;
   onViewFullPage: (item: FavoriteItem) => void;
   onShare: (item: FavoriteItem) => void;
+  onCreateAlert: (item: FavoriteItem) => void;
+  hasActiveAlert: boolean;
   formatDate: (dateString: string) => string;
 }
 
@@ -33,6 +35,8 @@ const WishlistDealCard = memo(({
   onViewDetails,
   onViewFullPage,
   onShare,
+  onCreateAlert,
+  hasActiveAlert,
   formatDate,
 }: WishlistDealCardProps) => {
   const createdDate = item.createdAt ? format(new Date(item.createdAt), 'h:mm a, MMM d, yyyy') : null;
@@ -65,6 +69,11 @@ const WishlistDealCard = memo(({
     onViewFullPage(item);
   };
 
+  const handleCreateAlert = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onCreateAlert(item);
+  };
+
   const primaryLink = item.link || extractSecondLink(item.description) || extractFirstLink(item.description) || '#';
 
   return (
@@ -79,21 +88,29 @@ const WishlistDealCard = memo(({
         <div className="mt-2 absolute top-3 right-3 flex items-center gap-1 z-10">
           {item.id && (
             <button
+              onClick={handleCreateAlert}
+              className="flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-violet-100 dark:hover:bg-violet-950/50"
+              title={hasActiveAlert ? 'Deal alert is active' : 'Notify me about this deal'}>
+              <Bell className={`h-4 w-4 ${hasActiveAlert ? 'fill-violet-500 text-violet-600' : 'text-violet-500'}`} />
+            </button>
+          )}
+          {item.id && (
+            <button
               onClick={handleViewFullPage}
-              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center"
+              className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               title="Visit full page">
               <ExternalLink className="w-4 h-4 text-green-500" />
             </button>
           )}
           <button
             onClick={handleShare}
-            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center"
+            className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             title="Share deal">
             <Share2 className="w-4 h-4 text-blue-500" />
           </button>
           <button
             onClick={handleRemove}
-            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center"
+            className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             title="Remove from wishlist">
             <Trash2 className="w-4 h-4 text-red-500" />
           </button>
@@ -108,7 +125,7 @@ const WishlistDealCard = memo(({
                 {createdDate}
               </span>
             )}
-            <h3 className="text-lg font-semibold text-high-contrast line-clamp-2 leading-tight pr-24">
+            <h3 className="text-lg font-semibold text-high-contrast line-clamp-2 leading-tight pr-36">
               {item.title}
             </h3>
           </div>

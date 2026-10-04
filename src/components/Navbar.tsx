@@ -10,7 +10,6 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
 	Search,
 	Target,
-	Heart,
 	ShoppingBag,
 	Menu,
 	User,
@@ -19,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import ThemeToggle from '@/components/ThemeToggle';
+import WishlistAlertIcon from '@/components/wishlist/WishlistAlertIcon';
 
 const Navbar = () => {
 	const navigate = useNavigate();
@@ -189,7 +189,7 @@ const Navbar = () => {
 									variant="ghost"
 									size="icon"
 									className="h-8 w-8 text-sm rounded-full dark:border-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-800">
-									<Heart />
+									<WishlistAlertIcon />
 								</Button>
 							</Link>
 							<ThemeToggle />
@@ -241,8 +241,8 @@ const Navbar = () => {
 									variant="ghost"
 									size="sm"
 									className="hover:scale-105 active:scale-95 transition-transform duration-200 ease-in-out text-sm rounded-full dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-800">
-									<Heart className="h-5 w-5 mr-1" />
-									<span>Wishlist</span>
+									<WishlistAlertIcon className="mr-1" />
+									<span>Wishlist & Alerts</span>
 								</Button>
 							</Link>
 							<ThemeToggle />
@@ -292,8 +292,8 @@ const Navbar = () => {
 							<Link
 								to="/wishlist"
 								className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 active:scale-95 transition-transform duration-150 ease-in-out rounded-md flex items-center">
-								<Heart className="h-5 w-5 mr-2" />
-								Wishlist
+								<WishlistAlertIcon className="mr-2" />
+								Wishlist & Alerts
 							</Link>
 							<Link
 								to="/admin"

@@ -77,6 +77,4 @@ The previous `Unexpected end of JSON input` error meant Gemini returned empty or
 
 `DealPriceObservation` stores `productId`, unique Telegram `sourceKey`, `observedAt`, price, link, match method, and confidence. The unique source key contains the channel/message IDs and prevents duplicate webhook observations. Historical summary values are derived from this collection rather than duplicated on the current product document.
 
-Run `npm run migrate:price-history` from `backend` once during deployment. It backfills one baseline observation per legacy product, populates legacy Amazon ASINs, removes obsolete product fields and indexes, and removes the old globally unique `messageId` index.
-
 The deal dialog calls `GET /api/telegram/messages/:id/price-history`. The endpoint returns ordered points plus current, previous, lowest, highest, and percentage-change values. The Recharts component displays each price with its date/time directly in the mobile-friendly dialog; hover is not required.

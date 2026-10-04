@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ClearAllConfirmDialog from './ClearAllConfirmDialog';
+import WishlistAlertIcon from './WishlistAlertIcon';
 
 interface WishlistHeaderProps {
   favoriteCount: number;
@@ -25,9 +26,12 @@ const WishlistHeader = ({ favoriteCount, onClearAll }: WishlistHeaderProps) => {
     <>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center justify-between mb-6 md:mb-8">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gradient dark:text-gradient">My Wishlist</h1>
+          <h1 className="flex items-center gap-2 text-2xl md:text-3xl font-bold text-gradient dark:text-gradient">
+            <WishlistAlertIcon className="h-7 w-8 text-violet-600 dark:text-violet-400" />
+            Wishlist & Alerts
+          </h1>
           <p className="text-sm sm:text-md md:text-lg font-medium text-gray-600 dark:text-gray-300 mt-1">
-            Your saved deals
+            Save favorites and get notified when the right deal arrives
           </p>
         </div>
         

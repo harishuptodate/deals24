@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Heart, HeartCrack, Share2 } from 'lucide-react';
+import { ArrowLeft, Bell, Heart, HeartCrack, Share2 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface DealPageHeaderProps {
@@ -10,6 +10,7 @@ interface DealPageHeaderProps {
   isSharing: boolean;
   onToggleWishlist: () => void;
   onShare: () => void;
+  onCreateAlert: () => void;
 }
 
 const DealPageHeader = ({
@@ -18,6 +19,7 @@ const DealPageHeader = ({
   isSharing,
   onToggleWishlist,
   onShare,
+  onCreateAlert,
 }: DealPageHeaderProps) => {
   const isMobile = useIsMobile();
 
@@ -77,6 +79,14 @@ const DealPageHeader = ({
               {isSharing ? "Sharing..." : "Share Deal"}
             </>
           )}
+        </Button>
+        <Button
+          onClick={onCreateAlert}
+          className="flex gap-2 items-center"
+          variant="outline"
+        >
+          <Bell size={16} className="h-5 w-5 text-violet-500" />
+          {!isMobile && 'Create Alert'}
         </Button>
       </div>
     </>

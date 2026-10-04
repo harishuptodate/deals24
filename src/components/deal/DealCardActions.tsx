@@ -1,12 +1,13 @@
 
 import React from 'react';
-import { Heart, Share2, Trash2, PenSquare, Tag } from 'lucide-react';
+import { Bell, Heart, Share2, Trash2, PenSquare, Tag } from 'lucide-react';
 import { isAuthenticated } from '@/services/authService';
 
 interface DealCardActionsProps {
   isFavorite: boolean;
   onToggleFavorite: (e: React.MouseEvent) => void;
   onShare: (e: React.MouseEvent) => void;
+  onCreateAlert?: (e: React.MouseEvent) => void;
   onDelete?: (e: React.MouseEvent) => void;
   onEdit?: (e: React.MouseEvent) => void;
   onCategoryEdit?: (e: React.MouseEvent) => void;
@@ -17,6 +18,7 @@ const DealCardActions = ({
   isFavorite,
   onToggleFavorite,
   onShare,
+  onCreateAlert,
   onDelete,
   onEdit,
   onCategoryEdit,
@@ -48,13 +50,13 @@ const DealCardActions = ({
       )}
       <button
         onClick={onShare}
-        className="p-2 mt-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center"
+        className="mt-2 flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
         title="Share deal">
         <Share2 className="w-4 h-4 text-blue-500" />
       </button>
       <button
         onClick={onToggleFavorite}
-        className="p-2 mt-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center"
+        className="mt-2 flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
         title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}>
         <Heart
           className={`w-4 h-4 transition-colors ${
@@ -62,6 +64,14 @@ const DealCardActions = ({
           }`}
         />
       </button>
+      {onCreateAlert && (
+        <button
+          onClick={onCreateAlert}
+          className="mt-2 flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-violet-100 dark:hover:bg-violet-950/50"
+          title="Create deal alert">
+          <Bell className="h-4 w-4 text-violet-500" />
+        </button>
+      )}
     </div>
   );
 };

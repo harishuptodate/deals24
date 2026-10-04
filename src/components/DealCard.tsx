@@ -20,6 +20,8 @@ import DealCardButton from './deal/DealCardButton';
 import { useDealCardState } from './deal/hooks/useDealCardState';
 import { useDealCardActions } from './deal/hooks/useDealCardActions';
 import { Tag, PenSquare } from 'lucide-react';
+import DealAlertDialog from './wishlist/DealAlertDialog';
+import { createDealAlert } from '@/services/api/alertsApi';
 
 interface DealCardProps {
   title: string;
@@ -80,6 +82,7 @@ const DealCard = memo(({
   const [isEditPasswordDialogOpen, setIsEditPasswordDialogOpen] = useState(false);
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [isCategoryPasswordDialogOpen, setIsCategoryPasswordDialogOpen] = useState(false);
+  const [isAlertDialogOpen, setIsAlertDialogOpen] = useState(false);
   
   // Password states (managed locally)
   const [deletePassword, setDeletePassword] = useState('');
@@ -110,6 +113,11 @@ const DealCard = memo(({
     e.stopPropagation();
     handleToggleWishlist();
     setIsFavorite(!isFavorite);
+  };
+
+  const handleCreateAlert = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsAlertDialogOpen(true);
   };
 
   const handleDelete = (e: React.MouseEvent) => {
@@ -232,6 +240,7 @@ const DealCard = memo(({
             isFavorite={isSaved}
             onToggleFavorite={toggleFavorite}
             onShare={handleShare}
+            onCreateAlert={id ? handleCreateAlert : undefined}
             onDelete={onDelete ? handleDelete : undefined}
             onEdit={onDelete ? handleEdit : undefined}
             onCategoryEdit={onDelete ? handleOpenCategoryDialog : undefined}
@@ -267,6 +276,13 @@ const DealCard = memo(({
 		category={displayCategory}
         imageUrl={displayImageUrl}
         telegramFileId={telegramFileId}
+      />
+
+      <DealAlertDialog
+        deal={id ? { id, title: displayTitle } : null}
+        open={isAlertDialogOpen}
+        onOpenChange={setIsAlertDialogOpen}
+        onCreate={createDealAlert}
       />
 
       <PasswordDialog

@@ -12,8 +12,13 @@ import DealImage from '../components/images/DealImage';
 import { useWishlist } from '../hooks/useWishlist';
 import WishlistDealCard from '../components/wishlist/WishlistDealCard';
 import { extractFirstLink, extractSecondLink } from '../components/deal/utils/linkUtils';
+import AlertCenter from '../components/wishlist/AlertCenter';
+import DealAlertDialog, { type AlertableDeal } from '../components/wishlist/DealAlertDialog';
+import { useDealAlerts } from '../hooks/useDealAlerts';
 
 const Wishlist = () => {
+  const { alerts, isLoading: alertsLoading, create, setActive, remove } = useDealAlerts();
+  const [alertDeal, setAlertDeal] = React.useState<AlertableDeal | null>(null);
   const {
     favorites,
     selectedItem,
@@ -116,10 +121,18 @@ const Wishlist = () => {
           onClearAll={clearAllFavorites} 
         />
 
+        <AlertCenter
+          alerts={alerts}
+          isLoading={alertsLoading}
+          onCreate={create}
+          onSetActive={setActive}
+          onRemove={remove}
+        />
+
         {favorites.length === 0 ? (
           <WishlistEmptyState />
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-6">
             {favorites.map((item) => (
               <WishlistDealCard
                 key={item.title}
@@ -128,6 +141,8 @@ const Wishlist = () => {
                 onViewDetails={viewDetails}
                 onViewFullPage={viewFullPage}
                 onShare={handleShare}
+                onCreateAlert={setAlertDeal}
+                hasActiveAlert={alerts.some((alert) => alert.active && alert.type === 'deal' && alert.dealId === item.id)}
                 formatDate={formatDate}
               />
             ))}
@@ -191,6 +206,12 @@ const Wishlist = () => {
         onOpenChange={cancelRemoveFavorite}
         onConfirm={confirmRemoveFavorite}
         dealTitle={itemToRemove || ''}
+      />
+      <DealAlertDialog
+        deal={alertDeal}
+        open={Boolean(alertDeal)}
+        onOpenChange={(open) => !open && setAlertDeal(null)}
+        onCreate={create}
       />
     </div>
   );

@@ -35,6 +35,7 @@ import {
   shouldUseLocalDealProcessing,
   shouldUseGeminiForDeal,
 } from './productMatching';
+import { processDealAlerts } from './dealAlertService';
 
 const AI_MATCH_THRESHOLD = 0.92;
 
@@ -320,6 +321,16 @@ export async function saveMessage(message: TelegramInboundMessage) {
       try {
         const updatedMessage = await matchedMessage.save();
         await invalidateDealCaches(String(updatedMessage._id));
+        await processDealAlerts({
+          _id: updatedMessage._id,
+          text: updatedMessage.text,
+          price: processedContent.price || null,
+          link: updatedMessage.link,
+          imageUrl: updatedMessage.imageUrl,
+          telegramFileId: updatedMessage.telegramFileId,
+        }, sourceKey).catch((error) => {
+          console.error('Error processing deal alerts:', error);
+        });
         console.log('Updated existing product price history:', String(updatedMessage._id));
         return updatedMessage;
       } catch (error) {
@@ -371,6 +382,9 @@ export async function saveMessage(message: TelegramInboundMessage) {
       throw error;
     }
     await invalidateDealCaches(String(savedMessage._id));
+    await processDealAlerts(savedMessage, sourceKey).catch((error) => {
+      console.error('Error processing deal alerts:', error);
+    });
     return savedMessage;
   } catch (error) {
     console.error('Error saving message:', error);

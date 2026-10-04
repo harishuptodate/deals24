@@ -5,6 +5,7 @@ import mongoose from 'mongoose';
 import { Telegraf } from 'telegraf';
 import { attachRequestContext } from './middleware/requestContext';
 import adminRouter from './routes/admin';
+import alertsRouter from './routes/alerts';
 import amazonRouter from './routes/amazon';
 import indexRouter from './routes/index';
 import statsRouter from './routes/stats.routes';
@@ -41,7 +42,7 @@ app.use(express.json());
 app.use(attachRequestContext);
 app.use(cors({
   origin: process.env.CORS_ALLOWED_ORIGINS?.split(',') || '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
   credentials: true
 }));
 
@@ -51,6 +52,7 @@ app.use('/api/telegram', telegramRouter);
 app.use('/api/amazon', amazonRouter);
 app.use('/api', statsRouter);  // Make sure the stats routes are registered
 app.use('/api/admin', adminRouter);
+app.use('/api/alerts', alertsRouter);
 
 // Health check endpoint
 app.get('/api/health', (_req: Request, res: Response) => {
