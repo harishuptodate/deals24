@@ -203,7 +203,8 @@ export async function saveMessage(message: TelegramInboundMessage) {
     const directAsinMatch = directAmazonAsin
       ? await findDeterministicMatch(directAmazonAsin)
       : null;
-    const imageData = directAsinMatch && incomingAmazonUrl
+    const matchedMessageHasImage = Boolean(directAsinMatch?.message.imageUrl?.trim());
+    const imageData = directAsinMatch && incomingAmazonUrl && matchedMessageHasImage
       ? {
           imageUrl: null,
           telegramFileId: null,

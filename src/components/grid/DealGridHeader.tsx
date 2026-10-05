@@ -23,8 +23,8 @@ const DealGridHeader = () => {
   };
 
   return (
-    <div className="flex sm:flex-row sm:items-center justify-between mb-3 gap-1.5">
-      <h2 className="text-base md:text-[1.2rem] font-semibold text-gradient dark:text-gradient">
+    <div className="flex sm:flex-row sm:items-center justify-between mb-3 min-[1025px]:mb-4 gap-1.5 min-[1025px]:gap-2">
+      <h2 className="text-base md:text-[1.2rem] min-[1025px]:text-2xl font-semibold text-gradient dark:text-gradient">
         Latest Deals
       </h2>
       

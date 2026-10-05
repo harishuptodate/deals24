@@ -22,7 +22,7 @@ const HeroSection = () => {
 
 	return (
 		<motion.section
-			className="relative py-7 md:py-10 min-[1025px]:py-14 overflow-hidden bg-gradient-to-b from-apple-lightGray to-white dark:from-[#09090B] dark:to-[#09090B] flex items-center justify-center flex-col"
+			className="relative py-7 md:py-10 min-[1025px]:py-7 overflow-hidden bg-gradient-to-b from-apple-lightGray to-white dark:from-[#09090B] dark:to-[#09090B] flex items-center justify-center flex-col"
 			variants={staggerContainer}
 			initial="hidden"
 			animate="visible">
