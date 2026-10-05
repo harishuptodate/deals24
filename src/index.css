@@ -114,6 +114,37 @@
 }
 
 @layer components {
+  /* Keep Sonner comfortably inside narrow viewports and soften its movement. */
+  .toaster[data-sonner-toaster] [data-sonner-toast] {
+    width: fit-content;
+    max-width: 100%;
+    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .toaster[data-sonner-toaster][data-x-position="right"] [data-sonner-toast] {
+    right: 0;
+    left: auto;
+  }
+
+  .toaster[data-sonner-toaster][data-x-position="center"] [data-sonner-toast] {
+    right: 0;
+    left: 0;
+    margin-inline: auto;
+  }
+
+  @media (max-width: 640px) {
+    .toaster[data-sonner-toaster] {
+      left: 0.75rem;
+      right: 0.75rem;
+      width: auto;
+      --mobile-offset: 0px;
+    }
+
+    .toaster[data-sonner-toaster] [data-sonner-toast] {
+      padding: 0.875rem;
+    }
+  }
+
   /* Enhanced glass effect with better backdrop blur */
   .glass-effect {
     @apply backdrop-blur-xl transition-all duration-300;

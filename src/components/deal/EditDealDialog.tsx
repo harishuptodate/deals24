@@ -126,12 +126,13 @@ const EditDealDialog = ({
 
 	return (
 		<Dialog open={isOpen} onOpenChange={onOpenChange}>
-			<DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto max-w-[90vw] w-[90vw] sm:w-auto rounded-xl">
-				<DialogHeader>
-					<DialogTitle>Edit Deal</DialogTitle>
-				</DialogHeader>
+			<DialogContent className="max-h-[80vh] w-[90vw] max-w-[90vw] overflow-y-auto rounded-xl p-[18px] [&>button]:right-3 [&>button]:top-3 [&>button_svg]:h-3 [&>button_svg]:w-3 sm:w-auto sm:max-w-[500px] sm:p-6 sm:[&>button]:right-4 sm:[&>button]:top-4 sm:[&>button_svg]:h-4 sm:[&>button_svg]:w-4">
+				<div className="[zoom:0.75] sm:[zoom:1]">
+					<DialogHeader>
+						<DialogTitle>Edit Deal</DialogTitle>
+					</DialogHeader>
 
-				<form onSubmit={handleSaveEdit}>
+					<form onSubmit={handleSaveEdit}>
 					<div className="mt-4">
 						<Textarea
 							value={editedText}
@@ -202,7 +203,8 @@ const EditDealDialog = ({
 							{isSubmitting ? 'Saving...' : 'Save Changes'}
 						</Button>
 					</DialogFooter>
-				</form>
+					</form>
+				</div>
 			</DialogContent>
 		</Dialog>
 	);

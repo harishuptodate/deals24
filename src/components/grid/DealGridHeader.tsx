@@ -23,8 +23,8 @@ const DealGridHeader = () => {
   };
 
   return (
-    <div className="flex sm:flex-row sm:items-center justify-between mb-4 gap-2">
-      <h2 className="text-xl md:text-2xl font-semibold text-gradient dark:text-gradient">
+    <div className="flex sm:flex-row sm:items-center justify-between mb-3 gap-1.5">
+      <h2 className="text-base md:text-[1.2rem] font-semibold text-gradient dark:text-gradient">
         Latest Deals
       </h2>
       
@@ -34,10 +34,13 @@ const DealGridHeader = () => {
           variant="outline"
           size="sm"
           onClick={toggleDateSort}
-          className="rounded-full h-7 sm:h-8 px-2 sm:px-3 py-0.5 text-[10px] sm:text-xs dark:border-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">
-          <ArrowDown size={14} className={cn("-mr-1 -ml-1 sm:size-[14px] opacity-80 transition-transform", sort === 'oldest' && "rotate-180")} />
-          {!isMobile && (sort === 'oldest' ? 'Oldest' : 'Newest')}
-          {isMobile && (sort === 'oldest' ? 'Old' : 'New')}
+          className="h-7 gap-1 rounded-full border-gray-200 bg-white/80 px-2 text-[10px] leading-none shadow-sm hover:bg-gray-100 sm:h-8 sm:px-2.5 sm:text-xs [&_svg]:size-3 sm:[&_svg]:size-3.5 dark:border-gray-700 dark:bg-gray-900/70 dark:text-gray-200 dark:hover:bg-gray-800">
+          <ArrowDown className={cn("shrink-0 opacity-80 transition-transform", sort === 'oldest' && "rotate-180")} />
+          <span className="leading-none">
+            {isMobile
+              ? (sort === 'oldest' ? 'Old' : 'New')
+              : (sort === 'oldest' ? 'Oldest' : 'Newest')}
+          </span>
         </Button>
         <PriceFilter />
         <DateRangeFilter />

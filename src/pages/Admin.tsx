@@ -30,6 +30,8 @@ import {
 	ScrollText,
 	ArrowRight,
 	Send,
+	Activity,
+	ShieldBan,
 } from 'lucide-react';
 import {
 	Dialog,
@@ -872,17 +874,23 @@ const Admin = () => {
 								<div className="flex flex-wrap gap-3 md:max-w-sm md:justify-end">
 									<Link to="/admin/logs">
 										<Button className="h-10 rounded-full bg-stone-950 px-4 text-white transition-transform duration-150 ease-out hover:scale-[1.02] hover:bg-stone-800 active:scale-[0.94] dark:bg-stone-100 dark:text-stone-950 dark:hover:bg-white">
-											Logs <ArrowRight className="ml-2 h-4 w-4" />
+											<Activity className="h-5 w-5 mr-2" />
+											Logs
+											<ArrowRight className="ml-2 h-4 w-4" />
 										</Button>
 									</Link>
 									<Link to="/admin/blacklist">
 										<Button className="h-10 rounded-full bg-stone-950 px-4 text-white transition-transform duration-150 ease-out hover:scale-[1.02] hover:bg-stone-800 active:scale-[0.94] dark:bg-stone-100 dark:text-stone-950 dark:hover:bg-white">
-											Blacklist <ArrowRight className="ml-2 h-4 w-4" />
+											<ShieldBan className="h-5 w-5 mr-2" />
+											Blacklist 
+											<ArrowRight className="ml-2 h-4 w-4" />
 										</Button>
 									</Link>
 									<Link to="/admin/post-deal">
 										<Button className="h-10 rounded-full bg-stone-950 px-4 text-white transition-transform duration-150 ease-out hover:scale-[1.02] hover:bg-stone-800 active:scale-[0.94] dark:bg-stone-100 dark:text-stone-950 dark:hover:bg-white">
-											Post Deal <Send className="ml-2 h-4 w-4" />
+											<Send className="ml-2 h-4 w-4" />
+											Post Deal 
+											<ArrowRight className="ml-2 h-4 w-4" />
 										</Button>
 									</Link>
 								</div>

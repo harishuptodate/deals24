@@ -15,6 +15,9 @@ import {
 	User,
 	ChartNoAxesColumn,
 	CommandIcon,
+	Activity,
+	Send,
+	ShieldBan,
 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import ThemeToggle from '@/components/ThemeToggle';
@@ -197,7 +200,7 @@ const Navbar = () => {
 								<Button
 									variant="link"
 									size="icon"
-									className="size-8 animate-shakeLift"
+									className="size-8"
 									onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
 									<Menu className="h-5 w-5 text-black" />
 								</Button>
@@ -250,7 +253,7 @@ const Navbar = () => {
 							{/* Glow bg */}
 							<div className="relative p-[2px] rounded-full bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 ml-2">
 								<Link to="/admin">
-									<Button className="rounded-full bg-white dark:bg-black dark:text-white text-black hover:bg-gray-200 dark:hover:bg-gray-800 px-4 py-2 w-full h-full animate-shakeLift">
+									<Button className="rounded-full bg-white dark:bg-black dark:text-white text-black hover:bg-gray-200 dark:hover:bg-gray-800 px-4 py-2 w-full h-full">
 										<User className="h-5 w-5 mr-1" />
 										<ChartNoAxesColumn className="h-5 w-5 mr-1" />
 									</Button>
@@ -265,39 +268,26 @@ const Navbar = () => {
 					<div className="py-2 border-t border-gray-200 dark:border-gray-700 animate-fade-down">
 						<div className="flex flex-col space-y-2">
 							<Link
-								to="/deals"
+								to="/admin/logs"
 								className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 active:scale-95 transition-transform duration-150 ease-in-out rounded-md flex items-center">
-								<ShoppingBag className="h-5 w-5 mr-2" />
-								Deals
+								<Activity className="h-5 w-5 mr-2" />
+								Logs
 							</Link>
 							<Link
-								to="/categories"
+								to="/admin/post-deal"
 								className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 active:scale-95 transition-transform duration-150 ease-in-out rounded-md flex items-center">
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									strokeWidth="2"
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									className="h-5 w-5 mr-2">
-									<rect width="7" height="7" x="3" y="3" rx="1" />
-									<rect width="7" height="7" x="14" y="3" rx="1" />
-									<rect width="7" height="7" x="14" y="14" rx="1" />
-									<rect width="7" height="7" x="3" y="14" rx="1" />
-								</svg>
-								Categories
+								<Send className="h-5 w-5 mr-2" />
+								Post Deal
 							</Link>
 							<Link
-								to="/wishlist"
+								to="/admin/blacklist"
 								className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 active:scale-95 transition-transform duration-150 ease-in-out rounded-md flex items-center">
-								<WishlistAlertIcon className="mr-2" />
-								Wishlist & Alerts
+								<ShieldBan className="h-5 w-5 mr-2" />
+								Blacklist
 							</Link>
 							<Link
 								to="/admin"
-								className="px-4 py-2 bg-apple-darkGray dark:bg-white text-white dark:text-black rounded-md flex items-center justify-center animate-bounce">
+								className="px-4 py-2 bg-apple-darkGray dark:bg-white text-white dark:text-black rounded-md flex items-center justify-center">
 								<User className="h-4 pb-0.5 w-4 mr-1" />
 								Admin
 								<ChartNoAxesColumn className="h-4 pb-0.5 w-4 ml-1" />

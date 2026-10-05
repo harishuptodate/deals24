@@ -82,6 +82,13 @@ export default {
             transform: "translate(-50%,-40%) scale(1)",
           },
         },
+        heartbeat: {
+          '0%, 100%': { transform: 'scale(1)' },
+          '15%': { transform: 'scale(1.2)' },
+          '30%': { transform: 'scale(1)' },
+          '45%': { transform: 'scale(1.2)' },
+          '70%': { transform: 'scale(1)' },
+        },
         shakeAndLift: {
           '0%, 100%': { transform: 'translateY(0) rotate(0deg)' },
           '20%': { transform: 'translateY(-2px) rotate(-5deg)' },
@@ -99,6 +106,7 @@ export default {
         "fade-up": "fade-up 0.5s ease-out",
         "fade-in": "fade-in 0.3s ease-out",
         spotlight: "spotlight 2s ease .75s 1 forwards",
+        heartbeat: 'heartbeat 1s ease-in-out infinite',
         shakeLift: 'shakeAndLift 1s ease-in-out infinite',
         'spin-slow': 'spin 8s linear infinite',
         borderMove: 'borderMove 4s linear infinite',

@@ -49,7 +49,10 @@ const DealCardActions = ({
         </>
       )}
       <button
-        onClick={onShare}
+        onClick={(event) => {
+          event.stopPropagation();
+          onShare(event);
+        }}
         className="mt-2 flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
         title="Share deal">
         <Share2 className="w-4 h-4 text-blue-500" />
@@ -69,7 +72,7 @@ const DealCardActions = ({
           onClick={onCreateAlert}
           className="mt-2 flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-violet-100 dark:hover:bg-violet-950/50"
           title="Create deal alert">
-          <Bell className="h-4 w-4 text-violet-500" />
+          <Bell className="h-4 w-4 text-violet-500 animate-shakeLift" />
         </button>
       )}
     </div>

@@ -73,7 +73,7 @@ const PriceLabel = ({
     fill="#3b82f6"
     fontSize={10}
     fontWeight={600}>
-    {formatCompactPrice(value)}
+    {formatPrice(value)}
   </text>
 );
 
@@ -142,7 +142,7 @@ const PriceHistoryChart = ({ dealId, enabled }: PriceHistoryChartProps) => {
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
             data={points}
-			margin={{ top: 24, right: 12, left: 4, bottom: 16 }}
+			margin={{ top: 24, right: 30, left: 4, bottom: 0 }}
           >
             <CartesianGrid
               strokeDasharray="3 3"
@@ -153,8 +153,8 @@ const PriceHistoryChart = ({ dealId, enabled }: PriceHistoryChartProps) => {
             <XAxis
               dataKey="name"
               tick={<DateTimeTick />}
-              tickMargin={10}
-              height={48}
+              tickMargin={4}
+              height={40}
               interval={0}
               stroke="rgba(160, 160, 160, 0.2)"
             />

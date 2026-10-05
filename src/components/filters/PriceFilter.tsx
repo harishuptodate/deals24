@@ -131,9 +131,9 @@ const PriceFilter = () => {
             type="button"
             variant="outline"
             size="sm"
-            className="rounded-full h-7 sm:h-8 px-2 sm:px-3 py-0.5 text-[12px] sm:text-xs dark:border-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">
-            <IndianRupee size={12} className="sm:size-[14px] opacity-80 -mr-1 -ml-0.5" />
-            <span className="max-w-[120px] sm:max-w-[180px] truncate">{pillLabel}</span>
+            className="h-7 gap-1 rounded-full border-gray-200 bg-white/80 px-2 text-[10px] leading-none shadow-sm hover:bg-gray-100 sm:h-8 sm:px-2.5 sm:text-xs [&_svg]:size-3 sm:[&_svg]:size-3.5 dark:border-gray-700 dark:bg-gray-900/70 dark:text-gray-200 dark:hover:bg-gray-800">
+            <IndianRupee className="shrink-0 opacity-80" />
+            <span className="max-w-[120px] truncate leading-none sm:max-w-[180px]">{pillLabel}</span>
 
             {hasAny && (
               <span
@@ -145,8 +145,8 @@ const PriceFilter = () => {
                 role="button"
                 tabIndex={0}
                 aria-label="Clear price range"
-                className="inline-flex items-center justify-center -mr-1 -ml-0.5 h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600">
-                <X size={12} className="sm:size-[14px]" />
+                className="inline-flex size-4 items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 sm:size-5 dark:bg-gray-700 dark:hover:bg-gray-600">
+                <X />
               </span>
             )}
           </Button>

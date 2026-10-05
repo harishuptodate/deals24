@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Filter } from 'lucide-react';
 import { getCategoryCounts } from '../../services/api';
 import { Button } from '@/components/ui/button';
+import { isAuthenticated } from '@/services/authService';
 
 interface CategoryFilterProps {
   onSelect: (category: string | null) => void;
@@ -16,6 +17,7 @@ const CategoryFilter = ({
   current,
   onSubCategorySelect,
 }: CategoryFilterProps) => {
+  const isAdmin = isAuthenticated();
   const categories = [
     { name: 'All', slug: null },
     { name: 'Best Deals', slug: 'Best-Deals' },
@@ -57,16 +59,17 @@ const CategoryFilter = ({
   } = useQuery({
     queryKey: ['category-counts'],
     queryFn: getCategoryCounts,
+    enabled: isAdmin,
     staleTime: 1000 * 60 * 5, // 5 minutes
     retry: 1, // retry only once if fails
   });
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center mb-6 overflow-x-auto pb-2 gap-2 max-w-full">
+      <div className="flex items-center mb-5 overflow-x-auto pb-1.5 gap-1.5 max-w-full">
         <Filter
-          size={16}
-          className="text-apple-gray dark:text-gray-400 mr-1 flex-shrink-0"
+          size={13}
+          className="text-apple-gray dark:text-gray-400 mr-[0.2rem] flex-shrink-0"
         />
         {categories.map((category) => {
           const count = category.slug
@@ -77,7 +80,7 @@ const CategoryFilter = ({
             <button
               key={category.name}
               onClick={() => onSelect(category.slug)}
-              className={`flex items-center gap-2 whitespace-nowrap px-3 py-1.5 rounded-full text-sm font-medium transition-colors flex-shrink-0 ${
+              className={`flex items-center gap-1.5 whitespace-nowrap px-2.5 py-[0.3rem] rounded-full text-[0.7rem] font-medium transition-colors flex-shrink-0 ${
                 current === category.slug ||
                 (current === null && category.slug === null)
                   ? 'bg-apple-darkGray dark:bg-gray-700 text-white'
@@ -85,8 +88,8 @@ const CategoryFilter = ({
               }`}>
               {category.name}
               {/* Only show count if category has a slug and count exists */}
-              {count !== undefined && count !== null && (
-                <span className="text-xs">({count})</span>
+              {isAdmin && count !== undefined && count !== null && (
+                <span className="text-[0.6rem]">({count})</span>
               )}
             </button>
           );

@@ -208,6 +208,7 @@ const AlertCenter = ({ alerts, isLoading, onCreate, onSetActive, onRemove }: Ale
                     <Switch
                       checked={alert.active}
                       onCheckedChange={(active) => void toggle(alert, active)}
+                      className="data-[state=checked]:bg-[#34C759] focus-visible:ring-[#34C759]"
                       aria-label={`${alert.active ? 'Pause' : 'Enable'} alert`}
                     />
                     <button

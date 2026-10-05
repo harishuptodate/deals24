@@ -19,7 +19,12 @@ const PriceAlertFields = ({ enabled, onEnabledChange, price, onPriceChange }: Pr
           Optional — notify only at or below this price
         </p>
       </div>
-      <Switch id="price-alert-toggle" checked={enabled} onCheckedChange={onEnabledChange} />
+      <Switch
+        id="price-alert-toggle"
+        checked={enabled}
+        onCheckedChange={onEnabledChange}
+        className="data-[state=checked]:bg-[#34C759] focus-visible:ring-[#34C759]"
+      />
     </div>
     {enabled && (
       <div className="relative mt-3">

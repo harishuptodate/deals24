@@ -22,37 +22,36 @@ const HeroSection = () => {
 
 	return (
 		<motion.section
-			className="relative py-10 md:py-14 overflow-hidden bg-gradient-to-b from-apple-lightGray to-white dark:from-[#09090B] dark:to-[#09090B] flex items-center justify-center flex-col"
+			className="relative py-7 md:py-10 min-[1025px]:py-14 overflow-hidden bg-gradient-to-b from-apple-lightGray to-white dark:from-[#09090B] dark:to-[#09090B] flex items-center justify-center flex-col"
 			variants={staggerContainer}
 			initial="hidden"
 			animate="visible">
 			<motion.div
-				className="container px-4 max-w-4xl text-center space-y-4 md:space-y-6"
+				className="container px-4 max-w-4xl text-center space-y-3 md:space-y-4 min-[1025px]:space-y-6"
 				variants={staggerItem}>
-				<span className="relative inline-block text-sm font-medium leading-6 text-white rounded-full p-px shadow-2xl shadow-zinc-900">
+				<span className="relative inline-block text-[0.7rem] min-[1025px]:text-sm font-medium leading-[1.05rem] min-[1025px]:leading-6 text-white rounded-full p-px shadow-2xl shadow-zinc-900">
 					<span className="absolute inset-0 overflow-hidden rounded-full">
 						<span className="absolute inset-0 rounded-full bg-[radial-gradient(75%_100%_at_50%_0%,rgba(56,189,248,0.6)_0%,rgba(56,189,248,0)_75%)] opacity-100" />
 						{/* Orbiting dot around the badge */}
 						<span className="absolute -inset-px rounded-[inherit] pointer-events-none">
 							<motion.div
-								className="absolute aspect-square bg-gradient-to-r from-transparent via-amber-500 to-amber-700 dark:via-amber-200 dark:to-amber-400"
+								className="absolute w-[0.525rem] min-[1025px]:w-3 aspect-square bg-gradient-to-r from-transparent via-amber-500 to-amber-700 dark:via-amber-200 dark:to-amber-400"
 								animate={{ offsetDistance: ['0%', '100%'] }}
 								style={{
-									width: 12,
 									offsetPath: `rect(0 auto auto 0 round 16px)`,
 								}}
 								transition={{ repeat: Infinity, duration: 8, ease: 'linear' }}
 							/>
 						</span>
 					</span>
-					<span className="relative z-10 flex items-center space-x-2 rounded-full bg-zinc-950 py-1 px-5 ring-1 ring-white/10">
+					<span className="relative z-10 flex items-center space-x-1.5 min-[1025px]:space-x-2 rounded-full bg-zinc-950 py-[0.175rem] min-[1025px]:py-1 px-3.5 min-[1025px]:px-5 ring-1 ring-white/10">
 						<span>✨ Welcome to Deals24</span>
 					</span>
 				</span>
 
-				<h1 className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight leading-tight">
+				<h1 className="text-[1.05rem] md:text-[1.3rem] min-[1025px]:text-4xl font-bold tracking-tight leading-tight">
 					<motion.span
-						className="block text-xl md:text-2xl lg:text-3xl mb-1 text-gradient dark:text-gradient"
+						className="block text-sm md:text-[1.05rem] min-[1025px]:text-3xl mb-[0.175rem] min-[1025px]:mb-1 text-gradient dark:text-gradient"
 						variants={staggerItem}>
 						Your one-stop destination for
 					</motion.span>
@@ -95,8 +94,8 @@ const HeroSection = () => {
 			{/* Decorative gradients */}
 			<div className="absolute inset-0 -z-10">
 				<div className="absolute inset-0 bg-gradient-to-b from-transparent to-white/20 dark:to-black/40" />
-				<div className="absolute top-0 left-1/4 w-48 md:w-64 h-48 md:h-64 bg-gradient-to-r from-blue-500/10 to-purple-500/10 dark:from-blue-500/5 dark:to-purple-500/5 rounded-full filter blur-3xl" />
-				<div className="absolute bottom-0 right-1/4 w-48 md:w-64 h-48 md:h-64 bg-gradient-to-r from-pink-500/10 to-orange-500/10 dark:from-pink-500/5 dark:to-orange-500/5 rounded-full filter blur-3xl" />
+				<div className="absolute top-0 left-1/4 w-[8.4rem] md:w-[11.2rem] min-[1025px]:w-64 h-[8.4rem] md:h-[11.2rem] min-[1025px]:h-64 bg-gradient-to-r from-blue-500/10 to-purple-500/10 dark:from-blue-500/5 dark:to-purple-500/5 rounded-full filter blur-3xl" />
+				<div className="absolute bottom-0 right-1/4 w-[8.4rem] md:w-[11.2rem] min-[1025px]:w-64 h-[8.4rem] md:h-[11.2rem] min-[1025px]:h-64 bg-gradient-to-r from-pink-500/10 to-orange-500/10 dark:from-pink-500/5 dark:to-orange-500/5 rounded-full filter blur-3xl" />
 			</div>
 		</motion.section>
 	);
