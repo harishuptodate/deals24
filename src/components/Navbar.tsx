@@ -163,18 +163,19 @@ const Navbar = () => {
 									</div>
 								</PopoverTrigger>
 								<PopoverContent
-									className="w-96 p-2 sm:w-[var(--radix-popover-trigger-width)] rounded-xl mt-1 dark:bg-apple-darkGray dark:border-gray-700"
+									className="mt-1 w-[calc(100vw-1.5rem)] max-w-80 rounded-lg p-1.5 sm:w-[var(--radix-popover-trigger-width)] sm:max-w-none sm:rounded-xl sm:p-2 dark:bg-apple-darkGray dark:border-gray-700"
+									collisionPadding={12}
 									sideOffset={5}>
-									<div className="space-y-2">
-										<h3 className="text-sm font-medium text-apple-darkGray dark:text-gray-300 px-2 active:scale-95 transition-transform duration-150 ease-in-out">
+									<div className="space-y-1.5 sm:space-y-2">
+										<h3 className="px-1.5 text-xs font-medium text-apple-darkGray sm:px-2 sm:text-sm dark:text-gray-300 active:scale-95 transition-transform duration-150 ease-in-out">
 											Popular searches
 										</h3>
-										<div className="flex flex-wrap gap-2 p-1">
+										<div className="flex flex-wrap gap-1.5 p-0.5 sm:gap-2 sm:p-1">
 											{popularSearches.map((search) => (
 												<button
 													key={search}
 													onClick={() => handlePopularSearch(search)}
-													className="bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 px-3 py-1.5 rounded-full text-xs text-apple-darkGray dark:text-gray-200 transition-colors">
+													className="rounded-full bg-gray-100 px-2 py-1 text-[10px] text-apple-darkGray transition-colors hover:bg-gray-200 sm:px-3 sm:py-1.5 sm:text-xs dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">
 													{search}
 												</button>
 											))}
