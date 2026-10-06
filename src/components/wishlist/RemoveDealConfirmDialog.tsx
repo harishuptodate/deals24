@@ -1,56 +1,41 @@
+import { HeartCrack } from 'lucide-react';
 import {
-	Dialog,
-	DialogClose,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-} from '@/components/ui/dialog';
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface RemoveDealConfirmDialogProps {
-	isOpen: boolean;
-	onOpenChange: (open: boolean) => void;
-	onConfirm: () => void;
-	dealTitle: string;
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: () => void;
+  dealTitle: string;
 }
 
-const RemoveDealConfirmDialog = ({
-	isOpen,
-	onOpenChange,
-	onConfirm,
-	dealTitle,
-}: RemoveDealConfirmDialogProps) => {
-	return (
-		<Dialog open={isOpen} onOpenChange={onOpenChange}>
-			<DialogContent className="max-w-[90vw] sm:max-w-md rounded-xl">
-				<DialogHeader>
-					<DialogTitle>Remove from Wishlist?</DialogTitle>
-					<DialogDescription>
-						Are you sure you want to remove this from your wishlist? This action
-						cannot be undone.
-					</DialogDescription>
-				</DialogHeader>
-
-				<DialogFooter className="flex flex-row flex-nowrap justify-between items-center gap-4">
-					<DialogClose asChild>
-						<button className="px-2 py-1 rounded-md border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800">
-							Cancel
-						</button>
-					</DialogClose>
-
-					<button
-						onClick={() => {
-							onConfirm();
-							onOpenChange(false);
-						}}
-						className="px-2 py-1 rounded-md bg-red-500 hover:bg-red-600 text-white">
-						Remove
-					</button>
-				</DialogFooter>
-			</DialogContent>
-		</Dialog>
-	);
-};
+const RemoveDealConfirmDialog = ({ isOpen, onOpenChange, onConfirm, dealTitle }: RemoveDealConfirmDialogProps) => (
+  <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
+    <AlertDialogContent className="w-[calc(100%-2rem)] rounded-3xl sm:max-w-md">
+      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-50 dark:bg-rose-950/40">
+        <HeartCrack className="h-5 w-5 text-rose-600" />
+      </div>
+      <AlertDialogHeader className="text-center sm:text-center">
+        <AlertDialogTitle>Remove this saved deal?</AlertDialogTitle>
+        <AlertDialogDescription className="leading-6">
+          <span className="mb-1 block line-clamp-2 font-medium text-gray-700 dark:text-gray-200">{dealTitle}</span>
+          The deal will leave your wishlist. Any alert created for it will stay active until you remove that alert separately.
+        </AlertDialogDescription>
+      </AlertDialogHeader>
+      <AlertDialogFooter className="grid grid-cols-2 gap-2 sm:grid-cols-2 sm:space-x-0">
+        <AlertDialogCancel className="mt-0 h-11 rounded-full">Keep deal</AlertDialogCancel>
+        <AlertDialogAction onClick={onConfirm} className="h-11 rounded-full bg-red-600 text-white hover:bg-red-700">Remove deal</AlertDialogAction>
+      </AlertDialogFooter>
+    </AlertDialogContent>
+  </AlertDialog>
+);
 
 export default RemoveDealConfirmDialog;

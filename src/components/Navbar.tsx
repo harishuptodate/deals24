@@ -287,7 +287,7 @@ const Navbar = () => {
 							<Button
 								variant="ghost"
 								size="sm"
-								className="max-w-44 rounded-full text-sm dark:text-gray-200"
+								className="max-w-44 dark:text-gray-200 hover:scale-105 active:scale-95 transition-transform duration-200 ease-in-out text-sm rounded-full hover:bg-gray-200 dark:hover:bg-gray-800"
 								onClick={handleAccountClick}>
 								{user ? <LogOut className="mr-1 h-4 w-4" /> : <LogIn className="mr-1 h-4 w-4" />}
 								<span className="truncate">{user ? user.email : 'Sign in'}</span>

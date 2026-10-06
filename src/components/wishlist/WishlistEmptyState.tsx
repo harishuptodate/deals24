@@ -1,46 +1,25 @@
-
-import React from 'react';
-import { Heart, Sparkles, Gift } from 'lucide-react';
+import { ArrowRight, BellRing, Heart } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { BigFooter } from '@/components/BigFooter';
-import IllustratedEmptyState from '../empty-states/IllustratedEmptyState';
 
-const WishlistEmptyState = () => {
-  return (
-    <>
-      <div className="bg-gray-50 dark:bg-[#111111] rounded-xl">
-        <IllustratedEmptyState
-          icon={Heart}
-          title="Your wishlist is empty"
-          description="Start saving your favorite deals by clicking the heart icon on any deal card. Build your personal collection of amazing offers!"
-          actionText="Browse Deals"
-          onAction={() => window.location.href = '/deals'}
-          illustration={
-            <div className="mx-auto h-24 w-24 flex items-center justify-center rounded-full bg-gradient-to-br from-pink-400 to-red-200 dark:from-pink-600 dark:to-red-900 relative">
-              <Heart className="h-12 w-12 text-pink-500 dark:text-pink-400 animate-heartbeat" />
-              <div className="absolute -top-1 -right-1">
-                <Sparkles className="h-6 w-6 text-yellow-500 animate-pulse" />
-              </div>
-            </div>
-          }
-        >
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 max-w-sm mx-auto">
-            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-              <Gift className="h-4 w-4" />
-              <span>Save favorite deals</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-              <Heart className="h-4 w-4" />
-              <span>Quick access anytime</span>
-            </div>
-          </div>
-        </IllustratedEmptyState>
+const WishlistEmptyState = () => (
+  <div className="grid gap-4 rounded-2xl border border-dashed border-gray-300 bg-gray-50/60 p-5 dark:border-gray-800 dark:bg-zinc-950/60 sm:grid-cols-[auto_1fr_auto] sm:items-center sm:p-6">
+    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-50 dark:bg-rose-950/30">
+      <Heart className="h-5 w-5 text-rose-500" />
+    </div>
+    <div>
+      <h3 className="font-semibold text-gray-950 dark:text-white">Your wishlist is ready for its first deal</h3>
+      <p className="mt-1 text-sm leading-6 text-gray-500 dark:text-gray-400">
+        Tap the heart on any deal to save it here. You can add a price alert later with one click.
+      </p>
+      <div className="mt-2 flex items-center gap-1.5 text-xs text-gray-500 sm:hidden">
+        <BellRing className="h-3.5 w-3.5 text-violet-500" /> Alerts stay alongside saved deals.
       </div>
-      <div className="pt-32 sm:pt-0">
-        <BigFooter/>
-      </div>
-    </>
-  );
-};
+    </div>
+    <Button asChild className="h-10 rounded-full px-5">
+      <Link to="/deals">Browse deals <ArrowRight className="ml-2 h-4 w-4" /></Link>
+    </Button>
+  </div>
+);
 
 export default WishlistEmptyState;
