@@ -1,5 +1,6 @@
 const ADMIN_AUTH_MARKER = 'adminAuth';
 const ADMIN_TOKEN_KEY = 'adminAuthToken';
+const ADMIN_AUTH_CHANGE_EVENT = 'admin-auth-change';
 
 const getApiBaseUrl = () => {
   const configuredUrl = import.meta.env.VITE_API_BASE_URL;
@@ -41,6 +42,7 @@ const login = async (username: string, password: string): Promise<boolean> => {
   localStorage.setItem(ADMIN_AUTH_MARKER, 'authenticated_user_token');
   localStorage.setItem(ADMIN_TOKEN_KEY, payload.token);
   localStorage.removeItem('adminAuthTokenExpiry');
+  window.dispatchEvent(new Event(ADMIN_AUTH_CHANGE_EVENT));
   return true;
 };
 
@@ -50,6 +52,7 @@ const logout = () => {
   localStorage.removeItem('adminAuthTokenExpiry');
   localStorage.removeItem('editPermissionGranted');
   localStorage.removeItem('categoryPermissionGranted');
+  window.dispatchEvent(new Event(ADMIN_AUTH_CHANGE_EVENT));
   window.location.reload();
 };
 
@@ -91,5 +94,6 @@ export {
   hasCategoryPermission, 
   grantEditPermission, 
   grantCategoryPermission, 
-  verifyActionPassword 
+  verifyActionPassword,
+  ADMIN_AUTH_CHANGE_EVENT,
 };

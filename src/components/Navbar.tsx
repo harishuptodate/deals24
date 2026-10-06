@@ -16,13 +16,20 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from '@/components/ui/popover';
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuLabel,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
 	Search,
 	Target,
 	ShoppingBag,
-	Menu,
-	User,
 	ChartNoAxesColumn,
 	CommandIcon,
 	Activity,
@@ -31,12 +38,18 @@ import {
 	LogIn,
 	LogOut,
 	ShieldCheck,
+	ChevronDown,
 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import ThemeToggle from '@/components/ThemeToggle';
 import WishlistAlertIcon from '@/components/wishlist/WishlistAlertIcon';
 import AuthDialog from '@/components/auth/AuthDialog';
 import { useAuth } from '@/contexts/AuthContext';
+import {
+	ADMIN_AUTH_CHANGE_EVENT,
+	isAuthenticated as isAdminAuthenticated,
+	logout as adminLogout,
+} from '@/services/authService';
 
 const Navbar = () => {
 	const navigate = useNavigate();
@@ -44,9 +57,9 @@ const Navbar = () => {
 	const isMobile = useIsMobile();
 	const [searchQuery, setSearchQuery] = useState('');
 	const [isSearchPopoverOpen, setIsSearchPopoverOpen] = useState(false);
-	const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 	const [isAuthOpen, setIsAuthOpen] = useState(false);
 	const [isLogoutOpen, setIsLogoutOpen] = useState(false);
+	const [isAdmin, setIsAdmin] = useState(() => isAdminAuthenticated());
 	const { user, signOut } = useAuth();
 	const inputRef = useRef<HTMLInputElement>(null);
 
@@ -55,6 +68,16 @@ const Navbar = () => {
 		const queryParam = searchParams.get('search');
 		setSearchQuery(queryParam || '');
 	}, [location.search]);
+
+	useEffect(() => {
+		const syncAdminSession = () => setIsAdmin(isAdminAuthenticated());
+		window.addEventListener(ADMIN_AUTH_CHANGE_EVENT, syncAdminSession);
+		window.addEventListener('storage', syncAdminSession);
+		return () => {
+			window.removeEventListener(ADMIN_AUTH_CHANGE_EVENT, syncAdminSession);
+			window.removeEventListener('storage', syncAdminSession);
+		};
+	}, []);
 
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
@@ -91,13 +114,114 @@ const Navbar = () => {
 	};
 
 	const handleAccountClick = () => {
-		if (user) {
-			setMobileMenuOpen(false);
-			setIsLogoutOpen(true);
-		} else {
+		if (!user) {
 			setIsAuthOpen(true);
 		}
 	};
+
+	const openLogoutDialog = () => {
+		setIsLogoutOpen(true);
+	};
+
+	const accountInitial = user?.email?.charAt(0).toUpperCase() || 'U';
+
+	const renderAccountMenu = (compact = false) => (
+		<DropdownMenu>
+			<DropdownMenuTrigger asChild>
+				<Button
+					variant="ghost"
+					size={compact ? 'icon' : 'sm'}
+					className={compact
+						? 'relative h-8 w-8 rounded-full p-0'
+						: 'max-w-48 gap-2 rounded-full border border-transparent px-2 hover:border-violet-200 hover:bg-violet-50 dark:hover:border-violet-900 dark:hover:bg-violet-950/40'}
+					aria-label="Open account and admin menu">
+					<Avatar className={compact ? 'h-6 w-6' : 'h-7 w-7'}>
+						<AvatarFallback className="bg-gradient-to-br from-violet-100 to-indigo-100 text-xs font-semibold text-violet-700 dark:from-violet-950 dark:to-indigo-950 dark:text-violet-300">
+							{user ? accountInitial : <LogIn className={compact ? 'h-3.5 w-3.5' : 'h-4 w-4'} />}
+						</AvatarFallback>
+					</Avatar>
+					{!compact && (
+						<>
+							<span className="truncate">{user ? user.email : 'Account'}</span>
+							<ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+						</>
+					)}
+					{isAdmin && (
+						<span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-background bg-violet-500" />
+					)}
+				</Button>
+			</DropdownMenuTrigger>
+			<DropdownMenuContent
+				align="end"
+				sideOffset={8}
+				collisionPadding={8}
+				className={compact
+					? 'w-[calc(100vw-1rem)] max-w-56 rounded-xl border-gray-200/80 p-1.5 text-xs shadow-xl dark:border-gray-800 [&_[role=menuitem]]:text-xs'
+					: 'w-[calc(100vw-1rem)] max-w-80 rounded-2xl border-gray-200/80 p-2 shadow-xl dark:border-gray-800'}>
+				{user ? (
+					<div className={compact ? 'flex items-center gap-2 rounded-lg bg-gray-50 p-2 dark:bg-zinc-900/70' : 'flex items-center gap-3 rounded-xl bg-gray-50 p-2.5 dark:bg-zinc-900/70'}>
+						<Avatar className={compact ? 'h-8 w-8' : 'h-10 w-10'}>
+							<AvatarFallback className="bg-gradient-to-br from-violet-100 to-indigo-100 font-semibold text-violet-700 dark:from-violet-950 dark:to-indigo-950 dark:text-violet-300">
+								{accountInitial}
+							</AvatarFallback>
+						</Avatar>
+						<div className="min-w-0 flex-1">
+							<p className={compact ? 'text-[10px] text-muted-foreground' : 'text-xs text-muted-foreground'}>Signed in as</p>
+							<p className={compact ? 'truncate text-xs font-semibold' : 'truncate text-sm font-semibold'}>{user.email}</p>
+						</div>
+						<DropdownMenuItem
+							onSelect={openLogoutDialog}
+							className={compact ? 'shrink-0 cursor-pointer rounded-full px-2 py-1.5 text-[10px] text-red-600 focus:bg-red-50 focus:text-red-700 dark:focus:bg-red-950/40' : 'shrink-0 cursor-pointer rounded-full px-2.5 py-2 text-xs text-red-600 focus:bg-red-50 focus:text-red-700 dark:focus:bg-red-950/40'}>
+							<LogOut className="mr-1.5 h-3.5 w-3.5" />Sign out
+						</DropdownMenuItem>
+					</div>
+				) : (
+					<>
+						<div className={compact ? 'rounded-lg bg-gradient-to-br from-violet-50 to-indigo-50 p-2 dark:from-violet-950/50 dark:to-indigo-950/50' : 'rounded-xl bg-gradient-to-br from-violet-50 to-indigo-50 p-3 dark:from-violet-950/50 dark:to-indigo-950/50'}>
+							<p className={compact ? 'text-xs font-semibold' : 'text-sm font-semibold'}>Your Deals24 account</p>
+							<p className={compact ? 'mt-0.5 text-[10px] leading-4 text-muted-foreground' : 'mt-0.5 text-xs leading-5 text-muted-foreground'}>Sync your saved deals and alerts securely.</p>
+						</div>
+						<DropdownMenuItem onSelect={handleAccountClick} className={compact ? 'mt-1 rounded-lg p-2 font-medium' : 'mt-1 rounded-xl p-3 font-medium'}>
+							<LogIn className="mr-2.5 h-4 w-4 text-violet-600" />Sign in with email
+						</DropdownMenuItem>
+					</>
+				)}
+
+				{compact && (
+					<>
+						<DropdownMenuSeparator className="my-2" />
+						<DropdownMenuLabel className="px-3 py-1 text-[11px] uppercase tracking-wider text-muted-foreground">
+							Explore
+						</DropdownMenuLabel>
+						<DropdownMenuItem asChild className="rounded-md py-1.5"><Link to="/deals"><ShoppingBag className="mr-2 h-3.5 w-3.5" />Deals</Link></DropdownMenuItem>
+						<DropdownMenuItem asChild className="rounded-md py-1.5"><Link to="/categories"><ChartNoAxesColumn className="mr-2 h-3.5 w-3.5" />Categories</Link></DropdownMenuItem>
+					</>
+				)}
+
+				<DropdownMenuSeparator className={compact ? 'my-1.5' : 'my-2'} />
+				<DropdownMenuLabel className={compact ? 'px-2 py-0.5 text-[9px] uppercase tracking-wider text-muted-foreground' : 'px-3 py-1 text-[11px] uppercase tracking-wider text-muted-foreground'}>
+					Administration
+				</DropdownMenuLabel>
+				{isAdmin ? (
+					<>
+						<DropdownMenuItem asChild className="rounded-lg"><Link to="/admin"><ChartNoAxesColumn className="mr-2.5 h-4 w-4" />Dashboard</Link></DropdownMenuItem>
+						<DropdownMenuItem asChild className="rounded-lg"><Link to="/admin/post-deal"><Send className="mr-2.5 h-4 w-4" />Post a deal</Link></DropdownMenuItem>
+						<DropdownMenuItem asChild className="rounded-lg"><Link to="/admin/blacklist"><ShieldBan className="mr-2.5 h-4 w-4" />Blacklist</Link></DropdownMenuItem>
+						<DropdownMenuItem asChild className="rounded-lg"><Link to="/admin/logs"><Activity className="mr-2.5 h-4 w-4" />Logs</Link></DropdownMenuItem>
+						<DropdownMenuSeparator />
+						<DropdownMenuItem onSelect={adminLogout} className="rounded-lg text-red-600 focus:text-red-600"><LogOut className="mr-2.5 h-4 w-4" />Exit admin mode</DropdownMenuItem>
+					</>
+				) : (
+					<DropdownMenuItem asChild className={compact ? 'rounded-lg p-2' : 'rounded-xl p-3'}>
+						<Link to="/admin" className="flex items-start">
+							<span className={compact ? 'mr-2 rounded-md bg-violet-100 p-1 text-violet-700 dark:bg-violet-950 dark:text-violet-300' : 'mr-2.5 mt-0.5 rounded-lg bg-violet-100 p-1.5 text-violet-700 dark:bg-violet-950 dark:text-violet-300'}><ShieldCheck className={compact ? 'h-3.5 w-3.5' : 'h-4 w-4'} /></span>
+							<span><span className="block font-medium">Admin access</span><span className={compact ? 'block text-[10px] font-normal text-muted-foreground' : 'block text-xs font-normal text-muted-foreground'}>Sign in to manage Deals24</span></span>
+						</Link>
+					</DropdownMenuItem>
+				)}
+			</DropdownMenuContent>
+		</DropdownMenu>
+	);
 
 	const popularSearches = [
 		'AC',
@@ -142,8 +266,8 @@ const Navbar = () => {
 						</Link>
 					</div>
 
-					<div className="flex-1 mx-1 sm:mx-4 max-w-xl">
-						<form onSubmit={handleSearch} className="relative">
+					<div className="min-w-0 w-0 flex-1 mx-1 sm:mx-4 max-w-xl">
+						<form onSubmit={handleSearch} className="relative min-w-0">
 							<Popover
 								open={isSearchPopoverOpen}
 								onOpenChange={(open) => {
@@ -164,7 +288,7 @@ const Navbar = () => {
 													? 'Search...'
 													: 'Search deals... (Press Ctrl+K)'
 											}
-											className="w-full placeholder:text-[13px] text-sm sm:pl-10 pr-4 py-2 border rounded-full focus:outline-none dark:bg-apple-darkGray dark:border-gray-700 dark:text-white dark:placeholder-gray-400 truncate"
+											className="min-w-0 w-full placeholder:text-[13px] text-sm sm:pl-10 pr-4 py-2 border rounded-full focus:outline-none dark:bg-apple-darkGray dark:border-gray-700 dark:text-white dark:placeholder-gray-400 truncate"
 											value={searchQuery}
 											onChange={(e) => setSearchQuery(e.target.value)}
 											onClick={() => setIsSearchPopoverOpen(true)}
@@ -214,7 +338,7 @@ const Navbar = () => {
 					</div>
 
 					{isMobile ? (
-						<div className="flex items-center gap-3">
+						<div className="flex items-center gap-2">
 							<Link to="/wishlist">
 								<Button
 									variant="ghost"
@@ -224,23 +348,7 @@ const Navbar = () => {
 								</Button>
 							</Link>
 							<ThemeToggle />
-							<Button
-								variant="ghost"
-								size="icon"
-								className="h-8 w-8 rounded-full"
-								onClick={handleAccountClick}
-								aria-label={user ? 'Sign out' : 'Sign in'}>
-								{user ? <LogOut className="h-4 w-4" /> : <LogIn className="h-4 w-4" />}
-							</Button>
-							<div className="relative p-[2px] rounded-full bg-gradient-to-r from-pink-300 via-purple-300 to-blue-400 animate-borderMove">
-								<Button
-									variant="link"
-									size="icon"
-									className="size-8"
-									onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-									<Menu className="h-5 w-5 text-black" />
-								</Button>
-							</div>
+							{renderAccountMenu(true)}
 						</div>
 					) : (
 						<div className="flex items-center gap-2 ml-auto pr-1">
@@ -284,68 +392,11 @@ const Navbar = () => {
 									<span>Wishlist & Alerts</span>
 								</Button>
 							</Link>
-							<Button
-								variant="ghost"
-								size="sm"
-								className="max-w-44 dark:text-gray-200 hover:scale-105 active:scale-95 transition-transform duration-200 ease-in-out text-sm rounded-full hover:bg-gray-200 dark:hover:bg-gray-800"
-								onClick={handleAccountClick}>
-								{user ? <LogOut className="mr-1 h-4 w-4" /> : <LogIn className="mr-1 h-4 w-4" />}
-								<span className="truncate">{user ? user.email : 'Sign in'}</span>
-							</Button>
 							<ThemeToggle />
-
-							{/* Glow bg */}
-							<div className="relative p-[2px] rounded-full bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 ml-2">
-								<Link to="/admin">
-									<Button className="rounded-full bg-white dark:bg-black dark:text-white text-black hover:bg-gray-200 dark:hover:bg-gray-800 px-4 py-2 w-full h-full">
-										<User className="h-5 w-5 mr-1" />
-										<ChartNoAxesColumn className="h-5 w-5 mr-1" />
-									</Button>
-								</Link>
-							</div>
+							{renderAccountMenu()}
 						</div>
 					)}
 				</div>
-
-				{/* Mobile menu */}
-				{isMobile && mobileMenuOpen && (
-					<div className="py-2 border-t border-gray-200 dark:border-gray-700 animate-fade-down">
-						<div className="flex flex-col space-y-2">
-							<button
-								type="button"
-								onClick={handleAccountClick}
-								className="flex items-center rounded-md px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800">
-								{user ? <LogOut className="mr-2 h-5 w-5" /> : <LogIn className="mr-2 h-5 w-5" />}
-								{user ? `Sign out ${user.email}` : 'Sign in'}
-							</button>
-							<Link
-								to="/admin/logs"
-								className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 active:scale-95 transition-transform duration-150 ease-in-out rounded-md flex items-center">
-								<Activity className="h-5 w-5 mr-2" />
-								Logs
-							</Link>
-							<Link
-								to="/admin/post-deal"
-								className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 active:scale-95 transition-transform duration-150 ease-in-out rounded-md flex items-center">
-								<Send className="h-5 w-5 mr-2" />
-								Post Deal
-							</Link>
-							<Link
-								to="/admin/blacklist"
-								className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 active:scale-95 transition-transform duration-150 ease-in-out rounded-md flex items-center">
-								<ShieldBan className="h-5 w-5 mr-2" />
-								Blacklist
-							</Link>
-							<Link
-								to="/admin"
-								className="px-4 py-2 bg-apple-darkGray dark:bg-white text-white dark:text-black rounded-md flex items-center justify-center">
-								<User className="h-4 pb-0.5 w-4 mr-1" />
-								Admin
-								<ChartNoAxesColumn className="h-4 pb-0.5 w-4 ml-1" />
-							</Link>
-						</div>
-					</div>
-				)}
 			</div>
 			<AuthDialog open={isAuthOpen} onOpenChange={setIsAuthOpen} />
 			<AlertDialog open={isLogoutOpen} onOpenChange={setIsLogoutOpen}>
