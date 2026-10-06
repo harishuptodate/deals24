@@ -1,5 +1,6 @@
 import axios, { AxiosRequestHeaders } from 'axios';
 import { getAdminToken } from '../authService';
+import { getUserSessionToken } from '../userSession';
 
 function getBaseUrl() {
   const configuredUrl = import.meta.env.VITE_API_BASE_URL;
@@ -19,10 +20,15 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const adminToken = getAdminToken();
+    const userSessionToken = getUserSessionToken();
     if (adminToken && config.url?.startsWith('/admin')) {
       config.headers = (config.headers as AxiosRequestHeaders)
         || ({} as unknown as AxiosRequestHeaders);
       config.headers.Authorization = `Bearer ${adminToken}`;
+    } else if (userSessionToken) {
+      config.headers = (config.headers as AxiosRequestHeaders)
+        || ({} as unknown as AxiosRequestHeaders);
+      config.headers.Authorization = `Bearer ${userSessionToken}`;
     }
     return config;
   },

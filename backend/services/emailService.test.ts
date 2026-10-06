@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { renderDealAlertEmail } from './emailService';
+import { renderDealAlertEmail, renderMagicLoginEmail } from './emailService';
 
 test('renders a collapsible deal email with image and both actions', () => {
   const html = renderDealAlertEmail({
@@ -21,4 +21,15 @@ test('renders a collapsible deal email with image and both actions', () => {
   assert.match(html, />Buy now</);
   assert.match(html, />View deal</);
   assert.doesNotMatch(html, /https:\/\/amazon\.in\/dp\/example<\/p>/);
+});
+
+test('renders a secure magic login email', () => {
+  const html = renderMagicLoginEmail({
+    email: 'buyer@example.com',
+    loginUrl: 'https://deals24.vercel.app/auth/verify?token=abc123',
+  });
+
+  assert.match(html, /Sign in to Deals24/);
+  assert.match(html, /expires in 15 minutes/);
+  assert.match(html, /token=abc123/);
 });

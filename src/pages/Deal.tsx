@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { BigFooter } from '@/components/BigFooter';
 import DealPageHeader from '../components/deal/DealPageHeader';
 import DealPageContent from '../components/deal/DealPageContent';
+import PriceHistoryChart from '../components/deal/PriceHistoryChart';
 import { useDealPage } from '../hooks/useDealPage';
 import DealAlertDialog from '@/components/wishlist/DealAlertDialog';
 import { createDealAlert } from '@/services/api/alertsApi';
@@ -58,6 +59,9 @@ const Deal = () => {
               />
             </div>
             <DealPageContent deal={deal} id={id} />
+            <div className="mt-6 rounded-xl border border-gray-200 p-4 shadow-md dark:border-gray-900 dark:bg-zinc-950 md:p-6">
+              <PriceHistoryChart dealId={id} enabled />
+            </div>
           </>
         ) : (
           <div className="text-center py-8">

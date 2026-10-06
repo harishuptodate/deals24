@@ -1,46 +1,34 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
 import { shareContent, copyToClipboard } from '../components/deal/utils/linkUtils';
-
-interface FavoriteItem {
-  title: string;
-  description: string;
-  link: string;
-  category?: string;
-  imageUrl?: string;
-  telegramFileId?: string;
-  id?: string;
-  timestamp: string;
-  createdAt?: string;
-}
+import { useSyncedWishlist } from '@/contexts/WishlistContext';
+import type { FavoriteItem } from '@/services/api/wishlistApi';
 
 export const useWishlist = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
+  const { favorites, removeFavorite: removeSyncedFavorite, clearFavorites } = useSyncedWishlist();
   const [selectedItem, setSelectedItem] = useState<FavoriteItem | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isRemoveConfirmOpen, setIsRemoveConfirmOpen] = useState(false);
   const [itemToRemove, setItemToRemove] = useState<string | null>(null);
-
-  useEffect(() => {
-    const storedFavorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-    setFavorites(storedFavorites);
-  }, []);
 
   const removeFavorite = (title: string) => {
     setItemToRemove(title);
     setIsRemoveConfirmOpen(true);
   };
 
-  const confirmRemoveFavorite = () => {
+  const confirmRemoveFavorite = async () => {
     if (!itemToRemove) return;
-    
-    const updatedFavorites = favorites.filter(item => item.title !== itemToRemove);
-    localStorage.setItem('favorites', JSON.stringify(updatedFavorites));
-    setFavorites(updatedFavorites);
+    const item = favorites.find((favorite) => favorite.title === itemToRemove);
+    try {
+      if (item) await removeSyncedFavorite(item);
+    } catch {
+      toast({ title: 'Could not remove item', description: 'Please try again.', variant: 'destructive' });
+      return;
+    }
     
     if (selectedItem && selectedItem.title === itemToRemove) {
       setIsDialogOpen(false);
@@ -61,9 +49,13 @@ export const useWishlist = () => {
     setItemToRemove(null);
   };
 
-  const clearAllFavorites = () => {
-    localStorage.setItem('favorites', JSON.stringify([]));
-    setFavorites([]);
+  const clearAllFavorites = async () => {
+    try {
+      await clearFavorites();
+    } catch {
+      toast({ title: 'Could not clear wishlist', description: 'Please try again.', variant: 'destructive' });
+      return;
+    }
     setIsDialogOpen(false);
     setSelectedItem(null);
     

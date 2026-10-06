@@ -7,8 +7,10 @@ import {
   type CreateDealAlertInput,
   type DealAlert,
 } from '@/services/api/alertsApi';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function useDealAlerts() {
+  const { user, isLoading: isAuthLoading } = useAuth();
   const [alerts, setAlerts] = useState<DealAlert[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -22,18 +24,21 @@ export function useDealAlerts() {
   }, []);
 
   useEffect(() => {
+    if (isAuthLoading) return;
     refresh().catch((error) => console.error('Failed to load deal alerts:', error));
-  }, [refresh]);
+  }, [refresh, isAuthLoading, user?.id]);
 
   const create = async (input: CreateDealAlertInput) => {
     const alert = await createDealAlert(input);
-    setAlerts((current) => [alert, ...current.filter((item) => item._id !== alert._id)]);
+    await refresh();
     return alert;
   };
 
   const setActive = async (alert: DealAlert, active: boolean) => {
     const updated = await updateDealAlert(alert._id, { active });
-    setAlerts((current) => current.map((item) => item._id === updated._id ? updated : item));
+    setAlerts((current) => current.map((item) => item._id === updated._id
+      ? { ...updated, deal: item.deal }
+      : item));
   };
 
   const remove = async (alert: DealAlert) => {

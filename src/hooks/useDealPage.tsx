@@ -1,28 +1,17 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/components/ui/use-toast';
 import { getDealById } from '../services/api';
 import { shareContent, copyToClipboard, extractFirstLink } from '../components/deal/utils/linkUtils';
-
-type FavoriteDeal = {
-  id?: string;
-  title: string;
-  description: string;
-  link: string;
-  timestamp: string;
-  createdAt: string;
-  category?: string;
-  imageUrl?: string;
-  telegramFileId?: string;
-};
+import { useSyncedWishlist } from '@/contexts/WishlistContext';
 
 export const useDealPage = (id?: string) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isSharing, setIsSharing] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
+  const { isSaved: hasSavedDeal, toggleFavorite } = useSyncedWishlist();
   
   const { data: deal, isLoading, isError } = useQuery({
     queryKey: ['deal', id],
@@ -30,16 +19,8 @@ export const useDealPage = (id?: string) => {
     enabled: !!id,
   });
 
-  useEffect(() => {
-    if (deal) {
-      const favorites: FavoriteDeal[] = JSON.parse(localStorage.getItem('favorites') || '[]');
-      const isAlreadySaved = favorites.some((item) => 
-        item.id === id || 
-        (item.title === deal.text?.split('\n')[0])
-      );
-      setIsSaved(isAlreadySaved);
-    }
-  }, [deal, id]);
+  const title = deal?.text?.split('\n')[0] || '';
+  const isSaved = hasSavedDeal(id, title);
 
   const handleGoBack = () => {
     navigate(-1);
@@ -86,42 +67,31 @@ export const useDealPage = (id?: string) => {
     }
   };
 
-  const handleToggleWishlist = () => {
+  const handleToggleWishlist = async () => {
     if (!deal) return;
-
-    const favorites: FavoriteDeal[] = JSON.parse(localStorage.getItem('favorites') || '[]');
-    const title = deal.text?.split('\n')[0] || '';
-
-    if (isSaved) {
-      const updatedFavorites = favorites.filter((item) => 
-        item.id !== id && 
-        item.title !== title
-      );
-      localStorage.setItem('favorites', JSON.stringify(updatedFavorites));
-      setIsSaved(false);
-      toast({
-        title: "Removed from wishlist",
-        description: "This deal has been removed from your wishlist.",
-      });
-    } else {
-      const newFavorite: FavoriteDeal = {
-        id: id,
-        title: title,
+    try {
+      const saved = await toggleFavorite({
+        id,
+        title,
         description: deal.text || '',
         link: deal.link || extractFirstLink(deal.text || '') || window.location.href,
         timestamp: new Date().toISOString(),
         createdAt: deal.date || deal.createdAt || new Date().toISOString(),
         category: deal.category,
         imageUrl: deal.imageUrl,
-        telegramFileId: deal.telegramFileId
-      };
-      
-      favorites.push(newFavorite);
-      localStorage.setItem('favorites', JSON.stringify(favorites));
-      setIsSaved(true);
+        telegramFileId: deal.telegramFileId,
+      });
       toast({
-        title: "Added to wishlist",
-        description: "This deal has been added to your wishlist.",
+        title: saved ? 'Added to wishlist' : 'Removed from wishlist',
+        description: saved
+          ? 'This deal has been added to your wishlist.'
+          : 'This deal has been removed from your wishlist.',
+      });
+    } catch {
+      toast({
+        title: 'Could not update wishlist',
+        description: 'Please try again.',
+        variant: 'destructive',
       });
     }
   };

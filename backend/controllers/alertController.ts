@@ -3,12 +3,7 @@ import type { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import DealAlert from '../models/DealAlert';
 import TelegramMessage from '../models/TelegramMessage';
-
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-function validOwnerToken(value: unknown): value is string {
-  return typeof value === 'string' && value.length >= 20 && value.length <= 200;
-}
+import { EMAIL_PATTERN, getAuthenticatedUser, normalizeEmail, validOwnerToken } from '../services/userAuthService';
 
 function normalizeKeywords(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
@@ -29,11 +24,12 @@ function parseTargetPrice(value: unknown): number | null | undefined {
 
 export async function createAlert(req: Request, res: Response) {
   const { ownerToken, email, type, dealId } = req.body;
-  const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
+  const user = await getAuthenticatedUser(req);
+  const normalizedEmail = user?.email || normalizeEmail(email);
   const targetPrice = parseTargetPrice(req.body.targetPrice);
   const keywords = normalizeKeywords(req.body.keywords);
 
-  if (!validOwnerToken(ownerToken)) return res.status(400).json({ error: 'Invalid browser token' });
+  if (!user && !validOwnerToken(ownerToken)) return res.status(400).json({ error: 'Invalid browser token' });
   if (!EMAIL_PATTERN.test(normalizedEmail) || normalizedEmail.length > 254) {
     return res.status(400).json({ error: 'Enter a valid email address' });
   }
@@ -53,9 +49,10 @@ export async function createAlert(req: Request, res: Response) {
     dealTitle = String(deal.text || 'Saved deal').split('\n')[0].slice(0, 160);
   }
 
+  const ownerScope = user ? { userId: user._id } : { ownerToken, email: normalizedEmail };
   const duplicateQuery = type === 'deal'
-    ? { ownerToken, email: normalizedEmail, type, dealId }
-    : { ownerToken, email: normalizedEmail, type, keywords };
+    ? { ...ownerScope, type, dealId }
+    : { ...ownerScope, type, keywords };
   const existing = await DealAlert.findOne(duplicateQuery);
   if (existing) {
     existing.active = true;
@@ -65,7 +62,8 @@ export async function createAlert(req: Request, res: Response) {
   }
 
   const alert = await DealAlert.create({
-    ownerToken,
+    ownerToken: user ? null : ownerToken,
+    userId: user?._id || null,
     email: normalizedEmail,
     type,
     dealId: type === 'deal' ? dealId : null,
@@ -79,15 +77,33 @@ export async function createAlert(req: Request, res: Response) {
 }
 
 export async function listAlerts(req: Request, res: Response) {
+  const user = await getAuthenticatedUser(req);
   const ownerToken = req.get('x-alert-owner-token');
-  if (!validOwnerToken(ownerToken)) return res.status(400).json({ error: 'Invalid browser token' });
-  const alerts = await DealAlert.find({ ownerToken }).sort({ createdAt: -1 }).lean();
-  return res.json(alerts);
+  if (!user && !validOwnerToken(ownerToken)) return res.status(400).json({ error: 'Invalid browser token' });
+  const alerts = await DealAlert.find(user ? { userId: user._id } : { ownerToken })
+    .sort({ createdAt: -1 })
+    .populate('dealId', 'text imageUrl telegramFileId category')
+    .lean();
+  return res.json(alerts.map((alert: any) => {
+    const deal = alert.dealId && typeof alert.dealId === 'object' ? alert.dealId : null;
+    return {
+      ...alert,
+      dealId: deal?._id ? String(deal._id) : alert.dealId,
+      deal: deal ? {
+        id: String(deal._id),
+        title: String(deal.text || alert.dealTitle || 'Deal').split('\n')[0],
+        imageUrl: deal.imageUrl || null,
+        telegramFileId: deal.telegramFileId || null,
+        category: deal.category || null,
+      } : null,
+    };
+  }));
 }
 
 export async function updateAlert(req: Request, res: Response) {
+  const user = await getAuthenticatedUser(req);
   const { ownerToken } = req.body;
-  if (!validOwnerToken(ownerToken)) return res.status(400).json({ error: 'Invalid browser token' });
+  if (!user && !validOwnerToken(ownerToken)) return res.status(400).json({ error: 'Invalid browser token' });
   const update: { active?: boolean; targetPrice?: number | null } = {};
   if (typeof req.body.active === 'boolean') update.active = req.body.active;
   if ('targetPrice' in req.body) {
@@ -98,7 +114,7 @@ export async function updateAlert(req: Request, res: Response) {
   if (Object.keys(update).length === 0) return res.status(400).json({ error: 'No changes supplied' });
 
   const alert = await DealAlert.findOneAndUpdate(
-    { _id: req.params.id, ownerToken },
+    { _id: req.params.id, ...(user ? { userId: user._id } : { ownerToken }) },
     update,
     { new: true },
   );
@@ -107,9 +123,13 @@ export async function updateAlert(req: Request, res: Response) {
 }
 
 export async function deleteAlert(req: Request, res: Response) {
+  const user = await getAuthenticatedUser(req);
   const ownerToken = req.get('x-alert-owner-token');
-  if (!validOwnerToken(ownerToken)) return res.status(400).json({ error: 'Invalid browser token' });
-  const result = await DealAlert.deleteOne({ _id: req.params.id, ownerToken });
+  if (!user && !validOwnerToken(ownerToken)) return res.status(400).json({ error: 'Invalid browser token' });
+  const result = await DealAlert.deleteOne({
+    _id: req.params.id,
+    ...(user ? { userId: user._id } : { ownerToken }),
+  });
   if (!result.deletedCount) return res.status(404).json({ error: 'Alert not found' });
   return res.status(204).send();
 }

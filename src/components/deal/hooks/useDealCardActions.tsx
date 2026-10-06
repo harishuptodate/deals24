@@ -2,18 +2,7 @@
 import { useState } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { shareContent, copyToClipboard } from '../utils/linkUtils';
-
-type FavoriteDeal = {
-  id?: string;
-  title: string;
-  description: string;
-  link: string;
-  timestamp: string;
-  createdAt: string;
-  category?: string;
-  imageUrl?: string;
-  telegramFileId?: string;
-};
+import { useSyncedWishlist } from '@/contexts/WishlistContext';
 
 interface DealCardActionsProps {
   id?: string;
@@ -39,44 +28,14 @@ export const useDealCardActions = ({
   category
 }: DealCardActionsProps) => {
   const { toast } = useToast();
-  const [isSaved, setIsSaved] = useState(() => {
-    const favorites: FavoriteDeal[] = JSON.parse(localStorage.getItem('favorites') || '[]');
-    return favorites.some((item) => 
-      item.id === id || 
-      (item.title === title)
-    );
-  });
+  const { isSaved: hasSavedDeal, toggleFavorite } = useSyncedWishlist();
+  const isSaved = hasSavedDeal(id, title);
   const [isSharing, setIsSharing] = useState(false);
 
-  const handleToggleWishlist = () => {
-    const favorites: FavoriteDeal[] = JSON.parse(localStorage.getItem('favorites') || '[]');
-
-    if (isSaved) {
-      const updatedFavorites = favorites.filter((item) => 
-        item.id !== id && 
-        item.title !== title
-      );
-      localStorage.setItem('favorites', JSON.stringify(updatedFavorites));
-      setIsSaved(false);
-      toast({
-        title: "Removed from wishlist",
-        description: "This deal has been removed from your wishlist.",
-      });
-    } else {
-      // Use fullText as the primary description source, then description as fallback
-      const dealDescription = fullText || description || title;
-      
-      console.log('Saving to wishlist with description:', {
-        id,
-        title,
-        originalDescription: description,
-        fullText,
-        finalDescription: dealDescription,
-        createdAt,
-        category
-      });
-      
-      const newFavorite: FavoriteDeal = {
+  const handleToggleWishlist = async () => {
+    const dealDescription = fullText || description || title;
+    try {
+      const saved = await toggleFavorite({
         id,
         title,
         description: dealDescription,
@@ -85,15 +44,19 @@ export const useDealCardActions = ({
         createdAt: createdAt || new Date().toISOString(),
         category,
         imageUrl,
-        telegramFileId
-      };
-      
-      favorites.push(newFavorite);
-      localStorage.setItem('favorites', JSON.stringify(favorites));
-      setIsSaved(true);
+        telegramFileId,
+      });
       toast({
-        title: "Added to wishlist",
-        description: "This deal has been added to your wishlist.",
+        title: saved ? 'Added to wishlist' : 'Removed from wishlist',
+        description: saved
+          ? 'This deal has been added to your wishlist.'
+          : 'This deal has been removed from your wishlist.',
+      });
+    } catch {
+      toast({
+        title: 'Could not update wishlist',
+        description: 'Please try again.',
+        variant: 'destructive',
       });
     }
   };

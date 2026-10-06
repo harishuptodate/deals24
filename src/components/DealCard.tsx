@@ -62,8 +62,6 @@ const DealCard = memo(({
   const navigate = useNavigate();
   
   const {
-    isFavorite,
-    setIsFavorite,
     localTitle,
     setLocalTitle,
     localDescription,
@@ -111,8 +109,7 @@ const DealCard = memo(({
 
   const toggleFavorite = (e: React.MouseEvent) => {
     e.stopPropagation();
-    handleToggleWishlist();
-    setIsFavorite(!isFavorite);
+    void handleToggleWishlist();
   };
 
   const handleCreateAlert = (e: React.MouseEvent) => {

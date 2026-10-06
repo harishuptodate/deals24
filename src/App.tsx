@@ -7,6 +7,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { lazy, Suspense, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import EnhancedErrorBoundary from "./components/enhanced/EnhancedErrorBoundary";
+import { AuthProvider } from "./contexts/AuthContext";
+import { WishlistProvider } from "./contexts/WishlistContext";
 
 // Lazy load components for code splitting
 const Index = lazy(() => import("./pages/Index"));
@@ -19,6 +21,7 @@ const AdminBlacklist = lazy(() => import("./pages/AdminBlacklist"));
 const Wishlist = lazy(() => import("./pages/Wishlist"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Deal = lazy(() => import("./pages/Deal"));
+const AuthVerify = lazy(() => import("./pages/AuthVerify"));
 
 // Enhanced loading fallback component
 const LoadingFallback = () => (
@@ -107,28 +110,33 @@ const App = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <EnhancedErrorBoundary>
-          <BrowserRouter>
-            <Suspense fallback={<LoadingFallback />}>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/deals" element={<Deals />} />
-                <Route path="/categories" element={<Categories />} />
-                <Route path="/admin" element={<Admin />} />
-                <Route path="/admin/logs" element={<AdminLogs />} />
-                <Route path="/admin/post-deal" element={<AdminPostDeal />} />
-                <Route path="/admin/blacklist" element={<AdminBlacklist />} />
-                <Route path="/wishlist" element={<Wishlist />} />
-                <Route path="/deal/:id" element={<Deal />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-          </BrowserRouter>
-        </EnhancedErrorBoundary>
-      </TooltipProvider>
+      <AuthProvider>
+        <WishlistProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <EnhancedErrorBoundary>
+              <BrowserRouter>
+                <Suspense fallback={<LoadingFallback />}>
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/deals" element={<Deals />} />
+                    <Route path="/categories" element={<Categories />} />
+                    <Route path="/admin" element={<Admin />} />
+                    <Route path="/admin/logs" element={<AdminLogs />} />
+                    <Route path="/admin/post-deal" element={<AdminPostDeal />} />
+                    <Route path="/admin/blacklist" element={<AdminBlacklist />} />
+                    <Route path="/wishlist" element={<Wishlist />} />
+                    <Route path="/deal/:id" element={<Deal />} />
+                    <Route path="/auth/verify" element={<AuthVerify />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </Suspense>
+              </BrowserRouter>
+            </EnhancedErrorBoundary>
+          </TooltipProvider>
+        </WishlistProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 };

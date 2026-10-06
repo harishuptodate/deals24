@@ -2,6 +2,16 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
 	Popover,
 	PopoverContent,
 	PopoverTrigger,
@@ -18,10 +28,15 @@ import {
 	Activity,
 	Send,
 	ShieldBan,
+	LogIn,
+	LogOut,
+	ShieldCheck,
 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import ThemeToggle from '@/components/ThemeToggle';
 import WishlistAlertIcon from '@/components/wishlist/WishlistAlertIcon';
+import AuthDialog from '@/components/auth/AuthDialog';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Navbar = () => {
 	const navigate = useNavigate();
@@ -30,6 +45,9 @@ const Navbar = () => {
 	const [searchQuery, setSearchQuery] = useState('');
 	const [isSearchPopoverOpen, setIsSearchPopoverOpen] = useState(false);
 	const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+	const [isAuthOpen, setIsAuthOpen] = useState(false);
+	const [isLogoutOpen, setIsLogoutOpen] = useState(false);
+	const { user, signOut } = useAuth();
 	const inputRef = useRef<HTMLInputElement>(null);
 
 	useEffect(() => {
@@ -70,6 +88,15 @@ const Navbar = () => {
 		setSearchQuery(query);
 		navigate(`/deals?search=${encodeURIComponent(query)}`);
 		setIsSearchPopoverOpen(false);
+	};
+
+	const handleAccountClick = () => {
+		if (user) {
+			setMobileMenuOpen(false);
+			setIsLogoutOpen(true);
+		} else {
+			setIsAuthOpen(true);
+		}
 	};
 
 	const popularSearches = [
@@ -163,7 +190,7 @@ const Navbar = () => {
 									</div>
 								</PopoverTrigger>
 								<PopoverContent
-									className="mt-1 w-[calc(100vw-1.5rem)] max-w-80 rounded-lg p-1.5 sm:w-[var(--radix-popover-trigger-width)] sm:max-w-none sm:rounded-xl sm:p-2 dark:bg-apple-darkGray dark:border-gray-700"
+									className="mt-1 w-[calc(100vw-1.5rem)] max-w-80 rounded-lg p-1.5 sm:w-[var(--radix-popover-trigger-width)] sm:max-w-none sm:rounded-xl sm:p-2 min-[1025px]:w-96 min-[1025px]:max-w-96 dark:bg-apple-darkGray dark:border-gray-700"
 									collisionPadding={12}
 									sideOffset={5}>
 									<div className="space-y-1.5 sm:space-y-2">
@@ -197,6 +224,14 @@ const Navbar = () => {
 								</Button>
 							</Link>
 							<ThemeToggle />
+							<Button
+								variant="ghost"
+								size="icon"
+								className="h-8 w-8 rounded-full"
+								onClick={handleAccountClick}
+								aria-label={user ? 'Sign out' : 'Sign in'}>
+								{user ? <LogOut className="h-4 w-4" /> : <LogIn className="h-4 w-4" />}
+							</Button>
 							<div className="relative p-[2px] rounded-full bg-gradient-to-r from-pink-300 via-purple-300 to-blue-400 animate-borderMove">
 								<Button
 									variant="link"
@@ -249,6 +284,14 @@ const Navbar = () => {
 									<span>Wishlist & Alerts</span>
 								</Button>
 							</Link>
+							<Button
+								variant="ghost"
+								size="sm"
+								className="max-w-44 rounded-full text-sm dark:text-gray-200"
+								onClick={handleAccountClick}>
+								{user ? <LogOut className="mr-1 h-4 w-4" /> : <LogIn className="mr-1 h-4 w-4" />}
+								<span className="truncate">{user ? user.email : 'Sign in'}</span>
+							</Button>
 							<ThemeToggle />
 
 							{/* Glow bg */}
@@ -268,6 +311,13 @@ const Navbar = () => {
 				{isMobile && mobileMenuOpen && (
 					<div className="py-2 border-t border-gray-200 dark:border-gray-700 animate-fade-down">
 						<div className="flex flex-col space-y-2">
+							<button
+								type="button"
+								onClick={handleAccountClick}
+								className="flex items-center rounded-md px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800">
+								{user ? <LogOut className="mr-2 h-5 w-5" /> : <LogIn className="mr-2 h-5 w-5" />}
+								{user ? `Sign out ${user.email}` : 'Sign in'}
+							</button>
 							<Link
 								to="/admin/logs"
 								className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 active:scale-95 transition-transform duration-150 ease-in-out rounded-md flex items-center">
@@ -297,6 +347,44 @@ const Navbar = () => {
 					</div>
 				)}
 			</div>
+			<AuthDialog open={isAuthOpen} onOpenChange={setIsAuthOpen} />
+			<AlertDialog open={isLogoutOpen} onOpenChange={setIsLogoutOpen}>
+				<AlertDialogContent className="w-[calc(100%-2rem)] overflow-hidden rounded-3xl border-violet-200 p-0 shadow-2xl sm:max-w-md dark:border-violet-950">
+					<div className="bg-gradient-to-br from-violet-600 via-indigo-600 to-blue-600 px-6 pb-7 pt-8 text-center text-white">
+						<div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15 shadow-inner ring-1 ring-white/25 backdrop-blur">
+							<LogOut className="h-6 w-6" />
+						</div>
+						<AlertDialogHeader className="space-y-2 text-center sm:text-center">
+							<AlertDialogTitle className="text-2xl text-white">Sign out of Deals24?</AlertDialogTitle>
+							<AlertDialogDescription className="text-sm leading-6 text-violet-100">
+								You’ll need another secure email link to access your synced wishlist and alerts on this browser.
+							</AlertDialogDescription>
+						</AlertDialogHeader>
+					</div>
+					<div className="space-y-5 px-6 pb-6 pt-5">
+						<div className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-gray-50 p-3 dark:border-gray-800 dark:bg-zinc-900/70">
+							<div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-100 dark:bg-green-950/50">
+								<ShieldCheck className="h-5 w-5 text-green-600 dark:text-green-400" />
+							</div>
+							<div className="min-w-0">
+								<p className="text-xs font-medium text-gray-500 dark:text-gray-400">Signed in as</p>
+								<p className="truncate text-sm font-semibold">{user?.email}</p>
+							</div>
+						</div>
+						<p className="text-center text-xs leading-5 text-gray-500 dark:text-gray-400">
+							Your saved data will remain safely stored in your account.
+						</p>
+						<AlertDialogFooter className="grid grid-cols-2 gap-2 sm:grid-cols-2 sm:space-x-0">
+							<AlertDialogCancel className="mt-0 h-11 rounded-full">Stay signed in</AlertDialogCancel>
+							<AlertDialogAction
+								onClick={() => void signOut()}
+								className="h-11 rounded-full bg-red-600 text-white hover:bg-red-700">
+								Sign out
+							</AlertDialogAction>
+						</AlertDialogFooter>
+					</div>
+				</AlertDialogContent>
+			</AlertDialog>
 		</header>
 	);
 };

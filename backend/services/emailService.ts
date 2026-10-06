@@ -9,6 +9,11 @@ type DealAlertEmail = {
   unsubscribeUrl: string;
 };
 
+type MagicLoginEmail = {
+  email: string;
+  loginUrl: string;
+};
+
 function escapeHtml(value: string): string {
   return value.replace(/[&<>'"]/g, (character) => ({
     '&': '&amp;',
@@ -97,6 +102,57 @@ export function renderDealAlertEmail(input: DealAlertEmail): string {
 
 export function isEmailDeliveryConfigured(): boolean {
   return Boolean(process.env.BREVO_API_KEY && process.env.BREVO_SENDER_EMAIL);
+}
+
+export function renderMagicLoginEmail(input: MagicLoginEmail): string {
+  const loginUrl = safeHttpUrl(input.loginUrl);
+  return `<!doctype html>
+<html>
+  <body style="margin:0;padding:0;background:#f5f5f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;color:#1d1d1f;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="padding:32px 16px;">
+      <tr><td align="center">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:520px;background:#ffffff;border:1px solid #e5e5e7;border-radius:24px;">
+          <tr><td style="padding:36px;text-align:center;">
+            <p style="margin:0 0 8px;font-size:13px;font-weight:700;letter-spacing:1px;color:#7c3aed;">DEALS24</p>
+            <h1 style="margin:0;font-size:28px;line-height:1.2;">Sign in to your account</h1>
+            <p style="margin:14px 0 26px;color:#6e6e73;font-size:15px;line-height:1.5;">Use this secure link to sync and manage your deal alerts across browsers.</p>
+            <a href="${escapeHtml(loginUrl)}" style="display:inline-block;padding:13px 24px;border-radius:999px;background:#1d1d1f;color:#ffffff;text-decoration:none;font-size:15px;font-weight:700;">Sign in to Deals24</a>
+            <p style="margin:24px 0 0;color:#86868b;font-size:12px;line-height:1.5;">This link expires in 15 minutes and can only be used once. If you did not request it, you can ignore this email.</p>
+          </td></tr>
+        </table>
+      </td></tr>
+    </table>
+  </body>
+</html>`;
+}
+
+export async function sendMagicLoginEmail(input: MagicLoginEmail): Promise<string> {
+  const apiKey = process.env.BREVO_API_KEY;
+  const senderEmail = process.env.BREVO_SENDER_EMAIL;
+  if (!apiKey || !senderEmail) throw new Error('Brevo email delivery is not configured');
+
+  const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: {
+      accept: 'application/json',
+      'api-key': apiKey,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      sender: {
+        name: process.env.BREVO_SENDER_NAME || 'Deals24',
+        email: senderEmail,
+      },
+      to: [{ email: input.email }],
+      subject: 'Your Deals24 sign-in link',
+      htmlContent: renderMagicLoginEmail(input),
+      textContent: `Sign in to Deals24: ${input.loginUrl}\n\nThis link expires in 15 minutes and can only be used once.`,
+    }),
+  });
+
+  const data = await response.json() as { messageId?: string; message?: string };
+  if (!response.ok) throw new Error(data.message || `Brevo returned ${response.status}`);
+  return data.messageId || '';
 }
 
 export async function sendDealAlertEmail(input: DealAlertEmail): Promise<string> {

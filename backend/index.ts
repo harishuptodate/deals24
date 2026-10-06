@@ -6,6 +6,8 @@ import { Telegraf } from 'telegraf';
 import { attachRequestContext } from './middleware/requestContext';
 import adminRouter from './routes/admin';
 import alertsRouter from './routes/alerts';
+import authRouter from './routes/auth';
+import wishlistRouter from './routes/wishlist';
 import amazonRouter from './routes/amazon';
 import indexRouter from './routes/index';
 import statsRouter from './routes/stats.routes';
@@ -53,6 +55,8 @@ app.use('/api/amazon', amazonRouter);
 app.use('/api', statsRouter);  // Make sure the stats routes are registered
 app.use('/api/admin', adminRouter);
 app.use('/api/alerts', alertsRouter);
+app.use('/api/auth', authRouter);
+app.use('/api/wishlist', wishlistRouter);
 
 // Health check endpoint
 app.get('/api/health', (_req: Request, res: Response) => {

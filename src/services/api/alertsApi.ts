@@ -10,10 +10,17 @@ export type DealAlert = {
   targetPrice?: number | null;
   active: boolean;
   createdAt: string;
+  deal?: {
+    id: string;
+    title: string;
+    imageUrl?: string | null;
+    telegramFileId?: string | null;
+    category?: string | null;
+  } | null;
 };
 
 export type CreateDealAlertInput = {
-  email: string;
+  email?: string;
   type: 'deal' | 'keyword';
   dealId?: string;
   keywords?: string[];
@@ -22,7 +29,7 @@ export type CreateDealAlertInput = {
 
 const OWNER_TOKEN_KEY = 'deal-alert-owner-token';
 
-function getOwnerToken(): string {
+export function getOwnerToken(): string {
   const existing = localStorage.getItem(OWNER_TOKEN_KEY);
   if (existing) return existing;
 
@@ -45,7 +52,7 @@ export async function createDealAlert(input: CreateDealAlertInput): Promise<Deal
     ...input,
     ownerToken: getOwnerToken(),
   });
-  localStorage.setItem('deal-alert-email', input.email);
+  if (input.email) localStorage.setItem('deal-alert-email', input.email);
   return response.data;
 }
 

@@ -1,7 +1,13 @@
 import mongoose from 'mongoose';
 
 const dealAlertSchema = new mongoose.Schema({
-  ownerToken: { type: String, required: true, index: true },
+  ownerToken: { type: String, default: null, index: true },
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null,
+    index: true,
+  },
   email: { type: String, required: true, lowercase: true, trim: true },
   type: { type: String, enum: ['deal', 'keyword'], required: true },
   dealId: {
@@ -18,5 +24,6 @@ const dealAlertSchema = new mongoose.Schema({
 
 dealAlertSchema.index({ active: 1, type: 1, dealId: 1 });
 dealAlertSchema.index({ ownerToken: 1, createdAt: -1 });
+dealAlertSchema.index({ userId: 1, createdAt: -1 });
 
 export default mongoose.model('DealAlert', dealAlertSchema);
