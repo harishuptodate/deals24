@@ -25,7 +25,6 @@ export function AdminLoginDialog({ isOpen, onClose, onSuccess }: AdminLoginDialo
       const success = await login(username, password);
       if (success) {
         onSuccess();
-        window.location.reload(); // Force reload to update the page
       } else {
         setError('Invalid credentials');
       }

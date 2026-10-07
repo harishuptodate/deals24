@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { lazy, Suspense, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import EnhancedErrorBoundary from "./components/enhanced/EnhancedErrorBoundary";
+import AdminRoute from "./components/AdminRoute";
 import { AuthProvider } from "./contexts/AuthContext";
 import { WishlistProvider } from "./contexts/WishlistContext";
 
@@ -122,7 +123,7 @@ const App = () => {
                     <Route path="/" element={<Index />} />
                     <Route path="/deals" element={<Deals />} />
                     <Route path="/categories" element={<Categories />} />
-                    <Route path="/admin" element={<Admin />} />
+                    <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
                     <Route path="/admin/logs" element={<AdminLogs />} />
                     <Route path="/admin/post-deal" element={<AdminPostDeal />} />
                     <Route path="/admin/blacklist" element={<AdminBlacklist />} />
