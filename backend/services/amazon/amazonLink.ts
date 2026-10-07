@@ -1,7 +1,7 @@
 const DEFAULT_AFFILIATE_TAG = 'harishch-21';
 
 const ASIN_PATH_PATTERN = /\/(?:dp|gp\/product|gp\/aw\/d)\/([a-z0-9]{10})(?:[/?#]|$)/i;
-const AMAZON_LINK_PATTERN = /(https?:\/\/)?(www\.)?(amazon\.(?:in|com)|amzn\.to)\/[^\s]*/gi;
+const AMAZON_LINK_PATTERN = /(https?:\/\/)?(www\.)?(amazon\.(?:in|com)|amzn\.to|link\.amazon)\/[^\s]*/gi;
 
 export function extractAmazonAsin(value: string | null | undefined): string | null {
   if (!value) return null;
@@ -34,7 +34,12 @@ function isSupportedAmazonHost(hostname: string): boolean {
 
 export function isAmazonShortUrl(value: string): boolean {
   const { hostname } = extractUrl(value);
-  return hostname === 'amzn.to' || hostname === 'www.amzn.to';
+  return [
+    'amzn.to',
+    'www.amzn.to',
+    'link.amazon',
+    'www.link.amazon',
+  ].includes(hostname.toLowerCase());
 }
 
 export function cleanAmazonProductUrl(

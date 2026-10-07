@@ -24,9 +24,13 @@ const blacklist = {
 };
 
 test('detects amazon links and normalizes shortened urls', () => {
-  const input = 'Deal link amzn.to/abc and https://amazon.in/dp/test';
+  const input = 'Deal links amzn.to/abc link.amazon/B055YsEWf and https://amazon.in/dp/test';
   assert.equal(hasAmazonLinks(input), true);
-  assert.deepEqual(extractAmazonUrls(input), ['https://amzn.to/abc', 'https://amazon.in/dp/test']);
+  assert.deepEqual(extractAmazonUrls(input), [
+    'https://amzn.to/abc',
+    'https://link.amazon/B055YsEWf',
+    'https://amazon.in/dp/test',
+  ]);
 });
 
 test('allows and blocks exact brand-product overrides before the default rule', () => {

@@ -45,14 +45,17 @@ export async function addWishlistItem(req: Request, res: Response) {
   if (!user) return;
   const dealId = req.body.dealId;
   if (!mongoose.isValidObjectId(dealId)) return res.status(400).json({ error: 'A valid deal is required' });
-  if (!await TelegramMessage.exists({ _id: dealId })) return res.status(404).json({ error: 'Deal not found' });
+  const deal = await TelegramMessage.findById(dealId)
+    .select('text link date createdAt category imageUrl telegramFileId')
+    .lean();
+  if (!deal) return res.status(404).json({ error: 'Deal not found' });
 
-  await WishlistItem.updateOne(
+  const item = await WishlistItem.findOneAndUpdate(
     { userId: user._id, dealId },
     { $setOnInsert: { userId: user._id, dealId } },
-    { upsert: true },
-  );
-  return res.status(201).json((await listForUser(user._id)).find((item: any) => item.id === dealId));
+    { upsert: true, new: true, setDefaultsOnInsert: true },
+  ).lean();
+  return res.status(201).json(serializeWishlistItem({ ...item, dealId: deal }));
 }
 
 export async function importWishlist(req: Request, res: Response) {

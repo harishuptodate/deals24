@@ -132,6 +132,18 @@ const PriceHistoryChart = ({ dealId, enabled }: PriceHistoryChartProps) => {
     name: `${format(new Date(point.observedAt), 'dd MMM yy')}|${format(new Date(point.observedAt), 'h:mm a')}`,
     fullDate: format(new Date(point.observedAt), 'dd MMM yyyy, h:mm a'),
   }));
+  const prices = points.map((point) => point.price);
+  const lowestPrice = Math.min(...prices);
+  const highestPrice = Math.max(...prices);
+  const pricePadding = Math.max(
+    (highestPrice - lowestPrice) * 0.2,
+    highestPrice * 0.02,
+    1,
+  );
+  const priceDomain: [number, number] = [
+    Math.max(0, Math.floor(lowestPrice - pricePadding)),
+    Math.ceil(highestPrice + pricePadding),
+  ];
 
   return (
     <div className="min-w-0 w-full overflow-hidden">
@@ -159,6 +171,7 @@ const PriceHistoryChart = ({ dealId, enabled }: PriceHistoryChartProps) => {
               stroke="rgba(160, 160, 160, 0.2)"
             />
 			<YAxis
+			  domain={priceDomain}
 			  width={48}
               allowDecimals={false}
               tickFormatter={(value) => formatCompactPrice(Number(value))}

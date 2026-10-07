@@ -1,6 +1,6 @@
 export const  hasAmazonLinks = (text: string):boolean =>  {
   if (!text) return false;
-  const amazonRegex = /(https?:\/\/)?(www\.)?(amazon\.[a-z]{2,}|amzn\.to)\/[^\s]*/gi;
+  const amazonRegex = /(https?:\/\/)?(www\.)?(amazon\.[a-z]{2,}|amzn\.to|link\.amazon)\/[^\s]*/gi;
   return amazonRegex.test(text);
 };
 

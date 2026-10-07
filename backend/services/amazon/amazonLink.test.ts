@@ -5,6 +5,7 @@ import {
   cleanAmazonProductUrl,
   extractAmazonAsin,
   replaceLastAmazonUrl,
+  resolveAmazonProductUrl,
 } from './amazonLink';
 
 test('cleans an Amazon India product URL and keeps only the configured affiliate tag', () => {
@@ -31,6 +32,17 @@ test('extracts a stable ASIN from canonical product links', () => {
   assert.equal(extractAmazonAsin('https://example.com/product/123'), null);
 });
 
+test('resolves link.amazon URLs and converts them to the configured affiliate URL', async (t) => {
+  t.mock.method(globalThis, 'fetch', async () => ({
+    url: 'https://www.amazon.in/dp/B0D14BB5XY?tag=another-tag&ascsubtag=source',
+  } as Response));
+
+  assert.equal(
+    await resolveAmazonProductUrl('https://link.amazon/B055YsEWf'),
+    'https://www.amazon.in/dp/B0D14BB5XY?tag=harishch-21',
+  );
+});
+
 test('rejects lookalike hosts and links without an ASIN', () => {
   assert.throws(() => cleanAmazonProductUrl('https://amazon.in.example.com/dp/B0FH1WPYMX'), /valid Amazon/);
   assert.throws(() => cleanAmazonProductUrl('https://www.amazon.in/s?k=phone'), /ASIN/);
@@ -42,6 +54,16 @@ test('replaces only the selected final Amazon link in message text', () => {
   assert.equal(
     replaceLastAmazonUrl(text, 'https://www.amazon.in/dp/B000000002?tag=harishch-21'),
     'Source https://amazon.in/dp/B000000001 deal https://www.amazon.in/dp/B000000002?tag=harishch-21',
+  );
+});
+
+test('replaces a link.amazon URL in message text', () => {
+  assert.equal(
+    replaceLastAmazonUrl(
+      'Deal https://link.amazon/B055YsEWf',
+      'https://www.amazon.in/dp/B0D14BB5XY?tag=harishch-21',
+    ),
+    'Deal https://www.amazon.in/dp/B0D14BB5XY?tag=harishch-21',
   );
 });
 

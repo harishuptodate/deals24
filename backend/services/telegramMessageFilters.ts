@@ -10,13 +10,13 @@ const EMOJI_REGEX = /(?:\p{Regional_Indicator}{2}|[#*0-9]\uFE0F?\u20E3|(?:\p{Ext
 
 export function hasAmazonLinks(text: string): boolean {
   if (!text) return false;
-  const amazonRegex = /(https?:\/\/)?(www\.)?(amazon\.[a-z]{2,}|amzn\.to)\/[^\s]*/gi;
+  const amazonRegex = /(https?:\/\/)?(www\.)?(amazon\.[a-z]{2,}|amzn\.to|link\.amazon)\/[^\s]*/gi;
   return amazonRegex.test(text);
 }
 
 export function extractAmazonUrls(text: string): string[] {
   if (!text) return [];
-  const amazonRegex = /(https?:\/\/)?(www\.)?(amazon\.[a-z]{2,}|amzn\.to)\/[^\s]*/gi;
+  const amazonRegex = /(https?:\/\/)?(www\.)?(amazon\.[a-z]{2,}|amzn\.to|link\.amazon)\/[^\s]*/gi;
   const matches = text.match(amazonRegex) || [];
   return matches.map((url) => (url.startsWith('http') ? url : `https://${url}`));
 }

@@ -72,16 +72,26 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
   )), [favorites]);
 
   const removeFavorite = useCallback(async (item: FavoriteItem) => {
-    if (user && item.id) {
-      await removeWishlistItem(item.id);
+    const matchesItem = (favorite: FavoriteItem) => item.id
+      ? favorite.id === item.id
+      : favorite.title === item.title;
+
+    if (!user || !item.id) {
+      setFavorites((current) => {
+        const updated = current.filter((favorite) => !matchesItem(favorite));
+        saveLocalWishlist(updated);
+        return updated;
+      });
+      return;
     }
-    setFavorites((current) => {
-      const updated = current.filter((favorite) => item.id
-        ? favorite.id !== item.id
-        : favorite.title !== item.title);
-      if (!user) saveLocalWishlist(updated);
-      return updated;
-    });
+
+    setFavorites((current) => current.filter((favorite) => !matchesItem(favorite)));
+    try {
+      await removeWishlistItem(item.id);
+    } catch (error) {
+      setFavorites((current) => current.some(matchesItem) ? current : [item, ...current]);
+      throw error;
+    }
   }, [user]);
 
   const toggleFavorite = useCallback(async (item: FavoriteItem) => {
@@ -94,8 +104,14 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     }
 
     if (user && item.id) {
-      const saved = await addWishlistItem(item.id);
-      setFavorites((current) => [saved, ...current.filter((favorite) => favorite.id !== saved.id)]);
+      setFavorites((current) => [item, ...current.filter((favorite) => favorite.id !== item.id)]);
+      try {
+        const saved = await addWishlistItem(item.id);
+        setFavorites((current) => [saved, ...current.filter((favorite) => favorite.id !== saved.id)]);
+      } catch (error) {
+        setFavorites((current) => current.filter((favorite) => favorite.id !== item.id));
+        throw error;
+      }
     } else {
       const updated = [item, ...favorites];
       saveLocalWishlist(updated);
