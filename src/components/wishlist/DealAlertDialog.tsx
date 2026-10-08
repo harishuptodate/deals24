@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import type { CreateDealAlertInput } from '@/services/api/alertsApi';
 import { useAuth } from '@/contexts/AuthContext';
+import EmailDomainSuggestions from '@/components/auth/EmailDomainSuggestions';
 import PriceAlertFields from './PriceAlertFields';
 
 export type AlertableDeal = { id?: string; title: string };
@@ -88,6 +89,7 @@ const DealAlertDialog = ({ deal, open, onOpenChange, onCreate }: DealAlertDialog
                   required
                 />
               </div>
+              <EmailDomainSuggestions value={email} onChange={setEmail} />
             </div>
           )}
           <PriceAlertFields

@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
+import EmailDomainSuggestions from './EmailDomainSuggestions';
 
 type AuthDialogProps = {
   open: boolean;
@@ -70,6 +71,7 @@ export default function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
                   required
                 />
               </div>
+              <EmailDomainSuggestions value={email} onChange={setEmail} />
               {error && <p className="text-xs text-red-600">{error}</p>}
             </div>
             <Button type="submit" disabled={isSending} className="h-9 w-full rounded-full text-sm">
