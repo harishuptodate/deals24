@@ -151,7 +151,7 @@ const AlertCenter = ({ alerts, isLoading, onCreate, onSetActive, onRemove }: Ale
         </form>
       </div>
 
-      <div className="grid lg:grid-cols-[minmax(0,1.45fr)_minmax(300px,.75fr)] lg:divide-x lg:divide-gray-200 dark:lg:divide-gray-800">
+      <div className="grid lg:grid-cols-[minmax(0,1fr)_20.45%] lg:divide-x lg:divide-gray-200 dark:lg:divide-gray-800">
         <div className="p-3 sm:p-5">
           <div className="mb-3 flex items-center justify-between">
             <div>
@@ -175,9 +175,9 @@ const AlertCenter = ({ alerts, isLoading, onCreate, onSetActive, onRemove }: Ale
                   <article key={alert._id} className="flex min-w-0 items-center gap-2.5 rounded-xl border border-gray-200 bg-gray-50/60 p-2.5 transition-colors hover:border-violet-200 dark:border-gray-800 dark:bg-white/[0.025] dark:hover:border-violet-900">
                     {dealId ? (
                       <Link to={`/deal/${dealId}`} className="shrink-0 overflow-hidden rounded-lg bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 dark:bg-zinc-900">
-                        <DealImage title={title} category={alert.deal?.category || undefined} imageUrl={alert.deal?.imageUrl || undefined} telegramFileId={alert.deal?.telegramFileId || undefined} className="h-[4.32rem] w-[4.32rem] object-contain p-0.5" fallbackClassName="border-0" />
+                        <DealImage title={title} category={alert.deal?.category || undefined} imageUrl={alert.deal?.imageUrl || undefined} telegramFileId={alert.deal?.telegramFileId || undefined} className="h-[4.32rem] w-[4.32rem] object-contain p-0.5 lg:h-[5.4rem] lg:w-[5.4rem]" fallbackClassName="border-0" />
                       </Link>
-                    ) : <div className="h-[4.32rem] w-[4.32rem] shrink-0 rounded-lg bg-gray-100 dark:bg-zinc-900" />}
+                    ) : <div className="h-[4.32rem] w-[4.32rem] shrink-0 rounded-lg bg-gray-100 dark:bg-zinc-900 lg:h-[5.4rem] lg:w-[5.4rem]" />}
                     <div className="min-w-0 flex-1">
                       {dealId ? <Link to={`/deal/${dealId}`} className="line-clamp-2 text-xs font-semibold leading-4 hover:text-violet-600">{title}</Link> : <p className="line-clamp-2 text-xs font-semibold leading-4">{title}</p>}
                       <p className="mt-1 text-[11px] text-gray-500">{alert.targetPrice ? `₹${alert.targetPrice.toLocaleString('en-IN')} or less` : 'Any price update'}</p>

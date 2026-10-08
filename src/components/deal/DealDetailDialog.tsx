@@ -159,26 +159,30 @@ const DealDetailDialog = ({
 						open={areDetailsOpen}
 						onOpenChange={setAreDetailsOpen}
 						className="overflow-hidden rounded-xl border border-border/70 bg-background shadow-sm">
-						<div className="flex items-start gap-2 px-3.5 py-2.5 sm:px-4 sm:py-3">
-							<p className="min-w-0 flex-1 text-center text-sm font-semibold leading-5 text-foreground">
-								{makeLinksClickable(descriptionHeadline)}
-							</p>
-							{remainingDescription && (
-								<CollapsibleTrigger asChild>
-									<button
-										type="button"
-										aria-label={areDetailsOpen ? 'Hide deal details' : 'Show deal details'}
-										className="-mr-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+						{remainingDescription ? (
+							<CollapsibleTrigger asChild>
+								<button
+									type="button"
+									aria-label={areDetailsOpen ? 'Hide deal details' : 'Show deal details'}
+									className="flex w-full items-start gap-2 px-3.5 py-2.5 transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500 sm:px-4 sm:py-3">
+									<span className="min-w-0 flex-1 text-center text-sm font-semibold leading-5 text-foreground">
+										{descriptionHeadline || title}
+									</span>
+									<span className="-mr-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground">
 										<ChevronDown
 											className={cn(
 												'h-4 w-4 transition-transform duration-200',
 												areDetailsOpen && 'rotate-180',
 											)}
 										/>
-									</button>
-								</CollapsibleTrigger>
-							)}
-						</div>
+									</span>
+								</button>
+							</CollapsibleTrigger>
+						) : (
+							<p className="px-3.5 py-2.5 text-center text-sm font-semibold leading-5 text-foreground sm:px-4 sm:py-3">
+								{makeLinksClickable(descriptionHeadline || title)}
+							</p>
+						)}
 
 						{remainingDescription && (
 							<CollapsibleContent className="data-[state=closed]:animate-out data-[state=open]:animate-in data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0">
