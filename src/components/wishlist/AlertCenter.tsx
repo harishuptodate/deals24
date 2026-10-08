@@ -151,7 +151,7 @@ const AlertCenter = ({ alerts, isLoading, onCreate, onSetActive, onRemove }: Ale
         </form>
       </div>
 
-      <div className="grid lg:grid-cols-[minmax(0,1fr)_20.45%] lg:divide-x lg:divide-gray-200 dark:lg:divide-gray-800">
+      <div className="grid lg:grid-cols-[minmax(0,1fr)_25.57%] lg:divide-x lg:divide-gray-200 dark:lg:divide-gray-800">
         <div className="p-3 sm:p-5">
           <div className="mb-3 flex items-center justify-between">
             <div>
