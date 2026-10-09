@@ -21,16 +21,41 @@ type AuthContextValue = {
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+const CACHED_USER_KEY = 'deals24-cached-user';
+
+function readCachedUser(): AuthUser | null {
+  if (!getUserSessionToken()) return null;
+  try {
+    const cached = JSON.parse(localStorage.getItem(CACHED_USER_KEY) || 'null');
+    return cached && typeof cached.id === 'string' && typeof cached.email === 'string'
+      ? cached
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function cacheUser(user: AuthUser | null) {
+  if (user) localStorage.setItem(CACHED_USER_KEY, JSON.stringify(user));
+  else localStorage.removeItem(CACHED_USER_KEY);
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(readCachedUser);
   const [isLoading, setIsLoading] = useState(Boolean(getUserSessionToken()));
 
   useEffect(() => {
     if (!getUserSessionToken()) return;
     getCurrentUser()
-      .then(setUser)
-      .catch(() => clearUserSessionToken())
+      .then((currentUser) => {
+        cacheUser(currentUser);
+        setUser(currentUser);
+      })
+      .catch(() => {
+        clearUserSessionToken();
+        cacheUser(null);
+        setUser(null);
+      })
       .finally(() => setIsLoading(false));
   }, []);
 
@@ -39,6 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const completeSignIn = useCallback(async (token: string) => {
     const result = await verifyMagicLink(token);
     setUserSessionToken(result.sessionToken);
+    cacheUser(result.user);
     setUser(result.user);
   }, []);
 
@@ -47,6 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await logoutUser();
     } finally {
       clearUserSessionToken();
+      cacheUser(null);
       setUser(null);
     }
   }, []);

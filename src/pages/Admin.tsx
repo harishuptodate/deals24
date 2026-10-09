@@ -902,7 +902,9 @@ const Admin = () => {
 
 			{/* Deal Details Dialog */}
 			<Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-				<DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto max-w-[95vw] w-[95vw] sm:w-auto rounded-xl">
+				<DialogContent
+					onOpenAutoFocus={(event) => event.preventDefault()}
+					className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto max-w-[95vw] w-[95vw] sm:w-auto rounded-xl">
 					<DialogHeader>
 						<DialogTitle className="text-xl">
 							{selectedDeal?.text?.split('\n')[0] || 'Deal Details'}

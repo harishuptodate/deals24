@@ -19,7 +19,9 @@ interface ClearAllConfirmDialogProps {
 
 const ClearAllConfirmDialog = ({ isOpen, onOpenChange, onConfirm, itemCount }: ClearAllConfirmDialogProps) => (
   <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
-    <AlertDialogContent className="w-[calc(100%-2rem)] rounded-3xl sm:max-w-md">
+    <AlertDialogContent
+      onOpenAutoFocus={(event) => event.preventDefault()}
+      className="w-[calc(100%-2rem)] rounded-3xl sm:max-w-md">
       <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-red-50 dark:bg-red-950/40">
         <Trash2 className="h-5 w-5 text-red-600" />
       </div>

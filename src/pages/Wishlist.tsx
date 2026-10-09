@@ -11,12 +11,14 @@ import AlertCenter from '../components/wishlist/AlertCenter';
 import DealAlertDialog, { type AlertableDeal } from '../components/wishlist/DealAlertDialog';
 import { useDealAlerts } from '../hooks/useDealAlerts';
 import DealDetailDialog from '../components/deal/DealDetailDialog';
+import DealCardSkeletonEnhanced from '../components/skeletons/DealCardSkeletonEnhanced';
 
 const Wishlist = () => {
   const { alerts, isLoading: alertsLoading, create, setActive, remove } = useDealAlerts();
   const [alertDeal, setAlertDeal] = useState<AlertableDeal | null>(null);
   const {
     favorites,
+    isLoading: wishlistLoading,
     selectedItem,
     isDialogOpen,
     setIsDialogOpen,
@@ -55,7 +57,13 @@ const Wishlist = () => {
             <span className="shrink-0 text-xs font-medium text-gray-500">{favorites.length} {favorites.length === 1 ? 'item' : 'items'}</span>
           </div>
 
-          {favorites.length === 0 ? <WishlistEmptyState /> : (
+          {wishlistLoading ? (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
+              {[...Array(8)].map((_, index) => (
+                <DealCardSkeletonEnhanced key={`wishlist-skeleton-${index}`} />
+              ))}
+            </div>
+          ) : favorites.length === 0 ? <WishlistEmptyState /> : (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
               {favorites.map((item) => (
                 <WishlistDealCard

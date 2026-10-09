@@ -19,7 +19,9 @@ interface RemoveDealConfirmDialogProps {
 
 const RemoveDealConfirmDialog = ({ isOpen, onOpenChange, onConfirm, dealTitle }: RemoveDealConfirmDialogProps) => (
   <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
-    <AlertDialogContent className="w-[calc(100%-2rem)] rounded-3xl sm:max-w-md">
+    <AlertDialogContent
+      onOpenAutoFocus={(event) => event.preventDefault()}
+      className="w-[calc(100%-2rem)] rounded-3xl sm:max-w-md">
       <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-50 dark:bg-rose-950/40">
         <HeartCrack className="h-5 w-5 text-rose-600" />
       </div>

@@ -164,7 +164,7 @@ const DealDetailDialog = ({
 								<button
 									type="button"
 									aria-label={areDetailsOpen ? 'Hide deal details' : 'Show deal details'}
-									className="flex w-full items-start gap-2 px-3.5 py-2.5 transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500 sm:px-4 sm:py-3">
+									className="flex w-full items-start gap-2 px-3.5 py-2.5 transition-colors hover:bg-muted/50 focus-visible:outline-none sm:px-4 sm:py-3">
 									<span className="min-w-0 flex-1 text-center text-sm font-semibold leading-5 text-foreground">
 										{descriptionHeadline || title}
 									</span>

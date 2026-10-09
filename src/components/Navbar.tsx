@@ -400,7 +400,9 @@ const Navbar = () => {
 			</div>
 			<AuthDialog open={isAuthOpen} onOpenChange={setIsAuthOpen} />
 			<AlertDialog open={isLogoutOpen} onOpenChange={setIsLogoutOpen}>
-				<AlertDialogContent className="w-[calc(100%-2rem)] overflow-hidden rounded-3xl border-violet-200 p-0 shadow-2xl sm:max-w-md dark:border-violet-950">
+				<AlertDialogContent
+					onOpenAutoFocus={(event) => event.preventDefault()}
+					className="w-[calc(100%-2rem)] overflow-hidden rounded-3xl border-violet-200 p-0 shadow-2xl sm:max-w-md dark:border-violet-950">
 					<div className="bg-gradient-to-br from-violet-600 via-indigo-600 to-blue-600 px-6 pb-7 pt-8 text-center text-white">
 						<div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15 shadow-inner ring-1 ring-white/25 backdrop-blur">
 							<LogOut className="h-6 w-6" />

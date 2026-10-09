@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { shareContent, copyToClipboard } from '../utils/linkUtils';
 import { useSyncedWishlist } from '@/contexts/WishlistContext';
@@ -31,8 +31,11 @@ export const useDealCardActions = ({
   const { isSaved: hasSavedDeal, toggleFavorite } = useSyncedWishlist();
   const isSaved = hasSavedDeal(id, title);
   const [isSharing, setIsSharing] = useState(false);
+  const isUpdatingWishlist = useRef(false);
 
   const handleToggleWishlist = async () => {
+    if (isUpdatingWishlist.current) return;
+    isUpdatingWishlist.current = true;
     const dealDescription = fullText || description || title;
     try {
       const saved = await toggleFavorite({
@@ -58,6 +61,8 @@ export const useDealCardActions = ({
         description: 'Please try again.',
         variant: 'destructive',
       });
+    } finally {
+      isUpdatingWishlist.current = false;
     }
   };
 

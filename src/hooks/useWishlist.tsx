@@ -9,7 +9,7 @@ import type { FavoriteItem } from '@/services/api/wishlistApi';
 export const useWishlist = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { favorites, removeFavorite: removeSyncedFavorite, clearFavorites } = useSyncedWishlist();
+  const { favorites, isLoading, removeFavorite: removeSyncedFavorite, clearFavorites } = useSyncedWishlist();
   const [selectedItem, setSelectedItem] = useState<FavoriteItem | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isRemoveConfirmOpen, setIsRemoveConfirmOpen] = useState(false);
@@ -122,6 +122,7 @@ export const useWishlist = () => {
 
   return {
     favorites,
+    isLoading,
     selectedItem,
     isDialogOpen,
     setIsDialogOpen,

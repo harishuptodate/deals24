@@ -21,7 +21,9 @@ const DeleteConfirmDialog = ({
 }: DeleteConfirmDialogProps) => {
 	return (
 		<Dialog open={isOpen} onOpenChange={onOpenChange}>
-			<DialogContent className="max-w-[90vw] sm:max-w-md rounded-xl">
+			<DialogContent
+				onOpenAutoFocus={(event) => event.preventDefault()}
+				className="max-w-[90vw] sm:max-w-md rounded-xl">
 				<DialogHeader>
 					<DialogTitle>Are you sure?</DialogTitle>
 					<DialogDescription>

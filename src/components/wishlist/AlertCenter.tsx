@@ -20,6 +20,7 @@ import type { CreateDealAlertInput, DealAlert } from '@/services/api/alertsApi';
 import { useAuth } from '@/contexts/AuthContext';
 import AuthDialog from '@/components/auth/AuthDialog';
 import DealImage from '@/components/images/DealImage';
+import { EnhancedSkeleton } from '@/components/ui/enhanced-skeleton';
 
 type AlertCenterProps = {
   alerts: DealAlert[];
@@ -161,7 +162,17 @@ const AlertCenter = ({ alerts, isLoading, onCreate, onSetActive, onRemove }: Ale
             <span className="text-xs font-medium text-gray-500">{dealAlerts.length}</span>
           </div>
           {isLoading ? (
-            <div className="flex h-20 items-center justify-center text-gray-400"><Loader2 className="h-5 w-5 animate-spin" /></div>
+            <div className="grid gap-2 xl:grid-cols-2">
+              {[0, 1].map((index) => (
+                <div key={`deal-alert-skeleton-${index}`} className="flex items-center gap-2.5 rounded-xl border border-gray-200 p-2.5 dark:border-gray-800">
+                  <EnhancedSkeleton variant="shimmer" className="h-[4.32rem] w-[4.32rem] shrink-0 rounded-lg lg:h-[5.4rem] lg:w-[5.4rem]" />
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <EnhancedSkeleton variant="shimmer" shape="text" className="h-3.5 w-full" />
+                    <EnhancedSkeleton variant="shimmer" shape="text" className="h-3 w-2/3" />
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : dealAlerts.length === 0 ? (
             <div className="flex items-center gap-3 rounded-xl border border-dashed border-gray-300 p-3 text-sm text-gray-500 dark:border-gray-800">
               <BellRing className="h-4 w-4 shrink-0 text-violet-500" /> Use the alert button on a saved deal.
@@ -199,7 +210,19 @@ const AlertCenter = ({ alerts, isLoading, onCreate, onSetActive, onRemove }: Ale
             </div>
             <span className="text-xs font-medium text-gray-500">{keywordAlerts.length}</span>
           </div>
-          {!isLoading && keywordAlerts.length === 0 ? (
+          {isLoading ? (
+            <div className="space-y-2">
+              {[0, 1, 2].map((index) => (
+                <div key={`keyword-alert-skeleton-${index}`} className="flex items-center gap-2 rounded-xl border border-gray-200 p-2.5 dark:border-gray-800">
+                  <EnhancedSkeleton variant="shimmer" className="h-8 w-8 shrink-0 rounded-lg" />
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <EnhancedSkeleton variant="shimmer" shape="text" className="h-3.5 w-3/4" />
+                    <EnhancedSkeleton variant="shimmer" shape="text" className="h-3 w-1/2" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : keywordAlerts.length === 0 ? (
             <div className="flex items-center gap-3 rounded-xl border border-dashed border-gray-300 p-3 text-sm text-gray-500 dark:border-gray-800">
               <Tag className="h-4 w-4 shrink-0 text-violet-500" /> Create one with the compact form above.
             </div>
@@ -223,7 +246,9 @@ const AlertCenter = ({ alerts, isLoading, onCreate, onSetActive, onRemove }: Ale
 
       <AuthDialog open={isAuthOpen} onOpenChange={setIsAuthOpen} />
       <AlertDialog open={alertsToRemove.length > 0} onOpenChange={(open) => !open && setAlertsToRemove([])}>
-        <AlertDialogContent className="w-[calc(100%-2rem)] rounded-3xl sm:max-w-md">
+        <AlertDialogContent
+          onOpenAutoFocus={(event) => event.preventDefault()}
+          className="w-[calc(100%-2rem)] rounded-3xl sm:max-w-md">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-red-50 dark:bg-red-950/40"><AlertTriangle className="h-5 w-5 text-red-600" /></div>
           <AlertDialogHeader className="text-center sm:text-center">
             <AlertDialogTitle>{alertsToRemove.length === 1 ? 'Remove this alert?' : `Remove ${alertsToRemove.length} alerts?`}</AlertDialogTitle>
