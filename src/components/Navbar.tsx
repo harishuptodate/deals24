@@ -156,10 +156,10 @@ const Navbar = () => {
 				sideOffset={8}
 				collisionPadding={8}
 				className={compact
-					? 'w-[calc(100vw-1rem)] max-w-56 rounded-xl border-gray-200/80 p-1.5 text-xs shadow-xl dark:border-gray-800 [&_[role=menuitem]]:text-xs'
-					: 'w-[calc(100vw-1rem)] max-w-80 rounded-2xl border-gray-200/80 p-2 shadow-xl dark:border-gray-800'}>
+					? 'w-[calc(100vw-1rem)] max-w-52 rounded-xl border-gray-200/80 p-1.5 text-xs shadow-xl dark:border-gray-800 [&_[role=menuitem]]:text-xs'
+					: 'w-[calc(100vw-1rem)] max-w-64 rounded-2xl border-gray-200/80 p-2 shadow-xl dark:border-gray-800'}>
 				{user ? (
-					<div className={compact ? 'flex items-center gap-2 rounded-lg bg-gray-50 p-2 dark:bg-zinc-900/70' : 'flex items-center gap-3 rounded-xl bg-gray-50 p-2.5 dark:bg-zinc-900/70'}>
+					<div className={compact ? 'flex items-start gap-2 rounded-lg bg-gray-50 p-2 dark:bg-zinc-900/70' : 'flex items-start gap-3 rounded-xl bg-gray-50 p-2.5 dark:bg-zinc-900/70'}>
 						<Avatar className={compact ? 'h-8 w-8' : 'h-10 w-10'}>
 							<AvatarFallback className="bg-gradient-to-br from-violet-100 to-indigo-100 font-semibold text-violet-700 dark:from-violet-950 dark:to-indigo-950 dark:text-violet-300">
 								{accountInitial}
@@ -168,12 +168,12 @@ const Navbar = () => {
 						<div className="min-w-0 flex-1">
 							<p className={compact ? 'text-[10px] text-muted-foreground' : 'text-xs text-muted-foreground'}>Signed in as</p>
 							<p className={compact ? 'truncate text-xs font-semibold' : 'truncate text-sm font-semibold'}>{user.email}</p>
+							<DropdownMenuItem
+								onSelect={openLogoutDialog}
+								className={compact ? 'mt-1 w-fit cursor-pointer rounded-full px-2 py-1 text-[10px] text-red-600 focus:bg-red-50 focus:text-red-700 dark:focus:bg-red-950/40' : 'mt-1 w-fit cursor-pointer rounded-full px-2.5 py-1.5 text-xs text-red-600 focus:bg-red-50 focus:text-red-700 dark:focus:bg-red-950/40'}>
+								<LogOut className="mr-1.5 h-3.5 w-3.5" />Sign out
+							</DropdownMenuItem>
 						</div>
-						<DropdownMenuItem
-							onSelect={openLogoutDialog}
-							className={compact ? 'shrink-0 cursor-pointer rounded-full px-2 py-1.5 text-[10px] text-red-600 focus:bg-red-50 focus:text-red-700 dark:focus:bg-red-950/40' : 'shrink-0 cursor-pointer rounded-full px-2.5 py-2 text-xs text-red-600 focus:bg-red-50 focus:text-red-700 dark:focus:bg-red-950/40'}>
-							<LogOut className="mr-1.5 h-3.5 w-3.5" />Sign out
-						</DropdownMenuItem>
 					</div>
 				) : (
 					<>
