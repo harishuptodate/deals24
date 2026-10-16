@@ -250,7 +250,7 @@ const Navbar = () => {
 							<img
 								src="/deals24logo.png"
 								alt="Deals24"
-								className="size-8 sm:size-10 mr-1 sm:mr-2 rounded-full"
+								className="size-10 translate-x-[20%] mr-1 rounded-full sm:translate-x-0 sm:mr-2"
 								onError={(e) => {
 									e.currentTarget.style.display = 'none';
 									document
