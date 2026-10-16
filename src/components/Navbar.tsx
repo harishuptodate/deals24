@@ -248,7 +248,7 @@ const Navbar = () => {
 						<Link to="/" className="flex items-center">
 							{/* <Target className="h-8 w-8 mr-2" /> */}
 							<img
-								src="/favicon.ico"
+								src="/deals24logo.png"
 								alt="Deals24"
 								className="size-8 sm:size-10 mr-1 sm:mr-2 rounded-full"
 								onError={(e) => {
