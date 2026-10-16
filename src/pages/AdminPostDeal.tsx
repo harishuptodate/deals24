@@ -75,14 +75,6 @@ export default function AdminPostDeal() {
               </div>
             </div>
           </div>
-
-          {authenticated ? (
-            <Button variant="outline" onClick={logout}>
-              <LogOut className="mr-2 h-4 w-4" /> Sign out
-            </Button>
-          ) : (
-            <Button onClick={() => setShowLoginDialog(true)}>Admin Login</Button>
-          )}
         </header>
 
         <section className="glass-effect rounded-xl border border-gray-200 p-4 shadow-md dark:border-gray-900 dark:bg-zinc-950 sm:p-6">
