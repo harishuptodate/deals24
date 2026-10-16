@@ -15,6 +15,7 @@ import {
 } from '../services/blacklistService';
 import { createLogger, fetchRecentLogs, logEmitter, queryLogs } from '../services/logger';
 import { saveMessage } from '../services/telegramService';
+import type { DealIngestionRejection } from '../services/telegramService';
 
 const logger = createLogger('admin-api');
 
@@ -53,17 +54,25 @@ export async function postDeal(req: PostDealRequest, res: Response) {
   }
 
   try {
+    let rejection: DealIngestionRejection | null = null;
     const deal = await saveMessage({
       message_id: `admin-${randomUUID()}`,
       chat: { id: 'admin-frontend' },
       date: Math.floor(Date.now() / 1000),
       text: messageText,
+    }, {
+      onRejected: (result) => {
+        rejection = result;
+      },
     });
 
     if (!deal) {
       return res.status(422).json({
         success: false,
-        error: 'The message was rejected by the deal ingestion filters.',
+        error: rejection
+          ? `Rejected by the ${rejection.filter}: ${rejection.reason}`
+          : 'The message was rejected by the deal ingestion pipeline.',
+        rejection,
       });
     }
 

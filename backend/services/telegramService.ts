@@ -39,30 +39,60 @@ import { processDealAlerts } from './dealAlertService';
 
 const AI_MATCH_THRESHOLD = 0.92;
 
-async function shouldSkipMessage(textContent: string, messageDate: number): Promise<boolean> {
+export type DealIngestionRejection = {
+  code: 'stale_message' | 'blocked_product' | 'low_context' | 'sale_mode_unprofitable'
+    | 'duplicate_source' | 'duplicate_message';
+  filter: string;
+  reason: string;
+};
+
+type SaveMessageOptions = {
+  onRejected?: (rejection: DealIngestionRejection) => void;
+};
+
+async function getFilterRejection(
+  textContent: string,
+  messageDate: number,
+): Promise<DealIngestionRejection | null> {
   if (!isRecentMessage(messageDate)) {
     console.log('Skipping message older than 5 minutes');
-    return true;
+    return {
+      code: 'stale_message',
+      filter: 'recent-message filter',
+      reason: 'The message is older than 5 minutes.',
+    };
   }
 
   const blacklist = await getDealBlacklist();
   if (shouldSkipBadProducts(textContent, blacklist)) {
     console.log('Skipping blocked product deal for blocked brand');
-    return true;
+    return {
+      code: 'blocked_product',
+      filter: 'blocked brand/product filter',
+      reason: 'The message matches a blocked brand and product combination.',
+    };
   }
 
   if (isLowContext(textContent)) {
     console.log('Skipping low-context message');
-    return true;
+    return {
+      code: 'low_context',
+      filter: 'low-context filter',
+      reason: 'The message does not contain enough product or offer context.',
+    };
   }
 
   const isSaleMode = process.env.IS_SALE_MODE === 'true';
   if (isSaleMode && !isProfitableProduct(textContent)) {
     console.log('Skipping non-profitable product in sale mode');
-    return true;
+    return {
+      code: 'sale_mode_unprofitable',
+      filter: 'sale-mode profitability filter',
+      reason: 'The product is not eligible while sale mode is enabled.',
+    };
   }
 
-  return false;
+  return null;
 }
 
 function escapeRegExp(value: string): string {
@@ -168,7 +198,7 @@ async function ensureBaselineObservation(message: InstanceType<typeof TelegramMe
   });
 }
 
-export async function saveMessage(message: TelegramInboundMessage) {
+export async function saveMessage(message: TelegramInboundMessage, options: SaveMessageOptions = {}) {
   try {
     const { message_id, chat, date, text: originalText, caption, photo } = message;
     const textContent = originalText || caption || '';
@@ -177,13 +207,20 @@ export async function saveMessage(message: TelegramInboundMessage) {
     const sourceKey = `${channelId}:${telegramMessageId}`;
     const observedAt = new Date(date * 1000);
 
-    if (await shouldSkipMessage(textContent, date)) {
+    const filterRejection = await getFilterRejection(textContent, date);
+    if (filterRejection) {
+      options.onRejected?.(filterRejection);
       return null;
     }
 
     const existingObservation = await DealPriceObservation.exists({ sourceKey });
     if (existingObservation) {
       console.log('Skipping duplicate Telegram source observation');
+      options.onRejected?.({
+        code: 'duplicate_source',
+        filter: 'duplicate-source filter',
+        reason: 'This source message has already been processed.',
+      });
       return null;
     }
 
@@ -194,6 +231,11 @@ export async function saveMessage(message: TelegramInboundMessage) {
 
     if (existingMessage) {
       console.log('Skipping duplicate Telegram message ID');
+      options.onRejected?.({
+        code: 'duplicate_message',
+        filter: 'duplicate-message filter',
+        reason: 'A message with this source ID has already been processed.',
+      });
       return null;
     }
 
