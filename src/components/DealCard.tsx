@@ -31,14 +31,14 @@ interface DealCardProps {
   category?: string;
   createdAt?: string;
   imageUrl?: string;
-  price?: string;
+  price?: number | null;
   telegramFileId?: string;
   onDelete?: (id: string) => void;
   onEdit?: (
     id: string,
     newText: string,
     newImageUrl: string | null,
-    newPrice: string | null,
+    newPrice: number | null,
   ) => void;
   onCategoryUpdate?: (id: string, category: string) => void;
   isAdmin?: boolean;
@@ -200,7 +200,7 @@ const DealCard = memo(({
     id: string,
     newText: string,
     newImageUrl: string | null,
-    newPrice: string | null,
+    newPrice: number | null,
   ) => {
     setLocalDescription(newText);
     setLocalTitle(newText.split('\n')[0] || 'New Deal');

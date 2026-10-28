@@ -33,7 +33,7 @@ type UpdateCategoryBody = { category?: string };
 type UpdateMessageBody = {
 	text?: string;
 	imageUrl?: string | null;
-	price?: string | null;
+	price?: number | string | null;
 	priceObservedAt?: string | null;
 };
 
@@ -57,6 +57,19 @@ function getMessagePreview(text: string) {
 		.replace(/\s+/g, ' ')
 		.trim()
 		.slice(0, 180);
+}
+
+function parseOptionalPriceInput(value: number | string | null | undefined) {
+	if (value === undefined) return undefined;
+	if (value === null || value === '') return null;
+	if (typeof value === 'number') {
+		return Number.isInteger(value) && value > 0 ? value : Number.NaN;
+	}
+
+	const normalized = value.trim().replace(/[₹,\s]/g, '');
+	return /^\d+$/.test(normalized) && Number(normalized) > 0
+		? Number(normalized)
+		: Number.NaN;
 }
 
 // Handle Telegram webhook updates
@@ -124,13 +137,14 @@ export const updateMessageText = async (req: UpdateMessageRequest, res: Response
 			return res.status(404).json({ error: 'Message not found' });
 		}
 
-		const normalizedPrice = typeof price === 'string'
-			? price.replace(/[^\d]/g, '')
-			: '';
+		const normalizedPrice = parseOptionalPriceInput(price);
+		if (Number.isNaN(normalizedPrice)) {
+			return res.status(400).json({ error: 'Price must be a positive number' });
+		}
 		let observedAt: Date | null = null;
 		if (priceObservedAt) {
 			observedAt = new Date(priceObservedAt);
-			if (Number(normalizedPrice) <= 0 || Number.isNaN(observedAt.getTime())) {
+			if (typeof normalizedPrice !== 'number' || Number.isNaN(observedAt.getTime())) {
 				return res.status(400).json({
 					error: 'A valid price and observation date are required for price history',
 				});
@@ -139,11 +153,7 @@ export const updateMessageText = async (req: UpdateMessageRequest, res: Response
 
 		message.text = text;
 		message.imageUrl = imageUrl;
-		if (typeof price === 'string') {
-			message.price = normalizedPrice || null;
-		} else if (price === null || price === '') {
-			message.price = null;
-		}
+		if (normalizedPrice !== undefined) message.price = normalizedPrice;
 		let manualSourceKey: string | null = null;
 		if (observedAt) {
 			manualSourceKey = `manual:${message._id}:${randomUUID()}`;
@@ -151,7 +161,7 @@ export const updateMessageText = async (req: UpdateMessageRequest, res: Response
 				productId: message._id,
 				sourceKey: manualSourceKey,
 				observedAt,
-				price: Number(normalizedPrice),
+				price: normalizedPrice,
 				link: message.link || null,
 				matchMethod: 'manual',
 				matchConfidence: 1,

@@ -249,7 +249,7 @@ const Admin = () => {
 		id: string,
 		newText: string,
 		newImageUrl: string | null,
-		newPrice: string | null,
+		newPrice: number | null,
 	) => {
 		try {
 			const success = await updateMessageText(

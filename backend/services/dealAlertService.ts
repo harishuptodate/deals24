@@ -6,7 +6,7 @@ import { isEmailDeliveryConfigured, sendDealAlertEmail } from './emailService';
 type SavedDeal = {
   _id: unknown;
   text?: string | null;
-  price?: string | null;
+  price?: number | null;
   link?: string | null;
   imageUrl?: string | null;
   telegramFileId?: string | null;

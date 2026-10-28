@@ -188,7 +188,7 @@ export const useDealsPage = () => {
     id: string,
     newText: string,
     newImageUrl: string | null,
-    newPrice: string | null,
+    newPrice: number | null,
   ) => {
     if (!id) {
       toast({
@@ -203,7 +203,7 @@ export const useDealsPage = () => {
       ...message,
       text: newText,
       imageUrl: newImageUrl || undefined,
-      price: newPrice || undefined,
+      price: newPrice,
     }));
   };
 

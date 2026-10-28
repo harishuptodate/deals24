@@ -8,7 +8,7 @@ export type MatchableAlert = {
 export type MatchableDeal = {
   id: string;
   text: string;
-  price?: string | number | null;
+  price?: number | null;
 };
 
 export function normalizeMatchText(value: string): string {

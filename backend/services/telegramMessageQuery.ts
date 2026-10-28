@@ -1,5 +1,6 @@
 import type { MessageQueryOptions } from './telegramTypes';
 import mongoose from 'mongoose';
+import { buildDealSearchPlan } from '../utils/dealSearch';
 
 type QueryableTelegramMessage = {
   aggregate: <T>(pipeline: unknown[]) => Promise<T[]>;
@@ -7,11 +8,12 @@ type QueryableTelegramMessage = {
 
 type TelegramMessageQuery = Record<string, unknown> & {
   _id?: Record<string, mongoose.Types.ObjectId>;
+  $text?: { $search: string };
   $or?: Record<string, unknown>[];
   channelId?: string;
   category?: string;
   date?: Record<string, Date>;
-  $and?: ReturnType<typeof buildSearchQuery>;
+  price?: Record<string, number | null>;
 };
 
 type TelegramMessageAggregateRow = {
@@ -24,10 +26,11 @@ type TelegramMessageAggregateRow = {
   telegramFileId?: string;
   channelId?: string;
   category?: string;
-  price?: string;
+  price?: number | null;
   clicks?: number;
   createdAt?: Date;
-  priceNumber?: number | null;
+  searchScore?: number;
+  matchCoverage?: number;
 };
 
 type CountRow = { count: number };
@@ -57,50 +60,6 @@ function parseDateOnlyToUtc(dateStr: string, endOfDay: boolean): Date | null {
   return parsed;
 }
 
-function buildSearchQuery(search: string) {
-  const rawSearch = search.trim();
-  const words = rawSearch.split(/\s+/);
-
-  const normalizeWord = (word: string) => {
-    const lc = word.toLowerCase();
-    const stems: Record<string, string> = {
-      inches: 'inch',
-      cms: 'cm',
-      kgs: 'kg',
-      lbs: 'lb',
-      tons: 'ton',
-      hz: 'hz',
-      gbs: 'gb',
-    };
-    return stems[lc] || word;
-  };
-
-  const normalizedWords = words.map(normalizeWord);
-  const unitWords = ['cm', 'inch', 'kg', 'gb', 'hz', 'tb', 'ton', 'lb'];
-
-  const regexQueries = normalizedWords.map((word) => {
-    const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const isLooseMatch = /^\d+$/.test(word) || unitWords.includes(word.toLowerCase());
-    const pattern = isLooseMatch ? escapedWord : `\\b${escapedWord}\\b`;
-    return { text: { $regex: new RegExp(pattern, 'i') } };
-  });
-
-  const escapedFullSearch = rawSearch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const urlExclusionRegex = new RegExp(
-    `(https?:\\/\\/\\S*${escapedFullSearch}\\S*)|(www\\.\\S*${escapedFullSearch}\\S*)`,
-    'i',
-  );
-
-  return [
-    ...regexQueries,
-    {
-      text: {
-        $not: { $regex: urlExclusionRegex },
-      },
-    },
-  ];
-}
-
 function parseNumericFilter(value: unknown): number | null {
   if (value === undefined || value === null || value === '') return null;
   if (!/^\d+$/.test(String(value))) return null;
@@ -125,34 +84,23 @@ export async function getMessagesFromStore(
     sort,
   } = options;
 
-  const numericLimit = parseInt(String(limit), 10);
+  const parsedLimit = parseInt(String(limit), 10);
+  const numericLimit = Number.isFinite(parsedLimit) ? Math.min(Math.max(parsedLimit, 1), 50) : 10;
   const isPriceAsc = sort === 'price_asc';
   const isPriceDesc = sort === 'price_desc';
   const isPriceSort = isPriceAsc || isPriceDesc;
   const isOldestFirst = sort === 'oldest';
+  const hasSearchInput = typeof search === 'string' && search.trim().length > 0;
+  const searchPlan = hasSearchInput ? buildDealSearchPlan(search.slice(0, 200)) : null;
+  if (searchPlan && !searchPlan.textSearch) {
+    return { data: [], hasMore: false, nextCursor: null, totalDealsCount: 0 };
+  }
+  const isRelevanceSort = Boolean(searchPlan) && !isPriceSort && !isOldestFirst;
   const objectId = mongoose.Types.ObjectId;
 
   const query: TelegramMessageQuery = {};
   if (channelId) {
     query.channelId = channelId;
-  }
-
-  if (cursor && !isPriceSort) {
-    const [cursorDateRaw, cursorIdRaw] = String(cursor).split('|');
-    const cursorDate = new Date(Number(cursorDateRaw));
-    if (
-      cursorIdRaw &&
-      objectId.isValid(cursorIdRaw) &&
-      !Number.isNaN(cursorDate.getTime())
-    ) {
-      const comparison = isOldestFirst ? '$gt' : '$lt';
-      query.$or = [
-        { date: { [comparison]: cursorDate } },
-        { date: cursorDate, _id: { [comparison]: new objectId(cursorIdRaw) } },
-      ];
-    } else if (objectId.isValid(cursor)) {
-      query._id = { [isOldestFirst ? '$gt' : '$lt']: new objectId(cursor) };
-    }
   }
 
   if (category) {
@@ -176,46 +124,40 @@ export async function getMessagesFromStore(
     }
   }
 
-  if (search) {
-    query.$and = buildSearchQuery(search);
+  if (searchPlan) {
+    query.$text = { $search: searchPlan.textSearch };
   }
 
   const minPriceNumber = parseNumericFilter(minPrice);
   const maxPriceNumber = parseNumericFilter(maxPrice);
   const hasPriceFilter = minPriceNumber !== null || maxPriceNumber !== null;
 
-  const addNumericPriceStage = {
-    $addFields: {
-      priceNumber: {
-        $convert: {
-          input: '$price',
-          to: 'double',
-          onError: null,
-          onNull: null,
-        },
-      },
-    },
-  };
-
-  const buildPriceRangeMatch = () => {
-    const priceRange: Record<string, number> = {};
+  if (hasPriceFilter || isPriceSort) {
+    const priceRange: Record<string, number | null> = {};
     if (minPriceNumber !== null) priceRange.$gte = minPriceNumber;
     if (maxPriceNumber !== null) priceRange.$lte = maxPriceNumber;
-    return Object.keys(priceRange).length > 0 ? { priceNumber: priceRange } : null;
-  };
-
-  const pipelineBase: Array<Record<string, unknown>> = [{ $match: query }];
-  if (hasPriceFilter || isPriceSort) {
-    pipelineBase.push(addNumericPriceStage);
+    if (isPriceSort) priceRange.$ne = null;
+    query.price = priceRange;
   }
 
-  const priceRangeMatch = buildPriceRangeMatch();
-  if (priceRangeMatch) {
-    pipelineBase.push({ $match: priceRangeMatch });
-  }
+  const filterPipeline: Array<Record<string, unknown>> = [{ $match: query }];
 
-  if (isPriceSort) {
-    pipelineBase.push({ $match: { priceNumber: { $ne: null } } });
+  const resultPipeline = [...filterPipeline];
+  if (searchPlan) {
+    resultPipeline.push({
+      $addFields: {
+        searchScore: { $meta: 'textScore' },
+        matchCoverage: {
+          $sum: searchPlan.tokenGroups.map((group) => ({
+            $cond: [
+              { $gt: [{ $size: { $setIntersection: ['$searchTokens', group] } }, 0] },
+              1,
+              0,
+            ],
+          })),
+        },
+      },
+    });
   }
 
   if (cursor && isPriceSort) {
@@ -228,20 +170,78 @@ export async function getMessagesFromStore(
 
     if (isValidCursor) {
       const cursorId = new objectId(cursorIdRaw);
-      pipelineBase.push({
+      resultPipeline.push({
         $match: {
           $or: [
-            { priceNumber: { [isPriceAsc ? '$gt' : '$lt']: cursorPrice } },
-            { priceNumber: cursorPrice, _id: { [isPriceAsc ? '$gt' : '$lt']: cursorId } },
+            { price: { [isPriceAsc ? '$gt' : '$lt']: cursorPrice } },
+            { price: cursorPrice, _id: { [isPriceAsc ? '$gt' : '$lt']: cursorId } },
           ],
         },
+      });
+    }
+  } else if (cursor && isRelevanceSort) {
+    const [
+      cursorCoverageRaw,
+      cursorScoreRaw,
+      cursorDateRaw,
+      cursorClicksRaw,
+      cursorIdRaw,
+    ] = String(cursor).split('|');
+    const cursorCoverage = Number(cursorCoverageRaw);
+    const cursorScore = Number(cursorScoreRaw);
+    const cursorDate = new Date(Number(cursorDateRaw));
+    const cursorClicks = Number(cursorClicksRaw);
+    const isValidCursor =
+      Number.isFinite(cursorCoverage) &&
+      Number.isFinite(cursorScore) &&
+      !Number.isNaN(cursorDate.getTime()) &&
+      Number.isFinite(cursorClicks) &&
+      Boolean(cursorIdRaw) &&
+      objectId.isValid(cursorIdRaw);
+
+    if (isValidCursor) {
+      const cursorId = new objectId(cursorIdRaw);
+      resultPipeline.push({
+        $match: {
+          $or: [
+            { matchCoverage: { $lt: cursorCoverage } },
+            { matchCoverage: cursorCoverage, searchScore: { $lt: cursorScore } },
+            { matchCoverage: cursorCoverage, searchScore: cursorScore, date: { $lt: cursorDate } },
+            { matchCoverage: cursorCoverage, searchScore: cursorScore, date: cursorDate, clicks: { $lt: cursorClicks } },
+            { matchCoverage: cursorCoverage, searchScore: cursorScore, date: cursorDate, clicks: cursorClicks, _id: { $lt: cursorId } },
+          ],
+        },
+      });
+    }
+  } else if (cursor) {
+    const [cursorDateRaw, cursorIdRaw] = String(cursor).split('|');
+    const cursorDate = new Date(Number(cursorDateRaw));
+    if (
+      cursorIdRaw &&
+      objectId.isValid(cursorIdRaw) &&
+      !Number.isNaN(cursorDate.getTime())
+    ) {
+      const comparison = isOldestFirst ? '$gt' : '$lt';
+      resultPipeline.push({
+        $match: {
+          $or: [
+            { date: { [comparison]: cursorDate } },
+            { date: cursorDate, _id: { [comparison]: new objectId(cursorIdRaw) } },
+          ],
+        },
+      });
+    } else if (objectId.isValid(cursor)) {
+      resultPipeline.push({
+        $match: { _id: { [isOldestFirst ? '$gt' : '$lt']: new objectId(cursor) } },
       });
     }
   }
 
   const sortStage = isPriceSort
-    ? { $sort: { priceNumber: isPriceAsc ? 1 : -1, _id: isPriceAsc ? 1 : -1 } }
-    : { $sort: { date: isOldestFirst ? 1 : -1, _id: isOldestFirst ? 1 : -1 } };
+    ? { $sort: { price: isPriceAsc ? 1 : -1, _id: isPriceAsc ? 1 : -1 } }
+    : isRelevanceSort
+      ? { $sort: { matchCoverage: -1, searchScore: -1, date: -1, clicks: -1, _id: -1 } }
+      : { $sort: { date: isOldestFirst ? 1 : -1, _id: isOldestFirst ? 1 : -1 } };
 
   const projectionStage = {
     $project: {
@@ -256,14 +256,15 @@ export async function getMessagesFromStore(
       price: 1,
       clicks: 1,
       createdAt: 1,
-      priceNumber: 1,
+      searchScore: 1,
+      matchCoverage: 1,
     },
   };
 
   const [totalDealsResult, messages] = await Promise.all([
-    TelegramMessage.aggregate<CountRow>([...pipelineBase, { $count: 'count' }]),
+    TelegramMessage.aggregate<CountRow>([...filterPipeline, { $count: 'count' }]),
     TelegramMessage.aggregate<TelegramMessageAggregateRow>([
-      ...pipelineBase,
+      ...resultPipeline,
       sortStage,
       { $limit: numericLimit + 1 },
       projectionStage,
@@ -273,10 +274,10 @@ export async function getMessagesFromStore(
   const hasMore = messages.length > numericLimit;
   const data = hasMore ? messages.slice(0, numericLimit) : messages;
 
-  const processedData = data.map((item) => ({
-    ...item,
-    id: item._id.toString(),
-  }));
+  const processedData = data.map((item) => {
+    const { searchScore: _searchScore, matchCoverage: _matchCoverage, ...message } = item;
+    return { ...message, id: message._id.toString() };
+  });
 
   const totalDealsCount = totalDealsResult?.[0]?.count || 0;
   const nextCursor = (() => {
@@ -285,9 +286,12 @@ export async function getMessagesFromStore(
     if (isPriceSort) {
       const lastWithPrice = [...data]
         .reverse()
-        .find((item) => typeof item.priceNumber === 'number');
+        .find((item) => typeof item.price === 'number');
       if (!lastWithPrice) return null;
-      return `${lastWithPrice.priceNumber}|${lastWithPrice._id}`;
+      return `${lastWithPrice.price}|${lastWithPrice._id}`;
+    }
+    if (isRelevanceSort) {
+      return `${lastItem.matchCoverage ?? 0}|${lastItem.searchScore ?? 0}|${new Date(lastItem.date || 0).getTime()}|${lastItem.clicks || 0}|${lastItem._id}`;
     }
     return `${new Date(lastItem.date || 0).getTime()}|${lastItem._id}`;
   })();

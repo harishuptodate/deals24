@@ -20,7 +20,7 @@ test('normalizes formatted prices', () => {
 });
 
 test('applies an optional target price to deal alerts', () => {
-  const deal = { id: 'deal-1', text: 'Laptop', price: '74999' };
+  const deal = { id: 'deal-1', text: 'Laptop', price: 74999 };
   assert.equal(alertMatchesDeal({ type: 'deal', dealId: 'deal-1' }, deal), true);
   assert.equal(alertMatchesDeal({ type: 'deal', dealId: 'deal-1', targetPrice: 75000 }, deal), true);
   assert.equal(alertMatchesDeal({ type: 'deal', dealId: 'deal-1', targetPrice: 70000 }, deal), false);

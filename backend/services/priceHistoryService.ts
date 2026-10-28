@@ -12,7 +12,7 @@ export async function syncCurrentDealPrice(dealId: string) {
 
   return TelegramMessage.findByIdAndUpdate(
     dealId,
-    { price: latestObservation?.price ? String(latestObservation.price) : null },
+    { price: latestObservation?.price || null },
     { new: true },
   );
 }
@@ -39,17 +39,17 @@ export async function getPriceHistory(dealId: string) {
     link: observation.link || undefined,
   }));
 
-  if (points.length === 0 && deal.price && Number(deal.price) > 0) {
+  if (points.length === 0 && deal.price && deal.price > 0) {
     points.push({
       id: `legacy-${deal._id}`,
       observedAt: new Date(deal.date || deal.createdAt).toISOString(),
-      price: Number(deal.price),
+      price: deal.price,
       link: deal.link || undefined,
     });
   }
 
   const prices = points.map((point) => point.price);
-  const storedCurrentPrice = Number(deal.price) || null;
+  const storedCurrentPrice = deal.price || null;
   const currentPrice = prices.at(-1) ?? storedCurrentPrice;
   const previousPrice = prices.at(-2) ?? null;
   const changePercent = currentPrice && previousPrice
@@ -102,7 +102,7 @@ export async function updatePriceHistoryPoint(input: {
   const deal = await syncCurrentDealPrice(dealId);
   return {
     observation,
-    currentPrice: deal?.price ? Number(deal.price) : null,
+    currentPrice: deal?.price || null,
   };
 }
 
@@ -119,5 +119,5 @@ export async function deletePriceHistoryPoint(dealId: string, observationId: str
   }
 
   const deal = await syncCurrentDealPrice(dealId);
-  return { currentPrice: deal?.price ? Number(deal.price) : null };
+  return { currentPrice: deal?.price || null };
 }

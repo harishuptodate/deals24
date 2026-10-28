@@ -114,7 +114,7 @@ export const updateMessageText = async (
   messageId: string,
   text: string,
   imageUrl: string | null = null,
-  price: string | null = null,
+  price: number | null = null,
   priceObservedAt: string | null = null,
 ): Promise<boolean> => {
   if (!messageId) return false;

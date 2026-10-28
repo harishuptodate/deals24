@@ -21,12 +21,12 @@ interface EditDealDialogProps {
 	id: string;
 	initialText: string;
 	initialImageUrl: string | null;
-	initialPrice?: string | null;
+	initialPrice?: number | null;
 	onSuccess: (
 		id: string,
 		newText: string,
 		newImageUrl: string | null,
-		newPrice: string | null,
+		newPrice: number | null,
 	) => void;
 }
 
@@ -44,7 +44,7 @@ const EditDealDialog = ({
 	const [editedText, setEditedText] = useState(initialText);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [editedImageUrl, setEditedImageUrl] = useState(initialImageUrl || null);
-	const [editedPrice, setEditedPrice] = useState(initialPrice ?? '');
+	const [editedPrice, setEditedPrice] = useState(initialPrice ? String(initialPrice) : '');
 	const [recordPriceHistory, setRecordPriceHistory] = useState(false);
 	const [priceObservedAt, setPriceObservedAt] = useState(new Date());
 
@@ -52,7 +52,7 @@ const EditDealDialog = ({
 		if (!isOpen) return;
 		setEditedText(initialText);
 		setEditedImageUrl(initialImageUrl || null);
-		setEditedPrice(initialPrice ?? '');
+		setEditedPrice(initialPrice ? String(initialPrice) : '');
 		setRecordPriceHistory(false);
 		setPriceObservedAt(new Date());
 	}, [isOpen, initialText, initialImageUrl, initialPrice]);
@@ -78,13 +78,14 @@ const EditDealDialog = ({
 		}
 
 		setIsSubmitting(true);
+		const numericPrice = editedPrice ? Number(editedPrice) : null;
 
 		try {
 			const success = await updateMessageText(
 				id,
 				editedText,
 				editedImageUrl,
-				editedPrice || null,
+				numericPrice,
 				recordPriceHistory ? priceObservedAt.toISOString() : null,
 			);
 			if (success) {
@@ -96,7 +97,7 @@ const EditDealDialog = ({
 					description: 'Deal was updated successfully',
 				});
 				onOpenChange(false);
-				onSuccess(id, editedText, editedImageUrl, editedPrice || null);
+				onSuccess(id, editedText, editedImageUrl, numericPrice);
 			} else {
 				toast({
 					title: 'Error',
@@ -157,7 +158,7 @@ const EditDealDialog = ({
 							value={editedPrice}
 							onChange={(e) => {
 								setEditedPrice(e.target.value);
-								setRecordPriceHistory(e.target.value !== (initialPrice ?? ''));
+								setRecordPriceHistory(e.target.value !== (initialPrice ? String(initialPrice) : ''));
 							}}
 							placeholder="Price (numbers only)"
 							className="min-h-[40px]"

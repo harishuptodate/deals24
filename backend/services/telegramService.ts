@@ -153,7 +153,7 @@ async function findMatchCandidates(
   }));
 }
 
-function parsePrice(price: string): number | null {
+function parsePrice(price: string | number | null | undefined): number | null {
   const value = Number(price);
   return Number.isFinite(value) && value > 0 ? value : null;
 }
@@ -184,7 +184,7 @@ async function ensureBaselineObservation(message: InstanceType<typeof TelegramMe
   const existingHistory = await DealPriceObservation.exists({ productId: message._id });
   if (existingHistory) return;
 
-  const baselinePrice = parsePrice(message.price || '');
+  const baselinePrice = parsePrice(message.price);
   if (!baselinePrice) return;
 
   await recordObservation({
@@ -357,7 +357,7 @@ export async function saveMessage(message: TelegramInboundMessage, options: Save
       matchedMessage.imageUrl = imageData.imageUrl || matchedMessage.imageUrl;
       matchedMessage.telegramFileId = imageData.telegramFileId || matchedMessage.telegramFileId;
       matchedMessage.category = processedContent.category;
-      matchedMessage.price = processedContent.price || matchedMessage.price;
+      matchedMessage.price = numericPrice ?? matchedMessage.price;
       matchedMessage.amazonAsin = amazonAsin || matchedMessage.amazonAsin;
       matchedMessage.identity = processedContent.identity || matchedMessage.identity;
       matchedMessage.identityKey = identityKey || matchedMessage.identityKey;
@@ -367,7 +367,7 @@ export async function saveMessage(message: TelegramInboundMessage, options: Save
         await processDealAlerts({
           _id: updatedMessage._id,
           text: updatedMessage.text,
-          price: processedContent.price || null,
+          price: updatedMessage.price,
           link: updatedMessage.link,
           imageUrl: updatedMessage.imageUrl,
           telegramFileId: updatedMessage.telegramFileId,
@@ -390,7 +390,7 @@ export async function saveMessage(message: TelegramInboundMessage, options: Save
       imageUrl: imageData.imageUrl,
       telegramFileId: imageData.telegramFileId,
       category: processedContent.category,
-      price: processedContent.price,
+      price: numericPrice,
       amazonAsin,
       identity: processedContent.identity,
       identityKey,

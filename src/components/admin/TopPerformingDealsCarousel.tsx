@@ -61,7 +61,7 @@ type FormattedDeal = {
 	createdAt?: string;
 	clicks: number;
 	imageUrl?: string;
-	price: string | null;
+	price: number | null;
 	telegramFileId?: string;
 	extraData: {
 		formattedCreatedDate: string;
@@ -78,7 +78,7 @@ interface TopPerformingDealsCarouselProps {
 		id: string,
 		newText: string,
 		newImageUrl: string | null,
-		newPrice: string | null,
+		newPrice: number | null,
 	) => void;
 	onCategoryUpdate?: (id: string, category: string) => void;
 }
@@ -222,7 +222,7 @@ const AutoCarousel = ({
 		id: string,
 		newText: string,
 		newImageUrl: string | null,
-		newPrice: string | null,
+		newPrice: number | null,
 	) => void;
 	onCategoryUpdate?: (id: string, category: string) => void;
 	formatDealForCard: (deal: TelegramMessage) => FormattedDeal;
@@ -328,7 +328,7 @@ const CustomDealCard = ({
 		id: string,
 		newText: string,
 		newImageUrl: string | null,
-		newPrice: string | null,
+		newPrice: number | null,
 	) => void;
 	onCategoryUpdate?: (id: string, category: string) => void;
 }) => {
@@ -473,7 +473,7 @@ const CustomDealCard = ({
 		id: string,
 		newText: string,
 		newImageUrl: string | null,
-		newPrice: string | null,
+		newPrice: number | null,
 	) => {
 		if (onEdit) {
 			onEdit(id, newText, newImageUrl, newPrice);

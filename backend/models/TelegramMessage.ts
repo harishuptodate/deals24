@@ -1,4 +1,10 @@
 import mongoose from 'mongoose';
+import {
+  buildDealSearchFields,
+  DEAL_SEARCH_INDEX_FIELDS,
+  DEAL_SEARCH_INDEX_NAME,
+  DEAL_SEARCH_INDEX_WEIGHTS,
+} from '../utils/dealSearch';
 
 const telegramMessageSchema = new mongoose.Schema({
   messageId: {
@@ -8,6 +14,14 @@ const telegramMessageSchema = new mongoose.Schema({
   text: {
     type: String,
     required: true
+  },
+  searchText: {
+    type: String,
+    default: ''
+  },
+  searchTokens: {
+    type: [String],
+    default: []
   },
   date: {
     type: Date,
@@ -32,7 +46,7 @@ const telegramMessageSchema = new mongoose.Schema({
     required: false
   },
   price: {
-    type: String,
+    type: Number,
     default: null,
     required: false
   },
@@ -77,11 +91,17 @@ telegramMessageSchema.index({ price: 1 });
 telegramMessageSchema.index({ amazonAsin: 1 }, { sparse: true });
 telegramMessageSchema.index({ identityKey: 1 }, { sparse: true });
 telegramMessageSchema.index({ lastSeenAt: -1 });
-telegramMessageSchema.index({
-  text: 'text',
-  'identity.canonicalName': 'text',
-  'identity.brand': 'text',
-  'identity.model': 'text',
+telegramMessageSchema.index(DEAL_SEARCH_INDEX_FIELDS, {
+  name: DEAL_SEARCH_INDEX_NAME,
+  default_language: 'none',
+  weights: DEAL_SEARCH_INDEX_WEIGHTS,
+});
+
+telegramMessageSchema.pre('validate', function syncDerivedFields(next) {
+  const searchFields = buildDealSearchFields({ text: this.text, identity: this.identity });
+  this.searchText = searchFields.searchText;
+  this.searchTokens = searchFields.searchTokens;
+  next();
 });
 
 const TelegramMessage = mongoose.model('TelegramMessage', telegramMessageSchema);
