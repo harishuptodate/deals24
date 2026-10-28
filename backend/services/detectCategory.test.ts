@@ -79,6 +79,35 @@ test('routes common miscellaneous aliases into the existing six categories', () 
 	assert.equal(detectCategory('Non-Stick Cookware Set'), 'electronics-home');
 });
 
+test('classifies major products found in the miscellaneous export', () => {
+	assert.equal(
+		detectCategory('Bosch 302L Frost Free Triple Door Refrigerator'),
+		'electronics-home',
+	);
+	assert.equal(detectCategory('XGIMI 1080p Full HD Projector'), 'gadgets-accessories');
+	assert.equal(detectCategory('Canon EOS R100 Mirrorless Camera'), 'gadgets-accessories');
+	assert.equal(detectCategory('Sony Full-Frame Camera Lens'), 'gadgets-accessories');
+	assert.equal(detectCategory('Crossbeats 4K Dash Cam for Car'), 'gadgets-accessories');
+	assert.equal(detectCategory('JBL Wireless Bluetooth Party Speaker'), 'gadgets-accessories');
+	assert.equal(detectCategory('Lenovo Idea Tab 8GB RAM'), 'gadgets-accessories');
+	assert.equal(detectCategory('Xiaomi Air Purifier 4 Lite'), 'electronics-home');
+	assert.equal(detectCategory('LG Washer + Dryer'), 'electronics-home');
+	assert.equal(detectCategory('Philips Digital Airfryer'), 'electronics-home');
+	assert.equal(detectCategory('ECOVACS Robot Vacuum & Mop'), 'electronics-home');
+	assert.equal(detectCategory('HP Omnibook 5 OLED 16GB/1TB'), 'laptops');
+	assert.equal(detectCategory('Lenovo LOQ Ryzen 7 16GB/512GB'), 'laptops');
+	assert.equal(detectCategory('OnePlus 15R 12GB+256GB'), 'mobile-phones');
+	assert.equal(detectCategory('Samsung Galaxy S25 Ultra'), 'mobile-phones');
+	assert.equal(detectCategory('OnePlus, Pad 4 8GB RAM'), 'gadgets-accessories');
+	assert.equal(detectCategory('Samsung Galaxy Watch8 Classic'), 'gadgets-accessories');
+	assert.equal(detectCategory('Firetv stick HD'), 'gadgets-accessories');
+	assert.equal(detectCategory('ASUS TUF A15 16GB RAM 512GB SSD'), 'laptops');
+	assert.equal(detectCategory('Centuary Mattresses Sleepables'), 'electronics-home');
+	assert.equal(detectCategory('Samsung 12 kg FrontLoad'), 'electronics-home');
+	assert.equal(detectCategory('Amazon Basics Digital Safe With Keypad'), 'electronics-home');
+	assert.equal(detectCategory('Xiaomi 65 inch 4K QLED'), 'electronics-home');
+});
+
 test('keeps non-product promotional messages miscellaneous', () => {
 	assert.equal(
 		detectCategory('Open IndusInd Zero Balance Account and enter your mobile number'),
