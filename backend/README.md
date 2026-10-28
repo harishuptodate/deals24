@@ -47,10 +47,22 @@ The command is safe to rerun. It updates the existing index definition and waits
 Every new deal first uses local headline rules to extract available brand, model, product type, and variants. Uncertain values are left empty instead of guessed. When enabled, Gemini can enrich these local results for deals that already require the AI processing path.
 
 ```env
-GEMINI_IDENTITY_EXTRACTION_ENABLED=true
+GEMINI_DEAL_ENRICHMENT_ENABLED=true
 ```
 
 This variable is the default. An authenticated admin can change the value from the Admin page; that override is stored in MongoDB and takes precedence. Turning it off prevents new ingestion requests from being sent to Gemini while local extraction continues.
+
+The previous `GEMINI_IDENTITY_EXTRACTION_ENABLED` variable and stored admin override remain supported. A single enrichment operation returns normalized text, category, price, identity, and candidate matching. Verified prices/categories and ASIN matches take precedence in application code. Existing API-key failure rotation can retry a failed operation; separate per-task calls are never issued. Clean, complete Amazon deals and inexpensive/fashion deals stay local. Identity uncertainty can trigger the combined operation for eligible deals. Logs record the reason and candidate count.
+
+## Search previews and Redis budget
+
+Default search results and previews prioritize query concept coverage, then show the newest deals within each match group. For example, S25 Ultra phones rank above newer TVs matching only Ultra; newer S25 Ultra deals rank above older higher-scoring S25 Ultra deals. Text relevance and engagement break ties in full results. Explicit price and oldest-first sorts take precedence. Pagination follows the same coverage-then-date ordering.
+
+`GET /api/telegram/search/suggestions?q=` returns up to five recent matching deals, five product names and three categories, respecting category/date/price filters. Atlas autocomplete uses the same search index; run `npm run atlas-search:index` after deploying this definition. Mongo prefix search provides previews while Atlas is unavailable or rebuilding. Deal age means last seen, not verified stock availability.
+
+The navbar debounces previews by 275ms, cancels obsolete requests, and keeps recent searches on the device. On `/deals`, typing updates results after 350ms with history replacement; committing a search pushes a history entry. Browser cache entries last 30 seconds. The mobile search opens a full-width sheet. Empty results offer broader stored-product suggestions and explicit filter removal.
+
+Redis preview payloads expire after 45 seconds. There are at most 256 cache slots, each capped at 12 KiB (3 MiB maximum serialized payload, plus Redis overhead). Fingerprints prevent cache-slot collisions returning another query's results. Popularity retains only 100 terms with a seven-day expiry and at most 128 one-minute selection guards. Only submissions/selections are counted. Popular searches fall back to defaults; unavailable Redis is bypassed with a 350ms read budget and cache writes do not delay results. No new Redis connections are created and no Gemini calls happen during search. Other existing cache usage shares the instance's remaining memory.
 
 ### Deal alert email configuration
 

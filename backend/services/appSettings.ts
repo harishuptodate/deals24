@@ -8,7 +8,8 @@ export type GeminiIdentitySetting = {
 };
 
 export function getGeminiIdentityEnvironmentDefault(): boolean {
-  return process.env.GEMINI_IDENTITY_EXTRACTION_ENABLED !== 'false';
+  return (process.env.GEMINI_DEAL_ENRICHMENT_ENABLED
+    ?? process.env.GEMINI_IDENTITY_EXTRACTION_ENABLED) !== 'false';
 }
 
 export async function getGeminiIdentitySetting(): Promise<GeminiIdentitySetting> {

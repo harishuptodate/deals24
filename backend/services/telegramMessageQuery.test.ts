@@ -3,7 +3,7 @@ import test from 'node:test';
 import mongoose from 'mongoose';
 import { getMessagesFromStore } from './telegramMessageQuery';
 
-test('uses concept coverage, text relevance, recency, and clicks for search ranking', async () => {
+test('prioritizes query coverage, then newest matches before text score and clicks', async () => {
   const pipelines: unknown[][] = [];
   const messageId = new mongoose.Types.ObjectId();
   const store = {
@@ -88,8 +88,72 @@ test('uses concept coverage, text relevance, recency, and clicks for search rank
     },
   });
   assert.deepEqual(resultPipeline[2], {
-    $sort: { matchCoverage: -1, searchScore: -1, date: -1, clicks: -1, _id: -1 },
+    $sort: { matchCoverage: -1, date: -1, searchScore: -1, clicks: -1, _id: -1 },
   });
+});
+
+test('ranks S25 Ultra phones before newer Ultra HD TVs and paginates complete matches newest first', async () => {
+  const newerDate = new Date('2026-10-29T10:00:00Z');
+  const olderDate = new Date('2026-10-28T10:00:00Z');
+  const rows = [
+    { _id: new mongoose.Types.ObjectId(), text: 'Samsung S25 Ultra', date: olderDate, matchCoverage: 2, searchScore: 100, clicks: 500, price: 50000 },
+    { _id: new mongoose.Types.ObjectId(), text: 'Hisense Ultra HD TV', date: newerDate, matchCoverage: 1, searchScore: 1, clicks: 0, price: 40000 },
+    { _id: new mongoose.Types.ObjectId(), date: newerDate, matchCoverage: 2, searchScore: 2, clicks: 0, price: 39000 },
+    { _id: new mongoose.Types.ObjectId(), date: newerDate, matchCoverage: 2, searchScore: 3, clicks: 0, price: 38000 },
+  ];
+  const comparable = (value: unknown): string | number => value instanceof Date
+    ? value.getTime() : typeof value === 'number' ? value : String(value);
+  const store = {
+    aggregate: async <Row>(pipeline: unknown[]) => {
+      const stages = pipeline as Array<Record<string, any>>;
+      if (stages.some((stage) => stage.$count)) return [{ count: rows.length }] as Row[];
+      let results = [...rows];
+      const cursorFilter = stages.find((stage) => stage.$match?.$or)?.$match.$or;
+      if (cursorFilter) results = results.filter((row) => cursorFilter.some((clause: Record<string, unknown>) => (
+        Object.entries(clause).every(([field, condition]) => {
+          const actual = comparable(row[field]);
+          if (condition && typeof condition === 'object' && '$lt' in condition) {
+            return actual < comparable(condition.$lt);
+          }
+          return actual === comparable(condition);
+        })
+      )));
+      const sort = stages.find((stage) => stage.$sort)?.$sort;
+      results.sort((first, second) => {
+        for (const [field, direction] of Object.entries(sort)) {
+          const firstValue = comparable(first[field]);
+          const secondValue = comparable(second[field]);
+          if (firstValue !== secondValue) return (firstValue < secondValue ? -1 : 1) * Number(direction);
+        }
+        return 0;
+      });
+      return results.slice(0, stages.find((stage) => stage.$limit)?.$limit) as Row[];
+    },
+  };
+  const ids: string[] = [];
+  let cursor: string | undefined;
+  for (let page = 0; page < rows.length; page++) {
+    const result = await getMessagesFromStore(store, { search: 's25 ultra', limit: 1, cursor });
+    ids.push(result.data[0].id);
+    cursor = result.nextCursor || undefined;
+  }
+  assert.deepEqual(ids, [rows[3], rows[2], rows[0], rows[1]].map((row) => String(row._id)));
+});
+
+test('explicit price and oldest sorts still override newest-first search ranking', async () => {
+  for (const [sort, expected] of [
+    ['price_asc', { price: 1, _id: 1 }],
+    ['price_desc', { price: -1, _id: -1 }],
+    ['oldest', { date: 1, _id: 1 }],
+  ] as const) {
+    const pipelines: unknown[][] = [];
+    await getMessagesFromStore({ aggregate: async <Row>(pipeline: unknown[]) => {
+      pipelines.push(pipeline);
+      return [] as Row[];
+    } }, { search: 'Samsung phone', sort });
+    const stages = pipelines.flat() as Array<Record<string, unknown>>;
+    assert.deepEqual(stages.find((stage) => '$sort' in stage), { $sort: expected });
+  }
 });
 
 test('falls back to MongoDB text search when Atlas Search fails', async () => {
@@ -163,6 +227,9 @@ test('falls back to MongoDB text search when Atlas Search fails', async () => {
     },
   });
   assert.equal(result.data.length, 1);
+  assert.deepEqual(fallbackPipeline.find((stage) => '$sort' in stage), {
+    $sort: { matchCoverage: -1, date: -1, searchScore: -1, clicks: -1, _id: -1 },
+  });
 });
 
 test('applies deal filters inside the Atlas Search stage', async () => {

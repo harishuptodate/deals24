@@ -2,8 +2,12 @@ import express, { type Request } from 'express';
 import * as priceHistoryController from '../controllers/priceHistoryController';
 import * as telegramController from '../controllers/telegramController';
 import { cacheHybrid } from '../services/redisClient';
+import * as searchController from '../controllers/searchController';
 
 const router = express.Router();
+router.get('/search/suggestions', searchController.suggestions);
+router.get('/search/popular', searchController.popular);
+router.post('/search/selection', searchController.recordSelection);
 
 type TelegramListQuery = {
   cursor?: string;

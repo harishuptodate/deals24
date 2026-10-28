@@ -3,16 +3,18 @@ import { detectCategory } from './detectCategory';
 import { GenerateCaptionAndCategory } from './CaptionAndCategoryGen';
 import { extractPrice } from '../utils/extractPrice';
 import { normalizeGeminiPrice } from './telegramMessageFilters';
+import type { EnrichmentContext } from './dealEnrichment';
 
 export async function generateMessageContent(
   cleanedText: string,
   candidates: ProductMatchCandidate[] = [],
+  context: EnrichmentContext = {},
 ): Promise<GeneratedMessageContent> {
   let normalizedText = cleanedText;
   let category = 'miscellaneous';
   let price: string | null = null;
 
-  const result = await GenerateCaptionAndCategory(cleanedText, candidates);
+  const result = await GenerateCaptionAndCategory(cleanedText, candidates, context);
   if (result.normalizedMessage && result.category) {
     normalizedText = result.normalizedMessage;
     category = result.category;

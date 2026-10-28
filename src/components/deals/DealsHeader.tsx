@@ -45,12 +45,12 @@ const DealsHeader = ({
     <div className="mb-6 md:mb-8">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-2">
         <div className="flex flex-col gap-1">
-          <h1 className="text-2xl md:text-3xl font-bold text-gradient dark:text-gradient">
+          <h1 className="text-[15.6px] leading-[20.8px] md:text-[19.5px] md:leading-[23.4px] font-bold text-gradient dark:text-gradient">
             {pageTitle}
           </h1>
           
           {(searchQuery || activeCategory) && totalDealsCount > 0 && (
-            <p className="text-sm sm:text-md md:text-lg font-medium text-gray-600 dark:text-gray-300 md:hidden">
+            <p className="text-[9.1px] leading-[13px] font-medium text-gray-600 dark:text-gray-300 md:hidden">
               {totalDealsCount} result{totalDealsCount > 1 ? 's' : ''} found
             </p>
           )}
@@ -108,7 +108,7 @@ const DealsHeader = ({
       </div>
 
       {(searchQuery || activeCategory) && totalDealsCount > 0 && (
-        <p className="hidden md:block text-sm sm:text-md md:text-lg font-medium text-gray-600 dark:text-gray-300">
+        <p className="hidden md:block text-[11.7px] leading-[18.2px] font-medium text-gray-600 dark:text-gray-300">
           {totalDealsCount} result{totalDealsCount > 1 ? 's' : ''} found
         </p>
       )}

@@ -23,7 +23,7 @@ async function waitUntilReady() {
   const startedAt = Date.now();
   while (Date.now() - startedAt < READY_TIMEOUT_MS) {
     const index = await getSearchIndex();
-    if (index?.queryable === true || index?.status === 'READY') return;
+    if (index?.status === 'READY' && index?.queryable === true) return;
     await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
   }
   throw new Error(`Timed out waiting for ${DEAL_ATLAS_SEARCH_INDEX_NAME} to become ready`);

@@ -4,7 +4,6 @@ import {
   assessDealTextReadiness,
   buildIdentityKey,
   getCandidateSearchTokens,
-  shouldUseGeminiForDeal,
   shouldUseLocalDealProcessing,
 } from './productMatching';
 
@@ -81,52 +80,6 @@ test('routes fashion and sub-1000 deals through local processing', () => {
   assert.equal(shouldUseLocalDealProcessing('gadgets-accessories', '999'), true);
   assert.equal(shouldUseLocalDealProcessing('gadgets-accessories', '1000'), false);
   assert.equal(shouldUseLocalDealProcessing('laptops', ''), false);
-});
-
-test('never uses Gemini for an exact Amazon match', () => {
-  assert.equal(shouldUseGeminiForDeal({
-    isAmazonDeal: true,
-    hasDeterministicMatch: true,
-    localApprovalPassed: false,
-    category: 'laptops',
-    price: '75000',
-  }), false);
-});
-
-test('uses local approval only for unmatched Amazon deals', () => {
-  const input = {
-    isAmazonDeal: true,
-    hasDeterministicMatch: false,
-    category: 'mobile-phones',
-    price: '25000',
-  };
-
-  assert.equal(shouldUseGeminiForDeal({ ...input, localApprovalPassed: true }), false);
-  assert.equal(shouldUseGeminiForDeal({ ...input, localApprovalPassed: false }), true);
-});
-
-test('uses one Gemini path for non-Amazon deals except cheap local categories', () => {
-  assert.equal(shouldUseGeminiForDeal({
-    isAmazonDeal: false,
-    hasDeterministicMatch: false,
-    localApprovalPassed: true,
-    category: 'laptops',
-    price: '50000',
-  }), true);
-  assert.equal(shouldUseGeminiForDeal({
-    isAmazonDeal: false,
-    hasDeterministicMatch: false,
-    localApprovalPassed: false,
-    category: 'fashion',
-    price: '2500',
-  }), false);
-  assert.equal(shouldUseGeminiForDeal({
-    isAmazonDeal: false,
-    hasDeterministicMatch: false,
-    localApprovalPassed: false,
-    category: 'gadgets-accessories',
-    price: '999',
-  }), false);
 });
 
 test('builds stable identity keys with sorted variants', () => {

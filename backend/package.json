@@ -10,7 +10,7 @@
     "atlas-search:index": "tsx scripts/syncAtlasDealSearchIndex.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "node ../node_modules/eslint/bin/eslint.js . --config eslint.config.js",
-    "test": "npm run build && node --test --test-force-exit dist/utils/dealSearch.test.js dist/utils/extractPrice.test.js dist/services/alertMatching.test.js dist/services/appSettings.test.js dist/services/emailService.test.js dist/services/detectCategory.test.js dist/services/localProductIdentity.test.js dist/services/productMatching.test.js dist/services/telegramMessageFilters.test.js dist/services/telegramMessageQuery.test.js dist/services/amazon/amazonLink.test.js dist/services/amazon/amazonFallback.test.js"
+    "test": "npm run build && node --test --test-force-exit dist/utils/dealSearch.test.js dist/utils/extractPrice.test.js dist/services/alertMatching.test.js dist/services/appSettings.test.js dist/services/emailService.test.js dist/services/detectCategory.test.js dist/services/dealEnrichment.test.js dist/services/localProductIdentity.test.js dist/services/productMatching.test.js dist/services/searchSuggestions.test.js dist/services/telegramMessageFilters.test.js dist/services/telegramMessageQuery.test.js dist/services/amazon/amazonLink.test.js dist/services/amazon/amazonFallback.test.js"
   },
   "dependencies": {
     "@google/genai": "^1.33.0",

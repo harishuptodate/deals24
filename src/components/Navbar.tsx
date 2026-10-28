@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import DealSearch from '@/components/search/DealSearch';
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -12,11 +12,6 @@ import {
 	AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import {
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-} from '@/components/ui/popover';
-import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
@@ -25,13 +20,11 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
-	Search,
 	Target,
 	ShoppingBag,
 	ChartNoAxesColumn,
-	CommandIcon,
 	Activity,
 	Send,
 	ShieldBan,
@@ -52,22 +45,11 @@ import {
 } from '@/services/authService';
 
 const Navbar = () => {
-	const navigate = useNavigate();
-	const location = useLocation();
 	const isMobile = useIsMobile();
-	const [searchQuery, setSearchQuery] = useState('');
-	const [isSearchPopoverOpen, setIsSearchPopoverOpen] = useState(false);
 	const [isAuthOpen, setIsAuthOpen] = useState(false);
 	const [isLogoutOpen, setIsLogoutOpen] = useState(false);
 	const [isAdmin, setIsAdmin] = useState(() => isAdminAuthenticated());
 	const { user, signOut } = useAuth();
-	const inputRef = useRef<HTMLInputElement>(null);
-
-	useEffect(() => {
-		const searchParams = new URLSearchParams(location.search);
-		const queryParam = searchParams.get('search');
-		setSearchQuery(queryParam || '');
-	}, [location.search]);
 
 	useEffect(() => {
 		const syncAdminSession = () => setIsAdmin(isAdminAuthenticated());
@@ -79,39 +61,6 @@ const Navbar = () => {
 		};
 	}, []);
 
-	useEffect(() => {
-		const handleKeyDown = (e: KeyboardEvent) => {
-			if (
-				(e.ctrlKey || e.metaKey) &&
-				e.key === 'k' &&
-				document.activeElement?.tagName !== 'INPUT' &&
-				document.activeElement?.tagName !== 'TEXTAREA'
-			) {
-				e.preventDefault();
-				setIsSearchPopoverOpen(true);
-				setTimeout(() => {
-					inputRef.current?.focus();
-				}, 0);
-			}
-		};
-
-		window.addEventListener('keydown', handleKeyDown);
-		return () => window.removeEventListener('keydown', handleKeyDown);
-	}, []);
-
-	const handleSearch = (e?: React.FormEvent) => {
-		if (e) e.preventDefault();
-		if (searchQuery.trim()) {
-			navigate(`/deals?search=${encodeURIComponent(searchQuery.trim())}`);
-			setIsSearchPopoverOpen(false);
-		}
-	};
-
-	const handlePopularSearch = (query: string) => {
-		setSearchQuery(query);
-		navigate(`/deals?search=${encodeURIComponent(query)}`);
-		setIsSearchPopoverOpen(false);
-	};
 
 	const handleAccountClick = () => {
 		if (!user) {
@@ -223,22 +172,6 @@ const Navbar = () => {
 		</DropdownMenu>
 	);
 
-	const popularSearches = [
-		'AC',
-		'TV',
-		'LG',
-		'TWS',
-		'4K TV',
-		'iPhone',
-		'Watch',
-		'MacBook',
-		'Samsung',
-		'T-shirt',
-		'Headphones',
-		'Gaming Laptop',
-		'Refrigerator',
-		'Washing Machine',
-	];
 
 	return (
 		<header className="sticky top-0 z-50 w-full bg-transparent backdrop-blur-md border-b border-gray-200 dark:border-[#27272A]">
@@ -266,76 +199,7 @@ const Navbar = () => {
 						</Link>
 					</div>
 
-					<div className="min-w-0 w-0 flex-1 mx-1 sm:mx-4 max-w-xl">
-						<form onSubmit={handleSearch} className="relative min-w-0">
-							<Popover
-								open={isSearchPopoverOpen}
-								onOpenChange={(open) => {
-									setIsSearchPopoverOpen(open);
-									if (open && inputRef.current) {
-										setTimeout(() => {
-											inputRef.current?.focus();
-										}, 0);
-									}
-								}}>
-								<PopoverTrigger asChild>
-									<div className="relative">
-										<Input
-											ref={inputRef}
-											type="text"
-											placeholder={
-												isMobile
-													? 'Search...'
-													: 'Search deals... (Press Ctrl+K)'
-											}
-											className="min-w-0 w-full placeholder:text-[13px] text-sm sm:pl-10 pr-4 py-2 border rounded-full focus:outline-none dark:bg-apple-darkGray dark:border-gray-700 dark:text-white dark:placeholder-gray-400 truncate"
-											value={searchQuery}
-											onChange={(e) => setSearchQuery(e.target.value)}
-											onClick={() => setIsSearchPopoverOpen(true)}
-										/>
-										<Search className="absolute hidden sm:block left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-										<Button
-											type="submit"
-											size="icon"
-											variant="ghost"
-											className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 rounded-full bg-gray-100 dark:bg-gray-700"
-											onClick={() => handleSearch()}>
-											<div className="relative flex items-center justify-center h-full">
-												{isMobile ? (
-													<Search className="h-5 w-5" />
-												) : (
-													<>
-														<CommandIcon className="w-3 h-3" />
-														<span className="text-sm mt-0.5">K</span>
-													</>
-												)}
-											</div>
-										</Button>
-									</div>
-								</PopoverTrigger>
-								<PopoverContent
-									className="mt-1 w-[calc(100vw-1.5rem)] max-w-80 rounded-lg p-1.5 sm:w-[var(--radix-popover-trigger-width)] sm:max-w-none sm:rounded-xl sm:p-2 min-[1025px]:w-96 min-[1025px]:max-w-96 dark:bg-apple-darkGray dark:border-gray-700"
-									collisionPadding={12}
-									sideOffset={5}>
-									<div className="space-y-1.5 sm:space-y-2">
-										<h3 className="px-1.5 text-xs font-medium text-apple-darkGray sm:px-2 sm:text-sm dark:text-gray-300 active:scale-95 transition-transform duration-150 ease-in-out">
-											Popular searches
-										</h3>
-										<div className="flex flex-wrap gap-1.5 p-0.5 sm:gap-2 sm:p-1">
-											{popularSearches.map((search) => (
-												<button
-													key={search}
-													onClick={() => handlePopularSearch(search)}
-													className="rounded-full bg-gray-100 px-2 py-1 text-[10px] text-apple-darkGray transition-colors hover:bg-gray-200 sm:px-3 sm:py-1.5 sm:text-xs dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">
-													{search}
-												</button>
-											))}
-										</div>
-									</div>
-								</PopoverContent>
-							</Popover>
-						</form>
-					</div>
+					<DealSearch />
 
 					{isMobile ? (
 						<div className="flex items-center gap-2">

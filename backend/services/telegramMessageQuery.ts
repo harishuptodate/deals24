@@ -308,8 +308,8 @@ async function getMessagesFromStoreWithBackend(
         $match: {
           $or: [
             { matchCoverage: { $lt: cursorCoverage } },
-            { matchCoverage: cursorCoverage, searchScore: { $lt: cursorScore } },
-            { matchCoverage: cursorCoverage, searchScore: cursorScore, date: { $lt: cursorDate } },
+            { matchCoverage: cursorCoverage, date: { $lt: cursorDate } },
+            { date: cursorDate, matchCoverage: cursorCoverage, searchScore: { $lt: cursorScore } },
             { matchCoverage: cursorCoverage, searchScore: cursorScore, date: cursorDate, clicks: { $lt: cursorClicks } },
             { matchCoverage: cursorCoverage, searchScore: cursorScore, date: cursorDate, clicks: cursorClicks, _id: { $lt: cursorId } },
           ],
@@ -343,7 +343,7 @@ async function getMessagesFromStoreWithBackend(
   const sortStage = isPriceSort
     ? { $sort: { price: isPriceAsc ? 1 : -1, _id: isPriceAsc ? 1 : -1 } }
     : isRelevanceSort
-      ? { $sort: { matchCoverage: -1, searchScore: -1, date: -1, clicks: -1, _id: -1 } }
+      ? { $sort: { matchCoverage: -1, date: -1, searchScore: -1, clicks: -1, _id: -1 } }
       : { $sort: { date: isOldestFirst ? 1 : -1, _id: isOldestFirst ? 1 : -1 } };
 
   const projectionStage = {

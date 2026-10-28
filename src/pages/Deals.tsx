@@ -21,6 +21,7 @@ const Deals = () => {
     totalDealsCount,
     allMessages,
     isLoading,
+    isUpdating,
     isError,
     hasNextPage,
     isFetchingNextPage,
@@ -53,7 +54,7 @@ const Deals = () => {
   return (
     <div className="min-h-screen bg-white dark:bg-[#09090B]">
       <Navbar />
-      <main className="container mx-auto px-4 py-6 md:py-12">
+      <main className="container mx-auto px-4 pt-3 pb-6 md:pt-6 md:pb-12">
         <DealsHeader
           pageTitle={pageTitle}
           searchQuery={searchQuery}
@@ -64,6 +65,7 @@ const Deals = () => {
         />
 
         <EnhancedErrorBoundary>
+          {isUpdating && !isLoading && <p role="status" className="mb-3 flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" />Updating deals…</p>}
           {isLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {[...Array(12)].map((_, index) => (

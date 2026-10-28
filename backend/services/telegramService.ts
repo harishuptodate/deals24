@@ -1,6 +1,7 @@
 import type {
   GeneratedMessageContent,
   MessageQueryOptions,
+  ProductIdentity,
   ProductMatchCandidate,
   TelegramInboundMessage,
 } from './telegramTypes';
@@ -34,13 +35,15 @@ import {
   buildIdentityKey,
   getCandidateSearchTokens,
   shouldUseLocalDealProcessing,
-  shouldUseGeminiForDeal,
 } from './productMatching';
 import { processDealAlerts } from './dealAlertService';
 import { getGeminiIdentitySetting } from './appSettings';
 import { extractLocalProductIdentity, mergeProductIdentities } from './localProductIdentity';
+import { planDealEnrichment, preserveVerifiedFacts } from './dealEnrichment';
+import { createLogger } from './logger';
 
 const AI_MATCH_THRESHOLD = 0.92;
+const enrichmentLogger = createLogger('deal-enrichment');
 
 export type DealIngestionRejection = {
   code: 'stale_message' | 'blocked_product' | 'low_context' | 'sale_mode_unprofitable'
@@ -127,12 +130,14 @@ async function findDeterministicMatch(amazonAsin: string | null) {
 async function findMatchCandidates(
   text: string,
   category: string,
+  amazonAsin?: string | null,
 ): Promise<ProductMatchCandidate[]> {
   const tokens = getCandidateSearchTokens(text);
   const tokenPatterns = tokens.map((token) => ({
     text: { $regex: new RegExp(`\\b${escapeRegExp(token)}\\b`, 'i') },
   }));
   const query: Record<string, unknown> = {};
+  if (amazonAsin) query.$and = [{ $or: [{ amazonAsin }, { amazonAsin: null }] }];
   if (category !== 'miscellaneous') {
     query.category = category;
   }
@@ -265,7 +270,8 @@ export async function saveMessage(message: TelegramInboundMessage, options: Save
     const localCategoryDecision = detectCategoryDecision(canonicalText);
     const localCategory = detectCategory(canonicalText);
     const localPrice = extractPrice(canonicalText);
-    const localIdentity = extractLocalProductIdentity(canonicalText).identity;
+    const localExtraction = extractLocalProductIdentity(canonicalText);
+    const localIdentity = localExtraction.identity;
     const cheapLocalProcessing = shouldUseLocalDealProcessing(
       localCategoryDecision.category,
       localPrice,
@@ -281,18 +287,21 @@ export async function saveMessage(message: TelegramInboundMessage, options: Save
       ? await findDeterministicMatch(amazonAsin)
       : null);
     const geminiIdentitySetting = await getGeminiIdentitySetting();
-    const useGemini = geminiIdentitySetting.enabled && shouldUseGeminiForDeal({
+    const enrichmentReasons = planDealEnrichment({
+      enabled: geminiIdentitySetting.enabled,
       isAmazonDeal,
-      hasDeterministicMatch: Boolean(deterministicResult),
-      localApprovalPassed: captionReadiness.ready,
+      hasMatch: Boolean(deterministicResult),
+      captionReady: captionReadiness.ready,
+      identityConfidence: localExtraction.confidence,
       category: localCategoryDecision.category,
       price: localPrice,
     });
+    const useGemini = enrichmentReasons.length > 0;
     if (!useGemini) {
       const localProcessingReason = deterministicResult
         ? deterministicResult.method
         : !geminiIdentitySetting.enabled
-        ? 'gemini-identity-disabled'
+        ? 'gemini-deal-enrichment-disabled'
         : cheapLocalProcessing
         ? (localCategoryDecision.category === 'fashion' ? 'fashion' : 'price-under-1000')
         : 'amazon-local-approval';
@@ -301,11 +310,25 @@ export async function saveMessage(message: TelegramInboundMessage, options: Save
         localProcessingReason,
       );
     }
-    const candidates = useGemini
-      ? await findMatchCandidates(canonicalText, localCategory)
+    const candidates = useGemini && !deterministicResult
+      ? await findMatchCandidates(canonicalText, localCategory, amazonAsin)
       : [];
+    const enrichmentContext = {
+      price: localPrice || undefined,
+      category: localCategoryDecision.confidence === 'high' ? localCategory : undefined,
+      identity: localIdentity,
+      matchedProductId: deterministicResult ? String(deterministicResult.message._id) : undefined,
+      amazonAsin,
+    };
+    if (useGemini) enrichmentLogger.info('Enriching deal in one combined Gemini operation', {
+      reasons: enrichmentReasons, candidateCount: candidates.length, sourceKey,
+    }, { event: 'gemini_deal_enrichment' });
     const processedContent: GeneratedMessageContent = useGemini
-      ? await generateMessageContent(canonicalText, candidates)
+      ? preserveVerifiedFacts(
+          await generateMessageContent(canonicalText, candidates, enrichmentContext),
+          canonicalText,
+          enrichmentContext,
+        )
       : {
           normalizedText: canonicalText,
           category: localCategoryDecision.category === 'fashion'
@@ -327,17 +350,12 @@ export async function saveMessage(message: TelegramInboundMessage, options: Save
         (candidate) => candidate.id === processedContent.match?.candidateId,
       );
       if (selectedCandidate && processedContent.match.confidence >= AI_MATCH_THRESHOLD) {
-        matchedMessage = await TelegramMessage.findById(selectedCandidate.id);
+        matchedMessage = await TelegramMessage.findOne({
+          _id: selectedCandidate.id,
+          ...(amazonAsin ? { $or: [{ amazonAsin }, { amazonAsin: null }] } : {}),
+        });
         matchMethod = 'gemini-candidate';
         matchConfidence = processedContent.match.confidence;
-      }
-    }
-
-    if (!matchedMessage && identityKey) {
-      matchedMessage = await TelegramMessage.findOne({ identityKey });
-      if (matchedMessage) {
-        matchMethod = useGemini ? 'gemini-identity' : 'local-identity';
-        matchConfidence = 0.95;
       }
     }
 
@@ -367,8 +385,12 @@ export async function saveMessage(message: TelegramInboundMessage, options: Save
       matchedMessage.category = processedContent.category;
       matchedMessage.price = numericPrice ?? matchedMessage.price;
       matchedMessage.amazonAsin = amazonAsin || matchedMessage.amazonAsin;
-      matchedMessage.identity = processedContent.identity || matchedMessage.identity;
-      matchedMessage.identityKey = identityKey || matchedMessage.identityKey;
+      matchedMessage.identity = mergeProductIdentities(
+        matchedMessage.identity as ProductIdentity | undefined,
+        processedContent.identity,
+      );
+      matchedMessage.identityKey = buildIdentityKey(matchedMessage.identity as ProductIdentity)
+        || matchedMessage.identityKey;
       try {
         const updatedMessage = await matchedMessage.save();
         await invalidateDealCaches(String(updatedMessage._id));

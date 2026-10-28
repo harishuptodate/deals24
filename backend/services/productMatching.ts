@@ -99,22 +99,6 @@ export function shouldUseLocalDealProcessing(category: string, price: string): b
   return category === 'fashion' || (Number.isFinite(numericPrice) && numericPrice > 0 && numericPrice < 1000);
 }
 
-export function shouldUseGeminiForDeal(input: {
-  isAmazonDeal: boolean;
-  hasDeterministicMatch: boolean;
-  localApprovalPassed: boolean;
-  category: string;
-  price: string;
-}): boolean {
-  if (input.hasDeterministicMatch) return false;
-  if (shouldUseLocalDealProcessing(input.category, input.price)) return false;
-
-  // Amazon misses can still avoid AI when the incoming caption is already trustworthy.
-  if (input.isAmazonDeal && input.localApprovalPassed) return false;
-
-  return true;
-}
-
 function normalizeIdentityPart(value: string): string {
   return value
     .toLowerCase()

@@ -3,6 +3,7 @@ import { DEAL_CATEGORIES, detectCategory } from './detectCategory';
 import { buildCaptionPrompt } from './captionPrompt';
 import { createLogger } from './logger';
 import type { ProductIdentity, ProductMatch, ProductMatchCandidate } from './telegramTypes';
+import type { EnrichmentContext } from './dealEnrichment';
 
 const logger = createLogger('gemini-caption');
 
@@ -265,6 +266,7 @@ function normalizeGeminiResult(messageText: string, result: GeminiNormalizedResu
 export async function GenerateCaptionAndCategory(
   messageText: string,
   candidates: ProductMatchCandidate[] = [],
+  context: EnrichmentContext = {},
 ) {
   if (!messageText || typeof messageText !== 'string') {
     throw new Error('Message text is required and must be a string');
@@ -281,7 +283,7 @@ export async function GenerateCaptionAndCategory(
   }
 
   try {
-    const prompt = buildCaptionPrompt(messageText, candidates);
+    const prompt = buildCaptionPrompt(messageText, candidates, context);
     const response = await requestGeminiContent(prompt, geminiApiKeys);
     try {
       const result = parseGeminiJsonResponse(response?.text || '');

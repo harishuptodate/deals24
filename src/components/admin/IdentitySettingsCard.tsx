@@ -30,10 +30,10 @@ export default function IdentitySettingsCard() {
       const updatedSetting = await updateGeminiIdentitySetting(enabled);
       setSetting(updatedSetting);
       toast({
-        title: enabled ? 'Gemini enrichment enabled' : 'Local-only extraction enabled',
+        title: enabled ? 'Gemini deal enrichment enabled' : 'Local processing enabled',
         description: enabled
-          ? 'Eligible new deals may use Gemini for identity enrichment.'
-          : 'New deals will not send identity extraction requests to Gemini.',
+          ? 'Eligible deals use one combined request for text, identity, category, price and matching.'
+          : 'New deals use local processing without Gemini requests.',
       });
     } catch {
       toast({
@@ -55,10 +55,10 @@ export default function IdentitySettingsCard() {
               <BrainCircuit className="h-5 w-5" />
             </div>
             <div>
-              <CardTitle>Gemini identity enrichment</CardTitle>
+              <CardTitle>Gemini deal enrichment</CardTitle>
               <CardDescription className="mt-1 max-w-2xl leading-6">
                 Local rules always extract available brand, model, product type, and variants.
-                Enable this only when eligible new deals may also use Gemini.
+                Enable Gemini to also normalize messages and resolve uncertain fields or product matches in one combined request.
               </CardDescription>
             </div>
           </div>
@@ -67,7 +67,7 @@ export default function IdentitySettingsCard() {
               checked={setting.enabled}
               disabled={isSaving}
               onCheckedChange={handleChange}
-              aria-label="Toggle Gemini identity enrichment"
+              aria-label="Toggle Gemini deal enrichment"
             />
           ) : (
             <Loader2 className="h-5 w-5 animate-spin text-stone-500" />
@@ -76,7 +76,7 @@ export default function IdentitySettingsCard() {
       </CardHeader>
       {setting && (
         <CardContent className="pt-0 text-xs text-stone-500 dark:text-stone-400">
-          Current value comes from {setting.source === 'admin' ? 'the saved admin override' : 'GEMINI_IDENTITY_EXTRACTION_ENABLED'}.
+          {setting.source === 'admin' ? 'Your saved preference applies to new deals.' : 'Using the deployment default until you save a preference.'}
         </CardContent>
       )}
     </Card>

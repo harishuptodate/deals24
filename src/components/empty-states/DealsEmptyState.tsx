@@ -3,6 +3,7 @@ import React from 'react';
 import { Search, ShoppingBag, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import IllustratedEmptyState from './IllustratedEmptyState';
+import SearchRecovery from '../search/SearchRecovery';
 
 interface DealsEmptyStateProps {
   searchQuery?: string | null;
@@ -36,6 +37,7 @@ const DealsEmptyState = ({
             Browse Categories
           </Button>
         )}
+        <SearchRecovery query={searchQuery} />
       </IllustratedEmptyState>
     );
   }

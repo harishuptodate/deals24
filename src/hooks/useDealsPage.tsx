@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { InfiniteData, useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
+import { InfiniteData, keepPreviousData, useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
 import { getTelegramMessages, deleteProduct } from '../services/api';
@@ -41,11 +41,13 @@ export const useDealsPage = () => {
     hasNextPage,
     isFetchingNextPage,
     isLoading,
+    isFetching,
+    isPlaceholderData,
     isError,
     refetch,
   } = useInfiniteQuery({
     queryKey: dealsQueryKey,
-    queryFn: ({ pageParam }) =>
+    queryFn: ({ pageParam, signal }) =>
       getTelegramMessages(
         pageParam as string | undefined,
         activeCategory || undefined,
@@ -55,10 +57,12 @@ export const useDealsPage = () => {
         minPriceParam,
         maxPriceParam,
         sortParam,
+        signal,
       ),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     retry: 2,
+    placeholderData: keepPreviousData,
 		refetchInterval: 30_000,
 		refetchIntervalInBackground: false,
     meta: {
@@ -226,8 +230,9 @@ export const useDealsPage = () => {
     totalDealsCount,
     allMessages,
     isLoading,
+    isUpdating: isFetching && !isFetchingNextPage,
     isError,
-    hasNextPage,
+    hasNextPage: !isPlaceholderData && hasNextPage,
     isFetchingNextPage,
     fetchNextPage,
     refetch,

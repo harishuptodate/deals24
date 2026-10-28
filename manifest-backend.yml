@@ -47,7 +47,7 @@ spec:
               value: "http://localhost:30808"
             - name: IS_SALE_MODE
               value: "false"
-            - name: GEMINI_IDENTITY_EXTRACTION_ENABLED
+            - name: GEMINI_DEAL_ENRICHMENT_ENABLED
               value: "true"
 ---
 apiVersion: v1

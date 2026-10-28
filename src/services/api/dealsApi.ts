@@ -27,6 +27,7 @@ export const getTelegramMessages = async (
   minPrice?: string | null,
   maxPrice?: string | null,
   sort?: string | null,
+  signal?: AbortSignal,
 ): Promise<TelegramResponse> => {
   try {
     const params: Record<string, string | undefined> = { cursor, limit: '12' };
@@ -40,13 +41,15 @@ export const getTelegramMessages = async (
 
     const response = await api.get<TelegramResponse>('/telegram/messages', {
       params,
+      signal,
       headers: { Accept: 'application/json' },
     });
     if (!response.data.data || !Array.isArray(response.data.data)) response.data.data = [];
     return response.data;
   } catch (error) {
+    if (axios.isCancel(error)) throw error;
     console.error('Failed to fetch Telegram messages:', error);
-    return { data: [], hasMore: false, nextCursor: undefined };
+    throw error;
   }
 };
 

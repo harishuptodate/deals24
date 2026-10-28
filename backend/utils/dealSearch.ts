@@ -7,12 +7,18 @@ export const DEAL_ATLAS_SEARCH_INDEX_DEFINITION = {
   mappings: {
     dynamic: false,
     fields: {
-      searchText: { type: 'string', analyzer: 'lucene.standard' },
+      searchText: [
+        { type: 'string', analyzer: 'lucene.standard' },
+        { type: 'autocomplete', tokenization: 'edgeGram', minGrams: 2, maxGrams: 15, foldDiacritics: true },
+      ],
       searchTokens: { type: 'string', analyzer: 'lucene.standard' },
       identity: {
         type: 'document',
         fields: {
-          canonicalName: { type: 'string', analyzer: 'lucene.standard' },
+          canonicalName: [
+            { type: 'string', analyzer: 'lucene.standard' },
+            { type: 'autocomplete', tokenization: 'edgeGram', minGrams: 2, maxGrams: 15, foldDiacritics: true },
+          ],
           brand: { type: 'string', analyzer: 'lucene.standard' },
           model: { type: 'string', analyzer: 'lucene.standard' },
           productType: { type: 'string', analyzer: 'lucene.standard' },

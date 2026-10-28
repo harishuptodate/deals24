@@ -99,6 +99,15 @@
   }
   
 
+  /* Avoid browser tap flashes while retaining keyboard focus indicators. */
+  :where(button, a, input, textarea, select, [role="button"], [tabindex]) {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+
   /* Focus indicators for accessibility */
   :focus-visible {
     @apply outline-2 outline-offset-2 outline-blue-500;
@@ -251,8 +260,8 @@
 
   /* Enhanced focus states */
   .focus-ring {
-    @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
-    @apply dark:focus:ring-offset-gray-900;
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2;
+    @apply dark:focus-visible:ring-offset-gray-900;
   }
 
   /* Enhanced card layouts */
