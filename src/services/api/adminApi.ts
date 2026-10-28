@@ -7,6 +7,23 @@ export const postAdminDeal = async (message: string): Promise<TelegramMessage> =
   return response.data.deal;
 };
 
+export interface GeminiIdentitySetting {
+  enabled: boolean;
+  source: 'environment' | 'admin';
+}
+
+export const getAdminSettings = async (): Promise<GeminiIdentitySetting> => {
+  const response = await api.get('/admin/settings');
+  return response.data.geminiIdentityExtraction;
+};
+
+export const updateGeminiIdentitySetting = async (
+  enabled: boolean,
+): Promise<GeminiIdentitySetting> => {
+  const response = await api.put('/admin/settings/gemini-identity', { enabled });
+  return response.data.geminiIdentityExtraction;
+};
+
 export interface AdminLogEntry {
   _id?: string;
   id?: string;

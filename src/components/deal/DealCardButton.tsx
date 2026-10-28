@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { handleTrackedLinkClick } from '../../services/api';
+import { trackMessageClick } from '../../services/api';
 import { extractFirstLink, extractSecondLink } from './utils/linkUtils';
 
 interface DealCardButtonProps {
@@ -11,17 +11,9 @@ interface DealCardButtonProps {
 }
 
 const DealCardButton = ({ description, link, id, hasMultipleLinks }: DealCardButtonProps) => {
-  const handleLinkClick = (url: string, e: React.MouseEvent) => {
-    handleTrackedLinkClick(url, id, e.nativeEvent);
-
-    if (e.ctrlKey || e.metaKey || e.button === 1) return;
-
-    e.preventDefault();
+  const handleLinkClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-
-    setTimeout(() => {
-      window.open(url, '_blank');
-    }, 100);
+    if (id) void trackMessageClick(id);
   };
 
   const fallbackLink = hasMultipleLinks
@@ -35,7 +27,7 @@ const DealCardButton = ({ description, link, id, hasMultipleLinks }: DealCardBut
         href={primaryLink}
         target="_blank"
         rel="noopener noreferrer"
-        onClick={(e) => handleLinkClick(primaryLink, e)}
+        onClick={handleLinkClick}
         className="inline-block w-full text-center px-6 py-3 text-sm font-medium text-white bg-gradient-to-b from-apple-darkGray to-indigo-950 rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-apple-darkGray/20 flex items-center justify-center hover:scale-105"
       >
         Buy Now

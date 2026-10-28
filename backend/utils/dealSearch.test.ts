@@ -3,9 +3,25 @@ import test from 'node:test';
 import {
   buildDealSearchFields,
   buildDealSearchPlan,
+  DEAL_ATLAS_SEARCH_INDEX_DEFINITION,
+  DEAL_ATLAS_SEARCH_INDEX_NAME,
   stripSearchUrls,
   tokenizeDealSearchValue,
 } from './dealSearch';
+
+test('defines the Atlas Search index used by deal queries', () => {
+  assert.equal(DEAL_ATLAS_SEARCH_INDEX_NAME, 'deal_search_atlas_v1');
+  assert.deepEqual(DEAL_ATLAS_SEARCH_INDEX_DEFINITION.mappings.fields.searchTokens, {
+    type: 'string',
+    analyzer: 'lucene.standard',
+  });
+  assert.deepEqual(DEAL_ATLAS_SEARCH_INDEX_DEFINITION.mappings.fields.category, {
+    type: 'token',
+  });
+  assert.deepEqual(DEAL_ATLAS_SEARCH_INDEX_DEFINITION.mappings.fields.price, {
+    type: 'number',
+  });
+});
 
 test('removes full and bare links from searchable content', () => {
   const value = 'Samsung TV https://amazon.in/dp/B0ABC12345?tag=test and amzn.to/xyz';

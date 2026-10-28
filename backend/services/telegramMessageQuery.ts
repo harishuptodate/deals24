@@ -1,6 +1,10 @@
 import type { MessageQueryOptions } from './telegramTypes';
 import mongoose from 'mongoose';
-import { buildDealSearchPlan } from '../utils/dealSearch';
+import {
+  buildDealSearchPlan,
+  DEAL_ATLAS_SEARCH_INDEX_NAME,
+  DEAL_SEARCH_INDEX_WEIGHTS,
+} from '../utils/dealSearch';
 
 type QueryableTelegramMessage = {
   aggregate: <T>(pipeline: unknown[]) => Promise<T[]>;
@@ -35,6 +39,92 @@ type TelegramMessageAggregateRow = {
 
 type CountRow = { count: number };
 
+type SearchBackend = 'atlas' | 'mongoText';
+const ATLAS_SEARCH_TIMEOUT_MS = 5_000;
+
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  let timeout: NodeJS.Timeout | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<T>((_resolve, reject) => {
+        timeout = setTimeout(
+          () => reject(new Error(`Atlas Search timed out after ${timeoutMs}ms`)),
+          timeoutMs,
+        );
+      }),
+    ]);
+  } finally {
+    if (timeout) clearTimeout(timeout);
+  }
+}
+
+function buildAtlasSearchStage(input: {
+  textSearch: string;
+  channelId?: string;
+  category?: string;
+  fromDate?: Date | null;
+  toDate?: Date | null;
+  minPrice?: number | null;
+  maxPrice?: number | null;
+  requirePrice?: boolean;
+}) {
+  const fuzzy = { maxEdits: 1, prefixLength: 1, maxExpansions: 50 };
+  const should: Array<Record<string, unknown>> = Object.entries(DEAL_SEARCH_INDEX_WEIGHTS).map(([path, weight]) => ({
+    text: {
+      query: input.textSearch,
+      path,
+      score: { boost: { value: weight } },
+    },
+  }));
+  should.push({
+    text: {
+      query: input.textSearch,
+      path: 'searchTokens',
+      fuzzy,
+      score: { boost: { value: 1 } },
+    },
+  });
+  const filter: Array<Record<string, unknown>> = [];
+
+  if (input.channelId) {
+    filter.push({ equals: { path: 'channelId', value: input.channelId } });
+  }
+  if (input.category) {
+    filter.push({ equals: { path: 'category', value: input.category } });
+  }
+  if (input.fromDate || input.toDate) {
+    filter.push({
+      range: {
+        path: 'date',
+        ...(input.fromDate ? { gte: input.fromDate } : {}),
+        ...(input.toDate ? { lte: input.toDate } : {}),
+      },
+    });
+  }
+  if (input.minPrice !== null || input.maxPrice !== null || input.requirePrice) {
+    filter.push({
+      range: {
+        path: 'price',
+        ...(input.minPrice !== null ? { gte: input.minPrice } : {}),
+        ...(input.maxPrice !== null ? { lte: input.maxPrice } : {}),
+        ...(input.requirePrice && input.minPrice === null ? { gte: 0 } : {}),
+      },
+    });
+  }
+
+  return {
+    $search: {
+      index: DEAL_ATLAS_SEARCH_INDEX_NAME,
+      compound: {
+        should,
+        minimumShouldMatch: 1,
+        ...(filter.length > 0 ? { filter } : {}),
+      },
+    },
+  };
+}
+
 function parseDateOnlyToUtc(dateStr: string, endOfDay: boolean): Date | null {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr);
   if (!match) return null;
@@ -67,9 +157,10 @@ function parseNumericFilter(value: unknown): number | null {
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
 }
 
-export async function getMessagesFromStore(
+async function getMessagesFromStoreWithBackend(
   TelegramMessage: QueryableTelegramMessage,
-  options: MessageQueryOptions = {},
+  options: MessageQueryOptions,
+  searchBackend: SearchBackend,
 ) {
   const {
     limit = 10,
@@ -97,6 +188,8 @@ export async function getMessagesFromStore(
   }
   const isRelevanceSort = Boolean(searchPlan) && !isPriceSort && !isOldestFirst;
   const objectId = mongoose.Types.ObjectId;
+  const fromDate = from ? parseDateOnlyToUtc(from, false) : null;
+  const toDate = to ? parseDateOnlyToUtc(to, true) : null;
 
   const query: TelegramMessageQuery = {};
   if (channelId) {
@@ -107,24 +200,17 @@ export async function getMessagesFromStore(
     query.category = category;
   }
 
-  if (from || to) {
+  if (fromDate || toDate) {
     const dateQuery: Record<string, Date> = {};
-    if (from) {
-      const start = parseDateOnlyToUtc(from, false);
-      if (start) dateQuery.$gte = start;
-    }
-
-    if (to) {
-      const end = parseDateOnlyToUtc(to, true);
-      if (end) dateQuery.$lte = end;
-    }
+    if (fromDate) dateQuery.$gte = fromDate;
+    if (toDate) dateQuery.$lte = toDate;
 
     if (Object.keys(dateQuery).length > 0) {
       query.date = dateQuery;
     }
   }
 
-  if (searchPlan) {
+  if (searchPlan && searchBackend === 'mongoText') {
     query.$text = { $search: searchPlan.textSearch };
   }
 
@@ -140,17 +226,34 @@ export async function getMessagesFromStore(
     query.price = priceRange;
   }
 
-  const filterPipeline: Array<Record<string, unknown>> = [{ $match: query }];
+  const filterPipeline: Array<Record<string, unknown>> = searchPlan && searchBackend === 'atlas'
+    ? [buildAtlasSearchStage({
+        textSearch: searchPlan.textSearch,
+        channelId,
+        category,
+        fromDate,
+        toDate,
+        minPrice: minPriceNumber,
+        maxPrice: maxPriceNumber,
+        requirePrice: isPriceSort,
+      })]
+    : [{ $match: query }];
 
   const resultPipeline = [...filterPipeline];
   if (searchPlan) {
     resultPipeline.push({
       $addFields: {
-        searchScore: { $meta: 'textScore' },
+        searchScore: { $meta: searchBackend === 'atlas' ? 'searchScore' : 'textScore' },
         matchCoverage: {
           $sum: searchPlan.tokenGroups.map((group) => ({
             $cond: [
-              { $gt: [{ $size: { $setIntersection: ['$searchTokens', group] } }, 0] },
+              {
+                $gt: [{
+                  $size: {
+                    $setIntersection: [{ $ifNull: ['$searchTokens', []] }, group],
+                  },
+                }, 0],
+              },
               1,
               0,
             ],
@@ -302,4 +405,24 @@ export async function getMessagesFromStore(
     nextCursor,
     totalDealsCount,
   };
+}
+
+export async function getMessagesFromStore(
+  TelegramMessage: QueryableTelegramMessage,
+  options: MessageQueryOptions = {},
+) {
+  const hasSearchInput = typeof options.search === 'string' && options.search.trim().length > 0;
+  if (!hasSearchInput) {
+    return getMessagesFromStoreWithBackend(TelegramMessage, options, 'mongoText');
+  }
+
+  try {
+    return await withTimeout(
+      getMessagesFromStoreWithBackend(TelegramMessage, options, 'atlas'),
+      ATLAS_SEARCH_TIMEOUT_MS,
+    );
+  } catch (error) {
+    console.warn('Atlas Search failed; retrying with MongoDB text search.', error);
+    return getMessagesFromStoreWithBackend(TelegramMessage, options, 'mongoText');
+  }
 }

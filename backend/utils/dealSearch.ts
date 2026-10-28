@@ -1,6 +1,31 @@
 import type { ProductIdentity } from '../services/telegramTypes';
 
 export const DEAL_SEARCH_INDEX_NAME = 'deal_search_text_v2';
+export const DEAL_ATLAS_SEARCH_INDEX_NAME = 'deal_search_atlas_v1';
+
+export const DEAL_ATLAS_SEARCH_INDEX_DEFINITION = {
+  mappings: {
+    dynamic: false,
+    fields: {
+      searchText: { type: 'string', analyzer: 'lucene.standard' },
+      searchTokens: { type: 'string', analyzer: 'lucene.standard' },
+      identity: {
+        type: 'document',
+        fields: {
+          canonicalName: { type: 'string', analyzer: 'lucene.standard' },
+          brand: { type: 'string', analyzer: 'lucene.standard' },
+          model: { type: 'string', analyzer: 'lucene.standard' },
+          productType: { type: 'string', analyzer: 'lucene.standard' },
+          variant: { type: 'string', analyzer: 'lucene.standard' },
+        },
+      },
+      channelId: { type: 'token' },
+      category: { type: 'token' },
+      date: { type: 'date' },
+      price: { type: 'number' },
+    },
+  },
+} as const;
 
 export const DEAL_SEARCH_INDEX_FIELDS = {
   searchText: 'text',

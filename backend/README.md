@@ -30,6 +30,28 @@ This is the backend server for Deals24, which handles Telegram message aggregati
    npm run dev
    ```
 
+## Atlas Search
+
+Deal search uses the `deal_search_atlas_v1` Atlas Search index as its primary search engine. If Atlas Search is unavailable or the index is still building, the backend automatically retries the request with the existing MongoDB text index.
+
+Create or update the Atlas Search index after configuring `MONGODB_URI`:
+
+```bash
+npm run atlas-search:index
+```
+
+The command is safe to rerun. It updates the existing index definition and waits until Atlas reports that the index is queryable.
+
+## Product identity extraction
+
+Every new deal first uses local headline rules to extract available brand, model, product type, and variants. Uncertain values are left empty instead of guessed. When enabled, Gemini can enrich these local results for deals that already require the AI processing path.
+
+```env
+GEMINI_IDENTITY_EXTRACTION_ENABLED=true
+```
+
+This variable is the default. An authenticated admin can change the value from the Admin page; that override is stored in MongoDB and takes precedence. Turning it off prevents new ingestion requests from being sent to Gemini while local extraction continues.
+
 ### Deal alert email configuration
 
 Deal and keyword alerts use Brevo's HTTPS API. Add these variables to the backend service:

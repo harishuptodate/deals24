@@ -6,7 +6,7 @@ import {
 	DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { handleTrackedLinkClick } from '../../services/api';
+import { trackMessageClick } from '../../services/api';
 import {
 	ChevronDown,
 	ExternalLink,
@@ -122,11 +122,8 @@ const DealDetailDialog = ({
 					target="_blank"
 					rel="noopener noreferrer"
 					onClick={(e) => {
-						void handleTrackedLinkClick(part, id, e.nativeEvent);
-						if (!e.ctrlKey && !e.metaKey && e.button !== 1) {
-							e.preventDefault();
-							e.stopPropagation();
-						}
+						e.stopPropagation();
+						if (id) void trackMessageClick(id);
 					}}
 					className="text-blue-600 hover:underline break-all inline-flex items-center gap-1">
 					{truncateLink(part)} <ExternalLink size={12} />
@@ -211,9 +208,8 @@ const DealDetailDialog = ({
 						<a
 							href={buyNowLink}
 							onClick={(event) => {
-								event.preventDefault();
 								event.stopPropagation();
-								void handleTrackedLinkClick(buyNowLink, id, event.nativeEvent);
+								if (id) void trackMessageClick(id);
 							}}
 							target="_blank"
 							rel="noopener noreferrer"

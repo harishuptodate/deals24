@@ -5,6 +5,8 @@ import { requireAdminAuth } from '../middleware/adminAuth';
 const router = express.Router();
 
 router.post('/deals', requireAdminAuth, adminController.postDeal);
+router.get('/settings', requireAdminAuth, adminController.getSettings);
+router.put('/settings/gemini-identity', requireAdminAuth, adminController.updateGeminiIdentitySetting);
 router.get('/blacklist', requireAdminAuth, adminController.getBlacklist);
 router.post('/blacklist/rules', requireAdminAuth, adminController.saveBlacklistRule);
 router.delete('/blacklist/rules/:id', requireAdminAuth, adminController.deleteBlacklistRule);

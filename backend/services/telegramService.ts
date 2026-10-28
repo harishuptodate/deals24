@@ -1,4 +1,5 @@
 import type {
+  GeneratedMessageContent,
   MessageQueryOptions,
   ProductMatchCandidate,
   TelegramInboundMessage,
@@ -36,6 +37,8 @@ import {
   shouldUseGeminiForDeal,
 } from './productMatching';
 import { processDealAlerts } from './dealAlertService';
+import { getGeminiIdentitySetting } from './appSettings';
+import { extractLocalProductIdentity, mergeProductIdentities } from './localProductIdentity';
 
 const AI_MATCH_THRESHOLD = 0.92;
 
@@ -262,6 +265,7 @@ export async function saveMessage(message: TelegramInboundMessage, options: Save
     const localCategoryDecision = detectCategoryDecision(canonicalText);
     const localCategory = detectCategory(canonicalText);
     const localPrice = extractPrice(canonicalText);
+    const localIdentity = extractLocalProductIdentity(canonicalText).identity;
     const cheapLocalProcessing = shouldUseLocalDealProcessing(
       localCategoryDecision.category,
       localPrice,
@@ -276,7 +280,8 @@ export async function saveMessage(message: TelegramInboundMessage, options: Save
     const deterministicResult = directAsinMatch || (isAmazonDeal
       ? await findDeterministicMatch(amazonAsin)
       : null);
-    const useGemini = shouldUseGeminiForDeal({
+    const geminiIdentitySetting = await getGeminiIdentitySetting();
+    const useGemini = geminiIdentitySetting.enabled && shouldUseGeminiForDeal({
       isAmazonDeal,
       hasDeterministicMatch: Boolean(deterministicResult),
       localApprovalPassed: captionReadiness.ready,
@@ -286,6 +291,8 @@ export async function saveMessage(message: TelegramInboundMessage, options: Save
     if (!useGemini) {
       const localProcessingReason = deterministicResult
         ? deterministicResult.method
+        : !geminiIdentitySetting.enabled
+        ? 'gemini-identity-disabled'
         : cheapLocalProcessing
         ? (localCategoryDecision.category === 'fashion' ? 'fashion' : 'price-under-1000')
         : 'amazon-local-approval';
@@ -297,7 +304,7 @@ export async function saveMessage(message: TelegramInboundMessage, options: Save
     const candidates = useGemini
       ? await findMatchCandidates(canonicalText, localCategory)
       : [];
-    const processedContent = useGemini
+    const processedContent: GeneratedMessageContent = useGemini
       ? await generateMessageContent(canonicalText, candidates)
       : {
           normalizedText: canonicalText,
@@ -307,6 +314,7 @@ export async function saveMessage(message: TelegramInboundMessage, options: Save
           price: localPrice,
           usedFallback: false,
         };
+    processedContent.identity = mergeProductIdentities(localIdentity, processedContent.identity);
     const textToSave = removeDisallowedEmojis(processedContent.normalizedText).trim();
     const identityKey = buildIdentityKey(processedContent.identity);
 
@@ -325,10 +333,10 @@ export async function saveMessage(message: TelegramInboundMessage, options: Save
       }
     }
 
-    if (!matchedMessage && useGemini && identityKey) {
+    if (!matchedMessage && identityKey) {
       matchedMessage = await TelegramMessage.findOne({ identityKey });
       if (matchedMessage) {
-        matchMethod = 'gemini-identity';
+        matchMethod = useGemini ? 'gemini-identity' : 'local-identity';
         matchConfidence = 0.95;
       }
     }

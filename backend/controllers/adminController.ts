@@ -14,6 +14,7 @@ import {
   upsertBlacklistRule,
 } from '../services/blacklistService';
 import { createLogger, fetchRecentLogs, logEmitter, queryLogs } from '../services/logger';
+import { getGeminiIdentitySetting, setGeminiIdentitySetting } from '../services/appSettings';
 import { saveMessage } from '../services/telegramService';
 import type { DealIngestionRejection } from '../services/telegramService';
 
@@ -43,6 +44,39 @@ type BlacklistRuleRequest = Request<
   { brand?: string; product?: string; action?: string }
 >;
 type PostDealRequest = Request<unknown, unknown, { message?: string }>;
+type GeminiIdentitySettingRequest = Request<unknown, unknown, { enabled?: unknown }>;
+
+export async function getSettings(_req: Request, res: Response) {
+  try {
+    const geminiIdentityExtraction = await getGeminiIdentitySetting();
+    return res.json({ success: true, geminiIdentityExtraction });
+  } catch (error) {
+    logger.error('Failed to load admin settings', { error }, { event: 'admin_settings_load_failed' });
+    return res.status(500).json({ success: false, error: 'Failed to load admin settings.' });
+  }
+}
+
+export async function updateGeminiIdentitySetting(
+  req: GeminiIdentitySettingRequest,
+  res: Response,
+) {
+  if (typeof req.body?.enabled !== 'boolean') {
+    return res.status(400).json({ success: false, error: 'Enabled must be a boolean.' });
+  }
+
+  try {
+    const geminiIdentityExtraction = await setGeminiIdentitySetting(req.body.enabled);
+    logger.info(
+      'Gemini identity extraction setting updated',
+      { enabled: req.body.enabled },
+      { event: 'gemini_identity_setting_updated' },
+    );
+    return res.json({ success: true, geminiIdentityExtraction });
+  } catch (error) {
+    logger.error('Failed to update admin settings', { error }, { event: 'admin_settings_update_failed' });
+    return res.status(500).json({ success: false, error: 'Failed to update admin settings.' });
+  }
+}
 
 export async function postDeal(req: PostDealRequest, res: Response) {
   const messageText = typeof req.body?.message === 'string' ? req.body.message.trim() : '';
