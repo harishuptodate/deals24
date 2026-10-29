@@ -1,8 +1,6 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Bell, Heart, HeartCrack, Share2 } from 'lucide-react';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { ArrowLeft, Bell, Heart, Share2 } from 'lucide-react';
 
 interface DealPageHeaderProps {
   onGoBack: () => void;
@@ -13,84 +11,24 @@ interface DealPageHeaderProps {
   onCreateAlert: () => void;
 }
 
-const DealPageHeader = ({
-  onGoBack,
-  isSaved,
-  isSharing,
-  onToggleWishlist,
-  onShare,
-  onCreateAlert,
-}: DealPageHeaderProps) => {
-  const isMobile = useIsMobile();
-
-  return (
-    <>
-      <Button 
-        variant="outline" 
-        onClick={onGoBack} 
-        className="mb-6 flex items-center gap-2">
-        <ArrowLeft size={16} />
-        Back
+const DealPageHeader = ({ onGoBack, isSaved, isSharing, onToggleWishlist, onShare, onCreateAlert }: DealPageHeaderProps) => (
+  <div className="flex w-full items-center justify-between gap-2">
+    <Button variant="ghost" onClick={onGoBack} aria-label="Go back" className="h-10 w-10 gap-2 rounded-full p-0 sm:w-auto sm:min-w-24 sm:px-4">
+      <ArrowLeft size={16} aria-hidden="true" /><span className="hidden sm:inline">Back</span>
+    </Button>
+    <div className="flex items-center gap-2">
+      <Button onClick={onToggleWishlist} variant="ghost" aria-label={isSaved ? 'Remove from wishlist' : 'Save to wishlist'} aria-pressed={isSaved} className="h-10 w-10 gap-2 rounded-full p-0 sm:w-auto sm:min-w-24 sm:px-4">
+        <Heart size={16} aria-hidden="true" className={isSaved ? 'fill-rose-500 text-rose-500' : ''} />
+        <span className="hidden sm:inline">{isSaved ? 'Saved' : 'Save'}</span>
       </Button>
-
-      <div className="flex gap-2">
-        <Button
-          onClick={onToggleWishlist}
-          className="flex gap-2 items-center"
-          variant="outline"
-        >
-          {isSaved ? (
-            <>
-              {isMobile ? (
-                <HeartCrack size={16} 
-                  className="w-5 h-5 fill-red-500 text-red-500"/>
-              ) : (
-                <>
-                  <HeartCrack size={16}
-                    className="w-5 h-5 fill-red-500 text-red-500" />
-                  Remove from Wishlist
-                </>
-              )} 
-            </>
-          ) : (
-            <>
-              {isMobile ? (
-                <Heart size={16} />
-              ) : (
-                <>
-                  <Heart size={16} />
-                  Add to Wishlist 
-                </>
-              )}
-            </>
-          )}
-        </Button>
-        <Button
-          onClick={onShare}
-          disabled={isSharing}
-          className="flex gap-2 items-center"
-          variant="outline"
-        >
-          {isMobile ? (
-            <Share2 size={16} className="w-5 h-5 text-blue-500" />
-          ) : (
-            <>
-              <Share2 size={16} className="w-5 h-5 text-blue-500" />
-              {isSharing ? "Sharing..." : "Share Deal"}
-            </>
-          )}
-        </Button>
-        <Button
-          onClick={onCreateAlert}
-          className="flex gap-2 items-center"
-          variant="outline"
-        >
-          <Bell size={16} className="h-5 w-5 text-violet-500" />
-          {!isMobile && 'Create Alert'}
-        </Button>
-      </div>
-    </>
-  );
-};
+      <Button onClick={onShare} disabled={isSharing} variant="ghost" aria-label={isSharing ? 'Sharing deal' : 'Share deal'} className="h-10 w-10 gap-2 rounded-full p-0 sm:w-auto sm:min-w-24 sm:px-4">
+        <Share2 size={16} aria-hidden="true" /><span className="hidden sm:inline">{isSharing ? 'Sharing...' : 'Share'}</span>
+      </Button>
+      <Button onClick={onCreateAlert} variant="outline" aria-label="Create price alert" className="h-10 w-10 gap-2 rounded-full p-0 sm:w-auto sm:px-4">
+        <Bell size={16} aria-hidden="true" /><span className="hidden sm:inline">Price alert</span>
+      </Button>
+    </div>
+  </div>
+);
 
 export default DealPageHeader;

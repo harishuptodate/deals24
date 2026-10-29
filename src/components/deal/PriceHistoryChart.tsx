@@ -67,6 +67,7 @@ const PriceLabel = ({
   value?: number;
 }) => (
   <text
+    className="deal-price-label"
     x={x}
     y={y - 10}
     textAnchor="middle"

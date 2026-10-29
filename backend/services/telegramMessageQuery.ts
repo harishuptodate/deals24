@@ -2,8 +2,9 @@ import type { MessageQueryOptions } from './telegramTypes';
 import mongoose from 'mongoose';
 import {
   buildDealSearchPlan,
-  DEAL_ATLAS_SEARCH_INDEX_NAME,
-  DEAL_SEARCH_INDEX_WEIGHTS,
+  buildAtlasSearchStage,
+  buildDealSearchRankingStage,
+  DEAL_SEARCH_RELEVANCE_SORT,
 } from '../utils/dealSearch';
 
 type QueryableTelegramMessage = {
@@ -59,71 +60,6 @@ async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T
   }
 }
 
-function buildAtlasSearchStage(input: {
-  textSearch: string;
-  channelId?: string;
-  category?: string;
-  fromDate?: Date | null;
-  toDate?: Date | null;
-  minPrice?: number | null;
-  maxPrice?: number | null;
-  requirePrice?: boolean;
-}) {
-  const fuzzy = { maxEdits: 1, prefixLength: 1, maxExpansions: 50 };
-  const should: Array<Record<string, unknown>> = Object.entries(DEAL_SEARCH_INDEX_WEIGHTS).map(([path, weight]) => ({
-    text: {
-      query: input.textSearch,
-      path,
-      score: { boost: { value: weight } },
-    },
-  }));
-  should.push({
-    text: {
-      query: input.textSearch,
-      path: 'searchTokens',
-      fuzzy,
-      score: { boost: { value: 1 } },
-    },
-  });
-  const filter: Array<Record<string, unknown>> = [];
-
-  if (input.channelId) {
-    filter.push({ equals: { path: 'channelId', value: input.channelId } });
-  }
-  if (input.category) {
-    filter.push({ equals: { path: 'category', value: input.category } });
-  }
-  if (input.fromDate || input.toDate) {
-    filter.push({
-      range: {
-        path: 'date',
-        ...(input.fromDate ? { gte: input.fromDate } : {}),
-        ...(input.toDate ? { lte: input.toDate } : {}),
-      },
-    });
-  }
-  if (input.minPrice !== null || input.maxPrice !== null || input.requirePrice) {
-    filter.push({
-      range: {
-        path: 'price',
-        ...(input.minPrice !== null ? { gte: input.minPrice } : {}),
-        ...(input.maxPrice !== null ? { lte: input.maxPrice } : {}),
-        ...(input.requirePrice && input.minPrice === null ? { gte: 0 } : {}),
-      },
-    });
-  }
-
-  return {
-    $search: {
-      index: DEAL_ATLAS_SEARCH_INDEX_NAME,
-      compound: {
-        should,
-        minimumShouldMatch: 1,
-        ...(filter.length > 0 ? { filter } : {}),
-      },
-    },
-  };
-}
 
 function parseDateOnlyToUtc(dateStr: string, endOfDay: boolean): Date | null {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr);
@@ -241,26 +177,7 @@ async function getMessagesFromStoreWithBackend(
 
   const resultPipeline = [...filterPipeline];
   if (searchPlan) {
-    resultPipeline.push({
-      $addFields: {
-        searchScore: { $meta: searchBackend === 'atlas' ? 'searchScore' : 'textScore' },
-        matchCoverage: {
-          $sum: searchPlan.tokenGroups.map((group) => ({
-            $cond: [
-              {
-                $gt: [{
-                  $size: {
-                    $setIntersection: [{ $ifNull: ['$searchTokens', []] }, group],
-                  },
-                }, 0],
-              },
-              1,
-              0,
-            ],
-          })),
-        },
-      },
-    });
+    resultPipeline.push(buildDealSearchRankingStage(searchPlan, searchBackend));
   }
 
   if (cursor && isPriceSort) {
@@ -343,7 +260,7 @@ async function getMessagesFromStoreWithBackend(
   const sortStage = isPriceSort
     ? { $sort: { price: isPriceAsc ? 1 : -1, _id: isPriceAsc ? 1 : -1 } }
     : isRelevanceSort
-      ? { $sort: { matchCoverage: -1, date: -1, searchScore: -1, clicks: -1, _id: -1 } }
+      ? { $sort: DEAL_SEARCH_RELEVANCE_SORT }
       : { $sort: { date: isOldestFirst ? 1 : -1, _id: isOldestFirst ? 1 : -1 } };
 
   const projectionStage = {

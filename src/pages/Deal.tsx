@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { BigFooter } from '@/components/BigFooter';
 import DealPageHeader from '../components/deal/DealPageHeader';
 import DealPageContent from '../components/deal/DealPageContent';
-import PriceHistoryChart from '../components/deal/PriceHistoryChart';
 import { useDealPage } from '../hooks/useDealPage';
 import DealAlertDialog from '@/components/wishlist/DealAlertDialog';
 import { createDealAlert } from '@/services/api/alertsApi';
@@ -29,12 +28,20 @@ const Deal = () => {
   return (
     <div className="min-h-screen bg-white dark:bg-[#09090B]">
       <Navbar />
-      <main className="container mx-auto max-w-4xl px-4 py-6 md:py-12">
+      <main className="mx-auto max-w-7xl px-4 py-5 sm:px-8 md:py-8 lg:px-12">
         {isLoading ? (
-          <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
-            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
-            <div className="h-64 bg-gray-200 dark:bg-gray-700 rounded"></div>
+          <div role="status" aria-label="Loading deal" className="animate-pulse">
+            <span className="sr-only">Loading deal…</span>
+            <div className="mb-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800" />
+            <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:gap-14">
+              <div className="aspect-square rounded-3xl bg-zinc-100 dark:bg-zinc-800" />
+              <div className="space-y-6">
+                <div className="h-8 w-3/4 rounded bg-zinc-100 dark:bg-zinc-800" />
+                <div className="h-4 w-1/3 rounded bg-zinc-100 dark:bg-zinc-800" />
+                <div className="h-12 w-60 rounded-full bg-zinc-100 dark:bg-zinc-800" />
+                <div className="h-64 rounded-2xl bg-zinc-100 dark:bg-zinc-800" />
+              </div>
+            </div>
           </div>
         ) : isError ? (
           <div className="text-center py-8">
@@ -48,7 +55,7 @@ const Deal = () => {
           </div>
         ) : deal ? (
           <>
-            <div className="flex justify-between items-start mb-6">
+            <div className="mb-6 border-b border-zinc-100 pb-5 dark:border-zinc-800 md:mb-10">
               <DealPageHeader
                 onGoBack={handleGoBack}
                 isSaved={isSaved}
@@ -59,9 +66,6 @@ const Deal = () => {
               />
             </div>
             <DealPageContent deal={deal} id={id} />
-            <div className="mt-6 rounded-xl border border-gray-200 p-4 shadow-md dark:border-gray-900 dark:bg-zinc-950 md:p-6">
-              <PriceHistoryChart dealId={id} enabled />
-            </div>
           </>
         ) : (
           <div className="text-center py-8">

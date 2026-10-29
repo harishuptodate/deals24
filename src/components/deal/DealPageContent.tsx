@@ -1,10 +1,9 @@
-
 import React from 'react';
-import { ExternalLink } from 'lucide-react';
+import { ArrowUpRight, CalendarDays } from 'lucide-react';
 import { extractFirstLink, extractSecondLink, truncateLink } from './utils/linkUtils';
-import { handleTrackedLinkClick } from '../../services/api';
-import CachedTelegramImage from '../images/CachedTelegramImage';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { trackMessageClick } from '../../services/api';
+import DealImage from '../images/DealImage';
+import PriceHistoryChart from './PriceHistoryChart';
 
 interface DealPageContentProps {
   deal: {
@@ -15,154 +14,85 @@ interface DealPageContentProps {
     createdAt?: string;
     imageUrl?: string;
     telegramFileId?: string;
+    price?: number | null;
   };
   id?: string;
 }
 
 const DealPageContent = ({ deal, id }: DealPageContentProps) => {
-    const isMobile = useIsMobile();
-  
-  const makeLinksClickable = (text: string) => {
-    if (!text) return '';
-
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    const parts = text.split(urlRegex);
-
-    return parts.map((part, index) => {
-      if (part.match(urlRegex)) {
-        return (
-          <a
-            key={`link-${index}-${part.substring(0, 10)}`}
-            href={part}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => {
-              handleTrackedLinkClick(part, id, e.nativeEvent);
-
-              if (e.ctrlKey || e.metaKey || e.button === 1) return;
-
-              e.preventDefault();
-              e.stopPropagation();
-
-              setTimeout(() => {
-                window.open(part, '_blank');
-              }, 100);
-            }}
-            className="text-blue-600 hover:underline break-all inline-flex items-center gap-1">
-            {truncateLink(part)}
-            <ExternalLink size={12} />
-          </a>
-        );
-      }
-      return <span key={`text-${index}-${part.substring(0, 10)}`}>{part}</span>;
-    });
-  };
-
-  const renderImage = () => {
-    if (deal.imageUrl) {
-      return (
-        isMobile ? (
-          <img
-            src={deal.imageUrl}
-            alt={deal.text?.split('\n')[0] || 'Product Image'}
-            className="w-full max-w-40 mx-auto h-auto object-contain rounded-lg"
-            onError={(e) => {
-              console.error('Failed to load image:', deal.imageUrl);
-              e.currentTarget.style.display = 'none';
-            }}
-          />
-        ) : (
-        <img 
-          src={deal.imageUrl} 
-          alt={deal.text?.split('\n')[0] || 'Product Image'}
-          // className="w-full max-w-md mx-auto h-auto object-contain rounded-lg"
-          className="w-full max-w-52 mx-auto h-auto object-contain rounded-lg"
-          onError={(e) => {
-            console.error('Failed to load image:', deal.imageUrl);
-            e.currentTarget.style.display = 'none';
-          }}
-        />
-      )
-    );
-    } else if (deal.telegramFileId) {
-      return (
-        isMobile ? (
-          <CachedTelegramImage
-            telegramFileId={deal.telegramFileId}
-            alt={deal.text?.split('\n')[0] || 'Product Image'}
-            className="w-full max-w-xs mx-auto object-contain h-auto rounded-lg"
-          />
-        ) : (
-        <CachedTelegramImage
-          telegramFileId={deal.telegramFileId}
-          alt={deal.text?.split('\n')[0] || 'Product Image'}
-          className="w-full max-w-md mx-auto object-contain h-auto rounded-lg"
-        />
-      )
-    );
-    }
-    return null;
-  };
-
-  const hasImage = deal.imageUrl || deal.telegramFileId;
+  const [title, ...descriptionLines] = (deal.text || '').trim().split('\n');
+  const description = descriptionLines.join('\n').trim();
   const buyNowLink = deal.link || extractSecondLink(deal.text || '') || extractFirstLink(deal.text || '');
+  const addedAt = new Date(deal.date || deal.createdAt || '');
+  const category = deal.category?.split('-').join(' ');
+  const hasPrice = typeof deal.price === 'number' && Number.isFinite(deal.price);
+  const trackClick = () => { if (id) void trackMessageClick(id); };
+
+  const makeLinksClickable = (text: string) => text.split(/(https?:\/\/[^\s]+)/g).map((part, index) => (
+    /^https?:\/\//.test(part) ? (
+      <a key={index} href={part} target="_blank" rel="noopener noreferrer" onClick={trackClick}
+        className="break-all text-blue-600 underline decoration-blue-200 underline-offset-4 hover:decoration-blue-600 dark:text-blue-400">
+        {truncateLink(part)}
+      </a>
+    ) : <React.Fragment key={index}>{part}</React.Fragment>
+  ));
 
   return (
-    // <div className="glass-effect rounded-2xl p-6 md:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-200 dark:border-gray-900 dark:bg-zinc-950">
-      <div className="glass-effect rounded-xl p-4 md:p-6 shadow-md border border-gray-200 dark:border-gray-900 dark:bg-zinc-950">
+    <article className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:gap-14 xl:gap-20">
+      <div className="min-w-0 lg:sticky lg:top-28">
+        <div className="flex aspect-square items-center justify-center overflow-hidden rounded-3xl border border-zinc-100 bg-[#f7f7f8] p-8 dark:border-zinc-800 dark:bg-zinc-900 sm:p-12">
+          <DealImage key={id} title={title || 'Product image'} category={deal.category} imageUrl={deal.imageUrl}
+            telegramFileId={deal.telegramFileId} className="h-full w-full rounded-xl object-contain" />
+        </div>
+        <p className="mt-4 text-center text-xs text-zinc-500 dark:text-zinc-400">Product image for reference. See retailer for full specifications.</p>
+      </div>
 
-      <div className="flex justify-center items-start mb-6">
-        <div>
-          <h1 className="text-xl md:text-2xl font-semibold mb-2"> 
-          {/* <h1 className="text-2xl md:text-3xl font-bold mb-2"> */}
-            {deal.text?.split('\n')[0] || 'Deal Title'}
-          </h1>
-          {deal.category && (
-            // <span className="inline-block px-3 py-1 text-xs font-medium bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded-full">
-              <span className="inline-block px-2 py-0.5 text-[10px] font-medium bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded-full">
-              {deal.category.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-            </span>
+      <div className="min-w-0">
+        <header>
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400">{category || 'Discover the deal'}</p>
+          <h1 className="break-words text-[1.275rem] font-semibold leading-tight tracking-tight text-zinc-950 dark:text-zinc-50 sm:text-[1.59375rem] xl:text-[1.9125rem]">{title || 'Deal details'}</h1>
+          {!Number.isNaN(addedAt.getTime()) && (
+            <p className="mt-4 flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
+              <CalendarDays size={14} aria-hidden="true" />
+              Added {addedAt.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+            </p>
           )}
-        </div>
-      </div>
+        </header>
 
-      {/* Display image if available */}
-      {hasImage && (
-        <div className="mb-6">
-          {renderImage()}
-        </div>
-      )}
+        <section aria-label="Purchase details" className="my-5 grid grid-cols-1 items-center gap-x-6 gap-y-2 border-y border-zinc-200 py-4 dark:border-zinc-800 sm:grid-cols-[minmax(0,1fr)_minmax(0,16rem)]">
+          {hasPrice && (
+            <>
+              <p className="text-xs leading-5 text-zinc-500 dark:text-zinc-400 sm:col-span-2">Deal price</p>
+              <p className="flex min-h-12 min-w-0 items-center break-all text-4xl font-semibold leading-none tracking-tight text-zinc-950 dark:text-white">
+                {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 }).format(deal.price)}
+              </p>
+            </>
+          )}
+          {buyNowLink && (
+            <a href={buyNowLink} onClick={trackClick} target="_blank" rel="noopener noreferrer"
+              className={`inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-zinc-950 px-6 py-3 text-sm font-medium leading-6 text-white transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-4 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200 ${hasPrice ? 'sm:col-start-2' : 'sm:col-span-2'}`}>
+              Buy now <ArrowUpRight size={18} aria-hidden="true" />
+            </a>
+          )}
+        </section>
 
-      {isMobile ? (
-        <div className="whitespace-pre-line text-gray-700 dark:text-gray-300 mt-6 font-mono text-sm text-center">
-        {makeLinksClickable(deal.text || '')}
-      </div>
-      ):(
+        <section aria-label="Price history" className="rounded-2xl border border-zinc-200 p-3 dark:border-zinc-800 sm:p-5 lg:[&_.deal-price-label]:text-[11.5px]">
+          <div className="overflow-x-auto">
+            <div className="w-[125%] sm:w-full">
+              <PriceHistoryChart dealId={id} enabled />
+            </div>
+          </div>
+        </section>
+        <p className="mt-3 text-xs leading-5 text-zinc-500 dark:text-zinc-400">Confirm the final price and availability on the retailer&apos;s website.</p>
 
-      <div className="whitespace-pre-line text-gray-700 dark:text-gray-300 mt-6 font-mono text-center">
-        {makeLinksClickable(deal.text || '')}
+        {description && (
+          <section aria-labelledby="deal-description" className="mt-8">
+            <h2 id="deal-description" className="text-lg font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">About this deal</h2>
+            <div className="mt-4 whitespace-pre-line break-words text-sm leading-7 text-zinc-600 dark:text-zinc-300">{makeLinksClickable(description)}</div>
+          </section>
+        )}
       </div>
-      )}
-
-      {buyNowLink && (
-        <div className="mt-8 flex justify-center">
-          <a
-            href={buyNowLink}
-            onClick={(e) => handleTrackedLinkClick(buyNowLink, id, e.nativeEvent)}
-            target="_blank"
-            rel="noopener noreferrer"
-          //   className="inline-block w-full sm:w-auto text-center px-6 py-3 text-sm font-medium text-white bg-gradient-to-b from-apple-darkGray to-indigo-950 rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-apple-darkGray/20 hover:scale-105"
-          // >
-          className="inline-block w-80 text-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-b from-apple-darkGray to-indigo-950 rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-apple-darkGray/20 hover:scale-105">
-            Buy Now
-          </a>
-        </div>
-      )}
-      
-      <div className="mt-6 text-sm text-gray-500 dark:text-gray-400 text-center">
-        Deal added: {new Date(deal.date || deal.createdAt || '').toLocaleDateString()}
-      </div>
-    </div>
+    </article>
   );
 };
 

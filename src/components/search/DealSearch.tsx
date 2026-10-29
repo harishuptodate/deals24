@@ -41,7 +41,14 @@ export default function DealSearch() {
   FILTER_KEYS.forEach((key) => { if (params.has(key)) filterParams.set(key, params.get(key)!); });
   const filters = filterParams.toString();
 
-  useEffect(() => { setDraft(urlQuery); }, [urlQuery]);
+  const liveQueryRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (liveQueryRef.current === urlQuery) {
+      liveQueryRef.current = null;
+      return;
+    }
+    setDraft(urlQuery);
+  }, [urlQuery]);
   useEffect(() => {
     const timer = setTimeout(() => setDebounced(normalized), 350); // was 275
     return () => clearTimeout(timer);
@@ -80,6 +87,7 @@ export default function DealSearch() {
     const timer = setTimeout(() => {
       const next = new URLSearchParams(location.search);
       if (normalized) next.set('search', normalized); else next.delete('search');
+      liveQueryRef.current = normalized;
       navigate(`/deals?${next.toString()}`, { replace: true, preventScrollReset: true });
     }, 500); // was 350
     return () => clearTimeout(timer);

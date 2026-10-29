@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { getMessagesFromStore } from './telegramMessageQuery';
 import {
   getSearchSuggestions, shapeSuggestions, suggestionCacheIdentity, buildSuggestionFilter,
 } from './searchSuggestions';
@@ -52,7 +53,7 @@ test('preserves Telegram image IDs in both search backends', async () => {
   assert.equal(shapeSuggestions([{ _id: 'no-image' }], 'samsung').deals[0].telegramFileId, null);
 });
 
-test('short TV searches use whole concepts instead of matching TVS motorcycle prefixes', async () => {
+test('TV searches retain synonym expansion and Atlas fuzzy matching', async () => {
   const pipelines: unknown[][] = [];
   const store = { aggregate: <Row>(pipeline: unknown[]) => ({ option: async () => {
     pipelines.push(pipeline);
@@ -61,14 +62,15 @@ test('short TV searches use whole concepts instead of matching TVS motorcycle pr
   await getSearchSuggestions(store, 'tv');
   const stage = JSON.stringify(pipelines[0][0]);
   assert.ok(stage.includes('television'));
+  assert.ok(stage.includes('fuzzy'));
   assert.ok(!stage.includes('autocomplete'));
   const stages = pipelines[0] as Array<Record<string, unknown>>;
   const sortIndex = stages.findIndex((stage) => '$sort' in stage);
-  assert.deepEqual(stages[sortIndex], { $sort: { coverage: -1, date: -1, _id: -1 } });
+  assert.deepEqual(stages[sortIndex], { $sort: { matchCoverage: -1, date: -1, searchScore: -1, clicks: -1, _id: -1 } });
   assert.ok(!stages.slice(0, sortIndex).some((entry) => '$limit' in entry));
 });
 
-test('autocomplete fallback preserves every filter and escapes query tokens', async () => {
+test('text search fallback preserves every filter', async () => {
   const pipelines: unknown[][] = [];
   const store = { aggregate: <Row>(pipeline: unknown[]) => ({ option: async () => {
     pipelines.push(pipeline);
@@ -80,3 +82,27 @@ test('autocomplete fallback preserves every filter and escapes query tokens', as
   assert.deepEqual((pipelines[1][0] as { $match: { price: unknown } }).$match.price, { $lte: 30000 });
   assert.ok(JSON.stringify(pipelines[1]).includes('electronics-home'));
 });
+
+for (const query of ['lg washing machine', 'lg washin machine', 'samsung s23', 'samung s25 ultra']) {
+  for (const fallback of [false, true]) {
+    test(`dropdown and grid share matching and ranking for "${query}" (fallback=${fallback})`, async () => {
+      const previewPipelines: unknown[][] = [];
+      const gridPipelines: unknown[][] = [];
+      const capture = (pipelines: unknown[][], pipeline: unknown[]) => {
+        pipelines.push(pipeline);
+        if (fallback && '$search' in (pipeline[0] as object)) throw new Error('Atlas unavailable');
+        return [];
+      };
+      await getSearchSuggestions({ aggregate: <Row>(pipeline: unknown[]) => ({
+        option: async () => capture(previewPipelines, pipeline) as Row[],
+      }) }, query);
+      await getMessagesFromStore({ aggregate: async <Row>(pipeline: unknown[]) => capture(gridPipelines, pipeline) as Row[] }, { search: query });
+      const preview = previewPipelines.at(-1) as Array<Record<string, unknown>>;
+      const grid = [...gridPipelines].reverse().find((pipeline) => pipeline.some((stage) => '$addFields' in (stage as object))) as Array<Record<string, unknown>>;
+      assert.deepEqual(preview[0], grid[0]);
+      assert.deepEqual(preview.find((stage) => '$addFields' in stage), grid.find((stage) => '$addFields' in stage));
+      assert.deepEqual(preview.find((stage) => '$sort' in stage), grid.find((stage) => '$sort' in stage));
+      assert.ok(!preview.some((stage) => '$match' in stage && '$and' in (stage.$match as object)));
+    });
+  }
+}

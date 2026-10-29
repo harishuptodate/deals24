@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import type { ProductIdentity } from './telegramTypes';
-import { DEAL_ATLAS_SEARCH_INDEX_NAME, buildDealSearchPlan } from '../utils/dealSearch';
+import { buildAtlasSearchStage, buildDealSearchPlan, buildDealSearchRankingStage, DEAL_SEARCH_RELEVANCE_SORT } from '../utils/dealSearch';
 
 export const SEARCH_CATEGORIES = [
   { label: 'Mobile phones', category: 'mobile-phones', terms: 'phone mobile smartphone iphone samsung' },
@@ -28,7 +28,7 @@ export function suggestionCacheIdentity(query: string, filters: SuggestionFilter
     (key) => filters[key as keyof SuggestionFilters] || '',
   )]);
   const fingerprint = createHash('sha256').update(canonical).digest('hex');
-  return { fingerprint, key: `search:suggestions:v1:${parseInt(fingerprint.slice(0, 8), 16) % 256}` };
+  return { fingerprint, key: `search:suggestions:v3:${parseInt(fingerprint.slice(0, 8), 16) % 256}` };
 }
 
 export function buildSuggestionFilter(filters: SuggestionFilters): Record<string, unknown> {
@@ -82,35 +82,22 @@ export async function getSearchSuggestions(store: SuggestionStore, rawQuery: str
   const query = normalizeSuggestionQuery(rawQuery);
   const plan = buildDealSearchPlan(query);
   if (query.length < 2 || !plan.textSearch) return shapeSuggestions([], query);
-  const isShortConcept = ['tv', 'ac', 'tws'].includes(query);
   const match = buildSuggestionFilter(filters);
   const projection = { $project: { text: 1, identity: 1, identityKey: 1, amazonAsin: 1, date: 1, price: 1, imageUrl: 1, telegramFileId: 1, category: 1 } };
   let rows: SuggestionRow[];
   try {
     rows = await store.aggregate<SuggestionRow>([
-      { $search: { index: DEAL_ATLAS_SEARCH_INDEX_NAME, compound: {
-        should: isShortConcept ? [{ text: { query: plan.textSearch, path: 'searchTokens' } }] : ['identity.canonicalName', 'searchText'].map((path) => ({ autocomplete: {
-          path, query, tokenOrder: 'sequential',
-          ...(query.length >= 4 ? { fuzzy: { maxEdits: 1, prefixLength: 2, maxExpansions: 20 } } : {}),
-        } })), minimumShouldMatch: 1,
-      } } },
+      buildAtlasSearchStage({ textSearch: plan.textSearch, minPrice: null, maxPrice: null }),
       { $match: match },
-      { $set: {
-        coverage: { $sum: plan.tokenGroups.map((group) => ({ $cond: [
-          { $gt: [{ $size: { $setIntersection: [{ $ifNull: ['$searchTokens', []] }, group] } }, 0] }, 1, 0,
-        ] })) },
-      } },
-      { $sort: { coverage: -1, date: -1, _id: -1 } },
+      buildDealSearchRankingStage(plan, 'atlas'),
+      { $sort: DEAL_SEARCH_RELEVANCE_SORT },
       { $limit: 25 }, projection,
     ]).option({ maxTimeMS: 1800 });
   } catch {
-    const tokens = query.match(/[\p{L}\p{N}]+/gu)?.slice(0, 6) || [];
-    if (!tokens.length) return shapeSuggestions([], query);
-    const clauses = isShortConcept ? [{ searchTokens: { $in: plan.tokenGroups.flat() } }] : tokens.map((token) => ({ searchText: {
-      $regex: `(?:^|\\s)${token.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&')}`, $options: 'i',
-    } }));
     rows = await store.aggregate<SuggestionRow>([
-      { $match: { ...match, $and: clauses } }, { $sort: { date: -1, _id: -1 } },
+      { $match: { ...match, $text: { $search: plan.textSearch } } },
+      buildDealSearchRankingStage(plan, 'mongoText'),
+      { $sort: DEAL_SEARCH_RELEVANCE_SORT },
       { $limit: 25 }, projection,
     ]).option({ maxTimeMS: 1800 });
   }
