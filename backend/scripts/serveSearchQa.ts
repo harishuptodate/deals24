@@ -4,7 +4,7 @@ import express from 'express';
 import cors from 'cors';
 import SearchSession from '../models/SearchSession';
 import TelegramMessage from '../models/TelegramMessage';
-import { markAtlasFailure } from '../services/atlasSearchHealth';
+import { getSearchMetrics, markAtlasFailure } from '../services/atlasSearchHealth';
 
 dotenv.config({ path: '../.env' });
 dotenv.config();
@@ -20,23 +20,10 @@ async function main() {
   await mongoose.connect(process.env.MONGODB_URI, { autoIndex: false, autoCreate: false });
   await SearchSession.createIndexes();
   const app = express();
-  const metrics = { atlas: 0, mongoTokens: 0, failed: 0 };
-  const originalInfo = console.info.bind(console);
-  console.info = (...args) => {
-    try {
-      const event = JSON.parse(String(args[0]));
-      if (event.event === 'deal_search') {
-        if (event.backend === 'atlas') metrics.atlas++;
-        else metrics.mongoTokens++;
-        if (!event.success) metrics.failed++;
-      }
-    } catch { /* Other application logs are not metrics. */ }
-    originalInfo(...args);
-  };
   app.use(cors());
   app.use(express.json());
   app.get('/api/health', (_req, res) => res.json({ status: 'ok', mode: 'search-qa' }));
-  app.get('/__qa/metrics', (_req, res) => res.json(metrics));
+  app.get('/__qa/metrics', (_req, res) => res.json(getSearchMetrics()));
   app.post('/__qa/fallback', (_req, res) => { markAtlasFailure(TelegramMessage); res.sendStatus(204); });
   app.post('/api/telegram/search/selection', (_req, res) => res.sendStatus(204));
   app.use((req, res, next) => ['GET', 'HEAD', 'OPTIONS'].includes(req.method) ? next() : res.sendStatus(405));
