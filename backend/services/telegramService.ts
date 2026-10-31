@@ -1,3 +1,4 @@
+export { trackMessageClick } from './clickTracking';
 import type {
   GeneratedMessageContent,
   MessageQueryOptions,
@@ -8,7 +9,7 @@ import type {
 import TelegramMessage from '../models/TelegramMessage';
 import DealPriceObservation from '../models/DealPriceObservation';
 import { extractLinks } from '../utils/messageParser';
-import { invalidateDealCaches, redis } from '../services/redisClient';
+import { invalidateDealCaches } from '../services/redisClient';
 import {
   hasAmazonLinks,
   extractAmazonUrls,
@@ -468,20 +469,6 @@ export async function saveMessage(message: TelegramInboundMessage, options: Save
 
 export async function getMessages(options: MessageQueryOptions = {}) {
   return options.search?.trim() ? getSearchPage(TelegramMessage, options) : getMessagesFromStore(TelegramMessage, options);
-}
-
-export async function trackMessageClick(messageId: string): Promise<number> {
-  const redisClickKey = `clicks:msg:${messageId}`;
-  const istDate = new Date(
-    new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }),
-  );
-  istDate.setHours(0, 0, 0, 0);
-  const dailyKey = `clicks:daily:${istDate.toISOString().slice(0, 10)}`;
-
-  const updatedClickCount = await redis.incr(redisClickKey);
-  await redis.incr(dailyKey);
-  console.log(`Redis click count updated for message ${messageId} -> ${updatedClickCount}`);
-  return updatedClickCount;
 }
 
 export async function incrementClicks(messageId: string) {

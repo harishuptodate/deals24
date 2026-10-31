@@ -103,6 +103,7 @@ export const trackMessageClick = async (messageId: string): Promise<boolean> => 
     await api.post(`/telegram/messages/${messageId}/today`);
   } catch (error) {
     console.warn('Message click tracking failed:', error);
+    return false;
   }
   return true;
 };

@@ -43,7 +43,7 @@ export const cacheHybrid = (
 ) => {
   return async (req: CacheRequestLike, res: CacheResponseLike, next: CacheNext): Promise<void> => {
     const key = keyGenerator(req);
-    if (!key) {
+    if (!key || !process.env.REDIS_URL || redis.status !== 'ready') {
       next();
       return;
     }
@@ -64,7 +64,9 @@ export const cacheHybrid = (
       // Override res.json to cache after sending
       const originalJson = res.json.bind(res);
       res.json = (data: unknown): void => {
-        redis.set(key, JSON.stringify(data), 'EX', ttl);
+        void redis.set(key, JSON.stringify(data), 'EX', ttl).catch((error) => {
+          console.error('Redis cache write failed:', error);
+        });
 
         // Also set headers for first-time response
         res.setHeader('Cache-Control', `max-age=${maxAge}, stale-while-revalidate=${staleWhileRevalidate}`);
