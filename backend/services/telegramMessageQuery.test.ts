@@ -2,94 +2,21 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import mongoose from 'mongoose';
 import { getMessagesFromStore } from './telegramMessageQuery';
+import { getSearchSuggestions } from './searchSuggestions';
+import { canUseAtlas, markAtlasFailure, runSearchWithFallback } from './atlasSearchHealth';
 
-test('prioritizes query coverage, then newest matches before text score and clicks', async () => {
+test('prioritizes coverage and recency, and counts inside Atlas', async () => {
   const pipelines: unknown[][] = [];
-  const messageId = new mongoose.Types.ObjectId();
-  const store = {
-    aggregate: async <T>(pipeline: unknown[]) => {
-      pipelines.push(pipeline);
-      if (pipeline.some((stage) => '$count' in (stage as Record<string, unknown>))) {
-        return [{ count: 1 }] as T[];
-      }
-      return [{
-        _id: messageId,
-        text: 'Samsung Galaxy smartphone deal',
-        date: new Date('2026-10-28T10:00:00.000Z'),
-        clicks: 5,
-      }] as T[];
-    },
-  };
-
-  await getMessagesFromStore(store, { search: 'Samsung mobile', limit: 12 });
-
-  const resultPipeline = pipelines.find(
-    (pipeline) => !pipeline.some((stage) => '$count' in (stage as Record<string, unknown>)),
-  ) as Array<Record<string, unknown>>;
-  const searchStage = resultPipeline[0] as {
-    $search: {
-      index: string;
-      compound: { should: Array<{ text: Record<string, unknown> }> };
-    };
-  };
-  assert.equal(searchStage.$search.index, 'deal_search_atlas_v1');
-  assert.equal(searchStage.$search.compound.should.length, 7);
-  assert.deepEqual(searchStage.$search.compound.should[0], {
-    text: {
-      query: 'samsung mobile smartphone phone',
-      path: 'identity.model',
-      score: { boost: { value: 10 } },
-    },
-  });
-  assert.deepEqual(searchStage.$search.compound.should[6], {
-    text: {
-      query: 'samsung mobile smartphone phone',
-      path: 'searchTokens',
-      fuzzy: { maxEdits: 1, prefixLength: 1, maxExpansions: 50 },
-      score: { boost: { value: 1 } },
-    },
-  });
-  assert.deepEqual(resultPipeline[1], {
-    $addFields: {
-      searchScore: { $meta: 'searchScore' },
-      matchCoverage: {
-        $sum: [
-          {
-            $cond: [
-              {
-                $gt: [{
-                  $size: {
-                    $setIntersection: [{ $ifNull: ['$searchTokens', []] }, ['samsung']],
-                  },
-                }, 0],
-              },
-              1,
-              0,
-            ],
-          },
-          {
-            $cond: [
-              {
-                $gt: [{
-                  $size: {
-                    $setIntersection: [
-                      { $ifNull: ['$searchTokens', []] },
-                      ['mobile', 'smartphone', 'phone'],
-                    ],
-                  },
-                }, 0],
-              },
-              1,
-              0,
-            ],
-          },
-        ],
-      },
-    },
-  });
-  assert.deepEqual(resultPipeline[2], {
+  await getMessagesFromStore({ aggregate: async <T>(pipeline: unknown[]) => {
+    pipelines.push(pipeline);
+    return [] as T[];
+  } }, { search: 'Samsung mobile' });
+  const stages = pipelines.flat() as Array<Record<string, any>>;
+  assert.equal(stages.find((stage) => stage.$searchMeta).$searchMeta.count.type, 'total');
+  assert.deepEqual(stages.find((stage) => stage.$sort), {
     $sort: { matchCoverage: -1, date: -1, searchScore: -1, clicks: -1, _id: -1 },
   });
+  assert.ok(JSON.stringify(stages).includes('autocomplete'));
 });
 
 test('ranks S25 Ultra phones before newer Ultra HD TVs and paginates complete matches newest first', async () => {
@@ -106,7 +33,7 @@ test('ranks S25 Ultra phones before newer Ultra HD TVs and paginates complete ma
   const store = {
     aggregate: async <Row>(pipeline: unknown[]) => {
       const stages = pipeline as Array<Record<string, any>>;
-      if (stages.some((stage) => stage.$count)) return [{ count: rows.length }] as Row[];
+      if (stages.some((stage) => (stage.$count || stage.$searchMeta))) return [{ count: rows.length }] as Row[];
       let results = [...rows];
       const cursorFilter = stages.find((stage) => stage.$match?.$or)?.$match.$or;
       if (cursorFilter) results = results.filter((row) => cursorFilter.some((clause: Record<string, unknown>) => (
@@ -156,7 +83,7 @@ test('explicit price and oldest sorts still override newest-first search ranking
   }
 });
 
-test('falls back to MongoDB text search when Atlas Search fails', async () => {
+test('falls back to MongoDB token search when Atlas Search fails', async () => {
   const pipelines: unknown[][] = [];
   const messageId = new mongoose.Types.ObjectId();
   const store = {
@@ -165,7 +92,7 @@ test('falls back to MongoDB text search when Atlas Search fails', async () => {
       if ('$search' in (pipeline[0] as Record<string, unknown>)) {
         throw new Error('Atlas Search index is unavailable');
       }
-      if (pipeline.some((stage) => '$count' in (stage as Record<string, unknown>))) {
+      if (pipeline.some((stage) => ('$count' in (stage as Record<string, unknown>) || '$searchMeta' in (stage as Record<string, unknown>)))) {
         return [{ count: 1 }] as T[];
       }
       return [{
@@ -181,51 +108,13 @@ test('falls back to MongoDB text search when Atlas Search fails', async () => {
   const fallbackPipeline = pipelines.find(
     (pipeline) => (
       '$match' in (pipeline[0] as Record<string, unknown>) &&
-      !pipeline.some((stage) => '$count' in (stage as Record<string, unknown>))
+      !pipeline.some((stage) => ('$count' in (stage as Record<string, unknown>) || '$searchMeta' in (stage as Record<string, unknown>)))
     ),
   ) as Array<Record<string, unknown>>;
 
-  assert.deepEqual(fallbackPipeline[0], {
-    $match: { $text: { $search: 'samsung mobile smartphone phone' } },
-  });
-  assert.deepEqual(fallbackPipeline[1], {
-    $addFields: {
-      searchScore: { $meta: 'textScore' },
-      matchCoverage: {
-        $sum: [
-          {
-            $cond: [
-              {
-                $gt: [{
-                  $size: {
-                    $setIntersection: [{ $ifNull: ['$searchTokens', []] }, ['samsung']],
-                  },
-                }, 0],
-              },
-              1,
-              0,
-            ],
-          },
-          {
-            $cond: [
-              {
-                $gt: [{
-                  $size: {
-                    $setIntersection: [
-                      { $ifNull: ['$searchTokens', []] },
-                      ['mobile', 'smartphone', 'phone'],
-                    ],
-                  },
-                }, 0],
-              },
-              1,
-              0,
-            ],
-          },
-        ],
-      },
-    },
-  });
+  const fallbackMatch = fallbackPipeline[0].$match as { searchTokens: { $in: Array<string | RegExp> } };
+  assert.ok(fallbackMatch.searchTokens.$in.some((pattern) => typeof pattern === 'string' ? pattern === 'samung' : pattern.test('samung')));
+  assert.ok(!JSON.stringify(fallbackPipeline).includes('textScore'));
   assert.equal(result.data.length, 1);
   assert.deepEqual(fallbackPipeline.find((stage) => '$sort' in stage), {
     $sort: { matchCoverage: -1, date: -1, searchScore: -1, clicks: -1, _id: -1 },
@@ -238,7 +127,7 @@ test('applies deal filters inside the Atlas Search stage', async () => {
   const store = {
     aggregate: async <T>(pipeline: unknown[]) => {
       pipelines.push(pipeline);
-      if (pipeline.some((stage) => '$count' in (stage as Record<string, unknown>))) {
+      if (pipeline.some((stage) => ('$count' in (stage as Record<string, unknown>) || '$searchMeta' in (stage as Record<string, unknown>)))) {
         return [{ count: 1 }] as T[];
       }
       return [{
@@ -261,7 +150,7 @@ test('applies deal filters inside the Atlas Search stage', async () => {
   });
 
   const resultPipeline = pipelines.find(
-    (pipeline) => !pipeline.some((stage) => '$count' in (stage as Record<string, unknown>)),
+    (pipeline) => !pipeline.some((stage) => ('$count' in (stage as Record<string, unknown>) || '$searchMeta' in (stage as Record<string, unknown>))),
   ) as Array<Record<string, unknown>>;
   const searchStage = resultPipeline[0] as {
     $search: { compound: { filter: unknown[] } };
@@ -304,7 +193,7 @@ test('filters and sorts directly on the numeric price field', async () => {
   const store = {
     aggregate: async <T>(pipeline: unknown[]) => {
       pipelines.push(pipeline);
-      if (pipeline.some((stage) => '$count' in (stage as Record<string, unknown>))) {
+      if (pipeline.some((stage) => ('$count' in (stage as Record<string, unknown>) || '$searchMeta' in (stage as Record<string, unknown>)))) {
         return [{ count: 1 }] as T[];
       }
       return [{
@@ -323,7 +212,7 @@ test('filters and sorts directly on the numeric price field', async () => {
   });
 
   const resultPipeline = pipelines.find(
-    (pipeline) => !pipeline.some((stage) => '$count' in (stage as Record<string, unknown>)),
+    (pipeline) => !pipeline.some((stage) => ('$count' in (stage as Record<string, unknown>) || '$searchMeta' in (stage as Record<string, unknown>))),
   ) as Array<Record<string, unknown>>;
   assert.deepEqual(resultPipeline[0], {
     $match: { price: { $gte: 1000, $lte: 5000, $ne: null } },
@@ -333,4 +222,73 @@ test('filters and sorts directly on the numeric price field', async () => {
   });
   assert.equal(JSON.stringify(resultPipeline).includes('$convert'), false);
   assert.equal(JSON.stringify(resultPipeline).includes('priceNumber'), false);
+});
+
+test('database operations receive server time limits and pagination reuses a bounded count', async () => {
+  const pipelines: Array<Array<Record<string, any>>> = [];
+  const timeouts: number[] = [];
+  const id = new mongoose.Types.ObjectId();
+  const store = { aggregate: <T>(pipeline: unknown[]) => {
+    const stages = pipeline as Array<Record<string, any>>;
+    pipelines.push(stages);
+    const operation = Promise.resolve((stages[0].$searchMeta ? [{ count: 2 }] : [
+      { _id: id, date: new Date(), matchCoverage: 1, searchScore: 1, clicks: 0 },
+      { _id: new mongoose.Types.ObjectId(), date: new Date(), matchCoverage: 1, searchScore: 1, clicks: 0 },
+    ]) as T[]);
+    return Object.assign(operation, { option: ({ maxTimeMS }: { maxTimeMS: number }) => {
+      timeouts.push(maxTimeMS);
+      return operation;
+    } });
+  } };
+  const first = await getMessagesFromStore(store, { search: 'samsung', limit: 1 });
+  const second = await getMessagesFromStore(store, { search: 'samsung', limit: 1, cursor: first.nextCursor! });
+  assert.equal(second.totalDealsCount, 2);
+  assert.equal(pipelines.filter((pipeline) => pipeline[0].$searchMeta).length, 1);
+  assert.ok(timeouts.every((timeout) => timeout === 4500));
+  await getMessagesFromStore(store, { search: 'samsung', category: 'mobile-phones', cursor: first.nextCursor! });
+  assert.equal(pipelines.filter((pipeline) => pipeline[0].$searchMeta).length, 2);
+});
+
+test('previews and grid share outage cooldown and retry Atlas after 30 seconds', async (context) => {
+  let now = Date.now();
+  context.mock.method(Date, 'now', () => now);
+  const pipelines: Array<Array<Record<string, any>>> = [];
+  const store = { aggregate: <T>(pipeline: unknown[]) => {
+    pipelines.push(pipeline as Array<Record<string, any>>);
+    const operation = Promise.resolve([] as T[]);
+    return Object.assign(operation, { option: () => operation });
+  } };
+  markAtlasFailure(store);
+  assert.equal(canUseAtlas(store), false);
+  await getSearchSuggestions(store, 'sams');
+  await getMessagesFromStore(store, { search: 'sams' });
+  assert.ok(pipelines.every((pipeline) => !pipeline[0].$search && !pipeline[0].$searchMeta));
+  now += 30_001;
+  assert.equal(canUseAtlas(store), true);
+  await getMessagesFromStore(store, { search: 'sams' });
+  assert.ok(pipelines.some((pipeline) => pipeline[0].$search));
+});
+
+test('only one request probes recovery and an older success cannot clear a newer outage', async (context) => {
+  let now = Date.now();
+  context.mock.method(Date, 'now', () => now);
+  const store = {};
+  markAtlasFailure(store);
+  now += 30_001;
+  let release: (value: string) => void;
+  const probe = new Promise<string>((resolve) => { release = resolve; });
+  const first = runSearchWithFallback(store, 'results', () => probe, async () => 'fallback');
+  assert.equal(canUseAtlas(store), false);
+  const second = await runSearchWithFallback(store, 'previews', async () => { throw new Error('must not probe twice'); }, async () => 'fallback');
+  assert.equal(second, 'fallback');
+  markAtlasFailure(store);
+  release('atlas');
+  assert.equal(await first, 'atlas');
+  assert.equal(canUseAtlas(store), false);
+});
+
+test('old score cursors require a refresh without querying either backend', async () => {
+  await assert.rejects(() => getMessagesFromStore({ aggregate: async () => { throw new Error('must not query'); } }, {
+    search: 'samsung', cursor: `1|10|12345|0|${new mongoose.Types.ObjectId()}`,
+  }), /Refresh results/);
 });

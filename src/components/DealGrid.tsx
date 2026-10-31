@@ -141,6 +141,7 @@ const DealGrid = () => {
         {hasNextPage && (
           <div
             ref={observerTarget}
+            data-testid="deal-scroll-sentinel"
             className="w-full h-20 flex justify-center items-center mt-4">
             {isFetchingNextPage && (
               <Loader2 className="w-6 h-6 animate-spin text-apple-gray dark:text-gray-400" />

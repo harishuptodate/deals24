@@ -6,6 +6,7 @@ import { runWithLogContext } from '../services/logger';
 import { getMessages, saveMessage, trackMessageClick } from '../services/telegramService';
 import { invalidateDealCaches } from '../services/redisClient';
 import type { TelegramInboundMessage } from '../services/telegramTypes';
+import { SearchCursorError } from '../utils/dealSearch';
 
 type TelegramWebhookRequest = Request<
 	unknown,
@@ -319,6 +320,7 @@ export const listMessages = async (req: TelegramListRequest, res: Response) => {
 		return res.json(messages);
 	} catch (error) {
 		console.error('Error fetching messages:', error);
+		if (error instanceof SearchCursorError) return res.status(409).json({ code: 'SEARCH_CURSOR_EXPIRED', error: error.message });
 		return res.status(500).json({ error: 'Failed to fetch messages' });
 	}
 };
@@ -388,6 +390,7 @@ export const searchMessages = async (req: TelegramListRequest, res: Response) =>
 		return res.json(messages);
 	} catch (error) {
 		console.error('Error searching messages:', error);
+		if (error instanceof SearchCursorError) return res.status(409).json({ code: 'SEARCH_CURSOR_EXPIRED', error: error.message });
 		return res.status(500).json({ error: 'Failed to search messages' });
 	}
 };

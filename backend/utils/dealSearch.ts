@@ -1,7 +1,8 @@
 import type { ProductIdentity } from '../services/telegramTypes';
 
 export const DEAL_SEARCH_INDEX_NAME = 'deal_search_text_v2';
-export const DEAL_ATLAS_SEARCH_INDEX_NAME = 'deal_search_atlas_v1';
+export const DEAL_ATLAS_SEARCH_INDEX_NAME = 'deal_search_atlas_v2';
+export const DEAL_SEARCH_SNAPSHOT_LIMIT = 25_000;
 
 export const DEAL_ATLAS_SEARCH_INDEX_DEFINITION = {
   mappings: {
@@ -11,7 +12,10 @@ export const DEAL_ATLAS_SEARCH_INDEX_DEFINITION = {
         { type: 'string', analyzer: 'lucene.standard' },
         { type: 'autocomplete', tokenization: 'edgeGram', minGrams: 2, maxGrams: 15, foldDiacritics: true },
       ],
-      searchTokens: { type: 'string', analyzer: 'lucene.standard' },
+      searchTokens: [
+        { type: 'string', analyzer: 'lucene.keyword' },
+        { type: 'autocomplete', analyzer: 'lucene.keyword', tokenization: 'edgeGram', minGrams: 2, maxGrams: 15, foldDiacritics: false },
+      ],
       identity: {
         type: 'document',
         fields: {
@@ -178,12 +182,17 @@ export function buildDealSearchPlan(value: string) {
     (token) => (SEARCH_SYNONYMS.get(token) || [token]).join('|'),
   )).map((group) => group.split('|'));
   const textSearch = unique(tokenGroups.flat()).join(' ');
+  const lastWord = stripSearchUrls(value).normalize('NFKC').toLowerCase().match(/[\p{L}\p{N}]+/gu)?.at(-1) || '';
+  const prefixToken = /^[a-z]{2,30}$/.test(lastWord) && !SEARCH_STOP_WORDS.has(TOKEN_NORMALIZATIONS[lastWord] || lastWord)
+    ? TOKEN_NORMALIZATIONS[lastWord] || lastWord : null;
 
-  return { textSearch, tokenGroups };
+  return { textSearch, tokenGroups, prefixToken };
 }
 
 export function buildAtlasSearchStage(input: {
   textSearch: string;
+  tokenGroups?: string[][];
+  prefixToken?: string | null;
   channelId?: string;
   category?: string;
   fromDate?: Date | null;
@@ -192,21 +201,22 @@ export function buildAtlasSearchStage(input: {
   maxPrice?: number | null;
   requirePrice?: boolean;
 }) {
-  const fuzzy = { maxEdits: 1, prefixLength: 1, maxExpansions: 50 };
-  const should: Array<Record<string, unknown>> = Object.entries(DEAL_SEARCH_INDEX_WEIGHTS).map(([path, weight]) => ({
-    text: {
-      query: input.textSearch,
-      path,
-      score: { boost: { value: weight } },
-    },
-  }));
-  should.push({
-    text: {
-      query: input.textSearch,
-      path: 'searchTokens',
-      fuzzy,
-      score: { boost: { value: 1 } },
-    },
+  const groups = input.tokenGroups || buildDealSearchPlan(input.textSearch).tokenGroups;
+  const prefixToken = input.prefixToken === undefined ? buildDealSearchPlan(input.textSearch).prefixToken : input.prefixToken;
+  const should: Array<Record<string, unknown>> = groups.flatMap((group, index) => {
+    const isLast = group.includes(prefixToken);
+    return group.flatMap((token) => {
+      const clauses: Array<Record<string, unknown>> = [{ regex: {
+        path: 'searchTokens',
+        query: buildSearchTokenPattern(token, false),
+        allowAnalyzedField: true,
+      } }];
+      if (isLast && /^[a-z]{2,30}$/.test(token)) clauses.push({ compound: { must: [
+        { autocomplete: { path: 'searchTokens', query: token.slice(0, 15), tokenOrder: 'sequential' } },
+        { regex: { path: 'searchTokens', query: token + '[a-z0-9]*', allowAnalyzedField: true } },
+      ] } });
+      return clauses;
+    });
   });
   const filter: Array<Record<string, unknown>> = [];
 
@@ -225,13 +235,13 @@ export function buildAtlasSearchStage(input: {
       },
     });
   }
-  if (input.minPrice !== null || input.maxPrice !== null || input.requirePrice) {
+  if (input.minPrice != null || input.maxPrice != null || input.requirePrice) {
     filter.push({
       range: {
         path: 'price',
-        ...(input.minPrice !== null ? { gte: input.minPrice } : {}),
-        ...(input.maxPrice !== null ? { lte: input.maxPrice } : {}),
-        ...(input.requirePrice && input.minPrice === null ? { gte: 0 } : {}),
+        ...(input.minPrice != null ? { gte: input.minPrice } : {}),
+        ...(input.maxPrice != null ? { lte: input.maxPrice } : {}),
+        ...(input.requirePrice && input.minPrice == null ? { gte: 0 } : {}),
       },
     });
   }
@@ -250,25 +260,82 @@ export function buildAtlasSearchStage(input: {
 
 export const DEAL_SEARCH_RELEVANCE_SORT = { matchCoverage: -1, date: -1, searchScore: -1, clicks: -1, _id: -1 } as const;
 
-export function buildDealSearchRankingStage(plan: ReturnType<typeof buildDealSearchPlan>, backend: 'atlas' | 'mongoText') {
+// Only tokenized letters/numbers reach these patterns. Keep the first letter
+// outside the alternatives so MongoDB can bound fallback index scans by prefix.
+export function buildSearchTokenPattern(token: string, prefix: boolean): string {
+  const tail = token.slice(1);
+  const variants = [tail];
+  if (/^[a-z]{4,30}$/.test(token)) {
+    for (let index = 0; index < tail.length; index++) {
+      const before = tail.slice(0, index);
+      const after = tail.slice(index + 1);
+      variants.push(before + after, before + '[a-z]' + after, before + '[a-z]' + tail.slice(index));
+      if (index < tail.length - 1) variants.push(before + tail[index + 1] + tail[index] + tail.slice(index + 2));
+    }
+    variants.push(tail + '[a-z]');
+  }
+  if (prefix && /^[a-z]{2,30}$/.test(token)) variants.push(tail + '[a-z0-9]*');
+  return variants.length === 1 ? token : token[0] + '(' + [...new Set(variants)].join('|') + ')';
+}
+
+export function buildSearchConceptPattern(group: string[], prefix: boolean): string {
+  return '^(' + group.map((token) => buildSearchTokenPattern(token, prefix)).join('|') + ')$';
+}
+
+export function buildMongoSearchMatch(plan: ReturnType<typeof buildDealSearchPlan>) {
+  const exact = new Set<string>();
+  const prefixes: RegExp[] = [];
+  for (const group of plan.tokenGroups) for (const token of group) {
+    exact.add(token);
+    if (/^[a-z]{4,30}$/.test(token)) {
+      // Equality bounds avoid scanning every token sharing the first letter.
+      for (let index = 1; index <= token.length; index++) {
+        const before = token.slice(0, index);
+        const after = token.slice(index + 1);
+        if (index < token.length) exact.add(before + after);
+        if (index < token.length - 1) exact.add(before + token[index + 1] + token[index] + token.slice(index + 2));
+        for (const letter of 'abcdefghijklmnopqrstuvwxyz') {
+          if (index < token.length) exact.add(before + letter + after);
+          exact.add(before + letter + token.slice(index));
+        }
+      }
+    }
+    if (group.includes(plan.prefixToken) && /^[a-z]{2,30}$/.test(token)) prefixes.push(new RegExp('^' + token + '[a-z0-9]*$'));
+  }
+  return { searchTokens: { $in: [...exact, ...prefixes] } };
+}
+
+function exactFieldPattern(group: string[]): string {
+  return '(^|[^\\p{L}\\p{N}])(' + group.join('|') + ')([^\\p{L}\\p{N}]|$)';
+}
+
+export class SearchCursorError extends Error {
+  constructor() { super('Search ordering has changed. Refresh results to continue.'); }
+}
+
+export function buildDealSearchRankingStage(plan: ReturnType<typeof buildDealSearchPlan>) {
+  const phrasePattern = '(^|[^\\p{L}\\p{N}])' + plan.tokenGroups.map((group) => '(' + group.join('|') + ')').join('[^\\p{L}\\p{N}]+') + '([^\\p{L}\\p{N}]|$)';
   return {
     $addFields: {
-      searchScore: { $meta: backend === 'atlas' ? 'searchScore' : 'textScore' },
-      matchCoverage: {
-        $sum: plan.tokenGroups.map((group) => ({
-          $cond: [
-            {
-              $gt: [{
-                $size: {
-                  $setIntersection: [{ $ifNull: ['$searchTokens', []] }, group],
-                },
-              }, 0],
-            },
-            1,
-            0,
-          ],
-        })),
-      },
+      // Shared exact-field boosts keep cursor ordering stable across backend changes.
+      searchScore: { $sum: [...Object.entries(DEAL_SEARCH_INDEX_WEIGHTS).flatMap(([path, weight]) => (
+        plan.tokenGroups.map((group) => ({ $cond: [
+          { $regexMatch: {
+            input: { $toLower: path === 'identity.variant' ? {
+              $reduce: { input: { $ifNull: ['$identity.variant', []] }, initialValue: '', in: { $concat: ['$$value', ' ', '$$this'] } },
+            } : { $ifNull: ['$' + path, ''] } },
+            regex: exactFieldPattern(group),
+          } }, weight, 0,
+        ] }))
+      )), ...['identity.model', 'identity.canonicalName'].map((path) => ({ $cond: [
+        { $regexMatch: { input: { $toLower: { $ifNull: ['$' + path, ''] } }, regex: phrasePattern } }, 20, 0,
+      ] }))] },
+      matchCoverage: { $sum: plan.tokenGroups.map((group, index) => ({ $cond: [
+        { $gt: [{ $size: { $filter: {
+          input: { $ifNull: ['$searchTokens', []] }, as: 'token',
+          cond: { $regexMatch: { input: '$$token', regex: buildSearchConceptPattern(group, group.includes(plan.prefixToken)) } },
+        } } }, 0] }, 1, 0,
+      ] })) },
     },
   };
 }

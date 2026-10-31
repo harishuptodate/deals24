@@ -34,6 +34,20 @@ test('validates filter values before generating database conditions', () => {
   const match = buildSuggestionFilter({ minPrice: 'invalid', maxPrice: '30000', from: 'bad', to: '2026-10-28' });
   assert.deepEqual(match.price, { $lte: 30000 });
   assert.deepEqual(match.date, { $lte: new Date('2026-10-28T23:59:59.999Z') });
+  assert.deepEqual(buildSuggestionFilter({ from: '2026-02-30', minPrice: '1e4', maxPrice: '-1' }), {});
+});
+
+test('previews push category, dates and budget into Atlas', async () => {
+  const pipelines: any[][] = [];
+  await getSearchSuggestions({ aggregate: <T>(pipeline: unknown[]) => ({ option: async () => {
+    pipelines.push(pipeline);
+    return [] as T[];
+  } }) }, 'sams', { category: 'mobile-phones', from: '2026-10-01', to: '2026-10-31', minPrice: '1000', maxPrice: '50000' });
+  assert.deepEqual(pipelines[0][0].$search.compound.filter, [
+    { equals: { path: 'category', value: 'mobile-phones' } },
+    { range: { path: 'date', gte: new Date('2026-10-01T00:00:00Z'), lte: new Date('2026-10-31T23:59:59.999Z') } },
+    { range: { path: 'price', gte: 1000, lte: 50000 } },
+  ]);
 });
 
 test('preserves Telegram image IDs in both search backends', async () => {
@@ -62,15 +76,15 @@ test('TV searches retain synonym expansion and Atlas fuzzy matching', async () =
   await getSearchSuggestions(store, 'tv');
   const stage = JSON.stringify(pipelines[0][0]);
   assert.ok(stage.includes('television'));
-  assert.ok(stage.includes('fuzzy'));
-  assert.ok(!stage.includes('autocomplete'));
+  assert.ok(stage.includes('[a-z]'));
+  assert.ok(stage.includes('autocomplete'));
   const stages = pipelines[0] as Array<Record<string, unknown>>;
   const sortIndex = stages.findIndex((stage) => '$sort' in stage);
   assert.deepEqual(stages[sortIndex], { $sort: { matchCoverage: -1, date: -1, searchScore: -1, clicks: -1, _id: -1 } });
   assert.ok(!stages.slice(0, sortIndex).some((entry) => '$limit' in entry));
 });
 
-test('text search fallback preserves every filter', async () => {
+test('token search fallback preserves every filter', async () => {
   const pipelines: unknown[][] = [];
   const store = { aggregate: <Row>(pipeline: unknown[]) => ({ option: async () => {
     pipelines.push(pipeline);

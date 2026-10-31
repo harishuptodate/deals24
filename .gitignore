@@ -15,6 +15,7 @@ dist-ssr
 .env2
 deals24-secrets.yml
 backend/backups/
+tmp/search-qa/
 
 # Editor directories and files
 .vscode/*

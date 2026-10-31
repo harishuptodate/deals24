@@ -22,6 +22,7 @@ import {
 } from './telegramMessageFilters';
 import { generateMessageContent } from './telegramMessageContent';
 import { getMessagesFromStore } from './telegramMessageQuery';
+import { getSearchPage } from './searchPagination';
 import { getDealBlacklist } from './blacklistService';
 import {
   cleanAmazonProductUrl,
@@ -466,7 +467,7 @@ export async function saveMessage(message: TelegramInboundMessage, options: Save
 }
 
 export async function getMessages(options: MessageQueryOptions = {}) {
-  return getMessagesFromStore(TelegramMessage, options);
+  return options.search?.trim() ? getSearchPage(TelegramMessage, options) : getMessagesFromStore(TelegramMessage, options);
 }
 
 export async function trackMessageClick(messageId: string): Promise<number> {

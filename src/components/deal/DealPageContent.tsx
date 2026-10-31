@@ -49,14 +49,16 @@ const DealPageContent = ({ deal, id }: DealPageContentProps) => {
 
       <div className="min-w-0">
         <header>
-          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400">{category || 'Discover the deal'}</p>
+          <div className="mb-3 flex items-center justify-between gap-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-400">{category || 'Discover the deal'}</p>
+            {!Number.isNaN(addedAt.getTime()) && (
+              <p className="flex shrink-0 items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
+                <CalendarDays size={14} aria-hidden="true" />
+                Added {addedAt.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+              </p>
+            )}
+          </div>
           <h1 className="break-words text-[1.275rem] font-semibold leading-tight tracking-tight text-zinc-950 dark:text-zinc-50 sm:text-[1.59375rem] xl:text-[1.9125rem]">{title || 'Deal details'}</h1>
-          {!Number.isNaN(addedAt.getTime()) && (
-            <p className="mt-4 flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
-              <CalendarDays size={14} aria-hidden="true" />
-              Added {addedAt.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-            </p>
-          )}
         </header>
 
         <section aria-label="Purchase details" className="my-5 grid grid-cols-1 items-center gap-x-6 gap-y-2 border-y border-zinc-200 py-4 dark:border-zinc-800 sm:grid-cols-[minmax(0,1fr)_minmax(0,16rem)]">

@@ -18,6 +18,10 @@ const DEFAULT_CATEGORY_COUNTS: CategoryCount[] = [
   { category: 'lifestyle', count: 0 },
 ];
 
+export const isExpiredSearchCursor = (error: unknown): boolean => (
+  axios.isAxiosError(error) && error.response?.status === 409 && error.response?.data?.code === 'SEARCH_CURSOR_EXPIRED'
+);
+
 export const getTelegramMessages = async (
   cursor?: string,
   category?: string | null,

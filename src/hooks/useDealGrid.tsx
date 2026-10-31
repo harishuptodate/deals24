@@ -1,9 +1,10 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { InfiniteData, useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
 import { getTelegramMessages, deleteProduct } from '../services/api';
+import { isExpiredSearchCursor } from '../services/api/dealsApi';
 import type { TelegramResponse } from '../types/telegram';
 
 export const useDealGrid = () => {
@@ -19,7 +20,7 @@ export const useDealGrid = () => {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
-  const dealsQueryKey = [
+  const dealsQueryKey = useMemo(() => [
     'telegram-messages',
     activeCategory,
     searchQuery,
@@ -28,7 +29,7 @@ export const useDealGrid = () => {
     minPriceParam,
     maxPriceParam,
     sortParam,
-  ] as const;
+  ] as const, [activeCategory, searchQuery, fromParam, toParam, minPriceParam, maxPriceParam, sortParam]);
 
   const {
     data,
@@ -37,6 +38,7 @@ export const useDealGrid = () => {
     isFetchingNextPage,
     isLoading,
     isError,
+    error,
     refetch,
   } = useInfiniteQuery({
     queryKey: dealsQueryKey,
@@ -53,7 +55,7 @@ export const useDealGrid = () => {
       ),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
-    retry: 2,
+    retry: (failures, error) => !isExpiredSearchCursor(error) && failures < 2,
 		refetchInterval: 30_000,
 		refetchIntervalInBackground: false,
     meta: {
@@ -66,6 +68,10 @@ export const useDealGrid = () => {
       },
     },
   });
+
+  useEffect(() => {
+    if (isExpiredSearchCursor(error)) void queryClient.resetQueries({ queryKey: dealsQueryKey, exact: true });
+  }, [error, queryClient, dealsQueryKey]);
 
   useEffect(() => {
     refetch();

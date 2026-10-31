@@ -11,7 +11,9 @@
     "lint": "npm run lint:frontend && npm run lint:backend",
     "lint:frontend": "eslint . --ignore-pattern backend --ignore-pattern dist",
     "lint:backend": "node ./node_modules/eslint/bin/eslint.js backend --config backend/eslint.config.js",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:search:browser": "playwright test",
+    "test:search:load": "node tests/search/load.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -74,6 +76,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
+    "@playwright/test": "^1.64.1",
     "@tailwindcss/typography": "^0.5.15",
     "@types/node": "^22.5.5",
     "@types/react": "^18.3.3",

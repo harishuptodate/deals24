@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import type { ProductIdentity } from './telegramTypes';
-import { buildAtlasSearchStage, buildDealSearchPlan, buildDealSearchRankingStage, DEAL_SEARCH_RELEVANCE_SORT } from '../utils/dealSearch';
+import { buildAtlasSearchStage, buildDealSearchPlan, buildDealSearchRankingStage, buildMongoSearchMatch, DEAL_SEARCH_RELEVANCE_SORT } from '../utils/dealSearch';
+import { runSearchWithFallback } from './atlasSearchHealth';
 
 export const SEARCH_CATEGORIES = [
   { label: 'Mobile phones', category: 'mobile-phones', terms: 'phone mobile smartphone iphone samsung' },
@@ -28,7 +29,7 @@ export function suggestionCacheIdentity(query: string, filters: SuggestionFilter
     (key) => filters[key as keyof SuggestionFilters] || '',
   )]);
   const fingerprint = createHash('sha256').update(canonical).digest('hex');
-  return { fingerprint, key: `search:suggestions:v3:${parseInt(fingerprint.slice(0, 8), 16) % 256}` };
+  return { fingerprint, key: `search:suggestions:v4:${parseInt(fingerprint.slice(0, 8), 16) % 256}` };
 }
 
 export function buildSuggestionFilter(filters: SuggestionFilters): Record<string, unknown> {
@@ -37,7 +38,7 @@ export function buildSuggestionFilter(filters: SuggestionFilters): Record<string
   const price: Record<string, number> = {};
   for (const [key, operator] of [['minPrice', '$gte'], ['maxPrice', '$lte']] as const) {
     const value = filters[key];
-    if (value && Number.isFinite(Number(value)) && Number(value) >= 0) price[operator] = Number(value);
+    if (value && /^\d+$/.test(value) && Number.isFinite(Number(value))) price[operator] = Number(value);
   }
   if (Object.keys(price).length) match.price = price;
   const date: Record<string, Date> = {};
@@ -45,7 +46,7 @@ export function buildSuggestionFilter(filters: SuggestionFilters): Record<string
     const value = filters[key];
     if (value && /^\d{4}-\d{2}-\d{2}$/u.test(value)) {
       const parsed = new Date(`${value}T${key === 'to' ? '23:59:59.999' : '00:00:00.000'}Z`);
-      if (Number.isFinite(parsed.getTime())) date[operator] = parsed;
+      if (Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value) date[operator] = parsed;
     }
   }
   if (Object.keys(date).length) match.date = date;
@@ -84,22 +85,27 @@ export async function getSearchSuggestions(store: SuggestionStore, rawQuery: str
   if (query.length < 2 || !plan.textSearch) return shapeSuggestions([], query);
   const match = buildSuggestionFilter(filters);
   const projection = { $project: { text: 1, identity: 1, identityKey: 1, amazonAsin: 1, date: 1, price: 1, imageUrl: 1, telegramFileId: 1, category: 1 } };
-  let rows: SuggestionRow[];
-  try {
-    rows = await store.aggregate<SuggestionRow>([
-      buildAtlasSearchStage({ textSearch: plan.textSearch, minPrice: null, maxPrice: null }),
-      { $match: match },
-      buildDealSearchRankingStage(plan, 'atlas'),
+  const fallback = () => store.aggregate<SuggestionRow>([
+    { $match: { ...match, ...buildMongoSearchMatch(plan) } },
+    buildDealSearchRankingStage(plan),
+    { $sort: DEAL_SEARCH_RELEVANCE_SORT },
+    { $limit: 25 }, projection,
+  ]).option({ maxTimeMS: 1800 });
+  const rows = await runSearchWithFallback(store, 'previews', async () => {
+    const price = match.price as Record<string, number> | undefined;
+    const date = match.date as Record<string, Date> | undefined;
+    return await store.aggregate<SuggestionRow>([
+      buildAtlasSearchStage({
+        textSearch: plan.textSearch, tokenGroups: plan.tokenGroups,
+        prefixToken: plan.prefixToken,
+        category: filters.category,
+        minPrice: price?.$gte ?? null, maxPrice: price?.$lte ?? null,
+        fromDate: date?.$gte, toDate: date?.$lte,
+      }),
+      buildDealSearchRankingStage(plan),
       { $sort: DEAL_SEARCH_RELEVANCE_SORT },
       { $limit: 25 }, projection,
     ]).option({ maxTimeMS: 1800 });
-  } catch {
-    rows = await store.aggregate<SuggestionRow>([
-      { $match: { ...match, $text: { $search: plan.textSearch } } },
-      buildDealSearchRankingStage(plan, 'mongoText'),
-      { $sort: DEAL_SEARCH_RELEVANCE_SORT },
-      { $limit: 25 }, projection,
-    ]).option({ maxTimeMS: 1800 });
-  }
+  }, fallback);
   return shapeSuggestions(rows, query);
 }

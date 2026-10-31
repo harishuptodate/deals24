@@ -87,6 +87,7 @@ const telegramMessageSchema = new mongoose.Schema({
 telegramMessageSchema.index({ date: -1 });
 telegramMessageSchema.index({ messageId: 1, channelId: 1 }, { unique: true });
 telegramMessageSchema.index({ category: 1 });
+telegramMessageSchema.index({ searchTokens: 1 }, { name: 'deal_search_tokens_v1' });
 telegramMessageSchema.index({ price: 1 });
 telegramMessageSchema.index({ amazonAsin: 1 }, { sparse: true });
 telegramMessageSchema.index({ identityKey: 1 }, { sparse: true });

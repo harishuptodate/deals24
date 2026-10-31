@@ -1,9 +1,10 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { InfiniteData, keepPreviousData, useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
 import { getTelegramMessages, deleteProduct } from '../services/api';
+import { isExpiredSearchCursor } from '../services/api/dealsApi';
 import type { TelegramMessage, TelegramResponse } from '../types/telegram';
 
 export const useDealsPage = () => {
@@ -20,7 +21,7 @@ export const useDealsPage = () => {
   const [activeCategory, setActiveCategory] = useState<string | null>(categoryParam);
   const queryClient = useQueryClient();
 
-  const dealsQueryKey = [
+  const dealsQueryKey = useMemo(() => [
     'all-telegram-messages',
     activeCategory,
     searchQuery,
@@ -29,7 +30,7 @@ export const useDealsPage = () => {
     minPriceParam,
     maxPriceParam,
     sortParam,
-  ] as const;
+  ] as const, [activeCategory, searchQuery, fromParam, toParam, minPriceParam, maxPriceParam, sortParam]);
 
   useEffect(() => {
     setActiveCategory(categoryParam);
@@ -44,6 +45,7 @@ export const useDealsPage = () => {
     isFetching,
     isPlaceholderData,
     isError,
+    error,
     refetch,
   } = useInfiniteQuery({
     queryKey: dealsQueryKey,
@@ -61,7 +63,7 @@ export const useDealsPage = () => {
       ),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
-    retry: 2,
+    retry: (failures, error) => !isExpiredSearchCursor(error) && failures < 2,
     placeholderData: keepPreviousData,
 		refetchInterval: 30_000,
 		refetchIntervalInBackground: false,
@@ -75,6 +77,10 @@ export const useDealsPage = () => {
       },
     },
   });
+
+  useEffect(() => {
+    if (isExpiredSearchCursor(error)) void queryClient.resetQueries({ queryKey: dealsQueryKey, exact: true });
+  }, [error, queryClient, dealsQueryKey]);
 
   const allMessages = data?.pages.flatMap((page) => page.data) ?? [];
   const totalDealsCount = data?.pages?.[0]?.totalDealsCount ?? 0;

@@ -1,5 +1,6 @@
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
+import { isDeepStrictEqual } from 'node:util';
 import TelegramMessage from '../models/TelegramMessage';
 import {
   DEAL_ATLAS_SEARCH_INDEX_DEFINITION,
@@ -23,7 +24,8 @@ async function waitUntilReady() {
   const startedAt = Date.now();
   while (Date.now() - startedAt < READY_TIMEOUT_MS) {
     const index = await getSearchIndex();
-    if (index?.status === 'READY' && index?.queryable === true) return;
+    if (index?.status === 'READY' && index?.queryable === true && isDeepStrictEqual(index.latestDefinition?.mappings, DEAL_ATLAS_SEARCH_INDEX_DEFINITION.mappings)) return;
+    if (index?.status === 'FAILED') throw new Error(`Atlas index ${DEAL_ATLAS_SEARCH_INDEX_NAME} failed to build`);
     await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
   }
   throw new Error(`Timed out waiting for ${DEAL_ATLAS_SEARCH_INDEX_NAME} to become ready`);
@@ -32,7 +34,7 @@ async function waitUntilReady() {
 async function main() {
   if (!process.env.MONGODB_URI) throw new Error('MONGODB_URI is not configured');
 
-  await mongoose.connect(process.env.MONGODB_URI);
+  await mongoose.connect(process.env.MONGODB_URI, { autoIndex: false, autoCreate: false });
   const database = mongoose.connection.db;
   if (!database) throw new Error('MongoDB connection is not ready');
 
