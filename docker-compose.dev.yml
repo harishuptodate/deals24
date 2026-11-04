@@ -12,8 +12,6 @@ services:
       - /app/node_modules
     environment:
       - VITE_API_BASE_URL=http://localhost:3000/api
-      - VITE_ADMIN_USERNAME=${VITE_ADMIN_USERNAME}
-      - VITE_ADMIN_PASSWORD=${VITE_ADMIN_PASSWORD}
     networks:
       - deals24-dev
 

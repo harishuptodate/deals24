@@ -41,18 +41,59 @@ The backend development container runs Node.js 20 and `tsx watch index.ts`. Mong
 
 ## Production Deployment
 
-For production deployment:
+Production starts the backend and Redis together. MongoDB remains external (use
+Atlas for Atlas Search and transaction support). The frontend is optional.
+Images build natively on the Oracle Ampere ARM server; no platform override is needed.
+
+Copy `.env.example` to `.env` if you do not already have one, then set your domains,
+configuration, and credentials there. The `.env` file is ignored by Git and excluded
+from Docker builds. Compose automatically loads it for variable interpolation;
+only variables listed under a service's `environment` are passed to that service.
+Shell variables take precedence. Redis's internal URL is set by the Compose file.
 
 ```bash
-# Start all services in production mode
-docker-compose up -d --build
+# Start backend and Redis
+docker compose up -d --build
+
+# Optionally include the frontend
+docker compose --profile frontend up -d --build
 
 # View logs
-docker-compose logs -f
+docker compose logs -f backend redis
 
-# Stop services
-docker-compose down
+# Stop services while preserving Redis data
+docker compose down
 ```
+
+Redis has no published host port. The backend uses `redis://redis:6379` on the
+private Compose network, without a password. Do not expose Redis publicly or attach
+untrusted containers to this network. Redis uses a named `/data` volume, AOF with
+one-second fsync, a 512 MiB memory budget, and `noeviction` because it buffers clicks.
+A crash can still lose the latest second of writes; persistence is not a backup.
+Do not use `down -v` unless you intend to delete the Redis volume.
+
+### Coolify on Oracle
+
+1. Create a Git-based application with the **Docker Compose** build strategy.
+2. Use Base Directory `/` and Compose Location `/docker-compose.yml`.
+3. Import the values from your `.env` into
+   Coolify's application environment variables. Keep secrets out of build variables.
+   Coolify supplies these variables when rendering Compose; you do not need to
+   upload `.env` or configure custom `--env-file` commands there.
+4. Assign `https://api.yourdomain.com` to the **backend** service, targeting port
+   `3000`. Keep the frontend profile disabled if the frontend is hosted elsewhere.
+5. Point the domain's A record to the VPS. Allow TCP 80/443 in Oracle's security
+   rules and the host firewall, and allow the VPS outbound IP in Atlas Network Access.
+6. Deploy, check backend/Redis logs, and request `/api/health`. Confirm a Telegram
+   post arrives and clicks persist: the health endpoint does not check Redis.
+7. Set the separately hosted frontend's `VITE_API_BASE_URL` to
+   `https://api.yourdomain.com/api` and rebuild it.
+
+The backend's host port is bound to loopback for local checks. Coolify routes to
+the container's port 3000 through its proxy. The Dockerfile already checks
+`/api/health`; allow a longer startup period in Coolify if Atlas startup needs it.
+Starting the backend with the existing bot token registers its configured webhook,
+switching Telegram delivery to this backend. Stop the previous backend at cutover.
 
 ## Individual Service Deployment
 
