@@ -3,7 +3,7 @@ name: Sync to GitHub B
 on:
   push:
     branches:
-      - "**"
+      - staging
 
 jobs:
   sync:
