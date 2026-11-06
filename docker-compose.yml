@@ -2,7 +2,6 @@
 services:
   frontend:
     profiles: [frontend]
-    container_name: frontend
     # image: harishuptodate/deals24-frontend:v1
     build:
       context: .
@@ -19,13 +18,10 @@ services:
       - deals24-network
 
   backend:
-    container_name: backend
     # image: harishuptodate/deals24-backend:v1
     build:
       context: ./backend
       dockerfile: Dockerfile
-    ports:
-      - "127.0.0.1:3000:3000"
     depends_on:
       redis:
         condition: service_healthy

@@ -89,8 +89,8 @@ Do not use `down -v` unless you intend to delete the Redis volume.
 7. Set the separately hosted frontend's `VITE_API_BASE_URL` to
    `https://api.yourdomain.com/api` and rebuild it.
 
-The backend's host port is bound to loopback for local checks. Coolify routes to
-the container's port 3000 through its proxy. The Dockerfile already checks
+The backend does not publish a host port, so production and staging can run together.
+Coolify routes each environment's domain to its container's port 3000. The Dockerfile already checks
 `/api/health`; allow a longer startup period in Coolify if Atlas startup needs it.
 Starting the backend with the existing bot token registers its configured webhook,
 switching Telegram delivery to this backend. Stop the previous backend at cutover.
@@ -143,7 +143,7 @@ The backend includes health checks. Check service health:
 
 ```bash
 # Check backend health
-curl http://localhost:3000/api/health
+docker compose exec backend node dist/healthcheck.js
 
 # Check container health
 docker ps
