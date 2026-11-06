@@ -124,8 +124,6 @@ docker run -p 3000:3000 \
 
 ### Frontend (.env)
 - `VITE_API_BASE_URL`: Backend API URL
-- `VITE_ADMIN_USERNAME`: Admin username
-- `VITE_ADMIN_PASSWORD`: Admin password
 
 ### Backend (.env)
 - `NODE_ENV`: Environment (development/production)
