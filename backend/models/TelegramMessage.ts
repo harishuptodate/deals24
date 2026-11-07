@@ -52,6 +52,8 @@ const telegramMessageSchema = new mongoose.Schema({
   },
   amazonAsin: {
     type: String,
+    trim: true,
+    uppercase: true,
     default: null
   },
   identity: {
@@ -89,7 +91,11 @@ telegramMessageSchema.index({ messageId: 1, channelId: 1 }, { unique: true });
 telegramMessageSchema.index({ category: 1 });
 telegramMessageSchema.index({ searchTokens: 1 }, { name: 'deal_search_tokens_v1' });
 telegramMessageSchema.index({ price: 1 });
-telegramMessageSchema.index({ amazonAsin: 1 }, { sparse: true });
+telegramMessageSchema.index({ amazonAsin: 1 }, {
+  name: 'amazon_asin_unique',
+  unique: true,
+  partialFilterExpression: { amazonAsin: { $type: 'string', $gt: '' } },
+});
 telegramMessageSchema.index({ identityKey: 1 }, { sparse: true });
 telegramMessageSchema.index({ lastSeenAt: -1 });
 telegramMessageSchema.index(DEAL_SEARCH_INDEX_FIELDS, {

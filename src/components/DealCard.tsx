@@ -31,6 +31,7 @@ interface DealCardProps {
   category?: string;
   createdAt?: string;
   imageUrl?: string;
+  amazonAsin?: string | null;
   price?: number | null;
   telegramFileId?: string;
   onDelete?: (id: string) => void;
@@ -52,6 +53,7 @@ const DealCard = memo(({
   category,
   createdAt,
   imageUrl,
+  amazonAsin,
   price,
   telegramFileId,
   onDelete,
@@ -60,6 +62,7 @@ const DealCard = memo(({
   isAdmin = false,
 }: DealCardProps) => {
   const navigate = useNavigate();
+  const [savedAsin, setSavedAsin] = useState<string | null>(null);
   
   const {
     localTitle,
@@ -201,7 +204,9 @@ const DealCard = memo(({
     newText: string,
     newImageUrl: string | null,
     newPrice: number | null,
+    newAsin?: string,
   ) => {
+    if (newAsin) setSavedAsin(newAsin);
     setLocalDescription(newText);
     setLocalTitle(newText.split('\n')[0] || 'New Deal');
     setLocalImageUrl(newImageUrl);
@@ -334,6 +339,8 @@ const DealCard = memo(({
         initialText={displayDescription}
         initialImageUrl={displayImageUrl || null}
         initialPrice={price || null}
+        initialAmazonAsin={savedAsin || amazonAsin}
+        initialLink={link}
         onSuccess={handleEditSuccess}
       />
 

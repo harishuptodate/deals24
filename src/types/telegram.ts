@@ -6,6 +6,7 @@ export interface TelegramMessage {
 	date: string;
 	link?: string;
 	imageUrl?: string;
+	amazonAsin?: string | null;
 	telegramFileId?: string;
 	category?: string;
 	price?: number | null;

@@ -336,6 +336,7 @@ const CustomDealCard = ({
 		formattedDeal;
 	const { toast } = useToast();
 	const buyNowLink = link || extractSecondLink(description) || extractFirstLink(description);
+	const [savedAsin, setSavedAsin] = useState<string | null>(null);
 
 	// Dialog states for admin actions
 	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -474,7 +475,9 @@ const CustomDealCard = ({
 		newText: string,
 		newImageUrl: string | null,
 		newPrice: number | null,
+		newAsin?: string,
 	) => {
+		if (newAsin) setSavedAsin(newAsin);
 		if (onEdit) {
 			onEdit(id, newText, newImageUrl, newPrice);
 		}
@@ -614,6 +617,8 @@ const CustomDealCard = ({
 				initialText={description}
 				initialImageUrl={imageUrl || null}
 				initialPrice={price || null}
+				initialAmazonAsin={savedAsin || deal.amazonAsin}
+				initialLink={link}
 				onSuccess={handleEditSuccess}
 			/>
 

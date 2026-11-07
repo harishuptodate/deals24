@@ -117,6 +117,7 @@ const Deals = () => {
                       category={message.category || ''}
                       createdAt={message.date || message.createdAt}
                       imageUrl={message.imageUrl}
+                      amazonAsin={message.amazonAsin}
                       price={message.price}
                       telegramFileId={message.telegramFileId}
                       onDelete={handleDeleteProduct}

@@ -7,6 +7,7 @@ import { getMessages, saveMessage, trackMessageClick } from '../services/telegra
 import { invalidateDealCaches } from '../services/redisClient';
 import type { TelegramInboundMessage } from '../services/telegramTypes';
 import { SearchCursorError } from '../utils/dealSearch';
+import { hasAmazonLinks } from '../services/telegramMessageFilters';
 
 type TelegramWebhookRequest = Request<
 	unknown,
@@ -36,6 +37,7 @@ type UpdateMessageBody = {
 	imageUrl?: string | null;
 	price?: number | string | null;
 	priceObservedAt?: string | null;
+	amazonAsin?: string;
 };
 
 type TelegramListRequest = Request<unknown, unknown, unknown, TelegramListQuery>;
@@ -126,7 +128,7 @@ export const handleTelegramWebhook = async (req: TelegramWebhookRequest, res: Re
 export const updateMessageText = async (req: UpdateMessageRequest, res: Response) => {
 	try {
 		const { id } = req.params;
-		const { text, imageUrl, price, priceObservedAt } = req.body;
+		const { text, imageUrl, price, priceObservedAt, amazonAsin } = req.body;
 
 		if (!text || text.trim() === '') {
 			return res.status(400).json({ error: 'Message text cannot be empty' });
@@ -139,6 +141,20 @@ export const updateMessageText = async (req: UpdateMessageRequest, res: Response
 		}
 
 		const normalizedPrice = parseOptionalPriceInput(price);
+		let normalizedAsin: string | undefined;
+		if (amazonAsin !== undefined) {
+			normalizedAsin = typeof amazonAsin === 'string' ? amazonAsin.trim().toUpperCase() : '';
+			if (!/^[A-Z0-9]{10}$/.test(normalizedAsin)) {
+				return res.status(400).json({ error: 'ASIN must contain exactly 10 letters or digits' });
+			}
+			if (!hasAmazonLinks(`${message.link || ''}\n${message.text}`)) {
+				return res.status(400).json({ error: 'ASIN can only be added to an Amazon deal' });
+			}
+			const existing = await TelegramMessage.exists({ amazonAsin: normalizedAsin, _id: { $ne: message._id } });
+			if (existing) {
+				return res.status(409).json({ error: 'Another deal already uses this ASIN' });
+			}
+		}
 		if (Number.isNaN(normalizedPrice)) {
 			return res.status(400).json({ error: 'Price must be a positive number' });
 		}
@@ -154,6 +170,7 @@ export const updateMessageText = async (req: UpdateMessageRequest, res: Response
 
 		message.text = text;
 		message.imageUrl = imageUrl;
+		if (normalizedAsin) message.amazonAsin = normalizedAsin;
 		if (normalizedPrice !== undefined) message.price = normalizedPrice;
 		let manualSourceKey: string | null = null;
 		if (observedAt) {
@@ -183,6 +200,10 @@ export const updateMessageText = async (req: UpdateMessageRequest, res: Response
 		return res.json({ success: true, message });
 	} catch (error) {
 		console.error('Error updating message text:', error);
+		if ((error as { code?: number; keyPattern?: { amazonAsin?: number } })?.code === 11000
+			&& (error as { keyPattern?: { amazonAsin?: number } }).keyPattern?.amazonAsin) {
+			return res.status(409).json({ error: 'Another deal already uses this ASIN' });
+		}
 		return res.status(500).json({ error: 'Failed to update message text' });
 	}
 };

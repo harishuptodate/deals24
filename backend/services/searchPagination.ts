@@ -73,6 +73,6 @@ export function getSearchPage(store: typeof TelegramMessage, options: MessageQue
     if (result.hasMore) throw new Error('Too many search matches. Refine your search or filters.');
     return result.data.map((row) => row.id);
   }, async (ids) => ids.length ? store.find({ _id: { $in: ids } })
-    .select('messageId text date link imageUrl telegramFileId channelId category price clicks createdAt')
+    .select('messageId text date link imageUrl amazonAsin telegramFileId channelId category price clicks createdAt')
     .maxTimeMS(4500).lean() : []);
 }

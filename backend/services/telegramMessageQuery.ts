@@ -31,6 +31,7 @@ type TelegramMessageAggregateRow = {
   date?: Date;
   link?: string;
   imageUrl?: string;
+  amazonAsin?: string | null;
   telegramFileId?: string;
   channelId?: string;
   category?: string;
@@ -284,6 +285,7 @@ async function getMessagesFromStoreWithBackend(
       date: 1,
       link: 1,
       imageUrl: 1,
+      amazonAsin: 1,
       telegramFileId: 1,
       channelId: 1,
       category: 1,

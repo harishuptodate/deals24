@@ -124,6 +124,7 @@ export const updateMessageText = async (
   imageUrl: string | null = null,
   price: number | null = null,
   priceObservedAt: string | null = null,
+  amazonAsin?: string,
 ): Promise<boolean> => {
   if (!messageId) return false;
   try {
@@ -132,10 +133,14 @@ export const updateMessageText = async (
       imageUrl,
       price,
       priceObservedAt,
+      ...(amazonAsin ? { amazonAsin } : {}),
     });
     return response.status === 200;
   } catch (error) {
     console.error('Failed to update message:', error);
+    if (amazonAsin && axios.isAxiosError(error) && error.response?.data?.error) {
+      throw new Error(error.response.data.error);
+    }
     return false;
   }
 };

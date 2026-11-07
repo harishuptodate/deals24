@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useId, useState } from 'react';
 import {
 	Dialog,
 	DialogContent,
@@ -14,6 +14,7 @@ import { Input } from '../ui/input';
 import { useQueryClient } from '@tanstack/react-query';
 import PriceDateTimeFields from './PriceDateTimeFields';
 import PriceHistoryEditor from './PriceHistoryEditor';
+import { hasAmazonLinks } from './utils/linkUtils';
 
 interface EditDealDialogProps {
 	isOpen: boolean;
@@ -22,11 +23,14 @@ interface EditDealDialogProps {
 	initialText: string;
 	initialImageUrl: string | null;
 	initialPrice?: number | null;
+	initialAmazonAsin?: string | null;
+	initialLink?: string;
 	onSuccess: (
 		id: string,
 		newText: string,
 		newImageUrl: string | null,
 		newPrice: number | null,
+		newAsin?: string,
 	) => void;
 }
 
@@ -38,6 +42,8 @@ const EditDealDialog = ({
 	onSuccess,
 	initialImageUrl,
 	initialPrice = null,
+	initialAmazonAsin,
+	initialLink = '',
 }: EditDealDialogProps) => {
 	const { toast } = useToast();
 	const queryClient = useQueryClient();
@@ -47,6 +53,10 @@ const EditDealDialog = ({
 	const [editedPrice, setEditedPrice] = useState(initialPrice ? String(initialPrice) : '');
 	const [recordPriceHistory, setRecordPriceHistory] = useState(false);
 	const [priceObservedAt, setPriceObservedAt] = useState(new Date());
+	const [editedAsin, setEditedAsin] = useState('');
+	const asinInputId = useId();
+	const showAsinEditor = !/^[A-Z0-9]{10}$/i.test(initialAmazonAsin?.trim() || '')
+		&& hasAmazonLinks(`${initialLink}\n${initialText}`);
 
 	useEffect(() => {
 		if (!isOpen) return;
@@ -55,6 +65,7 @@ const EditDealDialog = ({
 		setEditedPrice(initialPrice ? String(initialPrice) : '');
 		setRecordPriceHistory(false);
 		setPriceObservedAt(new Date());
+		setEditedAsin('');
 	}, [isOpen, initialText, initialImageUrl, initialPrice]);
 
 	const handleSaveEdit = async (e: React.FormEvent) => {
@@ -87,8 +98,14 @@ const EditDealDialog = ({
 				editedImageUrl,
 				numericPrice,
 				recordPriceHistory ? priceObservedAt.toISOString() : null,
+				showAsinEditor && editedAsin.trim() ? editedAsin.trim().toUpperCase() : undefined,
 			);
 			if (success) {
+				if (showAsinEditor && editedAsin.trim()) {
+					void queryClient.invalidateQueries({ queryKey: ['telegram-messages'] });
+					void queryClient.invalidateQueries({ queryKey: ['all-telegram-messages'] });
+					void queryClient.invalidateQueries({ queryKey: ['deal', id] });
+				}
 				if (recordPriceHistory) {
 					void queryClient.invalidateQueries({ queryKey: ['deal-price-history', id] });
 				}
@@ -97,7 +114,8 @@ const EditDealDialog = ({
 					description: 'Deal was updated successfully',
 				});
 				onOpenChange(false);
-				onSuccess(id, editedText, editedImageUrl, numericPrice);
+				onSuccess(id, editedText, editedImageUrl, numericPrice,
+					showAsinEditor && editedAsin.trim() ? editedAsin.trim().toUpperCase() : undefined);
 			} else {
 				toast({
 					title: 'Error',
@@ -108,7 +126,7 @@ const EditDealDialog = ({
 		} catch (error) {
 			toast({
 				title: 'Error',
-				description: 'An error occurred while updating the deal',
+				description: error instanceof Error ? error.message : 'An error occurred while updating the deal',
 				variant: 'destructive',
 			});
 		} finally {
@@ -166,6 +184,30 @@ const EditDealDialog = ({
 							inputMode="numeric"
 						/>
 					</div>
+
+					{showAsinEditor && (
+						<div className="mt-4 space-y-2">
+							<label htmlFor={asinInputId} className="block text-sm font-medium">Amazon ASIN (optional)</label>
+							<Input
+								id={asinInputId}
+								name="amazonAsin"
+								value={editedAsin}
+								onChange={(event) => setEditedAsin(event.target.value.trim().toUpperCase())}
+								placeholder="e.g. B0D1234567"
+								pattern="[A-Za-z0-9]{10}"
+								maxLength={10}
+								title="Enter the 10-letter or digit ASIN from the Amazon product page"
+								autoComplete="off"
+								autoCorrect="off"
+								autoCapitalize="off"
+								spellCheck={false}
+								aria-describedby={`${asinInputId}-help`}
+							/>
+							<p id={`${asinInputId}-help`} className="text-xs text-muted-foreground">
+								No ASIN was recognized. Enter the 10-character ASIN from the Amazon product page.
+							</p>
+						</div>
+					)}
 
 					<label className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
 						<input

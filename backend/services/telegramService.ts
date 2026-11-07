@@ -120,9 +120,9 @@ async function findDeterministicMatch(amazonAsin: string | null) {
     const message = await TelegramMessage.findOne({
       $or: [
         { amazonAsin },
-        { link: { $regex: new RegExp(`/dp/${escapeRegExp(amazonAsin)}(?:[/?#]|$)`, 'i') } },
+        { amazonAsin: null, link: { $regex: new RegExp(`/(?:dp|gp/product|gp/aw/d)/${escapeRegExp(amazonAsin)}(?:[/?#]|$)`, 'i') } },
       ],
-    });
+    }).sort({ date: -1, _id: -1 });
     if (message) return { message, method: 'amazon-asin' } as const;
   }
 
@@ -209,6 +209,10 @@ async function ensureBaselineObservation(message: InstanceType<typeof TelegramMe
 }
 
 export async function saveMessage(message: TelegramInboundMessage, options: SaveMessageOptions = {}) {
+  return saveMessageAttempt(message, options, true);
+}
+
+async function saveMessageAttempt(message: TelegramInboundMessage, options: SaveMessageOptions, retryAsinConflict: boolean) {
   try {
     const { message_id, chat, date, text: originalText, caption, photo } = message;
     const textContent = originalText || caption || '';
@@ -462,6 +466,12 @@ export async function saveMessage(message: TelegramInboundMessage, options: Save
     });
     return savedMessage;
   } catch (error) {
+    // Another worker may have inserted this ASIN after our initial lookup.
+    // Retry through the matching path so its price observation is retained.
+    if (retryAsinConflict && isDuplicateKeyError(error)
+      && (error as { keyPattern?: { amazonAsin?: number } }).keyPattern?.amazonAsin) {
+      return saveMessageAttempt(message, options, false);
+    }
     console.error('Error saving message:', error);
     throw error;
   }
