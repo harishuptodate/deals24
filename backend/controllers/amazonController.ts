@@ -22,7 +22,7 @@ export const downloadTelegramImage = async (req: DownloadImageRequest, res: Resp
   const { fileId } = req.params;
   const redisKey = `tg-image:${fileId}`;
   const etag = `"${fileId}"`;
-  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const token = process.env.TELEGRAM_BOT_TOKEN_STAGING;
 
   if (!token) return res.status(500).json({ error: 'Telegram bot token not configured' });
   if (req.headers['if-none-match'] === etag) return res.status(304).end();

@@ -17,7 +17,7 @@ async function main() {
   const router = (module.default as any).default || module.default;
   const { redis } = await import('../services/redisClient.js');
   redis.disconnect();
-  await mongoose.connect(process.env.MONGODB_URI, { autoIndex: false, autoCreate: false });
+  await mongoose.connect(process.env.MONGODB_URI_STAGING, { autoIndex: false, autoCreate: false });
   await SearchSession.createIndexes();
   const app = express();
   app.use(cors());

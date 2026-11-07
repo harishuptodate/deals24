@@ -1,7 +1,7 @@
 import type { ProductIdentity } from '../services/telegramTypes';
 
 export const DEAL_SEARCH_INDEX_NAME = 'deal_search_text_v2';
-export const DEAL_ATLAS_SEARCH_INDEX_NAME = 'deal_search_atlas_v2';
+export const DEAL_ATLAS_SEARCH_INDEX_NAME = 'deal_search_atlas_v2_staging';
 export const DEAL_SEARCH_SNAPSHOT_LIMIT = 25_000;
 
 export const DEAL_ATLAS_SEARCH_INDEX_DEFINITION = {

@@ -13,9 +13,9 @@ dotenv.config({ path: '../.env' });
 dotenv.config();
 
 async function main() {
-  if (!process.env.MONGODB_URI) throw new Error('MONGODB_URI is not configured');
+  if (!process.env.MONGODB_URI_STAGING) throw new Error('MONGODB_URI_STAGING is not configured');
   // Verification is read-only, including disabling Mongoose index creation.
-  await mongoose.connect(process.env.MONGODB_URI, { autoIndex: false, autoCreate: false, serverSelectionTimeoutMS: 10_000 });
+  await mongoose.connect(process.env.MONGODB_URI_STAGING, { autoIndex: false, autoCreate: false, serverSelectionTimeoutMS: 10_000 });
   const indexes = await TelegramMessage.collection.aggregate([
     { $listSearchIndexes: { name: DEAL_ATLAS_SEARCH_INDEX_NAME } },
   ]).toArray();

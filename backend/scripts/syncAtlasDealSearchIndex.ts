@@ -32,11 +32,12 @@ async function waitUntilReady() {
 }
 
 async function main() {
-  if (!process.env.MONGODB_URI) throw new Error('MONGODB_URI is not configured');
+  if (!process.env.MONGODB_URI_STAGING) throw new Error('MONGODB_URI_STAGING is not configured');
 
-  await mongoose.connect(process.env.MONGODB_URI, { autoIndex: false, autoCreate: false });
+  await mongoose.connect(process.env.MONGODB_URI_STAGING, { autoIndex: false, autoCreate: false });
   const database = mongoose.connection.db;
   if (!database) throw new Error('MongoDB connection is not ready');
+  if (database.databaseName !== 'staging') throw new Error('Atlas index sync requires the staging database');
 
   const collectionName = TelegramMessage.collection.collectionName;
   const existingIndex = await getSearchIndex();

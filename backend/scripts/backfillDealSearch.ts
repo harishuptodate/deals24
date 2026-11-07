@@ -8,9 +8,9 @@ dotenv.config({ path: '../.env' });
 dotenv.config();
 
 async function main() {
-  if (!process.env.MONGODB_URI) throw new Error('MONGODB_URI is not configured');
+  if (!process.env.MONGODB_URI_STAGING) throw new Error('MONGODB_URI_STAGING is not configured');
   const apply = process.argv.includes('--apply');
-  await mongoose.connect(process.env.MONGODB_URI, { autoIndex: false, autoCreate: false });
+  await mongoose.connect(process.env.MONGODB_URI_STAGING, { autoIndex: false, autoCreate: false });
   let scanned = 0;
   let changed = 0;
   let updated = 0;

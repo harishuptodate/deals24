@@ -28,8 +28,8 @@ export async function processDealAlerts(deal: SavedDeal, sourceKey: string): Pro
       { type: 'keyword' },
     ],
   });
-  const appUrl = (process.env.PUBLIC_APP_URL || 'https://deals24.vercel.app').replace(/\/$/, '');
-  const apiUrl = (process.env.PUBLIC_API_URL || '').replace(/\/$/, '');
+  const appUrl = (process.env.PUBLIC_APP_URL_STAGING || 'https://staging24.vercel.app').replace(/\/$/, '');
+  const apiUrl = (process.env.PUBLIC_API_URL_STAGING || '').replace(/\/$/, '');
   const proxiedImageUrl = deal.telegramFileId && apiUrl
     ? `${apiUrl}/api/amazon/download-image/${encodeURIComponent(deal.telegramFileId)}`
     : null;

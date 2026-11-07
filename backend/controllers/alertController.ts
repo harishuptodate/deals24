@@ -143,5 +143,5 @@ export async function unsubscribeAlert(req: Request, res: Response) {
   const message = alert
     ? 'This Deals24 alert has been turned off.'
     : 'This alert link is no longer valid.';
-  return res.type('html').send(`<!doctype html><html><body style="font-family:Arial,sans-serif;text-align:center;padding:64px 20px;background:#fafafa;color:#18181b"><h1>${message}</h1><p>You can manage your alerts from the Deals24 wishlist.</p><a href="${process.env.PUBLIC_APP_URL || 'https://deals24.vercel.app'}/wishlist">Return to Deals24</a></body></html>`);
+  return res.type('html').send(`<!doctype html><html><body style="font-family:Arial,sans-serif;text-align:center;padding:64px 20px;background:#fafafa;color:#18181b"><h1>${message}</h1><p>You can manage your alerts from the Deals24 wishlist.</p><a href="${process.env.PUBLIC_APP_URL_STAGING || 'https://staging24.vercel.app'}/wishlist">Return to Deals24</a></body></html>`);
 }

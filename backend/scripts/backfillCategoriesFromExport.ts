@@ -17,7 +17,7 @@ const fileArgument = process.argv.find((argument) => !argument.startsWith('--') 
 const exportPath = path.resolve(fileArgument || '../deals.telegrammessages-category-fault.json');
 
 async function run() {
-	if (!process.env.MONGODB_URI) throw new Error('MONGODB_URI is not configured');
+	if (!process.env.MONGODB_URI_STAGING) throw new Error('MONGODB_URI_STAGING is not configured');
 
 	const exportedMessages = JSON.parse(fs.readFileSync(exportPath, 'utf8')) as ExportedMessage[];
 	const exportedById = new Map(exportedMessages.flatMap((message) => {
@@ -29,7 +29,7 @@ async function run() {
 	}));
 	const exportedIds = [...exportedById.keys()];
 
-	await mongoose.connect(process.env.MONGODB_URI);
+	await mongoose.connect(process.env.MONGODB_URI_STAGING);
 
 	const storedMessages = await TelegramMessage.find({
 		_id: { $in: exportedIds },

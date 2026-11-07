@@ -20,7 +20,7 @@ export async function requestMagicLink(req: Request, res: Response) {
 
   const token = await createMagicLoginToken(email, ownerToken);
   if (token) {
-    const appUrl = (process.env.PUBLIC_APP_URL || 'https://deals24.vercel.app').replace(/\/$/, '');
+    const appUrl = (process.env.PUBLIC_APP_URL_STAGING || 'https://staging24.vercel.app').replace(/\/$/, '');
     await sendMagicLoginEmail({ email, loginUrl: `${appUrl}/auth/verify?token=${token}` });
   }
 

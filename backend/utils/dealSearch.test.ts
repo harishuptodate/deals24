@@ -13,7 +13,7 @@ import {
 } from './dealSearch';
 
 test('defines the Atlas Search index used by deal queries', () => {
-  assert.equal(DEAL_ATLAS_SEARCH_INDEX_NAME, 'deal_search_atlas_v2');
+  assert.equal(DEAL_ATLAS_SEARCH_INDEX_NAME, 'deal_search_atlas_v2_staging');
   assert.equal(DEAL_ATLAS_SEARCH_INDEX_DEFINITION.mappings.fields.searchTokens[0].analyzer, 'lucene.keyword');
   assert.deepEqual(DEAL_ATLAS_SEARCH_INDEX_DEFINITION.mappings.fields.category, {
     type: 'token',

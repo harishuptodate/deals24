@@ -64,7 +64,7 @@ app.get('/api/health', (_req: Request, res: Response) => {
 });
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI)
+mongoose.connect(process.env.MONGODB_URI_STAGING)
   .then(async () => {
     console.log('Connected to MongoDB');
     await seedLegacyBlacklist();
@@ -77,7 +77,7 @@ mongoose.connect(process.env.MONGODB_URI)
     });
     
     // Initialize Telegram bot if token exists
-    if (process.env.TELEGRAM_BOT_TOKEN) {
+    if (process.env.TELEGRAM_BOT_TOKEN_STAGING) {
       initTelegramBot();
     } else {
       console.warn('TELEGRAM_BOT_TOKEN not provided. Bot will not be initialized.');
@@ -91,12 +91,12 @@ mongoose.connect(process.env.MONGODB_URI)
 // Initialize Telegram bot
 function initTelegramBot() {
   try {
-    const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
+    const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN_STAGING);
     
     // Set webhook for production or use polling for development
     if (process.env.NODE_ENV === 'production') {
       // Set webhook URL (you need to set WEBHOOK_URL in .env)
-      const webhookUrl = process.env.WEBHOOK_URL || `https://your-domain.com/api/telegram/webhook`;
+      const webhookUrl = process.env.WEBHOOK_URL_STAGING || `https://your-domain.com/api/telegram/webhook`;
       bot.telegram.setWebhook(webhookUrl)
         .then(() => {
           console.log(`Webhook set to: ${webhookUrl}`);
