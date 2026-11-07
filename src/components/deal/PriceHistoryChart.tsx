@@ -3,7 +3,6 @@ import { format } from 'date-fns';
 import { Loader2 } from 'lucide-react';
 import {
   CartesianGrid,
-  LabelList,
   Line,
   LineChart,
   ResponsiveContainer,
@@ -12,6 +11,7 @@ import {
   YAxis,
 } from 'recharts';
 import { getDealPriceHistory } from '@/services/api';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface PriceHistoryChartProps {
   dealId?: string;
@@ -19,6 +19,7 @@ interface PriceHistoryChartProps {
 }
 
 interface PriceTooltipProps {
+  highlights: Array<{ price: number; color: string }>;
   active?: boolean;
   payload?: Array<{
     payload?: { fullDate?: string };
@@ -43,11 +44,13 @@ const formatCompactPrice = (price: number | null | undefined) =>
       }).format(price)}`
     : '';
 
-const PriceTooltip = ({ active, payload }: PriceTooltipProps) => {
+const PriceTooltip = ({ active, payload, highlights }: PriceTooltipProps) => {
   if (active && payload && payload.length) {
+    const color = highlights.find(({ price }) => price === Number(payload[0].value))?.color
+      || 'text-gray-700 dark:text-gray-300';
     return (
       <div className="rounded-md border border-gray-200 bg-white px-2 py-1.5 text-[10px] leading-4 shadow-md dark:border-gray-700 dark:bg-gray-800">
-        <p className="font-semibold text-green-600 dark:text-green-400">
+        <p className={`font-semibold ${color}`}>
           {formatPrice(Number(payload[0].value))}
         </p>
         <p className="font-medium dark:text-white">{payload[0].payload?.fullDate}</p>
@@ -56,27 +59,6 @@ const PriceTooltip = ({ active, payload }: PriceTooltipProps) => {
   }
   return null;
 };
-
-const PriceLabel = ({
-  x = 0,
-  y = 0,
-  value,
-}: {
-  x?: number;
-  y?: number;
-  value?: number;
-}) => (
-  <text
-    className="deal-price-label"
-    x={x}
-    y={y - 10}
-    textAnchor="middle"
-    fill="#3b82f6"
-    fontSize={10}
-    fontWeight={600}>
-    {formatPrice(value)}
-  </text>
-);
 
 const DateTimeTick = ({
   x = 0,
@@ -102,6 +84,7 @@ const DateTimeTick = ({
 };
 
 const PriceHistoryChart = ({ dealId, enabled }: PriceHistoryChartProps) => {
+  const isMobile = useIsMobile();
   const { data, isLoading, isError } = useQuery({
     queryKey: ['deal-price-history', dealId],
     queryFn: () => getDealPriceHistory(dealId || ''),
@@ -128,12 +111,27 @@ const PriceHistoryChart = ({ dealId, enabled }: PriceHistoryChartProps) => {
     );
   }
 
-  const points = data.points.map((point) => ({
+  const points = data.points.map((point, index) => ({
     ...point,
+    index,
     name: `${format(new Date(point.observedAt), 'dd MMM yy')}|${format(new Date(point.observedAt), 'h:mm a')}`,
     fullDate: format(new Date(point.observedAt), 'dd MMM yyyy, h:mm a'),
   }));
   const prices = points.map((point) => point.price);
+  const dateTickCount = Math.min(points.length, isMobile ? 4 : 7);
+  const dateTicks = Array.from({ length: dateTickCount }, (_, index) =>
+    dateTickCount === 1 ? 0 : Math.round(index * (points.length - 1) / (dateTickCount - 1)),
+  );
+  const distinctPrices = [...new Set(prices)].sort((a, b) => a - b);
+  const priceHighlights = [
+    { label: 'Lowest', price: distinctPrices[0], color: 'text-green-700 dark:text-green-400' },
+    ...(distinctPrices.length > 2
+      ? [{ label: 'Middle', price: distinctPrices[Math.floor((distinctPrices.length - 1) / 2)], color: 'text-blue-700 dark:text-blue-400' }]
+      : []),
+    ...(distinctPrices.length > 1
+      ? [{ label: 'Highest', price: distinctPrices[distinctPrices.length - 1], color: 'text-amber-700 dark:text-amber-400' }]
+      : []),
+  ];
   const lowestPrice = Math.min(...prices);
   const highestPrice = Math.max(...prices);
   const pricePadding = Math.max(
@@ -151,6 +149,25 @@ const PriceHistoryChart = ({ dealId, enabled }: PriceHistoryChartProps) => {
       <h3 className="mb-1 px-1 text-sm font-semibold text-gray-700 dark:text-gray-300">
         Price History
       </h3>
+      <dl className="mb-2 grid w-full grid-cols-3 gap-2 px-1">
+        {priceHighlights.map(({ label, price, color }) => (
+          <div
+            key={label}
+            className={`min-w-0 break-words ${
+              label === 'Lowest' ? 'col-start-1 text-left' :
+              label === 'Middle' ? 'col-start-2 text-center' : 'col-start-3 text-right'
+            }`}
+          >
+            <dt className="text-xs text-gray-500 dark:text-gray-400">{label}</dt>
+            <dd className={`text-sm font-semibold tabular-nums ${color}`}>
+              {formatPrice(price)}
+            </dd>
+          </div>
+        ))}
+      </dl>
+      <p className="mb-2 px-1 text-xs text-gray-500 dark:text-gray-400">
+        Hover or tap a point for its exact price and date.
+      </p>
       <div className="h-[220px] sm:h-[230px]">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
@@ -164,11 +181,17 @@ const PriceHistoryChart = ({ dealId, enabled }: PriceHistoryChartProps) => {
               horizontal={true}
             />
             <XAxis
-              dataKey="name"
-              tick={<DateTimeTick />}
+              dataKey="index"
+              ticks={dateTicks}
+              tickFormatter={(index) => points[Number(index)]?.name || ''}
+              tick={({ x, y, payload }) => (
+                <DateTimeTick x={x} y={y} payload={{ value: points[payload.value]?.name }} />
+              )}
               tickMargin={4}
               height={40}
-              interval={0}
+              interval="preserveStartEnd"
+              minTickGap={20}
+              tickLine={false}
               stroke="rgba(160, 160, 160, 0.2)"
             />
 			<YAxis
@@ -180,17 +203,15 @@ const PriceHistoryChart = ({ dealId, enabled }: PriceHistoryChartProps) => {
               tickMargin={6}
               stroke="rgba(160, 160, 160, 0.2)"
             />
-            <Tooltip content={<PriceTooltip />} />
+            <Tooltip content={<PriceTooltip highlights={priceHighlights} />} />
             <Line
               type="monotone"
               dataKey="price"
               stroke="#3b82f6"
               strokeWidth={2}
-              dot={{ r: 4, fill: '#3b82f6', stroke: '#3b82f6' }}
-              activeDot={{ r: 6, fill: '#60a5fa', stroke: '#3b82f6' }}
-            >
-              <LabelList dataKey="price" content={<PriceLabel />} />
-            </Line>
+              dot={false}
+              activeDot={false}
+            />
           </LineChart>
         </ResponsiveContainer>
       </div>
