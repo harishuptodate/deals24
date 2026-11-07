@@ -15,42 +15,42 @@ export default function AdminLogs() {
   return (
     <div className="min-h-screen bg-stone-50 text-stone-950 dark:bg-[#09090B] dark:text-stone-100">
       <Navbar />
-      <main className="container mx-auto max-w-screen-2xl px-4 py-6 sm:py-8">
-        <header className="mb-6 flex flex-col gap-5 border-b border-stone-200 pb-6 dark:border-white/10 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-3xl space-y-3">
+      <main className="container mx-auto max-w-screen-2xl px-2 py-3 sm:px-4 sm:py-6">
+        <header className="mb-3 flex items-center justify-between gap-3 sm:mb-4">
+          <div className="min-w-0 space-y-2">
             <Link
               to="/admin"
-              className="inline-flex items-center gap-2 text-sm font-medium text-stone-600 transition-colors hover:text-stone-950 dark:text-stone-400 dark:hover:text-white"
+              className="inline-flex min-h-6 items-center gap-1.5 text-xs font-medium text-stone-600 transition-colors hover:text-stone-950 dark:text-stone-400 dark:hover:text-white"
             >
               <ArrowLeft className="h-4 w-4" />
               Analytics
             </Link>
 
-            <div className="flex items-start gap-3">
-              <div className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-stone-950 text-white dark:bg-white dark:text-stone-950">
+            <div className="flex items-center gap-2.5">
+              <div className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-stone-950 text-white dark:bg-white dark:text-stone-950 sm:flex">
                 <Activity className="h-5 w-5" />
               </div>
               <div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">System activity</h1>
+                  <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">System logs</h1>
                   {authenticated ? (
-                    <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/25 dark:bg-emerald-500/10 dark:text-emerald-200">
+                    <Badge variant="outline" className="hidden border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/25 dark:bg-emerald-500/10 dark:text-emerald-200 sm:inline-flex">
                       <ShieldCheck className="mr-1 h-3.5 w-3.5" /> Admin access
                     </Badge>
                   ) : null}
                 </div>
-                <p className="mt-1.5 max-w-2xl text-sm leading-6 text-stone-600 dark:text-stone-400">
-                  Monitor incoming deals and quickly investigate warnings, failures, and related requests.
+                <p className="mt-1 hidden text-sm text-stone-600 dark:text-stone-400 sm:block">
+                  Follow every deal. Open an entry to read the full log.
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="shrink-0">
             {authenticated ? (
-              <Button variant="outline" onClick={logout}>
-                <LogOut className="mr-2 h-4 w-4" />
-                Sign out
+              <Button variant="outline" size="sm" className="px-2.5" onClick={logout} aria-label="Sign out">
+                <LogOut aria-hidden="true" className="h-4 w-4" />
+                <span className="hidden sm:inline">Sign out</span>
               </Button>
             ) : (
               <Button onClick={() => setShowLoginDialog(true)}>Admin Login</Button>

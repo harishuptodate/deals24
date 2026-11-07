@@ -82,7 +82,7 @@ const Navbar = () => {
 					size={compact ? 'icon' : 'sm'}
 					className={compact
 						? 'relative h-8 w-8 rounded-full p-0'
-						: 'max-w-48 gap-2 rounded-full border border-transparent px-2 hover:border-violet-200 hover:bg-violet-50 dark:hover:border-violet-900 dark:hover:bg-violet-950/40'}
+						: 'relative max-w-48 gap-2 rounded-full border border-transparent px-2 hover:border-violet-200 hover:bg-violet-50 dark:hover:border-violet-900 dark:hover:bg-violet-950/40'}
 					aria-label="Open account and admin menu">
 					<Avatar className={compact ? 'h-6 w-6' : 'h-7 w-7'}>
 						<AvatarFallback className="bg-gradient-to-br from-violet-100 to-indigo-100 text-xs font-semibold text-violet-700 dark:from-violet-950 dark:to-indigo-950 dark:text-violet-300">
@@ -222,7 +222,7 @@ const Navbar = () => {
 									size="sm"
 									className="hover:scale-105 active:scale-95 transition-transform duration-200 ease-in-out text-sm rounded-full dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-800">
 									<ShoppingBag className="h-5 w-5 mr-1" />
-									<span>Deals</span>
+									<span className="sr-only lg:not-sr-only">Deals</span>
 								</Button>
 							</Link>
 							<Link to="/categories">
@@ -244,7 +244,7 @@ const Navbar = () => {
 										<rect width="7" height="7" x="14" y="14" rx="1" />
 										<rect width="7" height="7" x="3" y="14" rx="1" />
 									</svg>
-									<span>Categories</span>
+									<span className="sr-only lg:not-sr-only">Categories</span>
 								</Button>
 							</Link>
 							<Link to="/wishlist">
@@ -253,7 +253,7 @@ const Navbar = () => {
 									size="sm"
 									className="hover:scale-105 active:scale-95 transition-transform duration-200 ease-in-out text-sm rounded-full dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-800">
 									<WishlistAlertIcon className="mr-1" />
-									<span>Wishlist & Alerts</span>
+									<span className="sr-only lg:not-sr-only">Wishlist & Alerts</span>
 								</Button>
 							</Link>
 							<ThemeToggle />
