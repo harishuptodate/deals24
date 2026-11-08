@@ -1,4 +1,4 @@
-const DEFAULT_FALLBACK_API_URL = 'https://amznpf.vercel.app/api/fetch-image';
+const DEFAULT_FALLBACK_API_URL = 'https://amznpf.onrender.com/api/fetch-image';
 
 type AmazonFallbackResponse = {
   success?: boolean;

@@ -13,21 +13,21 @@ export async function fetchProductImage(amazonUrl: string) {
     let product;
 
     try {
-      product = await scrapeAmazonProduct(canonicalUrl);
-    } catch (internalError) {
-      const internalErrorMessage = internalError instanceof Error
-        ? internalError.message
-        : String(internalError);
-      logger.warn(
-        'Internal Amazon image fetch failed; trying fallback service.',
-        { amazonUrl: canonicalUrl, error: internalErrorMessage },
-        { event: 'amazon_image_fallback_started' },
-      );
-
       product = {
         ...await fetchAmazonProductFallback(canonicalUrl),
         amazonUrl: canonicalUrl,
       };
+    } catch (apiError) {
+      const apiErrorMessage = apiError instanceof Error
+        ? apiError.message
+        : String(apiError);
+      logger.warn(
+        'Amazon image API failed; trying in-house scraper.',
+        { amazonUrl: canonicalUrl, error: apiErrorMessage },
+        { event: 'amazon_image_fallback_started' },
+      );
+
+      product = await scrapeAmazonProduct(canonicalUrl);
     }
 
     logger.info(
