@@ -16,6 +16,9 @@ COPY . .
 
 RUN npm run build && npm prune --omit=dev
 
+# Install curl command for the Coolify scheduled task
+RUN apk add --no-cache curl
+
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs
 RUN adduser -S backend -u 1001
