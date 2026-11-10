@@ -36,8 +36,8 @@ const PriceFilter = () => {
   const [maxDraft, setMaxDraft] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  const hasAny = !!minParam || !!maxParam;
   const isPriceSort = sortParam === 'price_asc' || sortParam === 'price_desc';
+  const hasAny = !!minParam || !!maxParam || isPriceSort;
 
   useEffect(() => {
     setMinDraft(minPrice !== null ? String(minPrice) : '');
@@ -114,14 +114,28 @@ const PriceFilter = () => {
     setSearchParams(next, { replace: true });
   };
 
-  const pillLabel = (() => {
+  const clearPriceFilters = () => {
+    const next = new URLSearchParams(searchParams);
+    next.delete('minPrice');
+    next.delete('maxPrice');
+    if (isPriceSort) next.delete('sort');
+    setSearchParams(next, { replace: true });
+    setMinDraft('');
+    setMaxDraft('');
+    setError(null);
+    setOpen(false);
+  };
+
+  const rangeLabel = (() => {
     if (minPrice !== null && maxPrice !== null) {
       return `${minPrice} - ${maxPrice}`;
     }
     if (minPrice !== null) return `>= ${minPrice}`;
     if (maxPrice !== null) return `<= ${maxPrice}`;
-    return 'Price';
+    return '';
   })();
+  const sortLabel = isPriceSort ? (sortParam === 'price_asc' ? 'Low-High' : 'High-Low') : '';
+  const pillLabel = [sortLabel, rangeLabel].filter(Boolean).join(' · ') || 'Price';
 
   return (
     <div className="flex items-center gap-2">
@@ -140,11 +154,11 @@ const PriceFilter = () => {
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  clearPriceRange();
+                  clearPriceFilters();
                 }}
                 role="button"
                 tabIndex={0}
-                aria-label="Clear price range"
+                aria-label="Clear price filters"
                 className="inline-flex size-4 items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 sm:size-5 dark:bg-gray-700 dark:hover:bg-gray-600">
                 <X />
               </span>
