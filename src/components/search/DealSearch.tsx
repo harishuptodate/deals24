@@ -2,7 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { formatDistanceToNowStrict } from 'date-fns';
-import { Search, Loader2, ArrowUpRight, Clock, X } from 'lucide-react';
+import { Search, Loader2, ArrowUpRight, ArrowUpLeft, Clock, X } from 'lucide-react';
 import DealImage from '@/components/images/DealImage';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -111,7 +111,7 @@ export default function DealSearch() {
     navigate(`/deals?${next.toString()}`);
   };
 
-  type Option = { label: string; kind: string; action: () => void; price?: number | null; image?: string | null; telegramFileId?: string | null; date?: string | null };
+  type Option = { label: string; kind: string; query?: string; action: () => void; price?: number | null; image?: string | null; telegramFileId?: string | null; date?: string | null };
   const options: Option[] = [];
   if (normalized.length < 2) {
     for (const term of recent.filter((value) => value.toLowerCase().includes(normalized.toLowerCase()))) {
@@ -121,11 +121,11 @@ export default function DealSearch() {
       options.push({ label: term, kind: 'Popular searches', action: () => commit(term) });
     }
   } else if (preview.data) {
-    for (const deal of preview.data.deals) options.push({
+    for (const deal of preview.data.deals.slice(0, 4)) options.push({
       label: deal.title, kind: 'Deals', price: deal.price, image: deal.imageUrl, telegramFileId: deal.telegramFileId, date: deal.date,
       action: () => { remember(normalized); setOpen(false); navigate(`/deal/${deal.id}`); },
     });
-    for (const product of preview.data.products) options.push({ label: product.label, kind: 'Products', action: () => commit(product.query) });
+    for (const product of preview.data.products) options.push({ label: product.label, kind: 'Products', query: product.query, action: () => commit(product.query) });
     for (const category of preview.data.categories) options.push({ label: category.label, kind: 'Categories', action: () => commit(normalized, category.category) });
     const prices = preview.data.deals.map((deal) => deal.price).filter((price): price is number => price != null && price > 0);
     if (prices.length && !params.has('maxPrice')) {
@@ -136,6 +136,10 @@ export default function DealSearch() {
       for (const term of (popular.data || DEFAULT_POPULAR).slice(0, 3)) options.push({ label: term, kind: 'Explore other deals', action: () => commit(term) });
     }
   }
+  const fillSearch = (query: string) => {
+    setDraft(query.slice(0, 100)); setOpen(true); setActive(-1);
+    inputRef.current?.focus();
+  };
   const optionSignature = options.map((option) => `${option.kind}:${option.label}`).join('|');
   useEffect(() => { setActive(-1); }, [optionSignature]);
   useEffect(() => {
@@ -168,7 +172,7 @@ export default function DealSearch() {
 
   const compactSuggestions = !isMobile && normalized.length < 2;
   const content = (
-    <div className={compactSuggestions ? 'max-h-72 overflow-y-auto p-3' : 'max-h-[65dvh] overflow-y-auto p-2 sm:max-h-[min(70vh,560px)]'}>
+    <div className={compactSuggestions ? 'max-h-72 overflow-y-auto p-3' : 'max-h-[65dvh] scroll-pb-14 overflow-y-auto overscroll-contain p-2 pb-0 sm:max-h-[min(70vh,560px)]'}>
       <div role="status" aria-live="polite" className="px-2 text-xs text-muted-foreground">
         {normalized.length >= 2 && (preview.isFetching || normalized !== debounced) ? <span className="flex items-center gap-2 py-3"><Loader2 className="h-4 w-4 animate-spin" />Finding deals…</span> : null}
         {preview.isError && normalized.length >= 2 ? <p className="py-3">Previews unavailable. Press Enter to search all deals.</p> : null}
@@ -178,18 +182,27 @@ export default function DealSearch() {
         {options.map((option, index) => (
           <div key={`${option.kind}:${option.label}:${index}`} className={compactSuggestions ? 'contents' : undefined}>
             {(index === 0 || options[index - 1].kind !== option.kind) && <p className={compactSuggestions ? `w-full text-[11px] font-semibold uppercase tracking-wide text-muted-foreground ${index > 0 ? 'mt-2' : ''}` : 'px-3 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground'}>{option.kind}</p>}
-            <button id={`${listId}-${index}`} type="button" role="option" aria-selected={active === index}
-              onMouseDown={(event) => event.preventDefault()} onClick={option.action}
-              className={`flex items-center text-left hover:bg-violet-50 dark:hover:bg-violet-950/40 ${compactSuggestions ? 'min-h-8 max-w-full gap-1.5 rounded-full border border-border px-2.5 py-1 text-xs' : 'min-h-11 w-full gap-3 rounded-xl px-3 py-2 text-sm'} ${active === index ? 'bg-violet-50 dark:bg-violet-950/40' : ''}`}>
-              {option.kind === 'Deals' ? <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-muted"><DealImage title={option.label} imageUrl={option.image || undefined} telegramFileId={option.telegramFileId || undefined} className="h-full w-full rounded-lg object-contain" fallbackClassName="[&>svg]:h-5 [&>svg]:w-5" /></div> : option.kind === 'Recent searches' ? <Clock className="h-4 w-4 shrink-0 text-muted-foreground" /> : <Search className="h-4 w-4 shrink-0 text-muted-foreground" />}
-              <span className="min-w-0 flex-1"><span className="line-clamp-2 font-medium">{option.label}</span>
-                {option.kind === 'Deals' && <span className="mt-1 block text-xs text-muted-foreground">{option.price != null ? `₹${option.price.toLocaleString('en-IN')}` : 'Price unavailable'}{option.date && Number.isFinite(Date.parse(option.date)) ? ` · Seen ${formatDistanceToNowStrict(new Date(option.date), { addSuffix: true })}` : ''}</span>}
-              </span>{!compactSuggestions && <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground" />}
-            </button>
+            <div className={`flex items-center ${compactSuggestions ? 'max-w-full rounded-full border border-border' : 'w-full rounded-xl'} ${active === index ? 'bg-violet-50 dark:bg-violet-950/40' : ''}`}>
+              <button id={`${listId}-${index}`} type="button" role="option" aria-selected={active === index}
+                onMouseDown={(event) => event.preventDefault()} onClick={option.action}
+                className={`flex min-w-0 flex-1 items-center text-left hover:bg-violet-50 dark:hover:bg-violet-950/40 ${compactSuggestions ? 'min-h-8 gap-1.5 rounded-full py-1 pl-2.5 pr-1 text-xs' : 'min-h-11 gap-3 rounded-xl py-2 pl-3 pr-1 text-sm'} ${active === index ? 'bg-violet-50 dark:bg-violet-950/40' : ''}`}>
+                {option.kind === 'Deals' ? <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-muted"><DealImage title={option.label} imageUrl={option.image || undefined} telegramFileId={option.telegramFileId || undefined} className="h-full w-full rounded-lg object-contain" fallbackClassName="[&>svg]:h-5 [&>svg]:w-5" /></div> : option.kind === 'Recent searches' ? <Clock className="h-4 w-4 shrink-0 text-muted-foreground" /> : <Search className="h-4 w-4 shrink-0 text-muted-foreground" />}
+                <span className="min-w-0 flex-1"><span className="line-clamp-2 font-medium">{option.label}</span>
+                  {option.kind === 'Deals' && <span className="mt-1 block text-xs text-muted-foreground">{option.price != null ? `₹${option.price.toLocaleString('en-IN')}` : 'Price unavailable'}{option.date && Number.isFinite(Date.parse(option.date)) ? ` · Seen ${formatDistanceToNowStrict(new Date(option.date), { addSuffix: true })}` : ''}</span>}
+                </span>
+              </button>
+              <button type="button" aria-label={`Fill search with ${option.label}`}
+                onMouseDown={(event) => event.preventDefault()} onClick={() => fillSearch(option.query || option.label)}
+                className={`flex shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-violet-50 hover:text-violet-700 dark:hover:bg-violet-950/40 ${compactSuggestions ? 'min-h-8 min-w-8' : 'min-h-11 min-w-11'}`}>
+                <ArrowUpLeft className="h-4 w-4" aria-hidden="true" />
+              </button>
+            </div>
           </div>
         ))}
       </div>
-      {normalized.length >= 2 && <Button type="button" variant="ghost" onClick={() => commit()} className="mt-2 w-full justify-between rounded-xl text-violet-700 dark:text-violet-300">Search all deals for “{normalized}”<ArrowUpRight className="ml-2 h-4 w-4 shrink-0" /></Button>}
+      {normalized.length >= 2 && <div className="sticky bottom-0 z-10 -mx-2 rounded-b-2xl bg-popover">
+        <Button type="button" variant="ghost" onClick={() => commit()} className="w-full justify-between rounded-t-none rounded-b-2xl text-violet-700 dark:text-violet-300">Search all deals for “{normalized}”<ArrowUpRight className="ml-2 h-4 w-4 shrink-0" /></Button>
+      </div>}
       {normalized.length < 2 && recent.length > 0 && <button type="button" onClick={() => { setRecent([]); try { localStorage.removeItem(RECENT_KEY); } catch { return; } }} className="px-3 py-3 text-xs text-muted-foreground underline">Clear recent searches</button>}
     </div>
   );
