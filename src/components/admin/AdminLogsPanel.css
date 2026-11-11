@@ -1,90 +1,78 @@
-.admin-logs {
-	container-type: inline-size;
+.admin-logs-page {
+	--log-bg: #f8fafc;
+	--log-surface: #ffffff;
+	--log-raised: #f1f5f9;
+	--log-ink: #0f172a;
+	--log-muted: #475569;
+	--log-border: #e2e8f0;
+	--log-control-border: #7b8ba1;
+	--log-primary: #1e40af;
+	--log-primary-fill: #1d4ed8;
+	--log-primary-soft: #eff6ff;
+	--log-focus: #1d4ed8;
+	--log-info: #1e40af;
+	--log-info-bg: #eff6ff;
+	--log-warn: #92400e;
+	--log-warn-bg: #fffbeb;
+	--log-error: #991b1b;
+	--log-error-bg: #fef2f2;
+	--log-debug: #6b21a8;
+	--log-debug-bg: #faf5ff;
+	--log-live: #166534;
+	--log-live-bg: #dcfce7;
 }
 
-.log-entry-summary {
-	display: flex;
-	align-items: center;
-	padding-inline-end: 0.5rem;
+.dark .admin-logs-page {
+	--log-bg: #0b1120;
+	--log-surface: #111827;
+	--log-raised: #1e293b;
+	--log-ink: #f1f5f9;
+	--log-muted: #a5b4c8;
+	--log-border: #334155;
+	--log-control-border: #64748b;
+	--log-primary: #93c5fd;
+	--log-primary-soft: #172554;
+	--log-focus: #93c5fd;
+	--log-info: #bfdbfe;
+	--log-info-bg: #172554;
+	--log-warn: #fde68a;
+	--log-warn-bg: #451a03;
+	--log-error: #fecaca;
+	--log-error-bg: #450a0a;
+	--log-debug: #e9d5ff;
+	--log-debug-bg: #3b0764;
+	--log-live: #bbf7d0;
+	--log-live-bg: #052e16;
 }
 
-.log-entry-trigger {
-	display: grid;
-	grid-template-columns: 0.875rem minmax(0, 1fr);
-	gap: 0.125rem 0.5rem;
-	flex: 1;
-	min-width: 0;
-	min-height: 3.5rem;
-	padding: 0.5rem 0.75rem;
-	text-align: start;
-}
-
-.log-entry-trigger:hover {
-	background: rgb(120 113 108 / 0.04);
-}
-
-.log-entry-trigger:focus-visible,
-.log-entry-telegram:focus-visible {
-	outline: 2px solid #0ea5e9;
-	outline-offset: -2px;
-}
-
-.log-entry-chevron {
-	grid-row: span 2;
-	align-self: center;
-}
-
-.log-entry-meta {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-	min-width: 0;
-}
-
-.log-entry-preview {
-	display: -webkit-box;
-	-webkit-box-orient: vertical;
-	-webkit-line-clamp: 1;
-	overflow: hidden;
-	overflow-wrap: anywhere;
-}
-
-.log-entry-telegram {
-	flex: none;
-	min-height: 2.75rem;
-	max-width: 40%;
-	overflow-wrap: anywhere;
-}
-
-@container (min-width: 760px) {
-	.log-entry-trigger {
-		grid-template-columns: 0.875rem 4rem 4.5rem 8rem minmax(0, 1fr);
-		align-items: center;
-		column-gap: 0.75rem;
-		min-height: 2.75rem;
-		padding-inline: 1rem;
+@container (width < 18rem) or ((width >= 640px) and (width < 60rem)) {
+	.admin-logs-page > header .container > div {
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr);
+		block-size: auto;
+		gap: 0.5rem;
+		padding-block: 0.25rem;
 	}
-
-	.log-entry-chevron {
-		grid-row: auto;
+	.admin-logs-page > header .container > div > div:nth-child(2) {
+		inline-size: auto;
+		margin-inline: 0;
 	}
-
-	.log-entry-meta {
-		display: contents;
+	.admin-logs-page > header .container > div > div:last-child {
+		grid-column: 1 / -1;
+		justify-content: space-between;
 	}
+}
 
-	.log-entry-telegram {
-		display: flex;
-		align-items: center;
-		gap: 0.375rem;
-		min-width: 8rem;
-	}
+/* Page-wide focus and motion rules also cover shared navigation components. */
+.admin-logs-page :is(button, a, input, [tabindex]):focus-visible {
+	outline: 2px solid var(--log-focus);
+	outline-offset: 2px;
+	box-shadow: none;
+}
 
-	.log-entry-telegram > span:first-child {
-		font-size: 0.75rem;
-	}
-
-	.log-entry-details {
-		padding-inline-start: 2.625rem;
+@media (prefers-reduced-motion: reduce) {
+	.admin-logs-page *, .admin-logs-page *::before, .admin-logs-page *::after {
+		animation: none !important;
+		transition: none !important;
 	}
 }

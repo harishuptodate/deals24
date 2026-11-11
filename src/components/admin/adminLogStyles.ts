@@ -1,0 +1,2 @@
+// Shared by the logs toolbar, page header, and expanded entries.
+export const adminLogButtonClassName = "min-h-11 h-auto min-w-11 rounded-lg border border-[var(--log-border)] bg-[var(--log-surface)] px-3 py-2 text-[0.8125rem] leading-tight text-[var(--log-ink)] dark:bg-[var(--log-surface)] dark:hover:bg-[var(--log-primary-soft)] dark:hover:text-[var(--log-primary)] hover:border-[var(--log-control-border)] hover:bg-[var(--log-primary-soft)] hover:text-[var(--log-primary)] [@container(min-width:43.75rem)]:min-h-9 [@media(pointer:coarse)]:min-h-11";

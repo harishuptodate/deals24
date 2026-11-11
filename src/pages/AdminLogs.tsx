@@ -1,3 +1,5 @@
+import { cn } from '@/lib/utils';
+import { adminLogButtonClassName } from '@/components/admin/adminLogStyles';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Activity, ArrowLeft, LogOut, ShieldCheck } from 'lucide-react';
@@ -13,34 +15,35 @@ export default function AdminLogs() {
   const authenticated = isAuthenticated();
 
   return (
-    <div className="min-h-screen bg-stone-50 text-stone-950 dark:bg-[#09090B] dark:text-stone-100">
+    <div className="admin-logs-page bg-[var(--log-bg)] font-inter text-[var(--log-ink)] [&>header]:[container-type:inline-size] min-h-screen">
+      <a href="#logs-content" className="logs-skip-link fixed left-4 top-2 z-[60] -translate-y-[calc(100%+1rem)] rounded-lg bg-[var(--log-primary-fill)] px-4 py-3 text-white focus:translate-y-0">Skip to logs</a>
       <Navbar />
-      <main className="container mx-auto max-w-screen-2xl px-2 py-3 sm:px-4 sm:py-6">
-        <header className="mb-3 flex items-center justify-between gap-3 sm:mb-4">
+      <main className="logs-main px-3 pt-2 pb-[max(2rem,env(safe-area-inset-bottom))] sm:px-6 sm:pt-4 sm:pb-8 mx-auto max-w-screen-2xl">
+        <header className="logs-page-header mb-4 flex items-center justify-between gap-4">
           <div className="min-w-0 space-y-2">
             <Link
               to="/admin"
-              className="inline-flex min-h-6 items-center gap-1.5 text-xs font-medium text-stone-600 transition-colors hover:text-stone-950 dark:text-stone-400 dark:hover:text-white"
+              className="logs-back min-h-11 text-[var(--log-muted)] hover:text-[var(--log-primary)] inline-flex items-center gap-1.5 text-xs font-medium"
             >
-              <ArrowLeft className="h-4 w-4" />
+              <ArrowLeft aria-hidden="true" className="h-4 w-4" />
               Analytics
             </Link>
 
             <div className="flex items-center gap-2.5">
-              <div className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-stone-950 text-white dark:bg-white dark:text-stone-950 sm:flex">
-                <Activity className="h-5 w-5" />
+              <div className="logs-page-icon bg-[var(--log-primary-fill)] text-white hidden h-10 w-10 shrink-0 items-center justify-center rounded-xl sm:flex">
+                <Activity aria-hidden="true" className="h-5 w-5" />
               </div>
               <div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">System logs</h1>
+                  <h1 id="logs-content" tabIndex={-1} className="logs-page-title scroll-mt-24 text-[clamp(1.375rem,1.125rem+1vw,1.875rem)] leading-[1.2] text-[var(--log-ink)] font-semibold tracking-tight">System logs</h1>
                   {authenticated ? (
-                    <Badge variant="outline" className="hidden border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/25 dark:bg-emerald-500/10 dark:text-emerald-200 sm:inline-flex">
-                      <ShieldCheck className="mr-1 h-3.5 w-3.5" /> Admin access
+                    <Badge variant="outline" className="logs-access border-[var(--log-border)] bg-[var(--log-raised)] font-medium text-[var(--log-muted)] hidden sm:inline-flex">
+                      <ShieldCheck aria-hidden="true" className="mr-1 h-3.5 w-3.5" /> Admin access
                     </Badge>
                   ) : null}
                 </div>
-                <p className="mt-1 hidden text-sm text-stone-600 dark:text-stone-400 sm:block">
-                  Follow every deal. Open an entry to read the full log.
+                <p className="logs-muted text-[var(--log-muted)] mt-1 hidden text-sm sm:block">
+                  A clear view of incoming deals, requests, and system activity.
                 </p>
               </div>
             </div>
@@ -48,7 +51,7 @@ export default function AdminLogs() {
 
           <div className="shrink-0">
             {authenticated ? (
-              <Button variant="outline" size="sm" className="px-2.5" onClick={logout} aria-label="Sign out">
+              <Button variant="outline" size="sm" className={cn(adminLogButtonClassName, "logs-button px-2.5")} onClick={logout} aria-label="Sign out">
                 <LogOut aria-hidden="true" className="h-4 w-4" />
                 <span className="hidden sm:inline">Sign out</span>
               </Button>

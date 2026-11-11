@@ -79,7 +79,7 @@ test('shows Telegram IDs directly and expands captions, context and errors as re
   expect(errors).toEqual([]);
 });
 
-for (const width of [320, 390, 768, 1440]) {
+for (const width of [320, 375, 390, 768, 1024, 1440]) {
   test(`compact layout and expanded content fit at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 844 });
     await openLogs(page);
@@ -145,6 +145,69 @@ test('filters, older logs, streaming, and pause/resume keep working', async ({ p
   await expect(page.locator('.log-entry')).toHaveCount(32);
   await page.getByRole('button', { name: 'Resume live updates' }).click();
   await expect(page.getByText('Live', { exact: true })).toBeVisible();
+});
+
+test('labels, focus, touch targets, contrast and enlarged text remain accessible', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 844 });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await openLogs(page);
+  await page.keyboard.press('Tab');
+  await expect(page.getByRole('link', { name: 'Skip to logs' })).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('heading', { name: 'System logs', exact: true })).toBeFocused();
+
+  for (const label of ['Search logs', 'Service']) {
+    const controlId = await page.locator('.logs-field label').filter({ hasText: label }).getAttribute('for');
+    expect(await page.locator(`[id="${controlId}"]`).count()).toBe(1);
+  }
+  for (const selector of ['.logs-toolbar-actions button', '.logs-search-submit', '.logs-control', '.logs-severity-button', '.log-entry-telegram']) {
+    for (const bounds of await page.locator(selector).evaluateAll((elements) => elements.map((element) => ({ width: element.getBoundingClientRect().width, height: element.getBoundingClientRect().height })))) {
+      expect(bounds.width).toBeGreaterThanOrEqual(44);
+      expect(bounds.height).toBeGreaterThanOrEqual(44);
+    }
+  }
+
+  const trigger = page.locator('.log-entry-trigger').first();
+  await trigger.focus();
+  await expect(trigger).toHaveAccessibleDescription(/Info.*telegram-ingest/);
+  expect(await trigger.evaluate((element) => getComputedStyle(element).outlineStyle)).toBe('solid');
+  expect(await page.locator('.log-entry-chevron').first().evaluate((element) => getComputedStyle(element).transitionDuration)).toBe('0s');
+
+  for (const dark of [false, true]) {
+    await page.evaluate((enabled) => document.documentElement.classList.toggle('dark', enabled), dark);
+    const contrasts = await page.locator('.admin-logs-page').evaluate((element) => {
+      const styles = getComputedStyle(element);
+      const color = (token: string) => styles.getPropertyValue(`--log-${token}`).trim();
+      const luminance = (hex: string) => {
+        const channels = hex.replace('#', '').match(/.{2}/g)!.map((value) => parseInt(value, 16) / 255).map((value) => value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4);
+        return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
+      };
+      return [['ink', 'surface'], ['muted', 'surface'], ['muted', 'raised'], ['primary', 'surface'], ['info', 'info-bg'], ['warn', 'warn-bg'], ['error', 'error-bg'], ['debug', 'debug-bg'], ['live', 'live-bg'], ['#ffffff', 'primary-fill']].map(([foreground, background]) => {
+        const values = [luminance(foreground.startsWith('#') ? foreground : color(foreground)), luminance(color(background))].sort((a, b) => b - a);
+        return { pair: `${foreground}/${background}`, ratio: (values[0] + 0.05) / (values[1] + 0.05) };
+      });
+    });
+    for (const { pair, ratio } of contrasts) expect(ratio, `${dark ? 'Dark' : 'Light'} ${pair}`).toBeGreaterThanOrEqual(4.5);
+  }
+
+  for (const width of [375, 1440]) {
+    await page.setViewportSize({ width, height: 844 });
+    await page.evaluate(() => { document.documentElement.style.fontSize = '200%'; });
+    expect(await page.locator('.logs-main').evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    const messageBounds = (await trigger.boundingBox())!;
+    const telegramBounds = (await page.locator('.log-entry-telegram').first().boundingBox())!;
+    expect(messageBounds.x + messageBounds.width <= telegramBounds.x || messageBounds.y + messageBounds.height <= telegramBounds.y).toBe(true);
+    await page.screenshot({ path: `tmp/search-qa/admin-logs/${width}-large-text.png`, animations: 'disabled' });
+  }
+  await page.evaluate(() => { document.documentElement.style.fontSize = ''; });
+  await page.setViewportSize({ width: 844, height: 390 });
+  await page.getByRole('button', { name: 'Sign out', exact: true }).focus();
+  await trigger.focus();
+  const focused = await trigger.boundingBox();
+  const navigationBottom = await page.locator('.admin-logs-page > header').evaluate((element) => element.getBoundingClientRect().bottom);
+  expect(focused!.y).toBeGreaterThanOrEqual(navigationBottom);
+  expect(focused!.y + focused!.height).toBeLessThanOrEqual(390);
 });
 
 test('handles truncated captions, structured messages, and logs without context', async ({ page }) => {
