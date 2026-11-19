@@ -125,12 +125,8 @@ const PriceHistoryChart = ({ dealId, enabled }: PriceHistoryChartProps) => {
   const distinctPrices = [...new Set(prices)].sort((a, b) => a - b);
   const priceHighlights = [
     { label: 'Lowest', price: distinctPrices[0], color: 'text-green-700 dark:text-green-400' },
-    ...(distinctPrices.length > 2
-      ? [{ label: 'Middle', price: distinctPrices[Math.floor((distinctPrices.length - 1) / 2)], color: 'text-blue-700 dark:text-blue-400' }]
-      : []),
-    ...(distinctPrices.length > 1
-      ? [{ label: 'Highest', price: distinctPrices[distinctPrices.length - 1], color: 'text-amber-700 dark:text-amber-400' }]
-      : []),
+    { label: 'Current', price: data.currentPrice ?? points[points.length - 1].price, color: 'text-blue-700 dark:text-blue-400' },
+    { label: 'Highest', price: distinctPrices[distinctPrices.length - 1], color: 'text-amber-700 dark:text-amber-400' },
   ];
   const lowestPrice = Math.min(...prices);
   const highestPrice = Math.max(...prices);
@@ -155,7 +151,7 @@ const PriceHistoryChart = ({ dealId, enabled }: PriceHistoryChartProps) => {
             key={label}
             className={`min-w-0 break-words ${
               label === 'Lowest' ? 'col-start-1 text-left' :
-              label === 'Middle' ? 'col-start-2 text-center' : 'col-start-3 text-right'
+              label === 'Current' ? 'col-start-2 text-center' : 'col-start-3 text-right'
             }`}
           >
             <dt className="text-xs text-gray-500 dark:text-gray-400">{label}</dt>

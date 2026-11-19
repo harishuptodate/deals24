@@ -5,7 +5,7 @@ import {
 	DialogContent,
 	DialogFooter,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { trackMessageClick } from '../../services/api';
 import {
 	ChevronDown,
@@ -28,7 +28,7 @@ import {
 	extractFirstLink,
 	extractSecondLink,
 } from './utils/linkUtils';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import DealImage from '../images/DealImage';
 import PriceHistoryChart from './PriceHistoryChart';
 
@@ -58,7 +58,6 @@ const DealDetailDialog = ({
 	const { toast } = useToast();
 	const [isSharing, setIsSharing] = useState(false);
 	const [areDetailsOpen, setAreDetailsOpen] = useState(false);
-	const navigate = useNavigate();
 	const buyNowLink = link || extractSecondLink(description) || extractFirstLink(description);
 	const [descriptionHeadline = '', ...descriptionLines] = description.split('\n');
 	const remainingDescription = descriptionLines.join('\n').trim();
@@ -103,13 +102,6 @@ const DealDetailDialog = ({
 		}
 	};
 
-	const handleViewFullPage = () => {
-		if (id) {
-			onOpenChange(false);
-			navigate(`/deal/${id}`);
-		}
-	};
-
 	const makeLinksClickable = (text: string) => {
 		if (!text) return '';
 		const urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -148,8 +140,10 @@ const DealDetailDialog = ({
 
 	return (
 		<Dialog open={isOpen} onOpenChange={onOpenChange}>
-			<DialogContent className="flex max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-[480px] flex-col gap-0 overflow-hidden rounded-xl p-0 text-[0.93rem] sm:max-h-[90dvh] sm:max-w-[520px] sm:text-sm">
-				<div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-3 pt-3 sm:px-5">
+			<DialogContent
+				closeButtonClassName={buttonVariants({ variant: 'dealTertiary', size: 'icon', className: 'right-2 top-2' })}
+				className="flex max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-[480px] flex-col gap-0 overflow-hidden rounded-xl p-0 text-[0.93rem] sm:max-h-[90dvh] sm:max-w-[520px] sm:text-sm [@media(max-height:500px)]:overflow-y-auto">
+				<div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-3 pt-3 sm:px-5 [@media(max-height:500px)]:flex-none">
 					<div className="mb-4">{renderImage()}</div>
 
 					<Collapsible
@@ -189,47 +183,51 @@ const DealDetailDialog = ({
 							</CollapsibleContent>
 						)}
 					</Collapsible>
-
-					<div className="mt-4 min-w-0 w-full overflow-hidden">
-						<PriceHistoryChart dealId={id} enabled={isOpen} />
-					</div>
 				</div>
 
-				<DialogFooter className="grid shrink-0 grid-cols-2 gap-1.5 border-t border-border bg-background/95 p-2 backdrop-blur-sm sm:grid-cols-4 sm:space-x-0">
+				<div className="min-w-0 w-full shrink-0 px-4 pb-3 sm:px-5">
+					<PriceHistoryChart dealId={id} enabled={isOpen} />
+				</div>
+
+				<DialogFooter className="grid shrink-0 grid-cols-2 gap-2 border-t border-border bg-background/95 p-3 backdrop-blur-sm sm:grid-cols-4 sm:space-x-0">
 					{id && (
-						<Button
-							onClick={handleViewFullPage}
-							className="order-1 h-9 w-full max-w-36 justify-self-center rounded-full bg-blue-600 px-2 text-[11px] text-white transition-all hover:scale-[1.02] hover:bg-blue-700 focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 sm:max-w-none sm:text-xs dark:bg-blue-800 dark:text-white dark:hover:bg-blue-900">
-							<ExternalLink className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-							View Deal
+						<Button asChild variant="dealOutline" className="w-full px-3 text-[13px]">
+							<Link to={`/deal/${id}`} onClick={() => onOpenChange(false)}>
+								<ExternalLink aria-hidden="true" />
+								View Deal
+							</Link>
 						</Button>
 					)}
 					{buyNowLink && (
-						<a
-							href={buyNowLink}
-							onClick={(event) => {
-								event.stopPropagation();
-								if (id) void trackMessageClick(id);
-							}}
-							target="_blank"
-							rel="noopener noreferrer"
-							className="order-3 flex h-9 w-full max-w-36 items-center justify-center gap-1.5 justify-self-center rounded-full bg-gradient-to-b from-apple-darkGray to-indigo-950 px-2 text-[11px] font-medium text-white transition-all hover:scale-[1.02] sm:order-2 sm:max-w-none sm:text-xs">
-							<ShoppingCart className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-							Buy Now
-						</a>
+						<Button asChild variant="dealPrimary" className="w-full px-3 text-[13px]">
+							<a
+								href={buyNowLink}
+								onClick={(event) => {
+									event.stopPropagation();
+									if (id) void trackMessageClick(id);
+								}}
+								target="_blank"
+								rel="noopener noreferrer">
+								<ShoppingCart aria-hidden="true" />
+								Buy Now
+							</a>
+						</Button>
 					)}
 					<Button
 						onClick={handleShare}
 						disabled={isSharing}
-						className="order-4 h-9 w-full max-w-36 justify-self-center rounded-full bg-orange-500 px-2 text-[11px] text-white transition-all hover:scale-[1.02] hover:bg-orange-600 sm:order-3 sm:max-w-none sm:text-xs dark:bg-orange-800 dark:text-white dark:hover:bg-orange-900">
-						<Share2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+						variant="dealLink"
+						aria-busy={isSharing}
+						className="w-full px-3 text-[13px]">
+						<Share2 aria-hidden="true" />
 						{isSharing ? 'Sharing...' : 'Share Deal'}
 					</Button>
 					<DialogClose asChild>
 						<Button
 							type="button"
-							className="order-2 h-9 w-full max-w-36 justify-self-center rounded-full bg-red-600 px-2 text-[11px] text-white transition-all hover:scale-[1.02] hover:bg-red-700 focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 sm:order-4 sm:max-w-none sm:text-xs dark:bg-red-800 dark:text-white dark:hover:bg-red-900">
-							<X className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+							variant="dealTertiary"
+							className="w-full px-3 text-[13px]">
+							<X aria-hidden="true" />
 							Close
 						</Button>
 					</DialogClose>

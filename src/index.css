@@ -123,6 +123,88 @@
 }
 
 @layer components {
+  /* Keep image hover feedback consistent without disturbing loading fades or transforms. */
+  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    img[src] {
+      scale: 1;
+      transition: opacity 300ms ease-out, scale 180ms cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    img[src]:hover {
+      scale: 1.03;
+    }
+
+    .top-performing-deal img[src]:hover {
+      scale: 1.04;
+    }
+
+    .deal-page-image img[src]:hover {
+      scale: 1.02;
+    }
+  }
+
+  /* Opt-in deal actions; shared button defaults stay unchanged. */
+  .deal-button {
+    @apply min-h-11 min-w-11 gap-2 px-4 text-sm font-medium leading-5 tracking-normal;
+    touch-action: manipulation;
+  }
+
+  .deal-button-primary {
+    @apply bg-blue-600 text-white shadow-sm;
+  }
+
+  .deal-button-secondary {
+    @apply border border-border bg-secondary text-secondary-foreground;
+  }
+
+  .deal-button-tertiary {
+    @apply bg-secondary text-secondary-foreground;
+  }
+
+  .deal-button-outline {
+    @apply border border-blue-600/50 bg-transparent text-blue-700 dark:border-blue-400/60 dark:text-blue-400;
+  }
+
+  .deal-button-link {
+    @apply bg-transparent text-blue-700 underline-offset-4 dark:text-blue-400;
+  }
+
+  .deal-button:focus-visible {
+    transition-duration: 0ms;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .deal-button-primary:hover { @apply bg-blue-700; }
+    .deal-button-secondary:hover { @apply bg-muted text-foreground border-muted-foreground/40; }
+    .deal-button-tertiary:hover { @apply bg-border; }
+    .deal-button-outline:hover { @apply border-blue-700 text-blue-800 dark:border-blue-300 dark:text-blue-300; }
+    .deal-button-link:hover { @apply text-blue-800 underline dark:text-blue-300; }
+  }
+
+  .deal-button:active:not(:disabled):not(:focus-visible) {
+    transform: scale(0.98);
+    transition-duration: 0ms;
+  }
+
+  .deal-button-primary:active { @apply bg-blue-800; }
+  .deal-button-outline:active,
+  .deal-button-link:active { @apply text-blue-900 dark:text-blue-200; }
+  .deal-button-secondary:active,
+  .deal-button-tertiary:active { @apply bg-accent text-accent-foreground; }
+
+  .deal-button:disabled {
+    @apply opacity-50 shadow-none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .deal-button:active:not(:disabled):not(:focus-visible) { transform: none; }
+  }
+
+  @media (forced-colors: active) {
+    .deal-button { border: 1px solid ButtonText; }
+    .deal-button:focus-visible { outline: 2px solid Highlight; }
+  }
+
   /* Keep Sonner comfortably inside narrow viewports and soften its movement. */
   .toaster[data-sonner-toaster] [data-sonner-toast] {
     width: fit-content;

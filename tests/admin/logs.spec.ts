@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { screenshotLogs, originalUrl, telegramFileId } from './logHistory.fixtures';
 
 const caption = 'Samsung Galaxy S25 Ultra\n\nPrice: ₹79,999\nhttps://example.com/deals/' + 'a'.repeat(180);
 const logs = Array.from({ length: 30 }, (_, index) => ({
@@ -52,7 +53,7 @@ test('shows Telegram IDs directly and expands captions, context and errors as re
   await openLogs(page);
   const rows = page.getByRole('list', { name: 'Operational log events' }).locator(':scope > li');
   const first = rows.first();
-  const trigger = first.getByRole('button', { name: 'Full log: Received webhook update', exact: true });
+  const trigger = first.getByRole('button', { name: /Telegram message 25407:/ });
   await expect(first.getByText('#25407', { exact: true })).toBeVisible();
   await expect(rows.nth(1).getByText('Telegram', { exact: true })).toHaveCount(0);
   await expect(rows.nth(2).getByText('#25405', { exact: true })).toBeVisible();
@@ -138,11 +139,11 @@ test('filters, older logs, streaming, and pause/resume keep working', async ({ p
   await page.evaluate((entry) => window.dispatchEvent(new CustomEvent('test-log', { detail: entry })), live);
   await expect(page.locator('.log-entry').first()).toContainText('New live deal');
   await page.evaluate((entry) => window.dispatchEvent(new CustomEvent('test-log', { detail: entry })), live);
-  await expect(page.locator('.log-entry')).toHaveCount(32);
+  await expect(page.locator('.log-entry')).toHaveCount(31);
   await page.getByRole('button', { name: 'Pause live updates' }).click();
   await expect(page.getByText('Paused', { exact: true })).toBeVisible();
   await page.evaluate((entry) => window.dispatchEvent(new CustomEvent('test-log', { detail: entry })), { ...live, logId: 'paused-entry' });
-  await expect(page.locator('.log-entry')).toHaveCount(32);
+  await expect(page.locator('.log-entry')).toHaveCount(31);
   await page.getByRole('button', { name: 'Resume live updates' }).click();
   await expect(page.getByText('Live', { exact: true })).toBeVisible();
 });
@@ -217,7 +218,7 @@ test('handles truncated captions, structured messages, and logs without context'
     ['Response: {"message":"First line\\nSecond line","status":200}', 'First line\nSecond line'],
     ['A plain message\nwith two lines', 'A plain message\nwith two lines'],
   ]) {
-    await page.evaluate((entry) => window.dispatchEvent(new CustomEvent('test-log', { detail: entry })), { ...logs[3], logId: message, message });
+    await page.evaluate((entry) => window.dispatchEvent(new CustomEvent('test-log', { detail: entry })), { ...logs[3], logId: message, message, timestamp: new Date().toISOString() });
     const first = page.locator('.log-entry').first();
     await first.getByRole('button', { name: /Full log:/ }).click();
     expect(await first.locator('.log-entry-details p').filter({ hasText: expected.split('\n')[0] }).last().textContent()).toBe(expected);
@@ -234,4 +235,219 @@ test('shows a recoverable loading error', async ({ page }) => {
   await page.route('**/api/admin/logs?**', (route) => route.fulfill({ json: { logs, hasMore: false, nextBefore: null } }));
   await page.getByRole('button', { name: 'Try again' }).click();
   await expect(page.getByText('We could not load logs', { exact: false })).toHaveCount(0);
+});
+
+test('Telegram history updates in one open row and preserves the final outcome and issues', async ({ page }) => {
+  await openLogs(page);
+  const rows = page.getByRole('list', { name: 'Operational log events' }).locator(':scope > li');
+  const group = rows.filter({ has: page.getByRole('button', { name: 'Copy Telegram message ID 25407' }) });
+  const trigger = group.locator('.log-entry-trigger');
+  await trigger.focus();
+  await page.keyboard.press('Enter');
+  const emit = async (index: number, message: string, level = 'info') => {
+    await page.evaluate((entry) => window.dispatchEvent(new CustomEvent('test-log', { detail: entry })), {
+      ...logs[0], logId: `group-event-${index}`, message, level,
+      timestamp: new Date(Date.now() + index * 1000).toISOString(),
+    });
+  };
+  await emit(1, 'Enriching deal in one combined Gemini operation');
+  await expect(rows).toHaveCount(30);
+  await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+  await expect(group.locator('.log-entry-preview')).toContainText('Processing');
+  await emit(2, 'Image lookup failed; using Telegram image', 'warn');
+  await emit(3, 'Updated existing product price history: product-id');
+  await emit(4, 'Message saved successfully: Samsung Galaxy S25 Ultra');
+  await expect(group.locator('.log-entry-preview')).toHaveText('Updated · 1 issueSamsung Galaxy S25 Ultra');
+  await expect(group.getByRole('list', { name: 'History for Telegram message 25407' }).locator(':scope > li')).toHaveCount(5);
+  await group.getByRole('button', { name: 'Copy history' }).click();
+  const history = JSON.parse((await page.evaluate(() => localStorage.getItem('copied-log')))!);
+  expect(history.map((entry: { logId: string }) => entry.logId)).toEqual(['log-0', 'group-event-1', 'group-event-2', 'group-event-3', 'group-event-4']);
+  // Trailing diagnostic output must not overwrite the actual outcome.
+  await emit(5, 'Cleanup complete', 'debug');
+  await expect(group.locator('.log-entry-preview')).toContainText('Updated · 1 issue');
+  await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+  // An older matching event joins the same row without changing the latest summary.
+  await page.route('**/api/admin/logs?**', (route) => route.fulfill({ json: {
+    logs: [{ ...logs[0], logId: 'older-group-event', timestamp: new Date(Date.now() - 60_000).toISOString(), message: 'Earlier processing context' }],
+    hasMore: false, nextBefore: null,
+  } }));
+  await page.getByRole('button', { name: 'Load older logs' }).click();
+  await expect(rows).toHaveCount(30);
+  await expect(group.getByRole('list', { name: 'History for Telegram message 25407' }).locator(':scope > li')).toHaveCount(7);
+  await expect(group.locator('.log-entry-preview')).toContainText('Updated · 1 issue');
+});
+
+test('shares repeated history metadata, keeps exceptions, and uses the available width for links', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openLogs(page);
+  const url = `https://example.com/deal/${'a'.repeat(82)}`;
+  for (const [index, event] of [
+    { message: `Full caption\n${url}`, level: 'info', service: 'telegram-ingest', source: 'webhook' },
+    { message: 'Saved successfully', level: 'info', service: 'telegram-ingest', source: 'webhook' },
+    { message: 'Provider warning', level: 'warn', service: 'amazon', source: 'polling-message' },
+    { message: 'Source unavailable', level: 'info', service: 'telegram-ingest', source: undefined },
+  ].entries()) {
+    await page.evaluate((entry) => window.dispatchEvent(new CustomEvent('test-log', { detail: entry })), {
+      ...logs[0], ...event, logId: `metadata-${index}`,
+      timestamp: new Date(Date.now() + index * 1000).toISOString(),
+      context: { telegramMessageId: 25407, source: event.source, ...(index === 0 ? { reasons: ['missing identity', 'low confidence', 'missing price'] } : {}) },
+    });
+  }
+  const group = page.locator('.log-entry').filter({ has: page.getByRole('button', { name: 'Copy Telegram message ID 25407' }) });
+  await group.locator('.log-entry-trigger').click();
+  const defaults = group.locator('.log-history-defaults');
+  await expect(defaults).toContainText('Unless noted:');
+  await expect(defaults).toContainText('Info');
+  await expect(defaults).toContainText('telegram-ingest');
+  await expect(defaults).toContainText('Source: webhook');
+  const history = group.getByRole('list', { name: 'History for Telegram message 25407' });
+  await expect(history.getByText('telegram-ingest', { exact: true })).toHaveCount(0);
+  await expect(history.getByText('Info', { exact: true })).toHaveCount(0);
+  await expect(history.getByText('webhook', { exact: true })).toHaveCount(0);
+  await expect(history.getByText('Warn', { exact: true })).toBeVisible();
+  await expect(history.getByText('amazon', { exact: true })).toBeVisible();
+  await expect(history.getByText('polling-message', { exact: true })).toBeVisible();
+  await expect(history.getByText('Not provided', { exact: true })).toBeVisible();
+  const caption = history.locator('.log-value').filter({ hasText: 'Full caption' });
+  const layout = await caption.evaluate((element, link) => {
+    const text = element.querySelector('.log-url')!.firstChild!;
+    const range = document.createRange();
+    range.setStart(text, 0);
+    range.setEnd(text, link.length);
+    return { width: element.parentElement!.getBoundingClientRect().width, lines: range.getClientRects().length };
+  }, url);
+  expect(layout.width).toBeGreaterThan(900);
+  expect(layout.lines).toBe(1);
+  const reasons = history.locator('.log-reasons');
+  await expect(reasons.locator(':scope > li')).toHaveCount(3);
+  const reasonBounds = await reasons.locator(':scope > li').evaluateAll((items) => items.map((item) => item.getBoundingClientRect().toJSON()));
+  expect(Math.max(...reasonBounds.map((item) => item.y)) - Math.min(...reasonBounds.map((item) => item.y))).toBeLessThan(2);
+  expect(reasonBounds[1].x).toBeGreaterThan(reasonBounds[0].x);
+  for (const width of [1440, 768, 375, 320]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    expect(await caption.evaluate((element) => element.parentElement!.scrollWidth <= element.parentElement!.clientWidth)).toBe(true);
+    const copyHistory = await group.getByRole('button', { name: 'Copy history', exact: true }).boundingBox();
+    await expect(group.getByRole('button', { name: 'Copy history', exact: true })).toBeVisible();
+    for (const actions of await history.locator('.log-entry-actions').all()) {
+      const messageBounds = await actions.locator('..').locator('.log-message').boundingBox();
+      const timeBounds = await actions.locator('time').boundingBox();
+      expect(timeBounds!.y).toBeLessThan(messageBounds!.y + 20);
+      expect(timeBounds!.y + timeBounds!.height).toBeGreaterThan(messageBounds!.y);
+      expect(messageBounds!.x + messageBounds!.width).toBeLessThanOrEqual(timeBounds!.x);
+      if (width < 768) {
+        await expect(actions.locator('.logs-copy')).toBeHidden();
+        await expect(actions.getByRole('button', { name: 'Copy log', exact: true })).toHaveCount(0);
+        await expect(actions.locator('time')).toBeVisible();
+        continue;
+      }
+      const copyLog = await actions.getByRole('button', { name: 'Copy log', exact: true }).boundingBox();
+      const timestamp = await actions.locator('time').boundingBox();
+      expect(Math.abs(copyHistory!.x + copyHistory!.width - copyLog!.x - copyLog!.width)).toBeLessThan(2);
+      expect(timestamp!.x + timestamp!.width).toBeLessThanOrEqual(copyLog!.x);
+      expect(Math.abs(timestamp!.y + timestamp!.height / 2 - copyLog!.y - copyLog!.height / 2)).toBeLessThan(2);
+      if (width >= 768) {
+        const message = await actions.locator('..').locator('.log-message').boundingBox();
+        expect(timestamp!.y).toBeLessThan(message!.y + 20);
+        expect(timestamp!.y + timestamp!.height).toBeGreaterThan(message!.y);
+        expect(message!.x + message!.width).toBeLessThanOrEqual(timestamp!.x);
+      }
+    }
+  }
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const received = history.locator('.log-message').first();
+  const heading = await received.getByText('Received webhook update:', { exact: true }).boundingBox();
+  const captionTop = await received.locator('.log-value').evaluate((element) => {
+    const range = document.createRange();
+    range.setStart(element.firstChild!, 0);
+    range.setEnd(element.firstChild!, 1);
+    return range.getBoundingClientRect().y;
+  });
+  expect(Math.abs(heading!.y - captionTop)).toBeLessThan(2);
+});
+
+test('consolidates the screenshot history while preserving raw copies and essential diagnostics', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await openLogs(page);
+  for (const entry of screenshotLogs) {
+    await page.evaluate((event) => window.dispatchEvent(new CustomEvent('test-log', { detail: event })), entry);
+  }
+  const group = page.locator('.log-entry').filter({ has: page.getByRole('button', { name: 'Copy Telegram message ID 25734' }) });
+  await group.locator('.log-entry-trigger').click();
+  const history = group.getByRole('list', { name: 'History for Telegram message 25734' });
+  await expect(history.locator(':scope > li')).toHaveCount(6);
+  await expect(group.getByText(/11 events in 6 steps/)).toBeVisible();
+  await expect(group.locator('.log-entry-preview')).not.toContainText('https://');
+  expect((await history.textContent())!.split(originalUrl)).toHaveLength(2);
+  await expect(history.getByText(/Amazon image unavailable:.*Used Telegram photo/)).toBeVisible();
+  await expect(history.getByText(/Gemini price missing/)).toBeVisible();
+  await expect(history.getByText('Deal saved', { exact: true })).toBeVisible();
+  await expect(history.getByText('lifestyle', { exact: true })).toBeVisible();
+  await expect(history.getByText(/Source Key|Not provided|Amazon image fetch failed|Gemini deal enrichment/)).toHaveCount(0);
+  const imageMessage = history.locator(':scope > li').nth(1).locator('.log-message');
+  const enrichmentMessage = history.locator(':scope > li').nth(2).locator('.log-message');
+  for (const [message, label] of [[imageMessage, 'Error'], [imageMessage, 'amazon-image'], [enrichmentMessage, 'deal-enrichment'], [enrichmentMessage, 'Candidate Count']] as const) {
+    const labelBounds = await message.getByText(label, { exact: true }).boundingBox();
+    const textTop = await message.locator(':scope > .log-value').evaluate((element) => {
+      const range = document.createRange();
+      range.setStart(element.firstChild!, 0);
+      range.setEnd(element.firstChild!, 1);
+      return range.getBoundingClientRect().y;
+    });
+    expect(Math.abs(labelBounds!.y - textTop)).toBeLessThan(5);
+  }
+  const fileCopy = history.getByRole('button', { name: 'Copy Telegram file ID', exact: true });
+  await expect(fileCopy).toHaveCount(1);
+  expect((await fileCopy.textContent())!.length).toBeLessThan(40);
+  await fileCopy.click();
+  expect(await page.evaluate(() => localStorage.getItem('copied-log'))).toBe(telegramFileId);
+  for (const time of await history.locator('.log-entry-actions time').allTextContents()) expect(time).toMatch(/^\d{2}:\d{2}:\d{2}$/);
+  await history.locator(':scope > li').nth(1).getByRole('button', { name: 'Copy log', exact: true }).click();
+  expect(JSON.parse((await page.evaluate(() => localStorage.getItem('copied-log')))!)).toEqual(screenshotLogs.slice(1, 6));
+  await group.getByRole('button', { name: 'Copy history', exact: true }).click();
+  expect(JSON.parse((await page.evaluate(() => localStorage.getItem('copied-log')))!)).toEqual(screenshotLogs);
+  await group.screenshot({ path: 'tmp/search-qa/admin-logs/consolidated-desktop.png' });
+  const link = history.locator('a.log-url');
+  await expect(link).toHaveText(`\u{1F517} ${originalUrl}`);
+  await expect(link).toHaveAttribute('href', originalUrl);
+  await expect(link).toHaveAttribute('target', '_blank');
+  await link.focus();
+  await expect(link).toBeFocused();
+  const destination = page.waitForEvent('popup');
+  await page.context().route('https://www.amazon.in/**', (route) => route.fulfill({ body: 'Link destination' }));
+  await page.keyboard.press('Enter');
+  const popup = await destination;
+  await popup.waitForLoadState();
+  expect(popup.url()).toBe(originalUrl);
+  await popup.close();
+  for (const width of [768, 375, 320]) {
+    await page.setViewportSize({ width, height: 1000 });
+    const linkLayout = await link.evaluate((element) => ({
+      width: element.clientWidth, contentWidth: element.scrollWidth,
+      height: element.getBoundingClientRect().height,
+      lineHeight: parseFloat(getComputedStyle(element).lineHeight),
+      overflow: getComputedStyle(element).textOverflow,
+    }));
+    expect(linkLayout.contentWidth).toBeGreaterThan(linkLayout.width);
+    expect(linkLayout.height).toBeLessThanOrEqual(linkLayout.lineHeight + 1);
+    expect(linkLayout.overflow).toBe('ellipsis');
+    expect(await group.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    if (width <= 375) {
+      const wrappedMetadata = await enrichmentMessage.locator('.log-inline-details > div').boundingBox();
+      const contentBounds = await enrichmentMessage.boundingBox();
+      expect(Math.abs(wrappedMetadata!.x - contentBounds!.x)).toBeLessThan(1);
+      const reasonRow = history.locator('.log-reasons-detail');
+      const reasonBounds = await reasonRow.boundingBox();
+      const lastReason = await reasonRow.getByRole('listitem').last().boundingBox();
+      expect(Math.abs(lastReason!.x - reasonBounds!.x)).toBeLessThan(1);
+      const caption = history.locator(':scope > li').first().locator('.log-message > .log-value');
+      expect(await caption.textContent()).not.toContain('\n\n');
+      await expect(history.getByRole('button', { name: 'Copy log', exact: true })).toHaveCount(0);
+      await expect(group.getByRole('button', { name: 'Copy history', exact: true })).toBeVisible();
+      expect((await group.locator('.log-history-defaults').boundingBox())!.width).toBeGreaterThan(240);
+      expect((await fileCopy.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    }
+  }
+  await group.screenshot({ path: 'tmp/search-qa/admin-logs/consolidated-mobile.png' });
 });

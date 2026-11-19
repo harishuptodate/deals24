@@ -107,29 +107,29 @@ const AlertCenter = ({ alerts, isLoading, onCreate, onSetActive, onRemove }: Ale
   };
 
   return (
-    <section className="mb-6 min-w-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-zinc-950 sm:mb-7">
-      <div className="border-b border-gray-200 p-3 dark:border-gray-800 sm:p-5">
-        <div className="mb-3 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2 sm:gap-3">
+    <section className="mb-8 min-w-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:border-gray-900 dark:bg-zinc-950 md:mb-10">
+      <div className="border-b border-gray-200 p-4 dark:border-gray-800 sm:p-6">
+        <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-100 text-violet-700 dark:bg-violet-950/60 dark:text-violet-300 sm:h-10 sm:w-10">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-700 dark:bg-zinc-900 dark:text-gray-300 sm:h-10 sm:w-10">
               <BellRing className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h2 className="font-semibold text-gray-950 dark:text-white">Alerts</h2>
+                <h2 className="text-lg font-semibold tracking-tight text-high-contrast">Alerts</h2>
                 <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600 dark:bg-zinc-900 dark:text-gray-300">{activeCount} active</span>
               </div>
-              <p className="mt-0.5 max-w-md text-[11px] leading-4 text-gray-500 dark:text-gray-400 sm:text-xs">Track a product once; we’ll watch every new deal.</p>
+              <p className="mt-0.5 max-w-md text-[11px] leading-4 text-gray-600 dark:text-gray-400 sm:text-xs">Track a product once; we’ll watch every new deal.</p>
             </div>
           </div>
           <div className="flex items-center gap-1.5">
             {!user && (
-              <Button type="button" variant="ghost" size="sm" className="h-8 rounded-full px-3 text-xs" onClick={() => setIsAuthOpen(true)}>
+              <Button type="button" variant="ghost" size="sm" className="h-10 rounded-full px-3 text-xs" onClick={() => setIsAuthOpen(true)}>
                 <LogIn className="mr-1.5 h-3.5 w-3.5" /> Sign in to sync
               </Button>
             )}
             {alerts.length > 1 && (
-              <Button type="button" variant="ghost" size="sm" onClick={() => setAlertsToRemove(alerts)} className="h-8 rounded-full border border-red-200 px-2.5 text-xs text-red-600 hover:border-red-300 hover:bg-red-50 hover:text-red-700 dark:border-red-900/70 dark:hover:bg-red-950/30 sm:px-3">
+              <Button type="button" variant="ghost" size="sm" onClick={() => setAlertsToRemove(alerts)} className="h-10 rounded-full border border-red-200 px-2.5 text-xs text-red-600 hover:border-red-300 hover:bg-red-50 hover:text-red-700 dark:border-red-900/70 dark:hover:bg-red-950/30 sm:px-3">
                 Clear alerts
               </Button>
             )}
@@ -139,33 +139,33 @@ const AlertCenter = ({ alerts, isLoading, onCreate, onSetActive, onRemove }: Ale
         <form onSubmit={submit} className="grid min-w-0 grid-cols-[minmax(0,.9fr)_minmax(0,1.1fr)] gap-2 md:grid-cols-[minmax(0,1fr)_190px_auto]">
           <div className="relative col-span-2 min-w-0 md:col-span-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-            <Input value={keywords} onChange={(event) => setKeywords(event.target.value)} placeholder="Product or keyword" maxLength={80} className="h-9 min-w-0 border-gray-200 bg-gray-50 pl-9 text-sm placeholder:text-sm dark:border-gray-800 dark:bg-zinc-900" aria-label="Product or keyword" required />
+            <Input value={keywords} onChange={(event) => setKeywords(event.target.value)} placeholder="Product or keyword" maxLength={80} className="h-11 min-w-0 rounded-xl border-gray-200 bg-gray-50 pl-9 text-base placeholder:text-sm focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-gray-800 dark:bg-zinc-900" aria-label="Product or keyword" required />
           </div>
           <div className="relative min-w-0">
             <IndianRupee className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-            <Input type="number" min="1" inputMode="numeric" value={price} onChange={(event) => setPrice(event.target.value)} placeholder="Target price" className="h-9 min-w-0 border-gray-200 bg-gray-50 pl-9 text-sm placeholder:text-sm dark:border-gray-800 dark:bg-zinc-900" aria-label="Optional target price" />
+            <Input type="number" min="1" inputMode="numeric" value={price} onChange={(event) => setPrice(event.target.value)} placeholder="Max price" className="h-11 min-w-0 rounded-xl border-gray-200 bg-gray-50 pl-9 text-base placeholder:text-sm focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-gray-800 dark:bg-zinc-900" aria-label="Optional target price" />
           </div>
-          <Button type="submit" disabled={isSaving} className="h-9 min-w-0 rounded-full px-2 text-xs sm:px-5 sm:text-sm md:min-w-36">
+          <Button type="submit" disabled={isSaving} className="h-11 min-w-0 rounded-full bg-gradient-to-b from-apple-darkGray to-indigo-950 px-2 text-xs text-white hover:shadow-lg hover:shadow-apple-darkGray/20 sm:px-5 sm:text-sm md:min-w-36">
             {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <BellRing className="mr-2 h-4 w-4" />}
             {isSaving ? 'Creating…' : user ? 'Create alert' : 'Sign in & create'}
           </Button>
         </form>
       </div>
 
-      <div className="grid lg:grid-cols-[minmax(0,1fr)_25.57%] lg:divide-x lg:divide-gray-200 dark:lg:divide-gray-800">
-        <div className="p-3 sm:p-5">
+      <div className="grid lg:grid-cols-2 lg:divide-x lg:divide-gray-200 dark:lg:divide-gray-800">
+        <div className="min-w-0 p-4 sm:p-6">
           <div className="mb-3 flex items-center justify-between">
             <div>
               <h3 className="text-sm font-semibold text-gray-950 dark:text-white">Deal alerts</h3>
-              <p className="text-xs text-gray-500">Notifications for one saved product</p>
+              <p className="text-xs text-gray-600 dark:text-gray-400">Notifications for one saved product</p>
             </div>
-            <span className="text-xs font-medium text-gray-500">{dealAlerts.length}</span>
+            <span className="text-xs font-medium text-gray-600 dark:text-gray-400">{dealAlerts.length}</span>
           </div>
           {isLoading ? (
-            <div className="grid gap-2 xl:grid-cols-2">
+            <div className="grid gap-3">
               {[0, 1].map((index) => (
                 <div key={`deal-alert-skeleton-${index}`} className="flex items-center gap-2.5 rounded-xl border border-gray-200 p-2.5 dark:border-gray-800">
-                  <EnhancedSkeleton variant="shimmer" className="h-[4.32rem] w-[4.32rem] shrink-0 rounded-lg lg:h-[5.4rem] lg:w-[5.4rem]" />
+                  <EnhancedSkeleton variant="shimmer" className="h-12 w-12 shrink-0 rounded-lg sm:h-16 sm:w-16" />
                   <div className="min-w-0 flex-1 space-y-2">
                     <EnhancedSkeleton variant="shimmer" shape="text" className="h-3.5 w-full" />
                     <EnhancedSkeleton variant="shimmer" shape="text" className="h-3 w-2/3" />
@@ -174,27 +174,27 @@ const AlertCenter = ({ alerts, isLoading, onCreate, onSetActive, onRemove }: Ale
               ))}
             </div>
           ) : dealAlerts.length === 0 ? (
-            <div className="flex items-center gap-3 rounded-xl border border-dashed border-gray-300 p-3 text-sm text-gray-500 dark:border-gray-800">
+            <div className="flex items-center gap-3 rounded-xl border border-dashed border-gray-300 p-3 text-sm text-gray-600 dark:text-gray-400 dark:border-gray-800">
               <BellRing className="h-4 w-4 shrink-0 text-violet-500" /> Use the alert button on a saved deal.
             </div>
           ) : (
-            <div className="grid gap-2 xl:grid-cols-2">
+            <div className="grid gap-3">
               {dealAlerts.map((alert) => {
                 const dealId = alert.deal?.id || alert.dealId;
                 const title = alert.deal?.title || alert.dealTitle || 'Deal alert';
                 return (
-                  <article key={alert._id} className="flex min-w-0 items-center gap-2.5 rounded-xl border border-gray-200 bg-gray-50/60 p-2.5 transition-colors hover:border-violet-200 dark:border-gray-800 dark:bg-white/[0.025] dark:hover:border-violet-900">
+                  <article key={alert._id} className="flex min-w-0 items-center gap-2.5 rounded-xl border border-gray-200 bg-gray-50/60 p-2.5 transition-colors hover:border-gray-300 dark:border-gray-800 dark:bg-white/[0.025] dark:hover:border-gray-700">
                     {dealId ? (
                       <Link to={`/deal/${dealId}`} className="shrink-0 overflow-hidden rounded-lg bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 dark:bg-zinc-900">
-                        <DealImage title={title} category={alert.deal?.category || undefined} imageUrl={alert.deal?.imageUrl || undefined} telegramFileId={alert.deal?.telegramFileId || undefined} className="h-[4.32rem] w-[4.32rem] object-contain p-0.5 lg:h-[5.4rem] lg:w-[5.4rem]" fallbackClassName="border-0" />
+                        <DealImage title={title} category={alert.deal?.category || undefined} imageUrl={alert.deal?.imageUrl || undefined} telegramFileId={alert.deal?.telegramFileId || undefined} className="h-12 w-12 object-contain p-0.5 sm:h-16 sm:w-16" fallbackClassName="border-0" />
                       </Link>
-                    ) : <div className="h-[4.32rem] w-[4.32rem] shrink-0 rounded-lg bg-gray-100 dark:bg-zinc-900 lg:h-[5.4rem] lg:w-[5.4rem]" />}
+                    ) : <div className="h-12 w-12 shrink-0 rounded-lg bg-gray-100 dark:bg-zinc-900 sm:h-16 sm:w-16" />}
                     <div className="min-w-0 flex-1">
                       {dealId ? <Link to={`/deal/${dealId}`} className="line-clamp-2 text-xs font-semibold leading-4 hover:text-violet-600">{title}</Link> : <p className="line-clamp-2 text-xs font-semibold leading-4">{title}</p>}
-                      <p className="mt-1 text-[11px] text-gray-500">{alert.targetPrice ? `₹${alert.targetPrice.toLocaleString('en-IN')} or less` : 'Any price update'}</p>
+                      <p className="mt-1 text-[11px] text-gray-600 dark:text-gray-400">{alert.targetPrice ? `₹${alert.targetPrice.toLocaleString('en-IN')} or less` : 'Any price update'}</p>
                     </div>
                     <Switch checked={alert.active} onCheckedChange={(active) => void toggle(alert, active)} className="shrink-0 scale-90 data-[state=checked]:bg-emerald-500 dark:data-[state=checked]:bg-emerald-500" aria-label={`${alert.active ? 'Pause' : 'Enable'} alert`} />
-                    <button type="button" onClick={() => setAlertsToRemove([alert])} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-rose-50 text-rose-600 hover:bg-rose-100 hover:text-rose-700 dark:bg-rose-950/35 dark:text-rose-300 dark:hover:bg-rose-950/60" aria-label="Remove alert"><Trash2 className="h-3.5 w-3.5" /></button>
+                    <button type="button" onClick={() => setAlertsToRemove([alert])} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-gray-500 hover:bg-red-50 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-gray-400 dark:hover:bg-red-950/30 dark:hover:text-red-400" aria-label="Remove alert"><Trash2 className="h-3.5 w-3.5" /></button>
                   </article>
                 );
               })}
@@ -202,13 +202,13 @@ const AlertCenter = ({ alerts, isLoading, onCreate, onSetActive, onRemove }: Ale
           )}
         </div>
 
-        <div className="border-t border-gray-200 p-3 dark:border-gray-800 sm:p-5 lg:border-t-0">
+        <div className="min-w-0 border-t border-gray-200 p-4 dark:border-gray-800 sm:p-6 lg:border-t-0">
           <div className="mb-3 flex items-center justify-between">
             <div>
               <h3 className="text-sm font-semibold text-gray-950 dark:text-white">Keyword alerts</h3>
-              <p className="text-xs text-gray-500">Searches checked on every deal</p>
+              <p className="text-xs text-gray-600 dark:text-gray-400">Searches checked on every deal</p>
             </div>
-            <span className="text-xs font-medium text-gray-500">{keywordAlerts.length}</span>
+            <span className="text-xs font-medium text-gray-600 dark:text-gray-400">{keywordAlerts.length}</span>
           </div>
           {isLoading ? (
             <div className="space-y-2">
@@ -223,20 +223,20 @@ const AlertCenter = ({ alerts, isLoading, onCreate, onSetActive, onRemove }: Ale
               ))}
             </div>
           ) : keywordAlerts.length === 0 ? (
-            <div className="flex items-center gap-3 rounded-xl border border-dashed border-gray-300 p-3 text-sm text-gray-500 dark:border-gray-800">
+            <div className="flex items-center gap-3 rounded-xl border border-dashed border-gray-300 p-3 text-sm text-gray-600 dark:text-gray-400 dark:border-gray-800">
               <Tag className="h-4 w-4 shrink-0 text-violet-500" /> Create one with the compact form above.
             </div>
           ) : (
             <div className="space-y-2">
               {keywordAlerts.map((alert) => (
-                <article key={alert._id} className="flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50/60 p-2.5 transition-colors hover:border-violet-200 dark:border-gray-800 dark:bg-white/[0.025] dark:hover:border-violet-900">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-violet-50 text-violet-600 dark:bg-violet-950/40 dark:text-violet-300"><Tag className="h-3.5 w-3.5" /></div>
+                <article key={alert._id} className="flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50/60 p-2.5 transition-colors hover:border-gray-300 dark:border-gray-800 dark:bg-white/[0.025] dark:hover:border-gray-700">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-600 dark:bg-zinc-900 dark:text-gray-300"><Tag className="h-3.5 w-3.5" /></div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-xs font-semibold">{alert.keywords.join(', ')}</p>
-                    <p className="mt-0.5 text-[11px] text-gray-500">{alert.targetPrice ? `₹${alert.targetPrice.toLocaleString('en-IN')} or less` : 'Any price'}</p>
+                    <p className="mt-0.5 text-[11px] text-gray-600 dark:text-gray-400">{alert.targetPrice ? `₹${alert.targetPrice.toLocaleString('en-IN')} or less` : 'Any price'}</p>
                   </div>
                   <Switch checked={alert.active} onCheckedChange={(active) => void toggle(alert, active)} className="shrink-0 scale-90 data-[state=checked]:bg-emerald-500 dark:data-[state=checked]:bg-emerald-500" aria-label={`${alert.active ? 'Pause' : 'Enable'} alert`} />
-                  <button type="button" onClick={() => setAlertsToRemove([alert])} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-rose-50 text-rose-600 hover:bg-rose-100 hover:text-rose-700 dark:bg-rose-950/35 dark:text-rose-300 dark:hover:bg-rose-950/60" aria-label="Remove alert"><Trash2 className="h-3.5 w-3.5" /></button>
+                  <button type="button" onClick={() => setAlertsToRemove([alert])} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-gray-500 hover:bg-red-50 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-gray-400 dark:hover:bg-red-950/30 dark:hover:text-red-400" aria-label="Remove alert"><Trash2 className="h-3.5 w-3.5" /></button>
                 </article>
               ))}
             </div>
@@ -247,7 +247,6 @@ const AlertCenter = ({ alerts, isLoading, onCreate, onSetActive, onRemove }: Ale
       <AuthDialog open={isAuthOpen} onOpenChange={setIsAuthOpen} />
       <AlertDialog open={alertsToRemove.length > 0} onOpenChange={(open) => !open && setAlertsToRemove([])}>
         <AlertDialogContent
-          onOpenAutoFocus={(event) => event.preventDefault()}
           className="w-[calc(100%-2rem)] rounded-3xl sm:max-w-md">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-red-50 dark:bg-red-950/40"><AlertTriangle className="h-5 w-5 text-red-600" /></div>
           <AlertDialogHeader className="text-center sm:text-center">

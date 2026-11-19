@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Button } from '@/components/ui/button';
 import { Bell, Heart, Share2, Trash2, PenSquare, Tag } from 'lucide-react';
 import { isAuthenticated } from '@/services/authService';
 
@@ -48,15 +49,16 @@ const DealCardActions = ({
           </button>
         </>
       )}
-      <button
+      <Button type="button" variant="dealLink"
         onClick={(event) => {
           event.stopPropagation();
           onShare(event);
         }}
-        className="mt-2 flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+        className="mt-2 h-11 w-11 p-0"
+        aria-label="Share deal"
         title="Share deal">
-        <Share2 className="w-4 h-4 text-blue-500" />
-      </button>
+        <Share2 aria-hidden="true" />
+      </Button>
       <button
         onClick={onToggleFavorite}
         className="mt-2 flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"

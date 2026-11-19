@@ -2,6 +2,7 @@ import { adminLogButtonClassName } from '@/components/admin/adminLogStyles';
 import { FormEvent, useCallback, useEffect, useId, useMemo, useState } from 'react';
 import { Activity, AlertCircle, Loader2, Pause, Play, RefreshCcw, RotateCcw, Search, Wifi, WifiOff } from 'lucide-react';
 import AdminLogEntryRow from './AdminLogEntryRow';
+import { getLogIdentity, groupAdminLogs } from './adminLogGroups';
 import './AdminLogsPanel.css';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -50,9 +51,6 @@ const emptyFilters: AppliedFilters = {
 	service: '',
 	search: '',
 };
-
-const getLogIdentity = (entry: AdminLogEntry) =>
-	entry.logId || entry.id || entry._id || `${entry.timestamp}-${entry.level}-${entry.message}`;
 
 export default function AdminLogsPanel({ enabled, onLogin }: AdminLogsPanelProps) {
 	const { toast } = useToast();
@@ -203,6 +201,8 @@ export default function AdminLogsPanel({ enabled, onLogin }: AdminLogsPanelProps
 		}
 	};
 
+	const logGroups = useMemo(() => groupAdminLogs(logs), [logs]);
+
 	const activeFilterCount = [
 		filters.level !== 'all',
 		Boolean(filters.service),
@@ -340,13 +340,14 @@ export default function AdminLogsPanel({ enabled, onLogin }: AdminLogsPanelProps
 					</div>
 				) : (
 					<ol role="list" aria-label="Operational log events">
-						{logs.map((entry) => <AdminLogEntryRow key={getLogIdentity(entry)} entry={entry} onCopy={handleCopy} />)}
+						{logGroups.map((group) => <AdminLogEntryRow key={group.key} entry={group.entry} entries={group.telegramId ? group.entries : undefined} status={group.status} summary={group.summary} telegramId={group.telegramId} onCopy={handleCopy} />)}
 					</ol>
 				)}
 				<div className="logs-footer flex flex-wrap items-center justify-between gap-3 border-t border-[var(--log-border)] bg-[var(--log-raised)] p-3">
 					<p className="logs-muted text-[var(--log-muted)] text-xs">
-						{logs.length} loaded · Newest first
+						{logs.length} events in {logGroups.length} rows · Newest first
 						{lastUpdatedAt ? <span className="hidden sm:inline"> · Updated {lastUpdatedAt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</span> : null}
+						<span className="mt-1 block">Grouped by Telegram message. History includes loaded events{activeFilterCount ? " matching your filters" : ""}.</span>
 					</p>
 					<Button variant="outline" size="sm" className={cn(adminLogButtonClassName, "logs-button")} onClick={() => void loadLogs('append', nextBefore)} disabled={!hasMore || isLoading}>
 						{isLoading ? <Loader2 aria-hidden="true" className="h-3 w-3 animate-spin" /> : null}

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button } from '@/components/ui/button';
 import { ArrowUpRight, CalendarDays } from 'lucide-react';
 import { extractFirstLink, extractSecondLink, truncateLink } from './utils/linkUtils';
 import { trackMessageClick } from '../../services/api';
@@ -40,7 +41,7 @@ const DealPageContent = ({ deal, id }: DealPageContentProps) => {
   return (
     <article className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:gap-14 xl:gap-20">
       <div className="min-w-0 lg:sticky lg:top-28">
-        <div className="flex aspect-square items-center justify-center overflow-hidden rounded-3xl border border-zinc-100 bg-[#f7f7f8] p-8 dark:border-zinc-800 dark:bg-zinc-900 sm:p-12">
+        <div className="deal-page-image flex aspect-square items-center justify-center overflow-hidden rounded-3xl border border-zinc-100 bg-[#f7f7f8] p-8 dark:border-zinc-800 dark:bg-zinc-900 sm:p-12">
           <DealImage key={id} title={title || 'Product image'} category={deal.category} imageUrl={deal.imageUrl}
             telegramFileId={deal.telegramFileId} className="h-full w-full rounded-xl object-contain" />
         </div>
@@ -71,10 +72,11 @@ const DealPageContent = ({ deal, id }: DealPageContentProps) => {
             </>
           )}
           {buyNowLink && (
-            <a href={buyNowLink} onClick={trackClick} target="_blank" rel="noopener noreferrer"
-              className={`inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-zinc-950 px-6 py-3 text-sm font-medium leading-6 text-white transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-4 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200 ${hasPrice ? 'sm:col-start-2' : 'sm:col-span-2'}`}>
-              Buy now <ArrowUpRight size={18} aria-hidden="true" />
-            </a>
+            <Button asChild variant="dealPrimary" className={`min-h-12 w-full px-6 ${hasPrice ? 'sm:col-start-2' : 'sm:col-span-2'}`}>
+              <a href={buyNowLink} onClick={trackClick} target="_blank" rel="noopener noreferrer">
+                Buy now <ArrowUpRight aria-hidden="true" />
+              </a>
+            </Button>
           )}
         </section>
 

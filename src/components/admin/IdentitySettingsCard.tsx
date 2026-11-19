@@ -47,7 +47,7 @@ export default function IdentitySettingsCard() {
   };
 
   return (
-    <Card className="mb-8 border-stone-200/80 bg-white/95 dark:border-white/10 dark:bg-[#111113]">
+    <Card animated={false} className="mb-8 border-stone-200/80 bg-white/95 dark:border-white/10 dark:bg-[#111113]">
       <CardHeader>
         <div className="flex items-start justify-between gap-4">
           <div className="flex gap-3">

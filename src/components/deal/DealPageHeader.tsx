@@ -21,7 +21,7 @@ const DealPageHeader = ({ onGoBack, isSaved, isSharing, onToggleWishlist, onShar
         <Heart size={16} aria-hidden="true" className={isSaved ? 'fill-rose-500 text-rose-500' : ''} />
         <span className="hidden sm:inline">{isSaved ? 'Saved' : 'Save'}</span>
       </Button>
-      <Button onClick={onShare} disabled={isSharing} variant="ghost" aria-label={isSharing ? 'Sharing deal' : 'Share deal'} className="h-10 w-10 gap-2 rounded-full p-0 sm:w-auto sm:min-w-24 sm:px-4">
+      <Button onClick={onShare} disabled={isSharing} aria-busy={isSharing} variant="dealLink" aria-label={isSharing ? 'Sharing deal' : 'Share deal'} className="w-11 p-0 sm:w-28 sm:px-4">
         <Share2 size={16} aria-hidden="true" /><span className="hidden sm:inline">{isSharing ? 'Sharing...' : 'Share'}</span>
       </Button>
       <Button onClick={onCreateAlert} variant="outline" aria-label="Create price alert" className="h-10 w-10 gap-2 rounded-full p-0 sm:w-auto sm:px-4">

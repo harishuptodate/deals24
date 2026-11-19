@@ -35,6 +35,7 @@ import {
 	truncateLink,
 } from '../deal/utils/linkUtils';
 import { handleTrackedLinkClick } from '../../services/api';
+import { Button } from '@/components/ui/button';
 import DealImage from '../images/DealImage';
 import DealCardActions from '../deal/DealCardActions';
 import { useDealCardActions } from '../deal/hooks/useDealCardActions';
@@ -130,7 +131,7 @@ const TopPerformingDealsCarousel = ({
 
 	if (isLoading) {
 		return (
-			<Card className="h-full flex flex-col">
+			<Card animated={false} className="h-full flex flex-col">
 				<CardHeader>
 					<CardTitle>Top Performing Deals</CardTitle>
 					<CardDescription>
@@ -148,7 +149,7 @@ const TopPerformingDealsCarousel = ({
 
 	if (!topDeals || topDeals.length === 0) {
 		return (
-			<Card className="h-full flex flex-col">
+			<Card animated={false} className="h-full flex flex-col">
 				<CardHeader>
 					<CardTitle>Top Performing Deals</CardTitle>
 					<CardDescription>
@@ -169,7 +170,7 @@ const TopPerformingDealsCarousel = ({
 
 	return (
 		<>
-			<Card className="h-full flex flex-col">
+			<Card animated={false} className="h-full flex flex-col">
 				<CardHeader>
 					<CardTitle>Top Performing Deals</CardTitle>
 					<CardDescription>
@@ -506,7 +507,7 @@ const CustomDealCard = ({
 	return (
 		<>
 			<div
-				className="group animate-fade-up hover-scale cursor-pointer h-full"
+				className="top-performing-deal group cursor-pointer h-full"
 				onClick={(e) => {
 					e.preventDefault();
 					e.stopPropagation();
@@ -544,21 +545,22 @@ const CustomDealCard = ({
 					{/* Buy Now Button */}
 					{buyNowLink && (
 						<div className="mt-auto flex justify-center">
-							<a
-								href={buyNowLink}
-								onClick={(e) => {
-									e.stopPropagation();
-									handleTrackedLinkClick(
-										buyNowLink,
-										formattedDeal.id,
-										e.nativeEvent,
-									);
-								}}
-								target="_blank"
-								rel="noopener noreferrer"
-								className="inline-block w-full max-w-[300px] text-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-b from-apple-darkGray to-indigo-950 rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-apple-darkGray/20 hover:scale-105">
-								Buy Now
-							</a>
+							<Button asChild variant="dealPrimary" className="w-full max-w-[300px]">
+								<a
+									href={buyNowLink}
+									onClick={(e) => {
+										e.stopPropagation();
+										handleTrackedLinkClick(
+											buyNowLink,
+											formattedDeal.id,
+											e.nativeEvent,
+										);
+									}}
+									target="_blank"
+									rel="noopener noreferrer">
+									Buy Now
+								</a>
+							</Button>
 						</div>
 					)}
 				</div>

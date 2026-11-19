@@ -2,14 +2,19 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
+interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+  animated?: boolean
+}
+
 const Card = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
+  CardProps
+>(({ className, animated = true, ...props }, ref) => (
   <div
     ref={ref}
     className={cn(
-      "rounded-lg animate-fade-up hover-scale bg-card text-card-foreground shadow-sm",
+      "rounded-lg bg-card text-card-foreground shadow-sm",
+      animated && "animate-fade-up hover-scale",
       className
     )}
     {...props}

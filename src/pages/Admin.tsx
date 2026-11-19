@@ -808,7 +808,7 @@ const Admin = () => {
 				{/* Updated layout with matching heights - reduced height to trim bottom space */}
 				<div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
 					<div className="lg:col-span-2">
-						<Card className="h-[500px]">
+						<Card animated={false} className="h-[500px]">
 							<CardHeader>
 								<CardTitle>Performance Metrics</CardTitle>
 								<CardDescription>{getPeriodLabel()} Stats</CardDescription>
@@ -875,27 +875,27 @@ const Admin = () => {
 									</p>
 								</div>
 								<div className="flex flex-wrap gap-3 md:max-w-sm md:justify-end">
-									<Link to="/admin/logs">
-										<Button className="h-10 rounded-full bg-stone-950 px-4 text-white transition-transform duration-150 ease-out hover:scale-[1.02] hover:bg-stone-800 active:scale-[0.94] dark:bg-stone-100 dark:text-stone-950 dark:hover:bg-white">
-											<Activity className="h-5 w-5 mr-2" />
+									<Button asChild variant="dealSecondary">
+										<Link to="/admin/logs">
+											<Activity aria-hidden="true" />
 											Logs
-											<ArrowRight className="ml-2 h-4 w-4" />
-										</Button>
-									</Link>
-									<Link to="/admin/blacklist">
-										<Button className="h-10 rounded-full bg-stone-950 px-4 text-white transition-transform duration-150 ease-out hover:scale-[1.02] hover:bg-stone-800 active:scale-[0.94] dark:bg-stone-100 dark:text-stone-950 dark:hover:bg-white">
-											<ShieldBan className="h-5 w-5 mr-2" />
-											Blacklist 
-											<ArrowRight className="ml-2 h-4 w-4" />
-										</Button>
-									</Link>
-									<Link to="/admin/post-deal">
-										<Button className="h-10 rounded-full bg-stone-950 px-4 text-white transition-transform duration-150 ease-out hover:scale-[1.02] hover:bg-stone-800 active:scale-[0.94] dark:bg-stone-100 dark:text-stone-950 dark:hover:bg-white">
-											<Send className="ml-2 h-4 w-4" />
-											Post Deal 
-											<ArrowRight className="ml-2 h-4 w-4" />
-										</Button>
-									</Link>
+											<ArrowRight aria-hidden="true" />
+										</Link>
+									</Button>
+									<Button asChild variant="dealSecondary">
+										<Link to="/admin/blacklist">
+											<ShieldBan aria-hidden="true" />
+											Blacklist
+											<ArrowRight aria-hidden="true" />
+										</Link>
+									</Button>
+									<Button asChild variant="dealPrimary">
+										<Link to="/admin/post-deal">
+											<Send aria-hidden="true" />
+											Post Deal
+											<ArrowRight aria-hidden="true" />
+										</Link>
+									</Button>
 								</div>
 							</div>
 						</CardContent>

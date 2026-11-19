@@ -16,30 +16,30 @@ const WishlistHeader = ({ favoriteCount, activeAlertCount, onClearAll }: Wishlis
 
   return (
     <>
-      <header className="mb-4 border-b border-gray-200 pb-4 dark:border-gray-800 sm:mb-6 sm:pb-6">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+      <header className="mb-6 border-b border-zinc-100 pb-5 dark:border-zinc-800 md:mb-8">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="min-w-0">
-            <p className="mb-0.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-violet-600 dark:text-violet-400 sm:mb-1 sm:text-xs">
+            <p className="mb-1 text-xs font-medium text-gray-600 dark:text-gray-400">
               Your personal deal space
             </p>
-            <h1 className="text-2xl font-semibold tracking-tight text-gray-950 dark:text-white sm:text-3xl">
+            <h1 className="text-gradient text-[15.6px] font-bold leading-[20.8px] md:text-[19.5px] md:leading-[23.4px]">
               Wishlist & alerts
             </h1>
-            <p className="mt-1 max-w-2xl text-[13px] leading-5 text-gray-500 dark:text-gray-400 sm:text-sm sm:leading-6">
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-600 dark:text-gray-400">
               Keep saved deals close and manage every price or keyword notification in one place.
             </p>
           </div>
 
-          <div className="grid min-w-0 grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
-            <div className="inline-flex h-8 items-center gap-2 rounded-full border border-gray-200 bg-white px-3 text-xs font-medium text-gray-700 shadow-sm dark:border-gray-800 dark:bg-zinc-950 dark:text-gray-200 sm:h-9">
+          <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2 lg:max-w-lg lg:justify-end">
+            <div className="inline-flex min-h-9 items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-400">
               <Heart className="h-3.5 w-3.5 fill-rose-500 text-rose-500" />
               {favoriteCount} saved
             </div>
-            <div className="inline-flex h-8 items-center gap-2 rounded-full border border-gray-200 bg-white px-3 text-xs font-medium text-gray-700 shadow-sm dark:border-gray-800 dark:bg-zinc-950 dark:text-gray-200 sm:h-9">
+            <div className="inline-flex min-h-9 items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-400">
               <BellRing className="h-3.5 w-3.5 text-violet-500" />
               {activeAlertCount} active
             </div>
-            <div className="inline-flex h-8 min-w-0 items-center gap-2 rounded-full border border-gray-200 bg-white px-3 text-xs font-medium text-gray-700 shadow-sm dark:border-gray-800 dark:bg-zinc-950 dark:text-gray-200 sm:h-9 sm:max-w-full">
+            <div className="inline-flex min-h-9 min-w-0 max-w-full items-center gap-1.5 text-xs text-gray-600 dark:text-gray-400">
               {user ? <Cloud className="h-3.5 w-3.5 text-green-500" /> : <Laptop className="h-3.5 w-3.5 text-gray-500" />}
               <span className="min-w-0 truncate sm:max-w-48">{user ? `Synced · ${user.email}` : 'Saved on this device'}</span>
             </div>
@@ -49,7 +49,7 @@ const WishlistHeader = ({ favoriteCount, activeAlertCount, onClearAll }: Wishlis
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsConfirmDialogOpen(true)}
-                className="h-8 rounded-full border border-red-200 px-3 text-xs text-red-600 hover:border-red-300 hover:bg-red-50 hover:text-red-700 dark:border-red-900/70 dark:hover:bg-red-950/30 sm:h-9">
+                className="h-10 rounded-full px-4 text-xs text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-950/30">
                 <Trash2 className="mr-1.5 h-3.5 w-3.5" />
                 Clear wishlist
               </Button>
