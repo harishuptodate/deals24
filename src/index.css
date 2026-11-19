@@ -166,7 +166,7 @@
   }
 
   .deal-button-link {
-    @apply bg-transparent text-blue-700 underline-offset-4 dark:text-blue-400;
+    @apply border border-border bg-secondary text-blue-700 dark:text-blue-400;
   }
 
   .deal-button:focus-visible {
@@ -178,7 +178,7 @@
     .deal-button-secondary:hover { @apply bg-muted text-foreground border-muted-foreground/40; }
     .deal-button-tertiary:hover { @apply bg-border; }
     .deal-button-outline:hover { @apply border-blue-700 text-blue-800 dark:border-blue-300 dark:text-blue-300; }
-    .deal-button-link:hover { @apply text-blue-800 underline dark:text-blue-300; }
+    .deal-button-link:hover { @apply border-muted-foreground/40 bg-border text-blue-800 dark:text-blue-300; }
   }
 
   .deal-button:active:not(:disabled):not(:focus-visible) {
@@ -189,6 +189,7 @@
   .deal-button-primary:active { @apply bg-blue-800; }
   .deal-button-outline:active,
   .deal-button-link:active { @apply text-blue-900 dark:text-blue-200; }
+  .deal-button-link:active { @apply bg-border; }
   .deal-button-secondary:active,
   .deal-button-tertiary:active { @apply bg-accent text-accent-foreground; }
 

@@ -90,7 +90,8 @@ for (const width of [320, 375, 390, 768, 1024, 1440]) {
     const bounds = await rows.first().boundingBox();
     expect(bounds!.height).toBeLessThanOrEqual(width < 800 ? 60 : 46);
     const idBounds = await page.getByRole('button', { name: 'Copy Telegram message ID 25407' }).boundingBox();
-    expect(idBounds!.x + idBounds!.width).toBeGreaterThan(width - 50);
+    const panelBounds = await page.locator('.admin-logs').boundingBox();
+    expect(idBounds!.x + idBounds!.width).toBeGreaterThan(panelBounds!.x + panelBounds!.width - 20);
     await page.locator('.log-entry-trigger').first().click();
     for (const dark of [false, true]) {
       await page.evaluate((enabled) => document.documentElement.classList.toggle('dark', enabled), dark);
@@ -170,7 +171,7 @@ test('labels, focus, touch targets, contrast and enlarged text remain accessible
 
   const trigger = page.locator('.log-entry-trigger').first();
   await trigger.focus();
-  await expect(trigger).toHaveAccessibleDescription(/Info.*telegram-ingest/);
+  await expect(trigger).toHaveAccessibleDescription(new RegExp(`Info.*${new Date(logs[0].timestamp).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}`));
   expect(await trigger.evaluate((element) => getComputedStyle(element).outlineStyle)).toBe('solid');
   expect(await page.locator('.log-entry-chevron').first().evaluate((element) => getComputedStyle(element).transitionDuration)).toBe('0s');
 
@@ -277,7 +278,7 @@ test('Telegram history updates in one open row and preserves the final outcome a
   await expect(group.locator('.log-entry-preview')).toContainText('Updated · 1 issue');
 });
 
-test('shares repeated history metadata, keeps exceptions, and uses the available width for links', async ({ page }) => {
+test('omits repeated history labels, keeps exceptions, and uses the available width for links', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await openLogs(page);
   const url = `https://example.com/deal/${'a'.repeat(82)}`;
@@ -295,11 +296,7 @@ test('shares repeated history metadata, keeps exceptions, and uses the available
   }
   const group = page.locator('.log-entry').filter({ has: page.getByRole('button', { name: 'Copy Telegram message ID 25407' }) });
   await group.locator('.log-entry-trigger').click();
-  const defaults = group.locator('.log-history-defaults');
-  await expect(defaults).toContainText('Unless noted:');
-  await expect(defaults).toContainText('Info');
-  await expect(defaults).toContainText('telegram-ingest');
-  await expect(defaults).toContainText('Source: webhook');
+  await expect(group.getByText(/Unless noted:|Oldest first|Source: webhook/)).toHaveCount(0);
   const history = group.getByRole('list', { name: 'History for Telegram message 25407' });
   await expect(history.getByText('telegram-ingest', { exact: true })).toHaveCount(0);
   await expect(history.getByText('Info', { exact: true })).toHaveCount(0);
@@ -327,8 +324,7 @@ test('shares repeated history metadata, keeps exceptions, and uses the available
     await page.setViewportSize({ width, height: 900 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     expect(await caption.evaluate((element) => element.parentElement!.scrollWidth <= element.parentElement!.clientWidth)).toBe(true);
-    const copyHistory = await group.getByRole('button', { name: 'Copy history', exact: true }).boundingBox();
-    await expect(group.getByRole('button', { name: 'Copy history', exact: true })).toBeVisible();
+    await expect(group.getByRole('button', { name: 'Copy history', exact: true }))[width < 768 ? 'toBeHidden' : 'toBeVisible']();
     for (const actions of await history.locator('.log-entry-actions').all()) {
       const messageBounds = await actions.locator('..').locator('.log-message').boundingBox();
       const timeBounds = await actions.locator('time').boundingBox();
@@ -343,7 +339,8 @@ test('shares repeated history metadata, keeps exceptions, and uses the available
       }
       const copyLog = await actions.getByRole('button', { name: 'Copy log', exact: true }).boundingBox();
       const timestamp = await actions.locator('time').boundingBox();
-      expect(Math.abs(copyHistory!.x + copyHistory!.width - copyLog!.x - copyLog!.width)).toBeLessThan(2);
+      const detail = await actions.locator('../..').boundingBox();
+      expect(Math.abs(detail!.x + detail!.width - 12 - copyLog!.x - copyLog!.width)).toBeLessThan(2);
       expect(timestamp!.x + timestamp!.width).toBeLessThanOrEqual(copyLog!.x);
       expect(Math.abs(timestamp!.y + timestamp!.height / 2 - copyLog!.y - copyLog!.height / 2)).toBeLessThan(2);
       if (width >= 768) {
@@ -376,7 +373,7 @@ test('consolidates the screenshot history while preserving raw copies and essent
   await group.locator('.log-entry-trigger').click();
   const history = group.getByRole('list', { name: 'History for Telegram message 25734' });
   await expect(history.locator(':scope > li')).toHaveCount(6);
-  await expect(group.getByText(/11 events in 6 steps/)).toBeVisible();
+  await expect(group.getByText(/11 events in 6 steps/)).toHaveCount(0);
   await expect(group.locator('.log-entry-preview')).not.toContainText('https://');
   expect((await history.textContent())!.split(originalUrl)).toHaveLength(2);
   await expect(history.getByText(/Amazon image unavailable:.*Used Telegram photo/)).toBeVisible();
@@ -401,7 +398,7 @@ test('consolidates the screenshot history while preserving raw copies and essent
   expect((await fileCopy.textContent())!.length).toBeLessThan(40);
   await fileCopy.click();
   expect(await page.evaluate(() => localStorage.getItem('copied-log'))).toBe(telegramFileId);
-  for (const time of await history.locator('.log-entry-actions time').allTextContents()) expect(time).toMatch(/^\d{2}:\d{2}:\d{2}$/);
+  for (const time of await history.locator('.log-entry-actions .log-clock').allTextContents()) expect(time).toMatch(/^\d{2}:\d{2}:\d{2}$/);
   await history.locator(':scope > li').nth(1).getByRole('button', { name: 'Copy log', exact: true }).click();
   expect(JSON.parse((await page.evaluate(() => localStorage.getItem('copied-log')))!)).toEqual(screenshotLogs.slice(1, 6));
   await group.getByRole('button', { name: 'Copy history', exact: true }).click();
@@ -436,18 +433,55 @@ test('consolidates the screenshot history while preserving raw copies and essent
     if (width <= 375) {
       const wrappedMetadata = await enrichmentMessage.locator('.log-inline-details > div').boundingBox();
       const contentBounds = await enrichmentMessage.boundingBox();
-      expect(Math.abs(wrappedMetadata!.x - contentBounds!.x)).toBeLessThan(1);
+      const bodyBounds = await enrichmentMessage.locator(':scope > .log-value').boundingBox();
+      if (wrappedMetadata!.y >= bodyBounds!.y + bodyBounds!.height - 1) expect(Math.abs(wrappedMetadata!.x - contentBounds!.x)).toBeLessThan(1);
       const reasonRow = history.locator('.log-reasons-detail');
       const reasonBounds = await reasonRow.boundingBox();
       const lastReason = await reasonRow.getByRole('listitem').last().boundingBox();
-      expect(Math.abs(lastReason!.x - reasonBounds!.x)).toBeLessThan(1);
+      const previousReason = await reasonRow.getByRole('listitem').nth(1).boundingBox();
+      if (lastReason!.y > previousReason!.y + 1) expect(Math.abs(lastReason!.x - reasonBounds!.x)).toBeLessThan(1);
       const caption = history.locator(':scope > li').first().locator('.log-message > .log-value');
       expect(await caption.textContent()).not.toContain('\n\n');
       await expect(history.getByRole('button', { name: 'Copy log', exact: true })).toHaveCount(0);
-      await expect(group.getByRole('button', { name: 'Copy history', exact: true })).toBeVisible();
-      expect((await group.locator('.log-history-defaults').boundingBox())!.width).toBeGreaterThan(240);
+      await expect(group.getByRole('button', { name: 'Copy history', exact: true })).toBeHidden();
+      await expect(group.locator('.log-summary-date')).toHaveText('19 Nov');
+      await expect(group.locator('.log-entry-service')).toBeHidden();
       expect((await fileCopy.boundingBox())!.height).toBeGreaterThanOrEqual(44);
     }
   }
   await group.screenshot({ path: 'tmp/search-qa/admin-logs/consolidated-mobile.png' });
+});
+
+
+test('mobile long press offers full history without a header or changing the expanded state', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 844 });
+  await openLogs(page);
+  const group = page.locator('.log-entry').filter({ has: page.locator('.log-telegram-id').filter({ hasText: '#25407' }) });
+  const trigger = group.locator('.log-entry-trigger');
+  const before = await trigger.boundingBox();
+  await expect(group.getByRole('button', { name: 'Copy history', exact: true })).toBeHidden();
+  await page.clock.install();
+  await trigger.dispatchEvent('pointerdown', { pointerType: 'touch', pointerId: 1, button: 0, clientX: 100, clientY: 300 });
+  await trigger.dispatchEvent('pointermove', { pointerType: 'touch', pointerId: 1, clientX: 100, clientY: 330 });
+  await page.clock.fastForward(1000);
+  await expect(page.getByRole('menuitem', { name: 'Copy history' })).toBeHidden();
+  await trigger.dispatchEvent('pointerdown', { pointerType: 'touch', pointerId: 1, button: 0, clientX: 100, clientY: 300 });
+  const copy = page.getByRole('menuitem', { name: 'Copy history' });
+  await expect(copy).toBeVisible();
+  await trigger.dispatchEvent('pointerup', { pointerType: 'touch', pointerId: 1, button: 0 });
+  await copy.click();
+  expect(JSON.parse((await page.evaluate(() => localStorage.getItem('copied-log')))!)).toEqual([logs[0]]);
+  await expect(trigger).toHaveAttribute('aria-expanded', 'false');
+  await trigger.click();
+  const after = await trigger.boundingBox();
+  expect(after!.height).toBe(before!.height);
+  await expect(group.getByText(/events in .*steps|Oldest first|Unless noted/)).toHaveCount(0);
+  const stamp = group.locator('.log-entry-actions time');
+  expect((await stamp.boundingBox())!.height).toBeLessThanOrEqual(21);
+  await expect(stamp.locator('.log-date-mobile')).toHaveText(new Date(logs[0].timestamp).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }));
+  await trigger.focus();
+  await page.keyboard.press('Shift+F10');
+  await expect(copy).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(copy).toBeHidden();
 });

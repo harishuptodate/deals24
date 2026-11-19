@@ -1,13 +1,13 @@
 .admin-logs-page {
-	--log-bg: #f8fafc;
+	--log-bg: #ffffff;
 	--log-surface: #ffffff;
-	--log-raised: #f1f5f9;
-	--log-ink: #0f172a;
-	--log-muted: #475569;
-	--log-border: #e2e8f0;
-	--log-control-border: #7b8ba1;
-	--log-primary: #1e40af;
-	--log-primary-fill: #1d4ed8;
+	--log-raised: #f7f7f8;
+	--log-ink: #09090b;
+	--log-muted: #52525b;
+	--log-border: #e4e4e7;
+	--log-control-border: #71717a;
+	--log-primary: #1d4ed8;
+	--log-primary-fill: #2563eb;
 	--log-primary-soft: #eff6ff;
 	--log-focus: #1d4ed8;
 	--log-info: #1e40af;
@@ -23,14 +23,14 @@
 }
 
 .dark .admin-logs-page {
-	--log-bg: #0b1120;
-	--log-surface: #111827;
-	--log-raised: #1e293b;
-	--log-ink: #f1f5f9;
-	--log-muted: #a5b4c8;
-	--log-border: #334155;
-	--log-control-border: #64748b;
-	--log-primary: #93c5fd;
+	--log-bg: #09090b;
+	--log-surface: #09090b;
+	--log-raised: #18181b;
+	--log-ink: #fafafa;
+	--log-muted: #a1a1aa;
+	--log-border: #27272a;
+	--log-control-border: #71717a;
+	--log-primary: #60a5fa;
 	--log-primary-soft: #172554;
 	--log-focus: #93c5fd;
 	--log-info: #bfdbfe;
