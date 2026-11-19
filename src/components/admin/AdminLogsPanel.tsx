@@ -220,17 +220,17 @@ export default function AdminLogsPanel({ enabled, onLogin }: AdminLogsPanelProps
 
 	if (!enabled) {
 		return (
-			<Card className="admin-logs [container-type:inline-size] overflow-hidden rounded-[0.875rem] border border-t-[3px] border-[var(--log-border)] border-t-[var(--log-primary-fill)] bg-[var(--log-surface)] text-[var(--log-ink)] shadow-[0_2px_8px_rgb(15_23_42/0.04)] !transform-none !animate-none !transition-none">
+			<Card animated={false} className="admin-logs [container-type:inline-size] overflow-hidden rounded-2xl border border-[var(--log-border)] bg-[var(--log-surface)] text-[var(--log-ink)] shadow-sm">
 				<CardContent className="flex min-h-[360px] items-center justify-center p-6">
 					<div className="max-w-md text-center">
-						<div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-stone-100 dark:bg-white/5">
-							<Activity className="h-6 w-6 text-stone-600 dark:text-stone-300" />
+						<div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-zinc-100 dark:bg-zinc-900">
+							<Activity aria-hidden="true" className="h-6 w-6 text-zinc-600 dark:text-zinc-300" />
 						</div>
 						<h2 className="mt-4 text-xl font-semibold">Sign in to view system activity</h2>
 						<p className="logs-muted text-[var(--log-muted)] mt-2 text-sm leading-6">
 							Operational logs can include internal request details, so this workspace is available to administrators only.
 						</p>
-						<Button onClick={onLogin} className={cn(adminLogButtonClassName, "logs-button mt-5")}>Admin Login</Button>
+						<Button variant="dealPrimary" onClick={onLogin} className="logs-button mt-5">Admin Login</Button>
 					</div>
 				</CardContent>
 			</Card>
@@ -238,7 +238,7 @@ export default function AdminLogsPanel({ enabled, onLogin }: AdminLogsPanelProps
 	}
 
 	return (
-		<Card className="admin-logs [container-type:inline-size] overflow-hidden rounded-[0.875rem] border border-t-[3px] border-[var(--log-border)] border-t-[var(--log-primary-fill)] bg-[var(--log-surface)] text-[var(--log-ink)] shadow-[0_2px_8px_rgb(15_23_42/0.04)] !transform-none !animate-none !transition-none">
+		<Card animated={false} className="admin-logs [container-type:inline-size] overflow-hidden rounded-2xl border border-[var(--log-border)] bg-[var(--log-surface)] text-[var(--log-ink)] shadow-sm">
 			<div className="logs-toolbar grid gap-3 border-b border-[var(--log-border)] p-3 [@container(min-width:43.75rem)]:p-4">
 				<div className="logs-toolbar-heading flex flex-wrap items-center justify-between gap-2">
 					<div className="flex min-w-0 items-center gap-2">
@@ -268,9 +268,9 @@ export default function AdminLogsPanel({ enabled, onLogin }: AdminLogsPanelProps
 								onChange={(event) => setSearchDraft(event.target.value)}
 								aria-label="Search logs"
 								placeholder="Find text…"
-								className="logs-control min-h-11 h-auto min-w-0 rounded-lg border-[var(--log-control-border)] bg-[var(--log-surface)] text-[var(--log-ink)] placeholder:text-[var(--log-muted)] pr-12 text-base sm:text-sm"
+								className="logs-control min-h-11 h-auto min-w-0 rounded-full border-[var(--log-control-border)] bg-[var(--log-raised)] text-[var(--log-ink)] placeholder:text-[var(--log-muted)] pr-12 text-base sm:text-sm"
 							/>
-							<Button type="submit" variant="ghost" size="icon" className="logs-search-submit absolute right-0 top-0 min-h-11 min-w-11 text-[var(--log-primary)]" aria-label="Apply log search">
+							<Button type="submit" variant="ghost" size="icon" className="logs-search-submit deal-button absolute right-0 top-0 min-h-11 min-w-11 rounded-full p-0 text-[var(--log-primary)]" aria-label="Apply log search">
 								<Search aria-hidden="true" />
 							</Button>
 						</div>
@@ -278,7 +278,7 @@ export default function AdminLogsPanel({ enabled, onLogin }: AdminLogsPanelProps
 					<div className="logs-field grid min-w-0 gap-1.5 [&_label]:text-xs [&_label]:font-semibold [&_label]:text-[var(--log-muted)]">
 						<label htmlFor={`${filterId}-service`}>Service</label>
 						<Select value={filters.service || 'all'} onValueChange={(value) => setFilters((current) => ({ ...current, service: value === 'all' ? '' : value }))}>
-							<SelectTrigger id={`${filterId}-service`} aria-label="Filter by service" className="logs-control min-h-11 h-auto min-w-0 rounded-lg border-[var(--log-control-border)] bg-[var(--log-surface)] text-[var(--log-ink)] placeholder:text-[var(--log-muted)] text-xs sm:text-sm">
+							<SelectTrigger id={`${filterId}-service`} aria-label="Filter by service" className="logs-control min-h-11 h-auto min-w-0 rounded-full border-[var(--log-control-border)] bg-[var(--log-raised)] text-[var(--log-ink)] placeholder:text-[var(--log-muted)] text-xs sm:text-sm">
 								<SelectValue placeholder="All services" />
 							</SelectTrigger>
 							<SelectContent>
@@ -294,7 +294,7 @@ export default function AdminLogsPanel({ enabled, onLogin }: AdminLogsPanelProps
 						<Button key={level} type="button" variant={filters.level === level ? 'default' : 'ghost'} size="sm"
 							aria-pressed={filters.level === level}
 							onClick={() => setFilters((current) => ({ ...current, level }))}
-							className="logs-severity-button min-w-0 min-h-11 h-auto gap-1.5 rounded-lg bg-[var(--log-raised)] px-1 py-1.5 text-xs text-[var(--log-muted)] hover:bg-[var(--log-primary-soft)] hover:text-[var(--log-primary)] aria-pressed:bg-[var(--log-primary-fill)] aria-pressed:text-white [@container(min-width:37.5rem)]:px-4 [@container(min-width:43.75rem)]:min-h-9 [@media(pointer:coarse)]:min-h-11"
+							className="logs-severity-button deal-button min-w-0 min-h-11 h-auto gap-1.5 rounded-full bg-[var(--log-raised)] px-1 py-1.5 text-xs text-[var(--log-muted)] hover:bg-[var(--log-primary-soft)] hover:text-[var(--log-primary)] aria-pressed:bg-[var(--log-primary-fill)] aria-pressed:text-white aria-pressed:shadow-sm [@container(min-width:37.5rem)]:px-4 [@container(min-width:43.75rem)]:min-h-9 [@media(pointer:coarse)]:min-h-11"
 						>
 							{label}{count !== undefined ? <span className="logs-severity-count hidden tabular-nums [@container(min-width:22.5rem)]:inline">{count}</span> : null}
 						</Button>
