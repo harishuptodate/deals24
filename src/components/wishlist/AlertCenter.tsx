@@ -107,7 +107,7 @@ const AlertCenter = ({ alerts, isLoading, onCreate, onSetActive, onRemove }: Ale
   };
 
   return (
-    <section className="mb-8 min-w-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:border-gray-900 dark:bg-zinc-950 md:mb-10">
+    <section className="[--alert-price-width:190px] [--alert-action-width:180px] mb-8 min-w-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:border-gray-900 dark:bg-zinc-950 md:mb-10">
       <div className="border-b border-gray-200 p-4 dark:border-gray-800 sm:p-6">
         <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
@@ -136,7 +136,7 @@ const AlertCenter = ({ alerts, isLoading, onCreate, onSetActive, onRemove }: Ale
           </div>
         </div>
 
-        <form onSubmit={submit} className="grid min-w-0 grid-cols-[minmax(0,.9fr)_minmax(0,1.1fr)] gap-2 md:grid-cols-[minmax(0,1fr)_190px_auto]">
+        <form onSubmit={submit} className="grid min-w-0 grid-cols-[minmax(0,.9fr)_minmax(0,1.1fr)] gap-2 md:grid-cols-[minmax(0,1fr)_var(--alert-price-width)_var(--alert-action-width)]">
           <div className="relative col-span-2 min-w-0 md:col-span-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
             <Input value={keywords} onChange={(event) => setKeywords(event.target.value)} placeholder="Product or keyword" maxLength={80} className="h-11 min-w-0 rounded-xl border-gray-200 bg-gray-50 pl-9 text-base placeholder:text-sm focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-gray-800 dark:bg-zinc-900" aria-label="Product or keyword" required />
@@ -152,7 +152,7 @@ const AlertCenter = ({ alerts, isLoading, onCreate, onSetActive, onRemove }: Ale
         </form>
       </div>
 
-      <div className="grid lg:grid-cols-2 lg:divide-x lg:divide-gray-200 dark:lg:divide-gray-800">
+      <div className="grid lg:grid-cols-[minmax(0,1fr)_calc(var(--alert-price-width)+var(--alert-action-width)+3.5rem)] lg:divide-x lg:divide-gray-200 dark:lg:divide-gray-800">
         <div className="min-w-0 p-4 sm:p-6">
           <div className="mb-3 flex items-center justify-between">
             <div>
@@ -165,7 +165,7 @@ const AlertCenter = ({ alerts, isLoading, onCreate, onSetActive, onRemove }: Ale
             <div className="grid gap-3">
               {[0, 1].map((index) => (
                 <div key={`deal-alert-skeleton-${index}`} className="flex items-center gap-2.5 rounded-xl border border-gray-200 p-2.5 dark:border-gray-800">
-                  <EnhancedSkeleton variant="shimmer" className="h-12 w-12 shrink-0 rounded-lg sm:h-16 sm:w-16" />
+                  <EnhancedSkeleton variant="shimmer" className="h-24 w-24 shrink-0 rounded-lg sm:h-32 sm:w-32" />
                   <div className="min-w-0 flex-1 space-y-2">
                     <EnhancedSkeleton variant="shimmer" shape="text" className="h-3.5 w-full" />
                     <EnhancedSkeleton variant="shimmer" shape="text" className="h-3 w-2/3" />
@@ -183,18 +183,20 @@ const AlertCenter = ({ alerts, isLoading, onCreate, onSetActive, onRemove }: Ale
                 const dealId = alert.deal?.id || alert.dealId;
                 const title = alert.deal?.title || alert.dealTitle || 'Deal alert';
                 return (
-                  <article key={alert._id} className="flex min-w-0 items-center gap-2.5 rounded-xl border border-gray-200 bg-gray-50/60 p-2.5 transition-colors hover:border-gray-300 dark:border-gray-800 dark:bg-white/[0.025] dark:hover:border-gray-700">
+                  <article key={alert._id} className="grid min-w-0 grid-cols-[96px_minmax(0,1fr)] items-center gap-x-2.5 gap-y-1 rounded-xl border border-gray-200 bg-gray-50/60 p-2.5 sm:flex sm:gap-2.5 transition-colors hover:border-gray-300 dark:border-gray-800 dark:bg-white/[0.025] dark:hover:border-gray-700">
                     {dealId ? (
-                      <Link to={`/deal/${dealId}`} className="shrink-0 overflow-hidden rounded-lg bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 dark:bg-zinc-900">
-                        <DealImage title={title} category={alert.deal?.category || undefined} imageUrl={alert.deal?.imageUrl || undefined} telegramFileId={alert.deal?.telegramFileId || undefined} className="h-12 w-12 object-contain p-0.5 sm:h-16 sm:w-16" fallbackClassName="border-0" />
+                      <Link to={`/deal/${dealId}`} className="row-span-2 h-24 w-24 shrink-0 overflow-hidden rounded-lg bg-gray-50 sm:h-32 sm:w-32 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 dark:bg-zinc-900">
+                        <DealImage title={title} category={alert.deal?.category || undefined} imageUrl={alert.deal?.imageUrl || undefined} telegramFileId={alert.deal?.telegramFileId || undefined} className="h-full w-full object-contain p-0.5" fallbackClassName="border-0" />
                       </Link>
-                    ) : <div className="h-12 w-12 shrink-0 rounded-lg bg-gray-100 dark:bg-zinc-900 sm:h-16 sm:w-16" />}
+                    ) : <div className="row-span-2 h-24 w-24 shrink-0 rounded-lg bg-gray-100 dark:bg-zinc-900 sm:h-32 sm:w-32" />}
                     <div className="min-w-0 flex-1">
                       {dealId ? <Link to={`/deal/${dealId}`} className="line-clamp-2 text-xs font-semibold leading-4 hover:text-violet-600">{title}</Link> : <p className="line-clamp-2 text-xs font-semibold leading-4">{title}</p>}
                       <p className="mt-1 text-[11px] text-gray-600 dark:text-gray-400">{alert.targetPrice ? `₹${alert.targetPrice.toLocaleString('en-IN')} or less` : 'Any price update'}</p>
                     </div>
-                    <Switch checked={alert.active} onCheckedChange={(active) => void toggle(alert, active)} className="shrink-0 scale-90 data-[state=checked]:bg-emerald-500 dark:data-[state=checked]:bg-emerald-500" aria-label={`${alert.active ? 'Pause' : 'Enable'} alert`} />
-                    <button type="button" onClick={() => setAlertsToRemove([alert])} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-gray-500 hover:bg-red-50 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-gray-400 dark:hover:bg-red-950/30 dark:hover:text-red-400" aria-label="Remove alert"><Trash2 className="h-3.5 w-3.5" /></button>
+                    <div className="col-start-2 flex items-center justify-end gap-2 sm:shrink-0">
+                      <Switch checked={alert.active} onCheckedChange={(active) => void toggle(alert, active)} className="shrink-0 scale-90 data-[state=checked]:bg-emerald-500 dark:data-[state=checked]:bg-emerald-500" aria-label={`${alert.active ? 'Pause' : 'Enable'} alert`} />
+                      <button type="button" onClick={() => setAlertsToRemove([alert])} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-gray-500 hover:bg-red-50 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-gray-400 dark:hover:bg-red-950/30 dark:hover:text-red-400" aria-label="Remove alert"><Trash2 className="h-3.5 w-3.5" /></button>
+                    </div>
                   </article>
                 );
               })}

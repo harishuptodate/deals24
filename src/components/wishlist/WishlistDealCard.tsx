@@ -64,7 +64,7 @@ const WishlistDealCard = memo(({
       <div className="flex min-w-0 flex-col sm:pt-3">
         <div className="flex flex-wrap items-center gap-2 text-[11px]">
           <span className="max-w-full truncate font-medium text-gray-600 dark:text-gray-400">{category}</span>
-          <span className="time-badge inline-flex items-center gap-1 text-[10px]"><CalendarDays className="h-3 w-3" /> {formatDate(item.timestamp)}</span>
+          <span className="time-badge ms-auto inline-flex shrink-0 items-center gap-1 whitespace-nowrap text-[10px]"><CalendarDays className="h-3 w-3" /> {formatDate(item.timestamp)}</span>
         </div>
 
         <button
