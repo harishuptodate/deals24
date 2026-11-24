@@ -72,10 +72,10 @@ const DealAlertDialog = ({ deal, open, onOpenChange, onCreate }: DealAlertDialog
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100%-2rem)] rounded-2xl sm:max-w-md dark:border-gray-800 dark:bg-zinc-950">
+      <DialogContent className="w-[calc(100%-2rem)] rounded-2xl sm:max-w-md dark:border-zinc-800 dark:bg-zinc-950">
         <DialogHeader>
-          <div className="mb-2 flex h-11 w-11 items-center justify-center rounded-full bg-violet-100 dark:bg-violet-950/60">
-            <BellRing className="h-5 w-5 text-violet-600 dark:text-violet-300" />
+          <div className="mb-2 flex h-11 w-11 items-center justify-center rounded-lg bg-zinc-100 dark:bg-zinc-900">
+            <BellRing aria-hidden="true" strokeWidth={1.5} className="h-5 w-5 text-zinc-600 dark:text-zinc-400" />
           </div>
           <DialogTitle>{user || isLocalAlertPreview ? 'Notify me about this deal' : 'Sign in to create this alert'}</DialogTitle>
           <DialogDescription className="line-clamp-2">
@@ -87,7 +87,7 @@ const DealAlertDialog = ({ deal, open, onOpenChange, onCreate }: DealAlertDialog
             <div className="space-y-2">
               <Label htmlFor="deal-alert-email">Email address</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+                <Mail aria-hidden="true" strokeWidth={1.5} className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
                 <Input
                   id="deal-alert-email"
                   type="email"
@@ -95,7 +95,7 @@ const DealAlertDialog = ({ deal, open, onOpenChange, onCreate }: DealAlertDialog
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                   placeholder="you@example.com"
-                  className="h-11 pl-9"
+                  className="h-12 rounded-lg pl-10 text-base"
                   required
                 />
               </div>
@@ -108,11 +108,11 @@ const DealAlertDialog = ({ deal, open, onOpenChange, onCreate }: DealAlertDialog
             price={price}
             onPriceChange={setPrice}
           />
-          <Button type="submit" disabled={isSaving || !deal?.id} className="h-11 w-full rounded-full">
-            <BellRing className="mr-2 h-4 w-4" />
+          <Button type="submit" disabled={isSaving || !deal?.id} className="h-11 w-full rounded-lg bg-blue-700 text-white hover:bg-blue-800 dark:bg-blue-600 dark:hover:bg-blue-500">
+            <BellRing aria-hidden="true" strokeWidth={1.5} className="mr-2 h-4 w-4" />
             {isSaving ? 'Please wait…' : isLocalAlertPreview ? 'Turn on alert' : user ? 'Turn on email alerts' : 'Email sign-in link'}
           </Button>
-          <p className="text-center text-xs text-gray-500 dark:text-gray-400">
+          <p className="text-center text-xs text-zinc-500 dark:text-zinc-400">
             {isLocalAlertPreview ? 'Local preview · no emails sent' : user ? `Signed in as ${user.email}` : 'Your alerts will sync anywhere you sign in.'}
           </p>
         </form>

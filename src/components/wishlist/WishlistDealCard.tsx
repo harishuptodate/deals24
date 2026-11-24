@@ -28,7 +28,6 @@ const WishlistDealCard = memo(({
   formatDate,
 }: WishlistDealCardProps) => {
   const primaryLink = item.link || extractSecondLink(item.description) || extractFirstLink(item.description);
-  const hasImage = Boolean(item.imageUrl || item.telegramFileId);
   const category = item.category
     ? item.category.split('-').map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
     : 'Saved deal';
@@ -43,76 +42,74 @@ const WishlistDealCard = memo(({
   };
 
   return (
-    <article className="group grid min-w-0 grid-cols-[80px_minmax(0,1fr)] gap-3 rounded-2xl border border-gray-200 bg-white p-3 shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:border-gray-900 dark:bg-zinc-950 sm:flex sm:flex-col sm:gap-0 sm:p-6">
+    <article className="group grid min-w-0 grid-cols-[80px_minmax(0,1fr)] gap-4 rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950 sm:flex sm:flex-col sm:gap-0 sm:p-5">
       <button
         type="button"
         onClick={() => onViewDetails(item)}
         aria-label={`View details for ${item.title}`}
-        className={`overflow-hidden rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 sm:h-40 ${hasImage
-          ? 'bg-transparent sm:w-fit sm:max-w-full sm:self-center dark:bg-transparent'
-          : 'bg-gray-50 dark:bg-zinc-900 sm:w-full'}`}>
+        className="flex h-28 items-center justify-center overflow-hidden rounded-lg bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 dark:bg-zinc-900 sm:h-44 sm:w-full">
         <DealImage
           title={item.title}
           category={item.category}
           imageUrl={item.imageUrl}
           telegramFileId={item.telegramFileId}
-          className={`h-full min-h-28 max-w-full object-contain sm:min-h-0 ${hasImage ? 'w-full sm:w-auto' : 'w-full p-1.5'}`}
+          className="h-full w-full max-w-full object-contain p-2 sm:p-4"
           fallbackClassName="min-w-0 border-0"
         />
       </button>
 
-      <div className="flex min-w-0 flex-col sm:pt-3">
-        <div className="flex flex-wrap items-center gap-2 text-[11px]">
-          <span className="max-w-full truncate font-medium text-gray-600 dark:text-gray-400">{category}</span>
-          <span className="time-badge ms-auto inline-flex shrink-0 items-center gap-1 whitespace-nowrap text-[10px]"><CalendarDays className="h-3 w-3" /> {formatDate(item.timestamp)}</span>
+      <div className="flex min-w-0 flex-1 flex-col sm:pt-4">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs leading-4">
+          <span className="max-w-full truncate font-medium text-zinc-600 dark:text-zinc-400">{category}</span>
+          <span className="inline-flex items-center gap-1 tabular-nums text-zinc-500 dark:text-zinc-400"><CalendarDays aria-hidden="true" className="h-4 w-4" strokeWidth={1.5} /> {formatDate(item.timestamp)}</span>
         </div>
 
         <button
           type="button"
           onClick={() => onViewDetails(item)}
-          className="mt-2 line-clamp-3 rounded-sm text-left text-base font-semibold leading-tight text-high-contrast transition-colors hover:text-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:hover:text-gray-300 sm:min-h-11 sm:line-clamp-2 sm:text-lg">
+          className="mt-2 line-clamp-3 rounded text-left text-sm font-medium leading-6 text-zinc-950 transition-colors hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 dark:text-zinc-100 dark:hover:text-blue-400 sm:min-h-12 sm:line-clamp-2 sm:text-base">
           {item.title}
         </button>
-
-        <div className="mt-auto flex items-center gap-1 pt-2 sm:pt-3">
-          {item.id && (
-            <button
-              type="button"
-              onClick={() => onCreateAlert(item)}
-              className={`inline-flex h-10 items-center gap-1.5 rounded-full px-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${hasActiveAlert
-                ? 'bg-violet-50 text-violet-700 dark:bg-violet-950/50 dark:text-violet-300'
-                : 'text-violet-600 hover:bg-gray-100 dark:text-violet-400 dark:hover:bg-gray-800'}`}
-              aria-pressed={hasActiveAlert}
-              aria-label={hasActiveAlert ? 'Deal alert is active' : 'Create deal alert'}>
-              <Bell className={`h-3.5 w-3.5 ${hasActiveAlert ? 'fill-current' : ''}`} />
-              {hasActiveAlert ? 'Alert on' : 'Alert'}
-            </button>
-          )}
-          <button type="button" onClick={() => onShare(item)} className="ml-auto flex h-10 w-10 shrink-0 items-center justify-center rounded-md border-0 bg-transparent p-0 text-blue-500 transition-colors hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-blue-400 dark:hover:bg-gray-800" aria-label="Share deal">
-            <Share2 aria-hidden="true" className="h-4 w-4" />
-          </button>
-          <button type="button" onClick={() => onRemove(item.title)} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-red-50 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-gray-400 dark:hover:bg-red-950/30 dark:hover:text-red-400" aria-label="Remove from wishlist">
-            <Trash2 className="h-3.5 w-3.5" />
-          </button>
-        </div>
       </div>
 
-      <div className="col-span-2 mt-auto grid grid-cols-2 gap-2 pt-3 sm:mt-3">
+      <div className="col-span-2 flex items-center gap-2 sm:mt-auto sm:pt-3">
+        {item.id && (
+          <button
+            type="button"
+            onClick={() => onCreateAlert(item)}
+            className={`inline-flex h-11 items-center gap-2 rounded-lg px-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${hasActiveAlert
+              ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300'
+              : 'text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800'}`}
+            aria-pressed={hasActiveAlert}
+            aria-label={hasActiveAlert ? 'Deal alert is active' : 'Create deal alert'}>
+            <Bell strokeWidth={1.5} className={`h-4 w-4 ${hasActiveAlert ? 'fill-current' : ''}`} />
+            {hasActiveAlert ? 'Alert on' : 'Alert'}
+          </button>
+        )}
+        <button type="button" onClick={() => onShare(item)} className="ml-auto flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border-0 bg-transparent p-0 text-zinc-500 transition-colors hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-zinc-400 dark:hover:bg-zinc-800" aria-label="Share deal">
+          <Share2 strokeWidth={1.5} aria-hidden="true" className="h-4 w-4" />
+        </button>
+        <button type="button" onClick={() => onRemove(item.title)} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-zinc-500 transition-colors hover:bg-red-50 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-zinc-400 dark:hover:bg-red-950/30 dark:hover:text-red-400" aria-label="Remove from wishlist">
+          <Trash2 strokeWidth={1.5} className="h-4 w-4" />
+        </button>
+      </div>
+
+      <div className="col-span-2 mt-auto grid grid-cols-2 gap-2 border-t border-zinc-100 pt-4 dark:border-zinc-800 sm:mt-4">
         {item.id ? (
-          <Button asChild variant="dealOutline" className="h-11 px-2 text-xs">
+          <Button asChild variant="outline" className="h-11 rounded-lg border-zinc-200 bg-white px-3 text-sm dark:border-zinc-700 dark:bg-zinc-950">
             <a href={`/deal/${item.id}`} onClick={(event) => {
               if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || event.button !== 0) return;
               event.preventDefault();
               onViewFullPage(item);
             }}>
-              <Eye aria-hidden="true" /> View deal
+              <Eye strokeWidth={1.5} aria-hidden="true" /> View deal
             </a>
           </Button>
         ) : <div />}
         {primaryLink ? (
-          <Button asChild variant="dealPrimary" className="h-11 px-2 text-xs">
+          <Button asChild className="h-11 rounded-lg bg-blue-700 px-3 text-sm text-white hover:bg-blue-800 dark:bg-blue-600 dark:hover:bg-blue-500">
             <a href={primaryLink} target="_blank" rel="noopener noreferrer" onClick={handleBuy}>
-              Buy now <ExternalLink aria-hidden="true" />
+              Buy now <ExternalLink strokeWidth={1.5} aria-hidden="true" />
             </a>
           </Button>
         ) : <div />}

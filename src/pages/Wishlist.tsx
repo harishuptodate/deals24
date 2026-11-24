@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Heart } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { BigFooter } from '@/components/BigFooter';
 import WishlistHeader from '../components/wishlist/WishlistHeader';
@@ -35,9 +34,9 @@ const Wishlist = () => {
   } = useWishlist();
 
   return (
-    <div className="min-h-screen bg-white text-apple-darkGray dark:bg-[#09090B] dark:text-gray-200">
+    <div className="min-h-screen bg-zinc-50 text-zinc-950 tracking-normal dark:bg-[#09090B] dark:text-zinc-100">
       <Navbar />
-      <main className="container mx-auto px-4 pb-6 pt-3 md:pb-12 md:pt-6">
+      <main className="container mx-auto px-4 pb-12 pt-6 md:px-8 md:pb-16 md:pt-10">
         <WishlistHeader
           favoriteCount={favorites.length}
           activeAlertCount={alerts.filter((alert) => alert.active).length}
@@ -47,24 +46,24 @@ const Wishlist = () => {
         <AlertCenter alerts={alerts} isLoading={alertsLoading} onCreate={create} onSetActive={setActive} onSetTargetPrice={setTargetPrice} onSetKeywords={setKeywords} onRemove={remove} />
 
         <section aria-labelledby="saved-deals-heading">
-          <div className="mb-6 flex items-end justify-between gap-3">
-            <div>
-              <h2 id="saved-deals-heading" className="flex items-center gap-2 text-lg font-semibold tracking-tight text-high-contrast">
-                <Heart className="h-4 w-4 fill-rose-500 text-rose-500" /> Saved deals
+          <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+            <div className="min-w-0">
+              <h2 id="saved-deals-heading" className="text-xl font-medium tracking-normal text-zinc-950 dark:text-zinc-100">
+                Saved deals
               </h2>
-              <p className="mt-1 text-sm leading-5 text-gray-600 dark:text-gray-400">Open, share, buy, or add an alert without leaving this page.</p>
+              <p className="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-400">Your shortlist, ready to compare or revisit</p>
             </div>
-            <span className="shrink-0 text-xs font-medium text-gray-600 dark:text-gray-400">{favorites.length} {favorites.length === 1 ? 'item' : 'items'}</span>
+            <span className="shrink-0 text-sm tabular-nums text-zinc-500 dark:text-zinc-400">{favorites.length} {favorites.length === 1 ? 'item' : 'items'}</span>
           </div>
 
           {wishlistLoading ? (
-            <div className="grid grid-cols-[minmax(0,1fr)] gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {[...Array(8)].map((_, index) => (
                 <DealCardSkeletonEnhanced key={`wishlist-skeleton-${index}`} />
               ))}
             </div>
           ) : favorites.length === 0 ? <WishlistEmptyState /> : (
-            <div className="grid grid-cols-[minmax(0,1fr)] gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {favorites.map((item) => (
                 <WishlistDealCard
                   key={item.id || item.title}

@@ -21,9 +21,9 @@ const ClearAllConfirmDialog = ({ isOpen, onOpenChange, onConfirm, itemCount }: C
   <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
     <AlertDialogContent
       onOpenAutoFocus={(event) => event.preventDefault()}
-      className="w-[calc(100%-2rem)] rounded-3xl sm:max-w-md">
+      className="w-[calc(100%-2rem)] rounded-2xl sm:max-w-md">
       <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-red-50 dark:bg-red-950/40">
-        <Trash2 className="h-5 w-5 text-red-600" />
+        <Trash2 aria-hidden="true" strokeWidth={1.5} className="h-5 w-5 text-red-600" />
       </div>
       <AlertDialogHeader className="text-center sm:text-center">
         <AlertDialogTitle>Clear your entire wishlist?</AlertDialogTitle>
@@ -33,8 +33,8 @@ const ClearAllConfirmDialog = ({ isOpen, onOpenChange, onConfirm, itemCount }: C
         </AlertDialogDescription>
       </AlertDialogHeader>
       <AlertDialogFooter className="grid grid-cols-2 gap-2 sm:grid-cols-2 sm:space-x-0">
-        <AlertDialogCancel className="mt-0 h-11 rounded-full">Keep wishlist</AlertDialogCancel>
-        <AlertDialogAction onClick={onConfirm} className="h-11 rounded-full bg-red-600 text-white hover:bg-red-700">Clear wishlist</AlertDialogAction>
+        <AlertDialogCancel className="mt-0 h-11 rounded-lg">Keep wishlist</AlertDialogCancel>
+        <AlertDialogAction onClick={onConfirm} className="h-11 rounded-lg bg-red-600 text-white hover:bg-red-700">Clear wishlist</AlertDialogAction>
       </AlertDialogFooter>
     </AlertDialogContent>
   </AlertDialog>
