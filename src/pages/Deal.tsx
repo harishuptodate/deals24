@@ -77,7 +77,7 @@ const Deal = () => {
         <BigFooter />
       </div>
       <DealAlertDialog
-        deal={deal && id ? { id, title: deal.text?.split('\n')[0] || 'Deal' } : null}
+        deal={deal && id ? { id, title: deal.text?.split('\n')[0] || 'Deal', imageUrl: deal.imageUrl, telegramFileId: deal.telegramFileId, category: deal.category } : null}
         open={isAlertDialogOpen}
         onOpenChange={setIsAlertDialogOpen}
         onCreate={createDealAlert}

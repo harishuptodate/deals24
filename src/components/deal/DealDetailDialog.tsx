@@ -133,7 +133,8 @@ const DealDetailDialog = ({
 				category={category}
 				imageUrl={imageUrl}
 				telegramFileId={telegramFileId}
-				className="h-32 w-full rounded-lg object-contain sm:h-40"
+				className="h-auto w-auto max-h-32 max-w-full rounded-xl object-contain sm:max-h-40 [&_img]:h-auto [&_img]:w-auto [&_img]:max-h-32 [&_img]:max-w-full [&_img]:rounded-xl sm:[&_img]:max-h-40"
+				fallbackClassName="h-32 w-32 border-0 sm:h-40 sm:w-40"
 			/>
 		);
 	};
@@ -144,7 +145,7 @@ const DealDetailDialog = ({
 				closeButtonClassName={buttonVariants({ variant: 'dealTertiary', size: 'icon', className: 'right-2 top-2' })}
 				className="flex max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-[480px] flex-col gap-0 overflow-hidden rounded-xl p-0 text-[0.93rem] sm:max-h-[90dvh] sm:max-w-[520px] sm:text-sm [@media(max-height:500px)]:overflow-y-auto">
 				<div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-3 pt-3 sm:px-5 [@media(max-height:500px)]:flex-none">
-					<div className="mb-4">{renderImage()}</div>
+					<div className="mx-auto mb-4 w-fit max-w-full overflow-hidden rounded-xl">{renderImage()}</div>
 
 					<Collapsible
 						open={areDetailsOpen}
@@ -213,15 +214,14 @@ const DealDetailDialog = ({
 							</a>
 						</Button>
 					)}
-					<Button
+					<button type="button"
 						onClick={handleShare}
 						disabled={isSharing}
-						variant="dealLink"
 						aria-busy={isSharing}
-						className="w-full px-3 text-[13px]">
-						<Share2 aria-hidden="true" />
+						className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg border-0 bg-transparent px-3 text-[13px] font-medium text-blue-500 transition-colors hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:pointer-events-none disabled:opacity-50 dark:text-blue-400 dark:hover:bg-gray-800">
+						<Share2 aria-hidden="true" className="h-4 w-4" />
 						{isSharing ? 'Sharing...' : 'Share Deal'}
-					</Button>
+					</button>
 					<DialogClose asChild>
 						<Button
 							type="button"

@@ -1,4 +1,5 @@
 import api from './client';
+import { createLocalAlert, isLocalAlertPreview, readLocalAlerts, saveLocalAlerts } from '../localAlertPreview';
 
 export type DealAlert = {
   _id: string;
@@ -23,6 +24,8 @@ export type CreateDealAlertInput = {
   email?: string;
   type: 'deal' | 'keyword';
   dealId?: string;
+  dealTitle?: string;
+  previewDeal?: DealAlert['deal'];
   keywords?: string[];
   targetPrice?: number | null;
 };
@@ -41,6 +44,7 @@ export function getOwnerToken(): string {
 }
 
 export async function getDealAlerts(): Promise<DealAlert[]> {
+  if (isLocalAlertPreview) return readLocalAlerts();
   const response = await api.get<DealAlert[]>('/alerts', {
     headers: { 'X-Alert-Owner-Token': getOwnerToken() },
   });
@@ -48,6 +52,7 @@ export async function getDealAlerts(): Promise<DealAlert[]> {
 }
 
 export async function createDealAlert(input: CreateDealAlertInput): Promise<DealAlert> {
+  if (isLocalAlertPreview) return createLocalAlert(input);
   const response = await api.post<DealAlert>('/alerts', {
     ...input,
     ownerToken: getOwnerToken(),
@@ -58,8 +63,16 @@ export async function createDealAlert(input: CreateDealAlertInput): Promise<Deal
 
 export async function updateDealAlert(
   id: string,
-  update: { active?: boolean; targetPrice?: number | null },
+  update: { active?: boolean; targetPrice?: number | null; keywords?: string[] },
 ): Promise<DealAlert> {
+  if (isLocalAlertPreview) {
+    const alerts = readLocalAlerts();
+    const existing = alerts.find((alert) => alert._id === id);
+    if (!existing) throw new Error('Alert not found');
+    const updated = { ...existing, ...update };
+    saveLocalAlerts(alerts.map((alert) => alert._id === id ? updated : alert));
+    return updated;
+  }
   const response = await api.patch<DealAlert>(`/alerts/${id}`, {
     ...update,
     ownerToken: getOwnerToken(),
@@ -68,6 +81,10 @@ export async function updateDealAlert(
 }
 
 export async function deleteDealAlert(id: string): Promise<void> {
+  if (isLocalAlertPreview) {
+    saveLocalAlerts(readLocalAlerts().filter((alert) => alert._id !== id));
+    return;
+  }
   await api.delete(`/alerts/${id}`, {
     headers: { 'X-Alert-Owner-Token': getOwnerToken() },
   });

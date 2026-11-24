@@ -9,8 +9,15 @@ import type { CreateDealAlertInput } from '@/services/api/alertsApi';
 import { useAuth } from '@/contexts/AuthContext';
 import EmailDomainSuggestions from '@/components/auth/EmailDomainSuggestions';
 import PriceAlertFields from './PriceAlertFields';
+import { isLocalAlertPreview } from '@/services/localAlertPreview';
 
-export type AlertableDeal = { id?: string; title: string };
+export type AlertableDeal = {
+  id?: string;
+  title: string;
+  imageUrl?: string;
+  telegramFileId?: string;
+  category?: string;
+};
 
 type DealAlertDialogProps = {
   deal: AlertableDeal | null;
@@ -37,9 +44,12 @@ const DealAlertDialog = ({ deal, open, onOpenChange, onCreate }: DealAlertDialog
     setIsSaving(true);
     try {
       const targetPrice = priceEnabled ? Number(price) : null;
-      if (user) {
-        await onCreate({ type: 'deal', dealId: deal.id, targetPrice });
-        toast({ title: 'Deal alert enabled', description: `Notifications will be sent to ${user.email}.` });
+      if (user || isLocalAlertPreview) {
+        await onCreate({
+          type: 'deal', dealId: deal.id, targetPrice,
+          ...(isLocalAlertPreview ? { dealTitle: deal.title, previewDeal: { ...deal, id: deal.id } } : {}),
+        });
+        toast({ title: 'Deal alert enabled', description: isLocalAlertPreview ? 'Saved in this browser. No emails will be sent.' : `Notifications will be sent to ${user.email}.` });
       } else {
         localStorage.setItem('pending-deal-alert', JSON.stringify({ dealId: deal.id, targetPrice }));
         localStorage.setItem('deal-alert-email', email.trim());
@@ -51,7 +61,7 @@ const DealAlertDialog = ({ deal, open, onOpenChange, onCreate }: DealAlertDialog
       setPrice('');
     } catch {
       toast({
-        title: user ? 'Could not enable alert' : 'Could not send sign-in link',
+        title: user || isLocalAlertPreview ? 'Could not enable alert' : 'Could not send sign-in link',
         description: 'Check the details and try again.',
         variant: 'destructive',
       });
@@ -67,13 +77,13 @@ const DealAlertDialog = ({ deal, open, onOpenChange, onCreate }: DealAlertDialog
           <div className="mb-2 flex h-11 w-11 items-center justify-center rounded-full bg-violet-100 dark:bg-violet-950/60">
             <BellRing className="h-5 w-5 text-violet-600 dark:text-violet-300" />
           </div>
-          <DialogTitle>{user ? 'Notify me about this deal' : 'Sign in to create this alert'}</DialogTitle>
+          <DialogTitle>{user || isLocalAlertPreview ? 'Notify me about this deal' : 'Sign in to create this alert'}</DialogTitle>
           <DialogDescription className="line-clamp-2">
-            {user ? deal?.title : 'We’ll send a secure sign-in link, then create this alert automatically.'}
+            {user || isLocalAlertPreview ? deal?.title : 'We’ll send a secure sign-in link, then create this alert automatically.'}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="space-y-4">
-          {!user && (
+          {!user && !isLocalAlertPreview && (
             <div className="space-y-2">
               <Label htmlFor="deal-alert-email">Email address</Label>
               <div className="relative">
@@ -100,10 +110,10 @@ const DealAlertDialog = ({ deal, open, onOpenChange, onCreate }: DealAlertDialog
           />
           <Button type="submit" disabled={isSaving || !deal?.id} className="h-11 w-full rounded-full">
             <BellRing className="mr-2 h-4 w-4" />
-            {isSaving ? 'Please wait…' : user ? 'Turn on email alerts' : 'Email sign-in link'}
+            {isSaving ? 'Please wait…' : isLocalAlertPreview ? 'Turn on alert' : user ? 'Turn on email alerts' : 'Email sign-in link'}
           </Button>
           <p className="text-center text-xs text-gray-500 dark:text-gray-400">
-            {user ? `Signed in as ${user.email}` : 'Your alerts will sync anywhere you sign in.'}
+            {isLocalAlertPreview ? 'Local preview · no emails sent' : user ? `Signed in as ${user.email}` : 'Your alerts will sync anywhere you sign in.'}
           </p>
         </form>
       </DialogContent>

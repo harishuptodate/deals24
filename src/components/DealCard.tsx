@@ -281,7 +281,7 @@ const DealCard = memo(({
       />
 
       <DealAlertDialog
-        deal={id ? { id, title: displayTitle } : null}
+        deal={id ? { id, title: displayTitle, imageUrl: displayImageUrl, telegramFileId, category: localCategory || category } : null}
         open={isAlertDialogOpen}
         onOpenChange={setIsAlertDialogOpen}
         onCreate={createDealAlert}

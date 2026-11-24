@@ -88,9 +88,9 @@ const WishlistDealCard = memo(({
               {hasActiveAlert ? 'Alert on' : 'Alert'}
             </button>
           )}
-          <Button type="button" variant="dealLink" onClick={() => onShare(item)} className="ml-auto h-11 w-11 shrink-0 p-0" aria-label="Share deal">
-            <Share2 aria-hidden="true" />
-          </Button>
+          <button type="button" onClick={() => onShare(item)} className="ml-auto flex h-10 w-10 shrink-0 items-center justify-center rounded-md border-0 bg-transparent p-0 text-blue-500 transition-colors hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-blue-400 dark:hover:bg-gray-800" aria-label="Share deal">
+            <Share2 aria-hidden="true" className="h-4 w-4" />
+          </button>
           <button type="button" onClick={() => onRemove(item.title)} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-red-50 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-gray-400 dark:hover:bg-red-950/30 dark:hover:text-red-400" aria-label="Remove from wishlist">
             <Trash2 className="h-3.5 w-3.5" />
           </button>

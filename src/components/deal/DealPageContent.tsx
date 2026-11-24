@@ -41,7 +41,7 @@ const DealPageContent = ({ deal, id }: DealPageContentProps) => {
   return (
     <article className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:gap-14 xl:gap-20">
       <div className="min-w-0 lg:sticky lg:top-28">
-        <div className="deal-page-image flex aspect-square items-center justify-center overflow-hidden rounded-3xl border border-zinc-100 bg-[#f7f7f8] p-8 dark:border-zinc-800 dark:bg-zinc-900 sm:p-12">
+        <div className="deal-page-image flex aspect-square items-center justify-center overflow-hidden p-8 sm:p-12">
           <DealImage key={id} title={title || 'Product image'} category={deal.category} imageUrl={deal.imageUrl}
             telegramFileId={deal.telegramFileId} className="h-full w-full rounded-xl object-contain" />
         </div>

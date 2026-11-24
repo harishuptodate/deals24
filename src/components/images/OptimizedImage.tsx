@@ -48,9 +48,9 @@ const OptimizedImage = ({
   const shouldLoad = priority || isIntersecting;
 
   return (
-    <div ref={elementRef} className={cn("relative overflow-hidden", className)}>
+    <div ref={elementRef} className={cn("relative overflow-hidden rounded-lg", className)}>
       {shouldLoad ? (
-        <picture>
+        <picture className="block rounded-[inherit]">
           <source srcSet={webpSrc} type="image/webp" />
           <img
             src={src}
@@ -61,7 +61,7 @@ const OptimizedImage = ({
             onLoad={handleLoad}
             onError={handleError}
             className={cn(
-              "transition-opacity duration-300",
+              "rounded-[inherit] transition-opacity duration-300",
               isLoaded ? "opacity-100" : "opacity-0",
               isError && "opacity-0"
             )}
@@ -73,7 +73,7 @@ const OptimizedImage = ({
           alt="Loading..."
           width={width}
           height={height}
-          className="opacity-50"
+          className="rounded-[inherit] opacity-50"
         />
       )}
       

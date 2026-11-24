@@ -9,6 +9,7 @@ import {
 } from '@/services/api/alertsApi';
 import { useAuth } from '@/contexts/AuthContext';
 import { getUserSessionToken } from '@/services/userSession';
+import { isLocalAlertPreview } from '@/services/localAlertPreview';
 
 function alertCacheKey(ownerKey: string) {
   return `deals24-alerts:${ownerKey}`;
@@ -31,7 +32,7 @@ function saveCachedAlerts(ownerKey: string, alerts: DealAlert[]) {
 
 export function useDealAlerts() {
   const { user } = useAuth();
-  const ownerKey = user?.id ? `account:${user.id}` : getUserSessionToken() ? 'account:pending' : 'browser';
+  const ownerKey = isLocalAlertPreview ? 'local-preview' : user?.id ? `account:${user.id}` : getUserSessionToken() ? 'account:pending' : 'browser';
   const initialAlerts = readCachedAlerts(ownerKey);
   const [alerts, setAlerts] = useState<DealAlert[]>(initialAlerts ?? []);
   const [isLoading, setIsLoading] = useState(initialAlerts === null);
@@ -82,5 +83,19 @@ export function useDealAlerts() {
     commitAlerts((current) => current.filter((item) => item._id !== alert._id));
   };
 
-  return { alerts, isLoading, create, setActive, remove };
+  const setTargetPrice = async (alert: DealAlert, targetPrice: number | null) => {
+    const updated = await updateDealAlert(alert._id, { targetPrice });
+    commitAlerts((current) => current.map((item) => item._id === updated._id
+      ? { ...updated, deal: item.deal }
+      : item));
+  };
+
+  const setKeywords = async (alert: DealAlert, keywords: string[]) => {
+    const updated = await updateDealAlert(alert._id, { keywords });
+    commitAlerts((current) => current.map((item) => item._id === updated._id
+      ? { ...updated, deal: item.deal }
+      : item));
+  };
+
+  return { alerts, isLoading, create, setActive, setTargetPrice, setKeywords, remove };
 }

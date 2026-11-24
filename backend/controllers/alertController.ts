@@ -104,7 +104,17 @@ export async function updateAlert(req: Request, res: Response) {
   const user = await getAuthenticatedUser(req);
   const { ownerToken } = req.body;
   if (!user && !validOwnerToken(ownerToken)) return res.status(400).json({ error: 'Invalid browser token' });
-  const update: { active?: boolean; targetPrice?: number | null } = {};
+  const update: { active?: boolean; targetPrice?: number | null; keywords?: string[] } = {};
+  if ('keywords' in req.body) {
+    const keywords = req.body.keywords;
+    if (!Array.isArray(keywords) || keywords.length < 1 || keywords.length > 10
+      || keywords.some((keyword) => typeof keyword !== 'string'
+        || keyword.trim().replace(/\s+/g, ' ').length < 2
+        || keyword.trim().replace(/\s+/g, ' ').length > 80)) {
+      return res.status(400).json({ error: 'Enter 1 to 10 keyword phrases, each 2 to 80 characters' });
+    }
+    update.keywords = normalizeKeywords(keywords);
+  }
   if (typeof req.body.active === 'boolean') update.active = req.body.active;
   if ('targetPrice' in req.body) {
     const targetPrice = parseTargetPrice(req.body.targetPrice);
@@ -114,7 +124,7 @@ export async function updateAlert(req: Request, res: Response) {
   if (Object.keys(update).length === 0) return res.status(400).json({ error: 'No changes supplied' });
 
   const alert = await DealAlert.findOneAndUpdate(
-    { _id: req.params.id, ...(user ? { userId: user._id } : { ownerToken }) },
+    { _id: req.params.id, ...(user ? { userId: user._id } : { ownerToken }), ...(update.keywords ? { type: 'keyword' } : {}) },
     update,
     { new: true },
   );

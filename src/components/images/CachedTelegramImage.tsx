@@ -64,12 +64,12 @@ const CachedTelegramImage = ({
 
   if (!imageSrc) {
     return (
-      <div className={cn("bg-gray-200 dark:bg-gray-800 animate-pulse", className)} />
+      <div className={cn("rounded-lg bg-gray-200 dark:bg-gray-800 animate-pulse", className)} />
     );
   }
 
   return (
-    <div className={cn("relative overflow-hidden", className)}>
+    <div className={cn("relative flex items-center justify-center overflow-hidden rounded-lg", className)}>
       <img
         src={imageSrc}
         alt={alt}
@@ -77,7 +77,7 @@ const CachedTelegramImage = ({
         onLoad={handleLoad}
         onError={handleError}
         className={cn(
-          "w-full h-full object-contain transition-opacity duration-300",
+          "h-auto w-auto max-h-full max-w-full rounded-[inherit] object-contain transition-opacity duration-300",
           isLoaded ? "opacity-100" : "opacity-0",
           isError && "hidden"
         )}

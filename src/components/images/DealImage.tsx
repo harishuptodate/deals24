@@ -67,13 +67,15 @@ const DealImage = ({
 
   if (source === 'amazon' && imageUrl) {
     return (
-      <img
-        src={imageUrl}
-        alt={title}
-        className={className}
-        loading="lazy"
-        onError={() => setSource(telegramFileId ? 'telegram' : 'fallback')}
-      />
+      <div className={cn('flex items-center justify-center rounded-lg', className)}>
+        <img
+          src={imageUrl}
+          alt={title}
+          className="h-auto w-auto max-h-full max-w-full rounded-[inherit] object-contain"
+          loading="lazy"
+          onError={() => setSource(telegramFileId ? 'telegram' : 'fallback')}
+        />
+      </div>
     );
   }
 
@@ -82,7 +84,7 @@ const DealImage = ({
       <CachedTelegramImage
         telegramFileId={telegramFileId}
         alt={title}
-        className={className}
+        className={cn('rounded-lg', className)}
         onError={() => setSource('fallback')}
       />
     );

@@ -14,7 +14,7 @@ import DealDetailDialog from '../components/deal/DealDetailDialog';
 import DealCardSkeletonEnhanced from '../components/skeletons/DealCardSkeletonEnhanced';
 
 const Wishlist = () => {
-  const { alerts, isLoading: alertsLoading, create, setActive, remove } = useDealAlerts();
+  const { alerts, isLoading: alertsLoading, create, setActive, setTargetPrice, setKeywords, remove } = useDealAlerts();
   const [alertDeal, setAlertDeal] = useState<AlertableDeal | null>(null);
   const {
     favorites,
@@ -44,7 +44,7 @@ const Wishlist = () => {
           onClearAll={clearAllFavorites}
         />
 
-        <AlertCenter alerts={alerts} isLoading={alertsLoading} onCreate={create} onSetActive={setActive} onRemove={remove} />
+        <AlertCenter alerts={alerts} isLoading={alertsLoading} onCreate={create} onSetActive={setActive} onSetTargetPrice={setTargetPrice} onSetKeywords={setKeywords} onRemove={remove} />
 
         <section aria-labelledby="saved-deals-heading">
           <div className="mb-6 flex items-end justify-between gap-3">
