@@ -142,7 +142,7 @@ const DealDetailDialog = ({
 	return (
 		<Dialog open={isOpen} onOpenChange={onOpenChange}>
 			<DialogContent
-				closeButtonClassName={buttonVariants({ variant: 'dealTertiary', size: 'icon', className: 'right-2 top-2' })}
+				closeButtonClassName={buttonVariants({ variant: 'ghost', size: 'icon', className: 'right-2 top-2' })}
 				className="flex max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-[480px] flex-col gap-0 overflow-hidden rounded-xl p-0 text-[0.93rem] sm:max-h-[90dvh] sm:max-w-[520px] sm:text-sm [@media(max-height:500px)]:overflow-y-auto">
 				<div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-3 pt-3 sm:px-5 [@media(max-height:500px)]:flex-none">
 					<div className="mx-auto mb-4 w-fit max-w-full overflow-hidden rounded-xl">{renderImage()}</div>
