@@ -30,20 +30,6 @@ export const truncateLink = (url: string): string => {
   }
 };
 
-export const createShareData = (title: string, text: string): ShareData => {
-  // Extract first link as the URL to share if available
-  const firstLink = extractFirstLink(text);
-  
-  // Create a trimmed version of text for the share description
-  const description = text.split('\n').slice(1).join(' ').substring(0, 100) + '...';
-  
-  return {
-    title: title || 'Check out this deal!',
-    text: description,
-    url: firstLink || window.location.href
-  };
-};
-
 export const shareContent = async (shareData: ShareData): Promise<boolean> => {
   if (navigator.share) {
     try {
@@ -65,9 +51,4 @@ export const copyToClipboard = async (text: string): Promise<boolean> => {
     console.error('Failed to copy:', error);
     return false;
   }
-};
-
-// Function to create a share URL directly to a specific deal
-export const createDealShareUrl = (id: string): string => {
-  return `${window.location.origin}/deal/${id}`;
 };

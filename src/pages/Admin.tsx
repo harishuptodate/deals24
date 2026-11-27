@@ -340,12 +340,6 @@ const Admin = () => {
 		}
 	};
 
-	// Open dialog with deal details
-	const handleOpenDealDetails = (deal: TelegramMessage) => {
-		setSelectedDeal(deal);
-		setIsDialogOpen(true);
-	};
-
 	// Open edit dialog
 	const handleOpenEditDialog = () => {
 		if (selectedDeal) {

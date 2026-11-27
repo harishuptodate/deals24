@@ -480,29 +480,3 @@ async function saveMessageAttempt(message: TelegramInboundMessage, options: Save
 export async function getMessages(options: MessageQueryOptions = {}) {
   return options.search?.trim() ? getSearchPage(TelegramMessage, options) : getMessagesFromStore(TelegramMessage, options);
 }
-
-export async function incrementClicks(messageId: string) {
-  if (!messageId) {
-    console.error('Cannot increment clicks: message ID is missing');
-    return null;
-  }
-
-  try {
-    const updatedMessage = await TelegramMessage.findByIdAndUpdate(
-      messageId,
-      { $inc: { clicks: 1 } },
-      { new: true },
-    );
-
-    if (!updatedMessage) {
-      console.log(`No message found with ID: ${messageId} for click tracking`);
-    } else {
-      console.log(`Mongo updated for ${messageId}: ${updatedMessage.clicks} clicks`);
-    }
-
-    return updatedMessage;
-  } catch (error) {
-    console.error(`Error incrementing clicks for message ${messageId}:`, error);
-    return null;
-  }
-}

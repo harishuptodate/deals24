@@ -73,15 +73,6 @@ export const getCategoryCounts = async (): Promise<CategoryCount[]> => {
   }
 };
 
-export const getTelegramMessageById = async (id: string): Promise<TelegramMessage> => {
-  const response = await api.get(`/telegram/messages/${id}`);
-  return response.data;
-};
-
-export const searchTelegramMessages = (query: string): Promise<TelegramResponse> => (
-  getTelegramMessages(undefined, undefined, query)
-);
-
 export const getCategoryMessages = async (
   category: string,
   cursor?: string,

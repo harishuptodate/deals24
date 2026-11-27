@@ -30,12 +30,6 @@ export interface DealPriceHistory {
 	changePercent: number | null;
 }
 
-export interface ApiResponse {
-	data: TelegramMessage[];
-	hasMore: boolean;
-	nextCursor?: string;
-}
-
 export interface TelegramResponse {
 	data: TelegramMessage[];
 	hasMore: boolean;
